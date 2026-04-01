@@ -3,7 +3,19 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '$lib/server/db';
 import * as authSchema from '$lib/server/db/auth-schema';
 
+// ✅ Validate env early (prevents silent crashes)
+const BETTER_AUTH_SECRET = process.env.BETTER_AUTH_SECRET;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const NODE_ENV = process.env.NODE_ENV;
+
+if (!BETTER_AUTH_SECRET) {
+  throw new Error('Missing BETTER_AUTH_SECRET');
+}
+
 export const auth = betterAuth({
+  secret: BETTER_AUTH_SECRET,
+
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema: {
@@ -13,41 +25,63 @@ export const auth = betterAuth({
       verification: authSchema.verifications,
     },
   }),
+
+  trustedOrigins: [
+    'http://localhost:5173',
+    // 👉 add your production domain here
+  ],
+
   emailAndPassword: {
     enabled: true,
-    async sendResetPassword(url) {
-      // Send reset password email
-      console.log(`Reset password URL: ${url}`);
-    },
+    // async sendResetPassword(url: string, user: { email: string; name?: string }) {
+    //   // TODO: Replace with real email service
+    //   console.log(`Reset password for ${user.email}: ${url}`);
+    // },
   },
-  socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    },
-  },
+
+  socialProviders: GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET
+    ? {
+        google: {
+          clientId: GOOGLE_CLIENT_ID,
+          clientSecret: GOOGLE_CLIENT_SECRET,
+        },
+      }
+    : {},
+
   rateLimit: {
     enabled: true,
-    window: 60, // seconds
+    window: 60,
     max: 100,
   },
+
   advanced: {
     cookiePrefix: 'lezie',
-    generateId: () => crypto.randomUUID(),
+
+    cookies: {
+      session: {
+        attributes: {
+          secure: NODE_ENV === 'production', // ✅ only HTTPS in prod
+          httpOnly: true,
+          sameSite: 'lax',
+        },
+      },
+    },
   },
 });
 
-// Helper function to verify tokens (simplified)
+
+// ✅ SECURE Auth Service (NO FAKE TOKEN TRUST)
 export const AuthService = {
-  verifyToken: (token: string) => {
-    // This is a simplified version - in production, you'd verify the JWT
-    // For now, we'll just return a mock user
-    if (!token) return null;
+  async getSession(request: Request) {
     try {
-      // In a real implementation, you'd verify the token with better-auth
-      return { id: token };
-    } catch {
+      const session = await auth.api.getSession({
+        headers: request.headers,
+      });
+
+      return session;
+    } catch (error) {
+      console.error('Session verification failed:', error);
       return null;
     }
-  }
+  },
 };

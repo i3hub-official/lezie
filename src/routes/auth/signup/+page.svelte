@@ -16,8 +16,7 @@
     ArrowRight
   } from 'lucide-svelte';
   
-  const { data } = $props();
-  
+ 
   let formData = $state({
     surname: '',
     firstName: '',
@@ -73,7 +72,7 @@
     // Phone validation
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone number is required';
-    } else if (!/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(formData.phone)) {
+    } else if (!/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(formData.phone)) {
       newErrors.phone = 'Please enter a valid phone number';
     }
     
