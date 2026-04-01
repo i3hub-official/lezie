@@ -52,21 +52,15 @@
   };
 </script>
 
-{#snippet header()}
-  <h1 class="text-2xl font-bold text-gray-800">Reset password</h1>
-  <p class="text-gray-500 mt-1">
-    Enter your email address and we'll send you a link to reset your password
-  </p>
-{/snippet}
-
-{#snippet footer()}
-  <p class="text-sm text-gray-500">
-    Remember your password?
-    <a href="/auth/signin" class="text-blue-500 font-medium hover:underline">Sign in</a>
-  </p>
-{/snippet}
-
 <div class="auth-form">
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Reset password</h1>
+    <p class="text-gray-500 mt-1">
+      Enter your email address and we'll send you a link to reset your password
+    </p>
+  </div>
+
   {#if isSuccess}
     <div class="flex items-center gap-2 px-4 py-3 mb-6 bg-green-50 text-green-600 rounded-xl border border-green-200">
       <CheckCircle size={20} />
@@ -143,4 +137,12 @@
       </a>
     </div>
   {/if}
+
+  <!-- Footer -->
+  <div class="mt-6 text-sm text-gray-500 text-center">
+    Remember your password?
+    <a href="/auth/signin" class="text-blue-500 font-medium hover:underline">
+      Sign in
+    </a>
+  </div>
 </div>

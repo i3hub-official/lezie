@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
+    import { goto } from '$app/navigation';
   import { authStore } from '$lib/stores/auth';
   import { 
     Mail, 
@@ -78,18 +77,16 @@
 </script>
 
 <!-- Header slot content -->
-{#snippet header()}
+
   <h1 class="text-2xl font-bold text-gray-800">Welcome back</h1>
   <p class="text-gray-500 mt-1">Sign in to your Lezie account</p>
-{/snippet}
 
 <!-- Footer slot content -->
-{#snippet footer()}
+
   <p class="text-sm text-gray-500">
     Don't have an account?
     <a href="/auth/signup" class="text-blue-500 font-medium hover:underline">Create account</a>
   </p>
-{/snippet}
 
 <!-- Main form content -->
 <div class="auth-form">
