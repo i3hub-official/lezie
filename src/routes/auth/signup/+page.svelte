@@ -149,18 +149,18 @@
   };
   
   
-  onMount(() => {
-    authStore.subscribe(user => {
-      if (user) goto('/dashboard');
-    })();
-  });
+//   onMount(() => {
+//     authStore.subscribe(user => {
+//       if (user) goto('/dashboard');
+//     })();
+//   });
 </script>
 
 <!-- Footer slot content -->
 {#snippet footer()}
   <p class="text-sm text-gray-500">
     Already have an account?
-    <a href="/auth/login" class="text-blue-500 font-medium hover:underline">Sign in</a>
+    <a href="/auth/signin" class="text-blue-500 font-medium hover:underline">Sign in</a>
   </p>
 {/snippet}
 
