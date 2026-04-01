@@ -21,7 +21,7 @@
     PhoneCall,
     MessageCircle,
     X,
-    Menu
+    Menu,
   } from 'lucide-svelte';
 
   // Fix: Use $state() for reactive variable
@@ -312,7 +312,14 @@
         <p class="lz-foot-desc">Making communities safer through technology and collective action.</p>
         <div class="lz-socials">
           <button type="button" class="lz-soc" aria-label="X / Twitter">
-            <Twitter size={15} />
+            <svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  fill="currentColor"
+  class="w-4 h-4"
+>
+  <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53A4.48 4.48 0 0 0 22.4.36a9.06 9.06 0 0 1-2.88 1.1 4.52 4.52 0 0 0-7.72 4.12 12.84 12.84 0 0 1-9.32-4.73 4.52 4.52 0 0 0 1.4 6.03 4.48 4.48 0 0 1-2.05-.57v.06a4.53 4.53 0 0 0 3.63 4.43 4.52 4.52 0 0 1-2.04.08 4.53 4.53 0 0 0 4.22 3.15A9.05 9.05 0 0 1 1 19.54a12.8 12.8 0 0 0 6.92 2.03c8.3 0 12.84-6.88 12.84-12.85 0-.2 0-.39-.02-.58A9.22 9.22 0 0 0 23 3z"/>
+</svg>
           </button>
           <button type="button" class="lz-soc" aria-label="Discord">
             <MessageCircle size={15} />
