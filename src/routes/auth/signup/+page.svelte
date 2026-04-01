@@ -12,7 +12,7 @@
     Phone,
     Users,
     Check,
-    AlertCircle,
+    CircleAlert,
     ArrowRight
   } from 'lucide-svelte';
   
@@ -66,7 +66,7 @@
     
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone number is required';
-    } else if (!/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(formData.phone)) {
+    } else if (!/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(formData.phone)) {
       newErrors.phone = 'Please enter a valid phone number';
     }
     
@@ -148,16 +148,6 @@
     }
   };
   
-  const handleGoogleSignup = async () => {
-    isLoading = true;
-    try {
-      window.location.href = '/api/auth/google';
-    } catch (error) {
-      console.error('Google signup failed:', error);
-      errors.submit = 'Google signup failed. Please try again.';
-      isLoading = false;
-    }
-  };
   
   onMount(() => {
     authStore.subscribe(user => {
@@ -165,12 +155,6 @@
     })();
   });
 </script>
-
-<!-- Header slot content -->
-{#snippet header()}
-  <h1 class="text-2xl font-bold text-gray-800">Create an account</h1>
-  <p class="text-gray-500 mt-1">Join Lezie and start making your community safer</p>
-{/snippet}
 
 <!-- Footer slot content -->
 {#snippet footer()}
@@ -184,7 +168,7 @@
 <div class="auth-form">
   {#if errors.submit}
     <div class="auth-alert-error">
-      <AlertCircle size={20} />
+      <CircleAlert size={20} />
       <span>{errors.submit}</span>
     </div>
   {/if}
