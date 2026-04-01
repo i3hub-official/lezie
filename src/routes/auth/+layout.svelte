@@ -1,3 +1,5 @@
+<!-- auth/+layout.svelte -->
+
 <script lang="ts">
   import { onMount } from 'svelte';
   import { resolve } from '$app/paths';
@@ -145,6 +147,7 @@
     font-size: 0.875rem;
     color: #6b7280;
   }
+  
   
   @media (max-width: 640px) {
     .auth-container {
