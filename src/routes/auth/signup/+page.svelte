@@ -16,7 +16,6 @@
     ArrowRight
   } from 'lucide-svelte';
   
- 
   let formData = $state({
     surname: '',
     firstName: '',
@@ -38,21 +37,18 @@
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
-    // Surname validation
     if (!formData.surname.trim()) {
       newErrors.surname = 'Surname is required';
     } else if (formData.surname.length < 2) {
       newErrors.surname = 'Surname must be at least 2 characters';
     }
     
-    // First name validation
     if (!formData.firstName.trim()) {
       newErrors.firstName = 'First name is required';
     } else if (formData.firstName.length < 2) {
       newErrors.firstName = 'First name must be at least 2 characters';
     }
     
-    // Date of Birth validation
     if (!formData.dateOfBirth) {
       newErrors.dateOfBirth = 'Date of birth is required';
     } else {
@@ -64,26 +60,22 @@
       }
     }
     
-    // Gender validation
     if (!formData.gender) {
       newErrors.gender = 'Please select your gender';
     }
     
-    // Phone validation
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone number is required';
-    } else if (!/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(formData.phone)) {
+    } else if (!/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(formData.phone)) {
       newErrors.phone = 'Please enter a valid phone number';
     }
     
-    // Email validation
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
     
-    // Password validation
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
@@ -92,12 +84,10 @@
       newErrors.password = 'Password must contain uppercase, lowercase, and number';
     }
     
-    // Confirm password validation
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
     
-    // Terms validation
     if (!formData.agreeTerms) {
       newErrors.agreeTerms = 'You must agree to the terms and conditions';
     }
@@ -176,315 +166,258 @@
   });
 </script>
 
-<svelte:head>
-  <title>Sign Up - Lezie</title>
-</svelte:head>
+<!-- Header slot content -->
+{#snippet header()}
+  <h1 class="text-2xl font-bold text-gray-800">Create an account</h1>
+  <p class="text-gray-500 mt-1">Join Lezie and start making your community safer</p>
+{/snippet}
 
-<div class="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-2xl w-full space-y-8 bg-white rounded-2xl shadow-xl p-8">
-    <div class="text-center">
-      <div class="mx-auto w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mb-4">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2L3 7L12 12L21 7L12 2Z" stroke="white" stroke-width="1.5" fill="none"/>
-          <path d="M3 12L12 17L21 12M3 17L12 22L21 17" stroke="white" stroke-width="1.5" fill="none"/>
-        </svg>
+<!-- Footer slot content -->
+{#snippet footer()}
+  <p class="text-sm text-gray-500">
+    Already have an account?
+    <a href="/auth/login" class="text-blue-500 font-medium hover:underline">Sign in</a>
+  </p>
+{/snippet}
+
+<!-- Main form content using your global CSS classes -->
+<div class="auth-form">
+  {#if errors.submit}
+    <div class="auth-alert-error">
+      <AlertCircle size={20} />
+      <span>{errors.submit}</span>
+    </div>
+  {/if}
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Surname -->
+    <div class="auth-form-group">
+      <label for="surname" class="auth-label">Surname *</label>
+      <div class="auth-input-wrapper">
+        <User size={18} class="auth-input-icon" />
+        <input
+          type="text"
+          id="surname"
+          placeholder="Doe"
+          bind:value={formData.surname}
+          class="auth-input {errors.surname ? 'input-error' : ''}"
+        />
       </div>
-      <h2 class="text-3xl font-bold text-gray-900">Create an account</h2>
-      <p class="mt-2 text-gray-600">Join Lezie and start making your community safer</p>
+      {#if errors.surname}
+        <span class="auth-error-message">{errors.surname}</span>
+      {/if}
     </div>
 
-    <form onsubmit={handleSubmit} class="mt-8 space-y-6">
-      {#if errors.submit}
-        <div class="flex items-center gap-2 px-4 py-3 bg-red-50 text-red-600 rounded-xl border border-red-200">
-          <AlertCircle size={20} />
-          <span class="text-sm">{errors.submit}</span>
-        </div>
+    <!-- First Name -->
+    <div class="auth-form-group">
+      <label for="firstName" class="auth-label">First Name *</label>
+      <div class="auth-input-wrapper">
+        <User size={18} class="auth-input-icon" />
+        <input
+          type="text"
+          id="firstName"
+          placeholder="John"
+          bind:value={formData.firstName}
+          class="auth-input {errors.firstName ? 'input-error' : ''}"
+        />
+      </div>
+      {#if errors.firstName}
+        <span class="auth-error-message">{errors.firstName}</span>
       {/if}
+    </div>
+  </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Surname -->
-        <div>
-          <label for="surname" class="block text-sm font-medium text-gray-700 mb-1.5">Surname *</label>
-          <div class="relative">
-            <User size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              id="surname"
-              placeholder="Doe"
-              bind:value={formData.surname}
-              class="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                {errors.surname ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-gray-300'}"
-            />
-          </div>
-          {#if errors.surname}
-            <span class="text-xs text-red-500 mt-1 block">{errors.surname}</span>
-          {/if}
-        </div>
+  <!-- Middle Name -->
+  <div class="auth-form-group">
+    <label for="middleName" class="auth-label">Middle Name (Optional)</label>
+    <div class="auth-input-wrapper">
+      <User size={18} class="auth-input-icon" />
+      <input
+        type="text"
+        id="middleName"
+        placeholder="Robert"
+        bind:value={formData.middleName}
+        class="auth-input"
+      />
+    </div>
+  </div>
 
-        <!-- First Name -->
-        <div>
-          <label for="firstName" class="block text-sm font-medium text-gray-700 mb-1.5">First Name *</label>
-          <div class="relative">
-            <User size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              id="firstName"
-              placeholder="John"
-              bind:value={formData.firstName}
-              class="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                {errors.firstName ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-gray-300'}"
-            />
-          </div>
-          {#if errors.firstName}
-            <span class="text-xs text-red-500 mt-1 block">{errors.firstName}</span>
-          {/if}
-        </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Date of Birth -->
+    <div class="auth-form-group">
+      <label for="dateOfBirth" class="auth-label">Date of Birth *</label>
+      <div class="auth-input-wrapper">
+        <Calendar size={18} class="auth-input-icon" />
+        <input
+          type="date"
+          id="dateOfBirth"
+          bind:value={formData.dateOfBirth}
+          class="auth-input {errors.dateOfBirth ? 'input-error' : ''}"
+        />
       </div>
+      {#if errors.dateOfBirth}
+        <span class="auth-error-message">{errors.dateOfBirth}</span>
+      {/if}
+    </div>
 
-      <!-- Middle Name -->
-      <div>
-        <label for="middleName" class="block text-sm font-medium text-gray-700 mb-1.5">Middle Name (Optional)</label>
-        <div class="relative">
-          <User size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            id="middleName"
-            placeholder="Robert"
-            bind:value={formData.middleName}
-            class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-300"
-          />
-        </div>
+    <!-- Gender -->
+    <div class="auth-form-group">
+      <label for="gender" class="auth-label">Gender *</label>
+      <div class="auth-input-wrapper">
+        <Users size={18} class="auth-input-icon" />
+        <select
+          id="gender"
+          bind:value={formData.gender}
+          class="auth-input {errors.gender ? 'input-error' : ''}"
+        >
+          <option value="">Select gender</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="non-binary">Non-binary</option>
+          <option value="prefer-not-to-say">Prefer not to say</option>
+        </select>
       </div>
+      {#if errors.gender}
+        <span class="auth-error-message">{errors.gender}</span>
+      {/if}
+    </div>
+  </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Date of Birth -->
-        <div>
-          <label for="dateOfBirth" class="block text-sm font-medium text-gray-700 mb-1.5">Date of Birth *</label>
-          <div class="relative">
-            <Calendar size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="date"
-              id="dateOfBirth"
-              bind:value={formData.dateOfBirth}
-              class="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                {errors.dateOfBirth ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-gray-300'}"
-            />
-          </div>
-          {#if errors.dateOfBirth}
-            <span class="text-xs text-red-500 mt-1 block">{errors.dateOfBirth}</span>
-          {/if}
-        </div>
+  <!-- Phone -->
+  <div class="auth-form-group">
+    <label for="phone" class="auth-label">Phone Number *</label>
+    <div class="auth-input-wrapper">
+      <Phone size={18} class="auth-input-icon" />
+      <input
+        type="tel"
+        id="phone"
+        placeholder="+1 234 567 8900"
+        bind:value={formData.phone}
+        class="auth-input {errors.phone ? 'input-error' : ''}"
+      />
+    </div>
+    {#if errors.phone}
+      <span class="auth-error-message">{errors.phone}</span>
+    {/if}
+  </div>
 
-        <!-- Gender -->
-        <div>
-          <label for="gender" class="block text-sm font-medium text-gray-700 mb-1.5">Gender *</label>
-          <div class="relative">
-            <Users size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <select
-              id="gender"
-              bind:value={formData.gender}
-              class="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                {errors.gender ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-gray-300'}"
-            >
-              <option value="">Select gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="non-binary">Non-binary</option>
-              <option value="prefer-not-to-say">Prefer not to say</option>
-            </select>
-          </div>
-          {#if errors.gender}
-            <span class="text-xs text-red-500 mt-1 block">{errors.gender}</span>
-          {/if}
-        </div>
-      </div>
+  <!-- Email -->
+  <div class="auth-form-group">
+    <label for="email" class="auth-label">Email Address *</label>
+    <div class="auth-input-wrapper">
+      <Mail size={18} class="auth-input-icon" />
+      <input
+        type="email"
+        id="email"
+        placeholder="you@example.com"
+        bind:value={formData.email}
+        class="auth-input {errors.email ? 'input-error' : ''}"
+      />
+    </div>
+    {#if errors.email}
+      <span class="auth-error-message">{errors.email}</span>
+    {/if}
+  </div>
 
-      <!-- Phone -->
-      <div>
-        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1.5">Phone Number *</label>
-        <div class="relative">
-          <Phone size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="tel"
-            id="phone"
-            placeholder="+1 234 567 8900"
-            bind:value={formData.phone}
-            class="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-              {errors.phone ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-gray-300'}"
-          />
-        </div>
-        {#if errors.phone}
-          <span class="text-xs text-red-500 mt-1 block">{errors.phone}</span>
-        {/if}
-      </div>
-
-      <!-- Email -->
-      <div>
-        <label for="email" class="block text-sm font-medium text-gray-700 mb-1.5">Email Address *</label>
-        <div class="relative">
-          <Mail size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="email"
-            id="email"
-            placeholder="you@example.com"
-            bind:value={formData.email}
-            class="w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-              {errors.email ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-gray-300'}"
-          />
-        </div>
-        {#if errors.email}
-          <span class="text-xs text-red-500 mt-1 block">{errors.email}</span>
-        {/if}
-      </div>
-
-      <!-- Password -->
-      <div>
-        <label for="password" class="block text-sm font-medium text-gray-700 mb-1.5">Password *</label>
-        <div class="relative">
-          <Lock size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type={showPassword ? 'text' : 'password'}
-            id="password"
-            placeholder="••••••••"
-            bind:value={formData.password}
-            class="w-full pl-10 pr-12 py-2.5 border rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-              {errors.password ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-gray-300'}"
-          />
-          <button
-            type="button"
-            class="absolute right-3 top-1/2 -translate-y-1/2"
-            onclick={() => showPassword = !showPassword}
-            aria-label="Toggle password visibility"
-          >
-            {#if showPassword}
-              <EyeOff size={18} class="text-gray-400 hover:text-gray-600" />
-            {:else}
-              <Eye size={18} class="text-gray-400 hover:text-gray-600" />
-            {/if}
-          </button>
-        </div>
-        {#if errors.password}
-          <span class="text-xs text-red-500 mt-1 block">{errors.password}</span>
-        {:else}
-          <div class="flex flex-wrap gap-3 mt-2">
-            <span class="text-xs flex items-center gap-1 {formData.password.length >= 8 ? 'text-emerald-500' : 'text-gray-400'}">
-              <Check size={12} /> 8+ characters
-            </span>
-            <span class="text-xs flex items-center gap-1 {/(?=.*[a-z])/.test(formData.password) ? 'text-emerald-500' : 'text-gray-400'}">
-              <Check size={12} /> Lowercase
-            </span>
-            <span class="text-xs flex items-center gap-1 {/(?=.*[A-Z])/.test(formData.password) ? 'text-emerald-500' : 'text-gray-400'}">
-              <Check size={12} /> Uppercase
-            </span>
-            <span class="text-xs flex items-center gap-1 {/(?=.*\d)/.test(formData.password) ? 'text-emerald-500' : 'text-gray-400'}">
-              <Check size={12} /> Number
-            </span>
-          </div>
-        {/if}
-      </div>
-
-      <!-- Confirm Password -->
-      <div>
-        <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1.5">Confirm Password *</label>
-        <div class="relative">
-          <Lock size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type={showConfirmPassword ? 'text' : 'password'}
-            id="confirmPassword"
-            placeholder="••••••••"
-            bind:value={formData.confirmPassword}
-            class="w-full pl-10 pr-12 py-2.5 border rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-              {errors.confirmPassword ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-gray-300'}"
-          />
-          <button
-            type="button"
-            class="absolute right-3 top-1/2 -translate-y-1/2"
-            onclick={() => showConfirmPassword = !showConfirmPassword}
-            aria-label="Toggle confirm password visibility"
-          >
-            {#if showConfirmPassword}
-              <EyeOff size={18} class="text-gray-400 hover:text-gray-600" />
-            {:else}
-              <Eye size={18} class="text-gray-400 hover:text-gray-600" />
-            {/if}
-          </button>
-        </div>
-        {#if errors.confirmPassword}
-          <span class="text-xs text-red-500 mt-1 block">{errors.confirmPassword}</span>
-        {/if}
-      </div>
-
-      <!-- Terms Checkbox -->
-      <div>
-        <label class="flex items-start gap-2.5 cursor-pointer">
-          <input
-            type="checkbox"
-            bind:checked={formData.agreeTerms}
-            class="mt-0.5 rounded border-gray-300 text-blue-500 focus:ring-blue-500 cursor-pointer"
-          />
-          <span class="text-sm text-gray-600">
-            I agree to the
-            <a href="/terms" class="text-blue-500 hover:underline font-medium">Terms of Service</a>
-            and
-            <a href="/privacy" class="text-blue-500 hover:underline font-medium">Privacy Policy</a>
-          </span>
-        </label>
-        {#if errors.agreeTerms}
-          <span class="text-xs text-red-500 mt-1 block">{errors.agreeTerms}</span>
-        {/if}
-      </div>
-
-      <!-- Submit Button -->
-      <button
-        type="submit"
-        disabled={isLoading}
-        class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-white font-semibold text-sm
-          bg-linear-to-r from-blue-500 to-blue-600 shadow-md
-          hover:-translate-y-0.5 hover:shadow-blue-200 hover:shadow-lg
-          disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none
-          transition-all duration-200"
-      >
-        {#if isLoading}
-          <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-          Creating account...
-        {:else}
-          Sign Up
-          <ArrowRight size={16} />
-        {/if}
-      </button>
-
-      <!-- Divider -->
-      <div class="relative text-center">
-        <div class="absolute inset-0 flex items-center">
-          <div class="w-full border-t border-gray-200"></div>
-        </div>
-        <span class="relative bg-white px-4 text-sm text-gray-400">or continue with</span>
-      </div>
-
-      <!-- Google Signup -->
+  <!-- Password -->
+  <div class="auth-form-group">
+    <label for="password" class="auth-label">Password *</label>
+    <div class="auth-input-wrapper">
+      <Lock size={18} class="auth-input-icon" />
+      <input
+        type={showPassword ? 'text' : 'password'}
+        id="password"
+        placeholder="••••••••"
+        bind:value={formData.password}
+        class="auth-input auth-input-has-toggle {errors.password ? 'input-error' : ''}"
+      />
       <button
         type="button"
-        onclick={handleGoogleSignup}
-        disabled={isLoading}
-        class="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg border border-gray-200 bg-white
-          text-sm font-medium text-gray-700
-          hover:border-blue-400 hover:bg-gray-50
-          disabled:opacity-70 disabled:cursor-not-allowed
-          transition-all duration-200"
+        class="auth-toggle-password"
+        onclick={() => showPassword = !showPassword}
+        aria-label="Toggle password visibility"
       >
-        <svg width="20" height="20" viewBox="0 0 24 24">
-          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-        </svg>
-        Sign up with Google
+        {#if showPassword}
+          <EyeOff size={18} />
+        {:else}
+          <Eye size={18} />
+        {/if}
       </button>
-
-      <p class="text-center text-sm text-gray-500">
-        Already have an account?
-        <a href="/auth/login" class="text-blue-500 font-medium hover:underline">Sign in</a>
-      </p>
-    </form>
+    </div>
+    {#if errors.password}
+      <span class="auth-error-message">{errors.password}</span>
+    {:else}
+      <div class="auth-password-hints">
+        <span class="auth-password-hint {formData.password.length >= 8 ? 'hint-valid' : ''}">✓ 8+ characters</span>
+        <span class="auth-password-hint {/(?=.*[a-z])/.test(formData.password) ? 'hint-valid' : ''}">✓ Lowercase</span>
+        <span class="auth-password-hint {/(?=.*[A-Z])/.test(formData.password) ? 'hint-valid' : ''}">✓ Uppercase</span>
+        <span class="auth-password-hint {/(?=.*\d)/.test(formData.password) ? 'hint-valid' : ''}">✓ Number</span>
+      </div>
+    {/if}
   </div>
+
+  <!-- Confirm Password -->
+  <div class="auth-form-group">
+    <label for="confirmPassword" class="auth-label">Confirm Password *</label>
+    <div class="auth-input-wrapper">
+      <Lock size={18} class="auth-input-icon" />
+      <input
+        type={showConfirmPassword ? 'text' : 'password'}
+        id="confirmPassword"
+        placeholder="••••••••"
+        bind:value={formData.confirmPassword}
+        class="auth-input auth-input-has-toggle {errors.confirmPassword ? 'input-error' : ''}"
+      />
+      <button
+        type="button"
+        class="auth-toggle-password"
+        onclick={() => showConfirmPassword = !showConfirmPassword}
+        aria-label="Toggle confirm password visibility"
+      >
+        {#if showConfirmPassword}
+          <EyeOff size={18} />
+        {:else}
+          <Eye size={18} />
+        {/if}
+      </button>
+    </div>
+    {#if errors.confirmPassword}
+      <span class="auth-error-message">{errors.confirmPassword}</span>
+    {/if}
+  </div>
+
+  <!-- Terms Checkbox -->
+  <div class="auth-checkbox-group">
+    <label class="auth-checkbox-label">
+      <input
+        type="checkbox"
+        bind:checked={formData.agreeTerms}
+      />
+      <span>
+        I agree to the
+        <a href="/terms" class="auth-link">Terms of Service</a>
+        and
+        <a href="/privacy" class="auth-link">Privacy Policy</a>
+      </span>
+    </label>
+    {#if errors.agreeTerms}
+      <span class="auth-error-message">{errors.agreeTerms}</span>
+    {/if}
+  </div>
+
+  <!-- Submit Button -->
+  <button
+    type="submit"
+    disabled={isLoading}
+    class="auth-btn-submit"
+    onclick={handleSubmit}
+  >
+    {#if isLoading}
+      <span class="auth-spinner"></span>
+      Creating account...
+    {:else}
+      Sign Up
+      <ArrowRight size={16} />
+    {/if}
+  </button>
 </div>

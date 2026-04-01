@@ -2,7 +2,9 @@
   import { onMount } from 'svelte';
   import { resolve } from '$app/paths';
   
-  let isVisible = false;
+  let isVisible = $state(false);
+  
+  let { children } = $props();
   
   onMount(() => {
     isVisible = true;
@@ -30,21 +32,21 @@
           </svg>
           <span>Lezie</span>
         </a>
-        <slot name="header" />
       </div>
       
       <div class="auth-content">
-        <slot />
+        <!-- Render default children -->
+        {@render children()}
       </div>
       
       <div class="auth-footer">
-        <slot name="footer" />
       </div>
     </div>
   </div>
 </div>
 
 <style>
+  /* Auth-specific styles that complement your global layout.css */
   .auth-layout {
     min-height: 100vh;
     position: relative;
