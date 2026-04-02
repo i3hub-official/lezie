@@ -85,7 +85,7 @@
 
   <p class="text-sm text-gray-500">
     Don't have an account?
-    <a href="/auth/signup" class="text-blue-500 font-medium hover:underline">Create account</a>
+    <a href="/auth/signup" class="auth-link text-sm font-medium hover:underline">Create account</a>
   </p>
 
 <!-- Main form content -->

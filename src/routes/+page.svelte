@@ -33,6 +33,9 @@
       { threshold: 0.1 }
     );
     document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+    
+    // Cleanup
+    return () => observer.disconnect();
   });
 
   const scrollToSection = (id: string) => {
@@ -44,22 +47,15 @@
 <svelte:head>
   <title>Lezie - Community Safety Platform</title>
   <meta name="description" content="Empower your community with real-time safety alerts, incident reporting, and AI-powered threat detection." />
-  <meta property="og:title" content="Lezie - Community Safety Platform" />
-  <meta property="og:type" content="website" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </svelte:head>
 
 <!-- ── NAV ─────────────────────────────────────────────────── -->
 <nav class="lz-nav">
   <div class="lz-nav-inner">
- <button type="button" class="lz-logo" onclick={() => scrollToSection('home')}>
-     <!-- <img 
-      src="/src/lib/assets/lz_logo_2.png" 
-      alt="Lezie Logo"
-      width="96" 
-      height="96"
-    /> -->
-   <span class="lz-logo-text">Lezie</span>
-</button>
+    <button type="button" class="lz-logo" onclick={() => scrollToSection('home')}>
+      <span class="lz-logo-text">Lezie</span>
+    </button>
 
     <button class="lz-hamburger" onclick={() => isMenuOpen = !isMenuOpen} aria-label="Toggle menu">
       {#if isMenuOpen}
@@ -133,7 +129,12 @@
         <span class="lz-live-dot"></span>
         <span style="font-size:.75rem;color:var(--primary-color);font-weight:600">Live</span>
       </div>
-      <div class="lz-map-grid" id="mapGrid"></div>
+      <div class="lz-map-grid" id="mapGrid">
+        <!-- Generate map grid dynamically -->
+        {#each Array(54) as _, i}
+          <div class="lz-mc {i % 7 === 0 ? 'h' : (i % 5 === 0 ? 'w' : '')}"></div>
+        {/each}
+      </div>
       <div class="lz-map-pins">
         <div class="lz-pin p1"></div>
         <div class="lz-pin p2"></div>
@@ -311,14 +312,9 @@
         <p class="lz-foot-desc">Making communities safer through technology and collective action.</p>
         <div class="lz-socials">
           <button type="button" class="lz-soc" aria-label="X / Twitter">
-            <svg
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 24 24"
-  fill="currentColor"
-  class="w-4 h-4"
->
-  <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53A4.48 4.48 0 0 0 22.4.36a9.06 9.06 0 0 1-2.88 1.1 4.52 4.52 0 0 0-7.72 4.12 12.84 12.84 0 0 1-9.32-4.73 4.52 4.52 0 0 0 1.4 6.03 4.48 4.48 0 0 1-2.05-.57v.06a4.53 4.53 0 0 0 3.63 4.43 4.52 4.52 0 0 1-2.04.08 4.53 4.53 0 0 0 4.22 3.15A9.05 9.05 0 0 1 1 19.54a12.8 12.8 0 0 0 6.92 2.03c8.3 0 12.84-6.88 12.84-12.85 0-.2 0-.39-.02-.58A9.22 9.22 0 0 0 23 3z"/>
-</svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+              <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53A4.48 4.48 0 0 0 22.4.36a9.06 9.06 0 0 1-2.88 1.1 4.52 4.52 0 0 0-7.72 4.12 12.84 12.84 0 0 1-9.32-4.73 4.52 4.52 0 0 0 1.4 6.03 4.48 4.48 0 0 1-2.05-.57v.06a4.53 4.53 0 0 0 3.63 4.43 4.52 4.52 0 0 1-2.04.08 4.53 4.53 0 0 0 4.22 3.15A9.05 9.05 0 0 1 1 19.54a12.8 12.8 0 0 0 6.92 2.03c8.3 0 12.84-6.88 12.84-12.85 0-.2 0-.39-.02-.58A9.22 9.22 0 0 0 23 3z"/>
+            </svg>
           </button>
           <button type="button" class="lz-soc" aria-label="Discord">
             <MessageCircle size={15} />
