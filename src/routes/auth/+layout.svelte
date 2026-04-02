@@ -27,12 +27,13 @@
     <div class="auth-card">
       <div class="auth-header">
         <a href={resolve('/')} class="logo">
-          <svg width="40" height="40" viewBox="0 0 32 32" fill="none">
-            <path d="M16 2L2 9L16 16L30 9L16 2Z" fill="#3B82F6" stroke="#2563EB" stroke-width="1.5"/>
-            <path d="M2 9V23L16 30L30 23V9" stroke="#2563EB" stroke-width="1.5" fill="none"/>
-            <path d="M16 16V30" stroke="#2563EB" stroke-width="1.5"/>
-          </svg>
-          <span>Lezie</span>
+          <img 
+          src="/src/lib/assets/lz_ico.png"
+          alt="Lezie Logo"
+          width="96"
+          height="96"
+          />
+          <!-- <span>Lezie</span> -->
         </a>
       </div>
       
