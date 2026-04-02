@@ -52,15 +52,13 @@
 <nav class="lz-nav">
   <div class="lz-nav-inner">
  <button type="button" class="lz-logo" onclick={() => scrollToSection('home')}>
- 
-    <img 
+     <img 
       src="/src/lib/assets/lz_ico.png" 
       alt="Lezie Logo"
       width="64" 
       height="64"
     />
-  
-  <span class="lz-logo-text">Lezie</span>
+   <span class="lz-logo-text">Lezie</span>
 </button>
 
     <button class="lz-hamburger" onclick={() => isMenuOpen = !isMenuOpen} aria-label="Toggle menu">
