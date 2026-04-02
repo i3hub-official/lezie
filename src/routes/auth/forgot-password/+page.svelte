@@ -137,12 +137,4 @@
       </a>
     </div>
   {/if}
-
-  <!-- Footer -->
-  <div class="mt-6 text-sm text-gray-500 text-center">
-    Remember your password?
-    <a href="/auth/signin" class="text-blue-500 font-medium hover:underline">
-      Sign in
-    </a>
-  </div>
 </div>

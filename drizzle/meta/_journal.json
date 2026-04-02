@@ -15,6 +15,13 @@
       "when": 1773643452683,
       "tag": "0001_first_magus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775085465238,
+      "tag": "0002_cheerful_texas_twister",
+      "breakpoints": true
     }
   ]
 }

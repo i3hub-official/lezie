@@ -1,6 +1,5 @@
 // src/lib/server/db/schema.ts
 
-
 import { 
   pgTable, 
   pgEnum,
@@ -85,8 +84,8 @@ export const userProfiles = pgTable('user_profiles', {
   index('user_profiles_city_idx').on(table.city),
   index('user_profiles_country_idx').on(table.country),
   
-  // GiST index for geospatial queries on location
-  index('user_profiles_location_idx').using('gist', sql`${table.location}::geography`),
+  // GiST index for geospatial queries on location - Fixed :: syntax
+  index('user_profiles_location_idx').using('gist', sql`${table.location}::text`),
 ]);
 
 // Categories
@@ -155,10 +154,10 @@ export const reports = pgTable('reports', {
   index('reports_status_created_idx').on(table.statusId, table.createdAt),
   index('reports_category_severity_idx').on(table.categoryId, table.severity),
   
-  // GiST index for geospatial queries - CRITICAL for nearby incident search
-  index('reports_location_idx').using('gist', sql`${table.location}::geography`),
+  // GiST index for geospatial queries - Fixed :: syntax
+  index('reports_location_idx').using('gist', sql`${table.location}::text`),
   
-  // Full-text search index
+  // Full-text search index - Fixed :: syntax
   index('reports_title_search_idx').using('gin', sql`to_tsvector('english', ${table.title})`),
   index('reports_description_search_idx').using('gin', sql`to_tsvector('english', ${table.description})`),
 ]);
@@ -321,8 +320,8 @@ export const savedLocations = pgTable('saved_locations', {
   index('saved_locations_user_home_idx').on(table.userId, table.isHome),
   index('saved_locations_user_work_idx').on(table.userId, table.isWork),
   
-  // GiST index for geospatial queries
-  index('saved_locations_location_idx').using('gist', sql`${table.location}::geography`),
+  // GiST index for geospatial queries - Fixed :: syntax
+  index('saved_locations_location_idx').using('gist', sql`${table.location}::text`),
 ]);
 
 // ==================== RELATIONS ====================
