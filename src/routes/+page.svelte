@@ -73,7 +73,7 @@
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('features')}>Features</button>
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('how-it-works')}>How it works</button>
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('safety-tips')}>Safety tips</button>
-      <a href="/dashboard" class="lz-nav-cta">Dashboard</a>
+      <a href="/auth/signin" class="lz-nav-cta">Report an incident</a>
     </div>
   </div>
 </nav>

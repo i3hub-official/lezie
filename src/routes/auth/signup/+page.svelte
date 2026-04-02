@@ -140,7 +140,7 @@
       }
       
       await authStore.login(formData.email, formData.password);
-      goto('/dashboard');
+      goto('/auth/signin');
     } catch (error: unknown) {
       errors.submit = error instanceof Error ? error.message : 'An error occurred';
     } finally {
