@@ -52,12 +52,12 @@
 <nav class="lz-nav">
   <div class="lz-nav-inner">
  <button type="button" class="lz-logo" onclick={() => scrollToSection('home')}>
-     <img 
-      src="/src/lib/assets/lz_ico.png" 
+     <!-- <img 
+      src="/src/lib/assets/lz_logo_2.png" 
       alt="Lezie Logo"
-      width="64" 
-      height="64"
-    />
+      width="96" 
+      height="96"
+    /> -->
    <span class="lz-logo-text">Lezie</span>
 </button>
 
