@@ -51,16 +51,17 @@
 <!-- ── NAV ─────────────────────────────────────────────────── -->
 <nav class="lz-nav">
   <div class="lz-nav-inner">
-    <button type="button" class="lz-logo" onclick={() => scrollToSection('home')}>
-      <div class="lz-logo-mark">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".95"/>
-          <path d="M1 4.5V11.5L8 15L15 11.5V4.5" stroke="white" stroke-opacity=".6" stroke-width="1.2" fill="none"/>
-          <circle cx="8" cy="8.5" r="1.3" fill="white" fill-opacity=".4"/>
-        </svg>
-      </div>
-      <span class="lz-logo-text">Lezie</span>
-    </button>
+ <button type="button" class="lz-logo" onclick={() => scrollToSection('home')}>
+ 
+    <img 
+      src="/src/lib/assets/lz_ico.png" 
+      alt="Lezie Logo"
+      width="64" 
+      height="64"
+    />
+  
+  <span class="lz-logo-text">Lezie</span>
+</button>
 
     <button class="lz-hamburger" onclick={() => isMenuOpen = !isMenuOpen} aria-label="Toggle menu">
       {#if isMenuOpen}
