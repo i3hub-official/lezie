@@ -264,10 +264,12 @@ Siren,
   <div class="lz-container">
     <div class="lz-report-grid">
       <div class="animate-on-scroll">
-        <span class="lz-tag" style="display: inline-flex; align-items: center; gap: 0.375rem;">
-  <Siren size={14} style="color:var(--primary-color); flex-shrink: 0;" />
-  Make a difference
-</span>
+        <div style="text-align: center;">
+  <span class="lz-tag" style="display: inline-flex; align-items: center; gap: 0.375rem;">
+    <Siren size={14} style="color:var(--primary-color); flex-shrink: 0;" />
+    Make a difference
+  </span>
+</div>
         <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1rem;">Report an incident in seconds</h2>
         <p style="color: var(--gray-color); margin-bottom: 1.5rem;">Your report can prevent crime, alert neighbours, and help authorities respond faster. Every incident — big or small — makes the community safer.</p>
 
