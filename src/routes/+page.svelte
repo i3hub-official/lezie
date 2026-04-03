@@ -22,6 +22,9 @@
     MessageCircle,
     X,
     Menu,
+    Clock,
+    Upload,
+    CheckCircle,
   } from 'lucide-svelte';
 
   // Fix: Use $state() for reactive variable
@@ -50,6 +53,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </svelte:head>
 
+<!-- ── FLOATING ACTION BUTTON (STRATEGIC REPORT INCIDENT) ── -->
+<a href="/report" class="lz-fab" aria-label="Report an incident">
+  <FlagTriangleRight size={20} />
+  <span>Report incident</span>
+</a>
+
 <!-- ── NAV ─────────────────────────────────────────────────── -->
 <nav class="lz-nav">
   <div class="lz-nav-inner">
@@ -69,7 +78,7 @@
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('features')}>Features</button>
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('how-it-works')}>How it works</button>
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('safety-tips')}>Safety tips</button>
-      <a href="/auth/signin" class="lz-nav-cta">Report an incident</a>
+      <a href="/report" class="lz-nav-cta">Report an incident</a>
     </div>
   </div>
 </nav>
@@ -101,6 +110,10 @@
         <PlayCircle size={16} />
         See how it works
       </button>
+      <a href="/report" class="lz-btn-outline">
+        <FlagTriangleRight size={16} />
+        Report incident
+      </a>
     </div>
 
     <div class="lz-stats animate-on-scroll">
@@ -144,6 +157,12 @@
         <div class="lz-leg-item"><span class="lz-leg-dot" style="background:var(--primary-color)"></span>Active</div>
         <div class="lz-leg-item"><span class="lz-leg-dot" style="background:var(--primary-light)"></span>Recent</div>
         <div class="lz-leg-item"><span class="lz-leg-dot" style="background:var(--primary-bg)"></span>Monitored</div>
+      </div>
+      <div class="lz-map-report">
+        <a href="/report" class="lz-map-report-btn">
+          <FlagTriangleRight size={14} />
+          Report incident on this map
+        </a>
       </div>
     </div>
   </div>
@@ -235,6 +254,73 @@
   </div>
 </section>
 
+<!-- ── REPORT INCIDENT STRATEGIC SECTION ───────────────────── -->
+<section id="report-incident" class="lz-section lz-report-hero">
+  <div class="lz-container">
+    <div class="lz-report-grid">
+      <div class="lz-report-content animate-on-scroll">
+        <span class="lz-tag lz-tag-report">📢 Make a difference</span>
+        <h2>Report an incident in seconds</h2>
+        <p>Your report can prevent crime, alert neighbours, and help authorities respond faster. Every incident — big or small — makes the community safer.</p>
+        
+        <div class="lz-report-features">
+          <div class="lz-report-feat">
+            <Upload size={18} style="color:var(--primary-color)" />
+            <span>Add photos & videos</span>
+          </div>
+          <div class="lz-report-feat">
+            <MapPin size={18} style="color:var(--primary-color)" />
+            <span>Precise location tagging</span>
+          </div>
+          <div class="lz-report-feat">
+            <EyeOff size={18} style="color:var(--primary-color)" />
+            <span>Anonymous reporting option</span>
+          </div>
+          <div class="lz-report-feat">
+            <Clock size={18} style="color:var(--primary-color)" />
+            <span>Less than 60 seconds</span>
+          </div>
+        </div>
+
+        <div class="lz-report-buttons">
+          <a href="/report" class="lz-btn-primary lz-btn-lg">
+            <FlagTriangleRight size={18} />
+            Report an incident now
+            <ArrowRight size={16} />
+          </a>
+          <a href="/demo" class="lz-btn-secondary">
+            <PlayCircle size={16} />
+            See example report
+          </a>
+        </div>
+      </div>
+
+      <div class="lz-report-card animate-on-scroll">
+        <div class="lz-report-card-header">
+          <div class="lz-report-card-icon"><FlagTriangleRight size={20} /></div>
+          <div>
+            <div class="lz-report-card-title">Quick incident report</div>
+            <div class="lz-report-card-sub">What would you like to report?</div>
+          </div>
+        </div>
+        <div class="lz-report-card-types">
+          <div class="lz-report-type">Suspicious person</div>
+          <div class="lz-report-type">Vandalism</div>
+          <div class="lz-report-type">Theft</div>
+          <div class="lz-report-type">Accident</div>
+          <div class="lz-report-type">Noise complaint</div>
+          <div class="lz-report-type">Other</div>
+        </div>
+        <div class="lz-report-card-note">
+          <CheckCircle size={14} />
+          <span>Verified reports get community alerts within minutes</span>
+        </div>
+        <a href="/report" class="lz-report-card-btn">Start reporting →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ── SAFETY TIPS ────────────────────────────────────────── -->
 <section id="safety-tips" class="lz-section lz-section-alt">
   <div class="lz-container">
@@ -289,6 +375,10 @@
         <a href="/auth/signup" class="lz-btn-primary lz-btn-lg">
           Get started for free
           <ArrowRight size={16} />
+        </a>
+        <a href="/report" class="lz-btn-outline lz-btn-lg">
+          <FlagTriangleRight size={16} />
+          Report an incident
         </a>
       </div>
     </div>
