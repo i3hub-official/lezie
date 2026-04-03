@@ -18,17 +18,17 @@ export default defineConfig({
 				display: 'standalone',
 				icons: [
 					{
-						src: 'icons/lz_ico_192.png', // Updated path
+						src: 'icons/lz_ico.png', // Updated path
 						sizes: '192x192',
 						type: 'image/png'
 					},
 					{
-						src: 'icons/lz_ico_512.png', // Updated path
+						src: 'icons/lz_ico.png', // Updated path
 						sizes: '512x512',
 						type: 'image/png'
 					},
 					{
-						src: 'icons/lz_ico_512.png',
+						src: 'icons/lz_ico.png',
 						sizes: '512x512',
 						type: 'image/png',
 						purpose: 'maskable'
