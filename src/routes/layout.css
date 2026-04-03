@@ -1146,14 +1146,3 @@ main {
     display: inline-flex;
   }
 }
-
-@media (max-width: 768px) {
-  .lz-map-card > div:first-child {
-    justify-content: center;
-    text-align: center;
-  }
-
-  .lz-map-card > div:first-child > div:last-child {
-    text-align: left;
-  }
-}
