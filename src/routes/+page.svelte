@@ -116,10 +116,6 @@
         <PlayCircle size={16} />
         See how it works
       </button>
-      <a href="/auth/signin" class="lz-btn-outline">
-        <FlagTriangleRight size={16} />
-        Report incident
-      </a>
     </div>
 
     <div class="lz-stats animate-on-scroll">
