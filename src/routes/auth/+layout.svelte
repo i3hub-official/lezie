@@ -28,7 +28,7 @@
       <div class="auth-header">
         <a href={resolve('/')} class="logo">
           <img 
-          src="/src/lib/assets/lz_ico.png"
+          src="/icons/lz_ico.png"
           alt="Lezie Logo"
           width="96"
           height="96"
