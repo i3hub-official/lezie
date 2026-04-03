@@ -1,6 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
-import { SvelteKitPWA } from '@vite-pwa/sveltekit'; // [!] Add this
+import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -13,25 +13,32 @@ export default defineConfig({
 				name: 'Lezie Safety Network',
 				short_name: 'Lezie',
 				description: 'Real-time incident reporting and identity monitoring.',
-				theme_color: '#6d28d9', // Your brand violet
+				theme_color: '#6d28d9',
 				background_color: '#ffffff',
 				display: 'standalone',
 				icons: [
 					{
-						src: 'lz_ico_192.png',
+						src: 'icons/lz_ico_192.png', // Updated path
 						sizes: '192x192',
 						type: 'image/png'
 					},
 					{
-						src: 'lz_ico_512.png',
+						src: 'icons/lz_ico_512.png', // Updated path
 						sizes: '512x512',
 						type: 'image/png'
 					},
 					{
-						src: 'lz_ico_512.png',
+						src: 'icons/lz_ico_512.png',
 						sizes: '512x512',
 						type: 'image/png',
 						purpose: 'maskable'
+					}
+				]
+			}
+		})
+	]
+});
+
 					}
 				]
 			}
