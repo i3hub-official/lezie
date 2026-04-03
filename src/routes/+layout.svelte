@@ -8,15 +8,20 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href="/icons/lz_ico.png" />
+    <link rel="icon" href="/icons/lz_ico.png" />
 
-	{@html pwaInfo?.webManifest.linkTag}
+    {@html pwaInfo?.webManifest.linkTag}
 
-	<meta name="theme-color" content="#6d28d9" />
-	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-	
-	<title>Lezie | Real-Time Safety & Monitoring</title>
-	<meta name="description" content="Proactive community safety and identity protection." />
+    <!-- iOS PWA support -->
+    <link rel="apple-touch-icon" href="/icons/lz_ico.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Lezie">
+
+    <meta name="theme-color" content="#6d28d9" />
+
+    <title>Lezie | Real-Time Safety & Monitoring</title>
+    <meta name="description" content="Proactive community safety and identity protection." />
 </svelte:head>
 
 <main class="min-h-screen antialiased text-slate-900">
