@@ -22,6 +22,9 @@
     MessageCircle,
     X,
     Menu,
+    Clock,
+    Upload,
+    CheckCircle,
   } from 'lucide-svelte';
 
   // Fix: Use $state() for reactive variable
@@ -49,6 +52,12 @@
   <meta name="description" content="Empower your community with real-time safety alerts, incident reporting, and AI-powered threat detection." />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </svelte:head>
+
+<!-- ── FLOATING ACTION BUTTON (LIKE CHAT BUTTON) ── -->
+<a href="/auth/signin" class="lz-fab" aria-label="Report an incident">
+  <FlagTriangleRight size={20} />
+  <span>Report incident</span>
+</a>
 
 <!-- ── NAV ─────────────────────────────────────────────────── -->
 <nav class="lz-nav">
@@ -101,6 +110,10 @@
         <PlayCircle size={16} />
         See how it works
       </button>
+      <a href="/auth/signin" class="lz-btn-outline">
+        <FlagTriangleRight size={16} />
+        Report incident
+      </a>
     </div>
 
     <div class="lz-stats animate-on-scroll">
@@ -145,6 +158,12 @@
         <div class="lz-leg-item"><span class="lz-leg-dot" style="background:var(--primary-light)"></span>Recent</div>
         <div class="lz-leg-item"><span class="lz-leg-dot" style="background:var(--primary-bg)"></span>Monitored</div>
       </div>
+      <div class="lz-map-report">
+        <a href="/auth/signin" class="lz-map-report-btn">
+          <FlagTriangleRight size={14} />
+          Report incident on this map
+        </a>
+      </div>
     </div>
   </div>
 </section>
@@ -163,6 +182,7 @@
         <div class="lz-feat-icon"><Radio size={22} style="color:var(--primary-color)" /></div>
         <h3>Real-time incident reporting</h3>
         <p>Report incidents instantly with photos, videos, and precise location tracking. Get immediate alerts to nearby community members.</p>
+        <a href="/auth/signin" class="lz-card-link">Report now →</a>
       </div>
       <div class="lz-feat-card animate-on-scroll">
         <div class="lz-feat-icon"><Cpu size={22} style="color:var(--primary-color)" /></div>
@@ -183,6 +203,7 @@
         <div class="lz-feat-icon"><EyeOff size={22} style="color:var(--primary-color)" /></div>
         <h3>Anonymous reporting</h3>
         <p>Report safely and securely with optional anonymity. Your identity remains protected while helping your community stay safe.</p>
+        <a href="/auth/signin" class="lz-card-link">Report anonymously →</a>
       </div>
       <div class="lz-feat-card animate-on-scroll">
         <div class="lz-feat-icon"><BellRing size={22} style="color:var(--primary-color)" /></div>
@@ -211,6 +232,7 @@
         <div class="lz-bdg-row">
           <span class="lz-bdg">"Suspicious activity on Main St"</span>
         </div>
+        <a href="/auth/signin" class="lz-step-link">Start reporting →</a>
       </div>
       <div class="lz-step animate-on-scroll">
         <div class="lz-step-num">2</div>
@@ -230,6 +252,69 @@
         <div class="lz-bdg-row">
           <span class="lz-bdg">Alert sent to 500+ nearby users</span>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── REPORT INCIDENT STRATEGIC SECTION ───────────────────── -->
+<section id="report-incident" class="lz-section lz-report-hero">
+  <div class="lz-container">
+    <div class="lz-report-grid">
+      <div class="lz-report-content animate-on-scroll">
+        <span class="lz-tag lz-tag-report">🚨 Make a difference</span>
+        <h2>Report an incident in seconds</h2>
+        <p>Your report can prevent crime, alert neighbours, and help authorities respond faster. Every incident — big or small — makes the community safer.</p>
+        
+        <div class="lz-report-features">
+          <div class="lz-report-feat">
+            <Upload size={18} style="color:var(--primary-color)" />
+            <span>Add photos & videos</span>
+          </div>
+          <div class="lz-report-feat">
+            <MapPin size={18} style="color:var(--primary-color)" />
+            <span>Precise location tagging</span>
+          </div>
+          <div class="lz-report-feat">
+            <EyeOff size={18} style="color:var(--primary-color)" />
+            <span>Anonymous reporting option</span>
+          </div>
+          <div class="lz-report-feat">
+            <Clock size={18} style="color:var(--primary-color)" />
+            <span>Less than 60 seconds</span>
+          </div>
+        </div>
+
+        <div class="lz-report-buttons">
+          <a href="/auth/signin" class="lz-btn-primary lz-btn-lg">
+            <FlagTriangleRight size={18} />
+            Report an incident now
+            <ArrowRight size={16} />
+          </a>
+        </div>
+      </div>
+
+      <div class="lz-report-card animate-on-scroll">
+        <div class="lz-report-card-header">
+          <div class="lz-report-card-icon"><FlagTriangleRight size={20} /></div>
+          <div>
+            <div class="lz-report-card-title">Quick incident report</div>
+            <div class="lz-report-card-sub">What would you like to report?</div>
+          </div>
+        </div>
+        <div class="lz-report-card-types">
+          <div class="lz-report-type">Suspicious person</div>
+          <div class="lz-report-type">Vandalism</div>
+          <div class="lz-report-type">Theft</div>
+          <div class="lz-report-type">Accident</div>
+          <div class="lz-report-type">Noise complaint</div>
+          <div class="lz-report-type">Other</div>
+        </div>
+        <div class="lz-report-card-note">
+          <CheckCircle size={14} />
+          <span>Verified reports get community alerts within minutes</span>
+        </div>
+        <a href="/auth/signin" class="lz-report-card-btn">Start reporting →</a>
       </div>
     </div>
   </div>
@@ -269,6 +354,7 @@
         <div class="lz-tip-ico"><FlagTriangleRight size={24} style="color:var(--primary-color)" /></div>
         <h3>Report suspicious activity</h3>
         <p>Don't hesitate to report suspicious behaviour. Your report could prevent a crime and help others.</p>
+        <a href="/auth/signin" class="lz-tip-link">Report now →</a>
       </div>
       <div class="lz-tip animate-on-scroll">
         <div class="lz-tip-ico"><PhoneCall size={24} style="color:var(--primary-color)" /></div>
@@ -289,6 +375,10 @@
         <a href="/auth/signup" class="lz-btn-primary lz-btn-lg">
           Get started for free
           <ArrowRight size={16} />
+        </a>
+        <a href="/auth/signin" class="lz-btn-outline lz-btn-lg">
+          <FlagTriangleRight size={16} />
+          Report an incident
         </a>
       </div>
     </div>
@@ -312,9 +402,7 @@
         <p class="lz-foot-desc">Making communities safer through technology and collective action.</p>
         <div class="lz-socials">
           <button type="button" class="lz-soc" aria-label="X / Twitter">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
-              <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53A4.48 4.48 0 0 0 22.4.36a9.06 9.06 0 0 1-2.88 1.1 4.52 4.52 0 0 0-7.72 4.12 12.84 12.84 0 0 1-9.32-4.73 4.52 4.52 0 0 0 1.4 6.03 4.48 4.48 0 0 1-2.05-.57v.06a4.53 4.53 0 0 0 3.63 4.43 4.52 4.52 0 0 1-2.04.08 4.53 4.53 0 0 0 4.22 3.15A9.05 9.05 0 0 1 1 19.54a12.8 12.8 0 0 0 6.92 2.03c8.3 0 12.84-6.88 12.84-12.85 0-.2 0-.39-.02-.58A9.22 9.22 0 0 0 23 3z"/>
-            </svg>
+            <X size={15} />
           </button>
           <button type="button" class="lz-soc" aria-label="Discord">
             <MessageCircle size={15} />
@@ -327,6 +415,7 @@
         <button type="button" class="lz-foot-link" onclick={() => scrollToSection('features')}>Features</button>
         <button type="button" class="lz-foot-link" onclick={() => scrollToSection('how-it-works')}>How it works</button>
         <a href="/dashboard" class="lz-foot-link">Dashboard</a>
+        <a href="/auth/signin" class="lz-foot-link">Report incident</a>
       </div>
 
       <div class="lz-foot-col">
