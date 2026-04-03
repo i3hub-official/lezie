@@ -25,6 +25,7 @@
     Clock,
     Upload,
     CheckCircle,
+    Twitter,
   } from 'lucide-svelte';
 
   // Fix: Use $state() for reactive variable
@@ -54,7 +55,7 @@
 </svelte:head>
 
 <!-- ── FLOATING ACTION BUTTON (STRATEGIC REPORT INCIDENT) ── -->
-<a href="/report" class="lz-fab" aria-label="Report an incident">
+<a href="/auth/signin" class="lz-fab" aria-label="Report an incident">
   <FlagTriangleRight size={20} />
   <span>Report incident</span>
 </a>
@@ -78,7 +79,7 @@
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('features')}>Features</button>
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('how-it-works')}>How it works</button>
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('safety-tips')}>Safety tips</button>
-      <a href="/report" class="lz-nav-cta">Report an incident</a>
+      <a href="/auth/signin" class="lz-nav-cta">Report an incident</a>
     </div>
   </div>
 </nav>
@@ -110,7 +111,7 @@
         <PlayCircle size={16} />
         See how it works
       </button>
-      <a href="/report" class="lz-btn-outline">
+      <a href="/auth/signin" class="lz-btn-outline">
         <FlagTriangleRight size={16} />
         Report incident
       </a>
@@ -159,7 +160,7 @@
         <div class="lz-leg-item"><span class="lz-leg-dot" style="background:var(--primary-bg)"></span>Monitored</div>
       </div>
       <div class="lz-map-report">
-        <a href="/report" class="lz-map-report-btn">
+        <a href="/auth/signin" class="lz-map-report-btn">
           <FlagTriangleRight size={14} />
           Report incident on this map
         </a>
@@ -283,7 +284,7 @@
         </div>
 
         <div class="lz-report-buttons">
-          <a href="/report" class="lz-btn-primary lz-btn-lg">
+          <a href="/auth/signin" class="lz-btn-primary lz-btn-lg">
             <FlagTriangleRight size={18} />
             Report an incident now
             <ArrowRight size={16} />
@@ -315,7 +316,7 @@
           <CheckCircle size={14} />
           <span>Verified reports get community alerts within minutes</span>
         </div>
-        <a href="/report" class="lz-report-card-btn">Start reporting →</a>
+        <a href="/auth/signin" class="lz-report-card-btn">Start reporting →</a>
       </div>
     </div>
   </div>
@@ -376,7 +377,7 @@
           Get started for free
           <ArrowRight size={16} />
         </a>
-        <a href="/report" class="lz-btn-outline lz-btn-lg">
+        <a href="/auth/signin" class="lz-btn-outline lz-btn-lg">
           <FlagTriangleRight size={16} />
           Report an incident
         </a>
@@ -402,9 +403,7 @@
         <p class="lz-foot-desc">Making communities safer through technology and collective action.</p>
         <div class="lz-socials">
           <button type="button" class="lz-soc" aria-label="X / Twitter">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
-              <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53A4.48 4.48 0 0 0 22.4.36a9.06 9.06 0 0 1-2.88 1.1 4.52 4.52 0 0 0-7.72 4.12 12.84 12.84 0 0 1-9.32-4.73 4.52 4.52 0 0 0 1.4 6.03 4.48 4.48 0 0 1-2.05-.57v.06a4.53 4.53 0 0 0 3.63 4.43 4.52 4.52 0 0 1-2.04.08 4.53 4.53 0 0 0 4.22 3.15A9.05 9.05 0 0 1 1 19.54a12.8 12.8 0 0 0 6.92 2.03c8.3 0 12.84-6.88 12.84-12.85 0-.2 0-.39-.02-.58A9.22 9.22 0 0 0 23 3z"/>
-            </svg>
+            <Twitter size={15} />
           </button>
           <button type="button" class="lz-soc" aria-label="Discord">
             <MessageCircle size={15} />
