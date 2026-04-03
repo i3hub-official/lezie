@@ -861,73 +861,279 @@ main {
   }
 }
 
-  /* Floating Action Button */
-  .lz-fab {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--primary-color);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 999px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.875rem;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    transition: transform 0.2s, background 0.2s;
-    border: none;
-    cursor: pointer;
-  }
-  .lz-fab:hover {
-    background: var(--primary-dark);
-    transform: scale(1.02);
-  }
-  @media (max-width: 640px) {
-    .lz-fab {
-      padding: 10px 16px;
-      right: 16px;
-      bottom: 16px;
-    }
-  }
+  
+  
+   /* Floating Action Button - Modern Redesign */
+.lz-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+  padding: 14px 24px;
+  border-radius: 40px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.3px;
+  box-shadow: 0 8px 20px rgba(106, 44, 145, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
 
-  /* Button outline */
-  .lz-btn-outline {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.7rem 1.5rem;
-    border: 1.5px solid var(--primary-border);
-    color: var(--primary-color);
-    background: none;
-    border-radius: 9999px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.15s;
+.lz-fab::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 40px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.lz-fab:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(106, 44, 145, 0.4), 0 4px 8px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+}
+
+.lz-fab:hover::before {
+  opacity: 1;
+}
+
+.lz-fab:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* FAB with icon animation */
+.lz-fab svg {
+  transition: transform 0.2s ease;
+}
+
+.lz-fab:hover svg {
+  transform: rotate(-5deg) scale(1.05);
+}
+
+/* Responsive FAB */
+@media (max-width: 768px) {
+  .lz-fab {
+    padding: 12px 20px;
+    bottom: 20px;
+    right: 20px;
+    font-size: 0.85rem;
   }
-  .lz-btn-outline:hover {
-    background: var(--primary-bg);
-    border-color: var(--primary-color);
+}
+
+@media (max-width: 640px) {
+  .lz-fab {
+    padding: 10px 16px;
+    bottom: 16px;
+    right: 16px;
+    gap: 6px;
   }
+}
+
+/* Button Outline - Modern Redesign */
+.lz-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: transparent;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+  border-radius: 40px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.3px;
+}
+
+.lz-btn-outline::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: var(--primary-color);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+  opacity: 0.1;
+  z-index: -1;
+}
+
+.lz-btn-outline:hover {
+  color: var(--primary-dark);
+  border-color: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(106, 44, 145, 0.15);
+}
+
+.lz-btn-outline:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.lz-btn-outline:active {
+  transform: translateY(0);
+}
+
+/* Outline Button Light (for dark backgrounds) */
+.lz-btn-outline-light {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  color: white;
+  border-radius: 40px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 0.3px;
+}
+
+.lz-btn-outline-light:hover {
+  border-color: white;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+.lz-btn-outline-light:active {
+  transform: translateY(0);
+}
+
+/* Large Outline Button */
+.lz-btn-outline-lg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 32px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  border-radius: 48px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 0.3px;
+}
+
+.lz-btn-outline-lg:hover {
+  border-color: white;
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 255, 255, 0.15);
+}
+
+.lz-btn-outline-lg:active {
+  transform: translateY(0);
+}
+
+/* Additional Button Variants */
+.lz-btn-outline-danger {
+  border-color: var(--danger-color);
+  color: var(--danger-color);
+}
+
+.lz-btn-outline-danger:hover {
+  border-color: var(--danger-color);
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger-color);
+}
+
+.lz-btn-outline-success {
+  border-color: var(--success-color);
+  color: var(--success-color);
+}
+
+.lz-btn-outline-success:hover {
+  border-color: var(--success-color);
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success-color);
+}
+
+/* FAB with notification badge (optional) */
+.lz-fab-badge {
+  position: relative;
+}
+
+.lz-fab-badge::after {
+  content: '!';
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  background: var(--danger-color);
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+/* Responsive adjustments for buttons */
+@media (max-width: 768px) {
+  .lz-btn-outline,
+  .lz-btn-outline-light {
+    padding: 8px 20px;
+    font-size: 0.85rem;
+  }
+  
   .lz-btn-outline-lg {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.85rem 1.75rem;
-    border: 1.5px solid rgba(255, 255, 255, 0.4);
-    color: #fff;
-    border-radius: 9999px;
-    text-decoration: none;
-    font-weight: 500;
+    padding: 12px 28px;
     font-size: 0.95rem;
-    transition: all 0.15s;
   }
-  .lz-btn-outline-lg:hover {
-    border-color: #fff;
-    background: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 640px) {
+  .lz-btn-outline,
+  .lz-btn-outline-light {
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    gap: 6px;
   }
+  
+  .lz-btn-outline-lg {
+    padding: 10px 24px;
+    font-size: 0.9rem;
+  }
+}
