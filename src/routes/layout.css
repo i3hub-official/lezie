@@ -860,3 +860,74 @@ main {
     padding-right: 2rem;
   }
 }
+
+  /* Floating Action Button */
+  .lz-fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--primary-color);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transition: transform 0.2s, background 0.2s;
+    border: none;
+    cursor: pointer;
+  }
+  .lz-fab:hover {
+    background: var(--primary-dark);
+    transform: scale(1.02);
+  }
+  @media (max-width: 640px) {
+    .lz-fab {
+      padding: 10px 16px;
+      right: 16px;
+      bottom: 16px;
+    }
+  }
+
+  /* Button outline */
+  .lz-btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.5rem;
+    border: 1.5px solid var(--primary-border);
+    color: var(--primary-color);
+    background: none;
+    border-radius: 9999px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .lz-btn-outline:hover {
+    background: var(--primary-bg);
+    border-color: var(--primary-color);
+  }
+  .lz-btn-outline-lg {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.75rem;
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    color: #fff;
+    border-radius: 9999px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.15s;
+  }
+  .lz-btn-outline-lg:hover {
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+  }
