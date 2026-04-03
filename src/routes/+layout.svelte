@@ -2,7 +2,7 @@
 
 <script lang="ts">
 	import './layout.css';
-	import favicon from '$icons/lz_ico.png';
+	import favicon from '$lib/assets/lz_ico.png';
 
 	let { children } = $props();
 </script>
