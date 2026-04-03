@@ -63,6 +63,12 @@
 <nav class="lz-nav">
   <div class="lz-nav-inner">
     <button type="button" class="lz-logo" onclick={() => scrollToSection('home')}>
+      <div class="lz-logo-mark">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
+          <path d="M1 4.5V11.5L8 15L15 11.5V4.5" stroke="white" stroke-opacity=".6" stroke-width="1.2" fill="none"/>
+        </svg>
+      </div>
       <span class="lz-logo-text">Lezie</span>
     </button>
 
@@ -142,8 +148,7 @@
         <span class="lz-live-dot"></span>
         <span style="font-size:.75rem;color:var(--primary-color);font-weight:600">Live</span>
       </div>
-      <div class="lz-map-grid" id="mapGrid">
-        <!-- Generate map grid dynamically -->
+      <div class="lz-map-grid">
         {#each Array(54) as _, i}
           <div class="lz-mc {i % 7 === 0 ? 'h' : (i % 5 === 0 ? 'w' : '')}"></div>
         {/each}
@@ -158,8 +163,8 @@
         <div class="lz-leg-item"><span class="lz-leg-dot" style="background:var(--primary-light)"></span>Recent</div>
         <div class="lz-leg-item"><span class="lz-leg-dot" style="background:var(--primary-bg)"></span>Monitored</div>
       </div>
-      <div class="lz-map-report">
-        <a href="/auth/signin" class="lz-map-report-btn">
+      <div style="margin-top: 1rem; text-align: center;">
+        <a href="/auth/signin" style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--primary-color); text-decoration: none;">
           <FlagTriangleRight size={14} />
           Report incident on this map
         </a>
@@ -182,7 +187,7 @@
         <div class="lz-feat-icon"><Radio size={22} style="color:var(--primary-color)" /></div>
         <h3>Real-time incident reporting</h3>
         <p>Report incidents instantly with photos, videos, and precise location tracking. Get immediate alerts to nearby community members.</p>
-        <a href="/auth/signin" class="lz-card-link">Report now →</a>
+        <a href="/auth/signin" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report now →</a>
       </div>
       <div class="lz-feat-card animate-on-scroll">
         <div class="lz-feat-icon"><Cpu size={22} style="color:var(--primary-color)" /></div>
@@ -203,7 +208,7 @@
         <div class="lz-feat-icon"><EyeOff size={22} style="color:var(--primary-color)" /></div>
         <h3>Anonymous reporting</h3>
         <p>Report safely and securely with optional anonymity. Your identity remains protected while helping your community stay safe.</p>
-        <a href="/auth/signin" class="lz-card-link">Report anonymously →</a>
+        <a href="/auth/signin" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report anonymously →</a>
       </div>
       <div class="lz-feat-card animate-on-scroll">
         <div class="lz-feat-icon"><BellRing size={22} style="color:var(--primary-color)" /></div>
@@ -232,7 +237,7 @@
         <div class="lz-bdg-row">
           <span class="lz-bdg">"Suspicious activity on Main St"</span>
         </div>
-        <a href="/auth/signin" class="lz-step-link">Start reporting →</a>
+        <a href="/auth/signin" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Start reporting →</a>
       </div>
       <div class="lz-step animate-on-scroll">
         <div class="lz-step-num">2</div>
@@ -258,63 +263,49 @@
 </section>
 
 <!-- ── REPORT INCIDENT STRATEGIC SECTION ───────────────────── -->
-<section id="report-incident" class="lz-section lz-report-hero">
+<section class="lz-section lz-section-alt">
   <div class="lz-container">
-    <div class="lz-report-grid">
-      <div class="lz-report-content animate-on-scroll">
-        <span class="lz-tag lz-tag-report">🚨 Make a difference</span>
-        <h2>Report an incident in seconds</h2>
-        <p>Your report can prevent crime, alert neighbours, and help authorities respond faster. Every incident — big or small — makes the community safer.</p>
+    <div class="lz-report-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center;">
+      <div class="animate-on-scroll">
+        <span class="lz-tag">🚨 Make a difference</span>
+        <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1rem;">Report an incident in seconds</h2>
+        <p style="color: var(--gray-color); margin-bottom: 1.5rem;">Your report can prevent crime, alert neighbours, and help authorities respond faster. Every incident — big or small — makes the community safer.</p>
         
-        <div class="lz-report-features">
-          <div class="lz-report-feat">
-            <Upload size={18} style="color:var(--primary-color)" />
-            <span>Add photos & videos</span>
-          </div>
-          <div class="lz-report-feat">
-            <MapPin size={18} style="color:var(--primary-color)" />
-            <span>Precise location tagging</span>
-          </div>
-          <div class="lz-report-feat">
-            <EyeOff size={18} style="color:var(--primary-color)" />
-            <span>Anonymous reporting option</span>
-          </div>
-          <div class="lz-report-feat">
-            <Clock size={18} style="color:var(--primary-color)" />
-            <span>Less than 60 seconds</span>
-          </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;"><Upload size={18} style="color:var(--primary-color)" /> Add photos & videos</div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;"><MapPin size={18} style="color:var(--primary-color)" /> Precise location tagging</div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;"><EyeOff size={18} style="color:var(--primary-color)" /> Anonymous reporting option</div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;"><Clock size={18} style="color:var(--primary-color)" /> Less than 60 seconds</div>
         </div>
 
-        <div class="lz-report-buttons">
-          <a href="/auth/signin" class="lz-btn-primary lz-btn-lg">
-            <FlagTriangleRight size={18} />
-            Report an incident now
-            <ArrowRight size={16} />
-          </a>
-        </div>
+        <a href="/auth/signin" class="lz-btn-primary lz-btn-lg">
+          <FlagTriangleRight size={18} />
+          Report an incident now
+          <ArrowRight size={16} />
+        </a>
       </div>
 
-      <div class="lz-report-card animate-on-scroll">
-        <div class="lz-report-card-header">
-          <div class="lz-report-card-icon"><FlagTriangleRight size={20} /></div>
+      <div class="lz-map-card animate-on-scroll" style="background: white;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+          <div style="background: var(--primary-bg); padding: 0.75rem; border-radius: 1rem;"><FlagTriangleRight size={20} style="color:var(--primary-color)" /></div>
           <div>
-            <div class="lz-report-card-title">Quick incident report</div>
-            <div class="lz-report-card-sub">What would you like to report?</div>
+            <div style="font-weight: 700;">Quick incident report</div>
+            <div style="font-size: 0.75rem; color: var(--gray-color);">What would you like to report?</div>
           </div>
         </div>
-        <div class="lz-report-card-types">
-          <div class="lz-report-type">Suspicious person</div>
-          <div class="lz-report-type">Vandalism</div>
-          <div class="lz-report-type">Theft</div>
-          <div class="lz-report-type">Accident</div>
-          <div class="lz-report-type">Noise complaint</div>
-          <div class="lz-report-type">Other</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem;">
+          <span style="background: var(--light-color); padding: 0.25rem 1rem; border-radius: 999px; font-size: 0.75rem;">Suspicious person</span>
+          <span style="background: var(--light-color); padding: 0.25rem 1rem; border-radius: 999px; font-size: 0.75rem;">Vandalism</span>
+          <span style="background: var(--light-color); padding: 0.25rem 1rem; border-radius: 999px; font-size: 0.75rem;">Theft</span>
+          <span style="background: var(--light-color); padding: 0.25rem 1rem; border-radius: 999px; font-size: 0.75rem;">Accident</span>
+          <span style="background: var(--light-color); padding: 0.25rem 1rem; border-radius: 999px; font-size: 0.75rem;">Noise complaint</span>
+          <span style="background: var(--light-color); padding: 0.25rem 1rem; border-radius: 999px; font-size: 0.75rem;">Other</span>
         </div>
-        <div class="lz-report-card-note">
-          <CheckCircle size={14} />
+        <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--gray-color); margin-bottom: 1rem;">
+          <CheckCircle size={14} style="color: var(--success-color);" />
           <span>Verified reports get community alerts within minutes</span>
         </div>
-        <a href="/auth/signin" class="lz-report-card-btn">Start reporting →</a>
+        <a href="/auth/signin" style="display: block; text-align: center; background: var(--primary-color); color: white; padding: 0.75rem; border-radius: 999px; text-decoration: none; font-weight: 600;">Start reporting →</a>
       </div>
     </div>
   </div>
@@ -354,7 +345,7 @@
         <div class="lz-tip-ico"><FlagTriangleRight size={24} style="color:var(--primary-color)" /></div>
         <h3>Report suspicious activity</h3>
         <p>Don't hesitate to report suspicious behaviour. Your report could prevent a crime and help others.</p>
-        <a href="/auth/signin" class="lz-tip-link">Report now →</a>
+        <a href="/auth/signin" style="display: inline-block; margin-top: 0.75rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report now →</a>
       </div>
       <div class="lz-tip animate-on-scroll">
         <div class="lz-tip-ico"><PhoneCall size={24} style="color:var(--primary-color)" /></div>
@@ -376,7 +367,7 @@
           Get started for free
           <ArrowRight size={16} />
         </a>
-        <a href="/auth/signin" class="lz-btn-outline lz-btn-lg">
+        <a href="/auth/signin" class="lz-btn-outline-lg">
           <FlagTriangleRight size={16} />
           Report an incident
         </a>
@@ -391,7 +382,7 @@
     <div class="lz-foot-grid">
       <div>
         <div class="lz-foot-logo">
-          <div class="lz-logo-mark" style="width:26px;height:26px;border-radius:6px">
+          <div class="lz-logo-mark" style="width:26px;height:26px;border-radius:6px; background: var(--primary-color); display: flex; align-items: center; justify-content: center;">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
               <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
               <path d="M1 4.5V11.5L8 15L15 11.5V4.5" stroke="white" stroke-opacity=".6" stroke-width="1.2" fill="none"/>
