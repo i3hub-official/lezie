@@ -1124,49 +1124,36 @@ main {
   }
 }
 
-@media (max-width: 640px) {
-  .lz-btn-outline,
-  .lz-btn-outline-light {
-    padding: 8px 16px;
-    font-size: 0.8rem;
-    gap: 6px;
-  }
-  
-  .lz-btn-outline-lg {
-    padding: 10px 24px;
-    font-size: 0.9rem;
-  }
-}
-
-/* Report grid — responsive */
-.lz-report-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 3rem;
-  align-items: center;
-}
-
-.lz-report-features {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
 @media (max-width: 768px) {
+  .lz-report-grid > div:first-child {
+    text-align: center;
+  }
+
   .lz-report-grid > div:first-child .lz-tag {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto;
+    gap: 0.375rem;
   }
 
-  .lz-report-features {
-    justify-items: center;
+  .lz-report-features div {
+    font-size: 0.775rem;  /* reduced from 0.875rem */
+    justify-content: center;
   }
 
   .lz-report-grid > div:first-child .lz-btn-primary {
     margin: 0 auto;
     display: inline-flex;
+  }
+}
+
+@media (max-width: 768px) {
+  .lz-map-card > div:first-child {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .lz-map-card > div:first-child > div:last-child {
+    text-align: left;
   }
 }
