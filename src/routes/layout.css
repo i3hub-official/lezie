@@ -1154,13 +1154,16 @@ main {
 }
 
 @media (max-width: 768px) {
-  .lz-report-grid {
-    grid-template-columns: 1fr;
-    gap: 2rem;
+  .lz-report-grid > div:first-child {
+    text-align: center;
   }
 
   .lz-report-features {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
+    justify-items: center;
+  }
+
+  .lz-report-grid > div:first-child .lz-btn-primary {
+    margin: 0 auto;
+    display: inline-flex;
   }
 }
