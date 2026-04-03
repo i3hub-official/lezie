@@ -13,7 +13,7 @@
 		{@html pwaInfo.webManifest.linkTag}
 	{/if}
 
-	<link rel="apple-touch-icon" href="/icons/lz_ico_192.png" />
+	<link rel="apple-touch-icon" href="/icons/lz_ico.png" />
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 	<meta name="apple-mobile-web-app-title" content="Lezie" />
