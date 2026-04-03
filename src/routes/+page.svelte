@@ -25,6 +25,7 @@
     Clock,
     Upload,
     CheckCircle,
+Siren,
   } from 'lucide-svelte';
 
   // Fix: Use $state() for reactive variable
@@ -261,13 +262,16 @@
 <!-- ── REPORT INCIDENT STRATEGIC SECTION ───────────────────── -->
 <section class="lz-section lz-section-alt">
   <div class="lz-container">
-    <div class="lz-report-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center;">
+    <div class="lz-report-grid">
       <div class="animate-on-scroll">
-        <span class="lz-tag">🚨 Make a difference</span>
+        <span class="lz-tag">
+          <Siren size={14} style="color:var(--primary-color); vertical-align:middle;" />
+          Make a difference
+        </span>
         <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1rem;">Report an incident in seconds</h2>
         <p style="color: var(--gray-color); margin-bottom: 1.5rem;">Your report can prevent crime, alert neighbours, and help authorities respond faster. Every incident — big or small — makes the community safer.</p>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+
+        <div class="lz-report-features">
           <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;"><Upload size={18} style="color:var(--primary-color)" /> Add photos & videos</div>
           <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;"><MapPin size={18} style="color:var(--primary-color)" /> Precise location tagging</div>
           <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;"><EyeOff size={18} style="color:var(--primary-color)" /> Anonymous reporting option</div>
@@ -306,6 +310,7 @@
     </div>
   </div>
 </section>
+            
 
 <!-- ── SAFETY TIPS ────────────────────────────────────────── -->
 <section id="safety-tips" class="lz-section lz-section-alt">
