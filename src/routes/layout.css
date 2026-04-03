@@ -1154,8 +1154,12 @@ main {
 }
 
 @media (max-width: 768px) {
-  .lz-report-grid > div:first-child {
-    text-align: center;
+  .lz-report-grid > div:first-child .lz-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
   }
 
   .lz-report-features {
