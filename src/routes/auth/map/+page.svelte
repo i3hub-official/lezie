@@ -3,17 +3,12 @@
   import { goto } from '$app/navigation';
   import {
     MapPin,
-    Camera,
     X,
     AlertTriangle,
-    Send,
     Navigation,
-    Shield,
-    EyeOff,
     CheckCircle,
     AlertCircle,
     ChevronLeft,
-    Loader2,
     Flame,
     Car,
     Building,
@@ -23,8 +18,7 @@
     AlertOctagon,
     Filter,
     Search,
-    SlidersHorizontal,
-    Calendar
+    SlidersHorizontal
   } from 'lucide-svelte';
   
   let isLoading = $state(true);
@@ -173,7 +167,6 @@
       navigator.geolocation.getCurrentPosition(
         (position) => {
           console.log('User location:', position.coords.latitude, position.coords.longitude);
-          // TODO: Center map on user location
         },
         (err) => {
           console.error('Geolocation error:', err);
@@ -352,9 +345,12 @@
           </div>
         {:else}
           {#each getFilteredIncidents() as incident}
-            <button 
+            <div 
               class="incident-item {selectedIncident?.id === incident.id ? 'selected' : ''}"
               onclick={() => selectedIncident = incident}
+              role="button"
+              tabindex="0"
+              onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') selectedIncident = incident; }}
             >
               <div class="incident-status-dot" style="background: {getSeverityColor(incident.severity)}"></div>
               <div class="incident-info">
@@ -373,7 +369,7 @@
               >
                 View →
               </button>
-            </button>
+            </div>
           {/each}
         {/if}
       </div>
@@ -887,16 +883,6 @@
     
     .filters-sidebar {
       width: 100%;
-    }
-    
-    .incidents-sidebar {
-      position: absolute;
-      right: 0;
-      top: 0;
-      height: 100%;
-      transform: translateX(100%);
-      transition: transform 0.3s;
-      z-index: 30;
     }
     
     .map-overlay {
