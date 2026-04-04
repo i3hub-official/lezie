@@ -284,7 +284,9 @@
         />
         <div class="form-hint">
           <span>{title.length}/200 characters</span>
-          {title.length < 5 && title.length > 0 && <span class="hint-warning">Minimum 5 characters</span>}
+          {#if title.length < 5 && title.length > 0}
+            <span class="hint-warning">Minimum 5 characters</span>
+          {/if}
         </div>
       </div>
 
@@ -345,7 +347,9 @@
         ></textarea>
         <div class="form-hint">
           <span>{description.length} characters</span>
-          {description.length < 20 && description.length > 0 && <span class="hint-warning">Minimum 20 characters</span>}
+          {#if description.length < 20 && description.length > 0}
+            <span class="hint-warning">Minimum 20 characters</span>
+          {/if}
         </div>
       </div>
 
@@ -470,7 +474,7 @@
       <div class="safety-note">
         <Shield size={18} />
         <div>
-          <strong>⚠️ Emergency?</strong> If this is an emergency, call your local emergency services immediately.
+          <strong>Emergency?</strong> If this is an emergency, call your local emergency services immediately.
         </div>
       </div>
     </form>
