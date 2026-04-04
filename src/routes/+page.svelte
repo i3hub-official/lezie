@@ -263,21 +263,23 @@ Siren,
 <section class="lz-section lz-section-alt">
   <div class="lz-container">
     <div class="lz-report-grid">
-      <div class="animate-on-scroll">
-        <div style="text-align: center;">
-  <span class="lz-tag" style="display: inline-flex; align-items: center; gap: 0.375rem;">
-    <Siren size={14} style="color:var(--primary-color); flex-shrink: 0;" />
-    Make a difference
-  </span>
-</div>
-        <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1rem;">Report an incident in seconds</h2>
-        <p style="color: var(--gray-color); margin-bottom: 1.5rem;">Your report can prevent crime, alert neighbours, and help authorities respond faster. Every incident — big or small — makes the community safer.</p>
+      <div class="animate-on-scroll content-column">
+        <div class="tag-wrapper">
+          <span class="lz-tag">
+            <Siren size={14} />
+            Make a difference
+          </span>
+        </div>
+        
+        <h2>Report an incident in seconds</h2>
+        
+        <p class="description">Your report can prevent crime, alert neighbours, and help authorities respond faster. Every incident — big or small — makes the community safer.</p>
 
         <div class="lz-report-features">
-          <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;"><Upload size={18} style="color:var(--primary-color)" /> Add photos & videos</div>
-          <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;"><MapPin size={18} style="color:var(--primary-color)" /> Precise location tagging</div>
-          <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;"><EyeOff size={18} style="color:var(--primary-color)" /> Anonymous reporting option</div>
-          <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;"><Clock size={18} style="color:var(--primary-color)" /> Less than 60 seconds</div>
+          <div class="feature-item"><Upload size={18} /> Add photos & videos</div>
+          <div class="feature-item"><MapPin size={18} /> Precise location tagging</div>
+          <div class="feature-item"><EyeOff size={18} /> Anonymous reporting option</div>
+          <div class="feature-item"><Clock size={18} /> Less than 60 seconds</div>
         </div>
 
         <a href="/auth/signin" class="lz-btn-primary lz-btn-lg">
@@ -287,31 +289,38 @@ Siren,
         </a>
       </div>
 
-      <div class="lz-map-card animate-on-scroll" style="background: white;">
-        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-          <div style="background: var(--primary-bg); padding: 0.75rem; border-radius: 1rem;"><FlagTriangleRight size={20} style="color:var(--primary-color)" /></div>
+      <div class="lz-map-card animate-on-scroll">
+        <div class="card-header">
+          <div class="card-icon">
+            <FlagTriangleRight size={20} />
+          </div>
           <div>
-            <div style="font-weight: 700;">Quick incident report</div>
-            <div style="font-size: 0.75rem; color: var(--gray-color);">What would you like to report?</div>
+            <div class="card-title">Quick incident report</div>
+            <div class="card-subtitle">What would you like to report?</div>
           </div>
         </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem;">
-          <span style="background: var(--light-color); padding: 0.25rem 1rem; border-radius: 999px; font-size: 0.75rem;">Suspicious person</span>
-          <span style="background: var(--light-color); padding: 0.25rem 1rem; border-radius: 999px; font-size: 0.75rem;">Vandalism</span>
-          <span style="background: var(--light-color); padding: 0.25rem 1rem; border-radius: 999px; font-size: 0.75rem;">Theft</span>
-          <span style="background: var(--light-color); padding: 0.25rem 1rem; border-radius: 999px; font-size: 0.75rem;">Accident</span>
-          <span style="background: var(--light-color); padding: 0.25rem 1rem; border-radius: 999px; font-size: 0.75rem;">Noise complaint</span>
-          <span style="background: var(--light-color); padding: 0.25rem 1rem; border-radius: 999px; font-size: 0.75rem;">Other</span>
+        
+        <div class="incident-tags">
+          <span>Suspicious person</span>
+          <span>Vandalism</span>
+          <span>Theft</span>
+          <span>Accident</span>
+          <span>Noise complaint</span>
+          <span>Other</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--gray-color); margin-bottom: 1rem;">
-          <CheckCircle size={14} style="color: var(--success-color);" />
+        
+        <div class="verification-badge">
+          <CheckCircle size={14} />
           <span>Verified reports get community alerts within minutes</span>
         </div>
-        <a href="/auth/signin" style="display: block; text-align: center; background: var(--primary-color); color: white; padding: 0.75rem; border-radius: 999px; text-decoration: none; font-weight: 600;">Start reporting →</a>
+        
+        <a href="/auth/signin" class="report-link">Start reporting →</a>
       </div>
     </div>
   </div>
 </section>
+
+
             
 
 <!-- ── SAFETY TIPS ────────────────────────────────────────── -->
