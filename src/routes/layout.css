@@ -1153,12 +1153,14 @@ main {
 .report-page {
   min-height: 100vh;
   background: linear-gradient(135deg, var(--primary-bg) 0%, #ffffff 100%);
-  padding: clamp(1rem, 5vw, 2rem);
+  padding: 0;
 }
 
 .report-container {
-  max-width: min(800px, 100%);
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
+  padding: clamp(1rem, 4vw, 2rem);
 }
 
 /* Header */
@@ -1542,10 +1544,6 @@ main {
 }
 
 /* Tablet Responsive */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .report-container {
-    max-width: 700px;
-  }
   
   .category-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -1553,10 +1551,6 @@ main {
 }
 
 /* Desktop Responsive */
-@media (min-width: 1025px) {
-  .report-container {
-    max-width: 800px;
-  }
   
   .report-form {
     padding: 2rem;
@@ -1568,11 +1562,6 @@ main {
 }
 
 /* Mobile Responsive */
-@media (max-width: 768px) {
-  .report-container {
-    padding: 0;
-  }
-  
   .report-form {
     padding: 1.25rem;
     border-radius: 1rem;
@@ -1693,34 +1682,13 @@ main {
 /* ─── Report Page Wide Screen Support ───────────────────────── */
 
 /* Wide screen optimizations */
-@media (min-width: 1400px) {
-  .report-page {
-    padding: 2rem;
-  }
   
   .report-container {
     max-width: 1000px;
   }
 }
 
-@media (min-width: 1600px) {
-  .report-container {
-    max-width: 1100px;
-  }
-}
-
-@media (min-width: 1920px) {
-  .report-container {
-    max-width: 1200px;
-  }
-}
-
 /* For ultra-wide screens (21:9 and wider) */
-@media (min-width: 2560px) {
-  .report-container {
-    max-width: 1400px;
-  }
-  
   .report-form {
     padding: 2.5rem;
   }
