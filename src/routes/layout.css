@@ -1779,3 +1779,119 @@ main {
       width: 100%;
     }
   }
+
+
+/* FORGOT-PASSWORD CONTAINER */
+
+  .forgot-password-container {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .forgot-password-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .forgot-password-title {
+    font-size: clamp(1.5rem, 5vw, 1.875rem);
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+  }
+
+  .forgot-password-subtitle {
+    font-size: clamp(0.75rem, 3vw, 0.875rem);
+    color: #6b7280;
+    line-height: 1.5;
+  }
+
+  .forgot-password-form {
+    width: 100%;
+  }
+
+  .submit-btn {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  .success-message {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .success-message svg {
+    color: var(--success-color);
+    flex-shrink: 0;
+  }
+
+  .success-message h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #166534;
+    margin-bottom: 0.25rem;
+  }
+
+  .success-message p {
+    font-size: 0.75rem;
+    color: #15803d;
+  }
+
+  .success-message strong {
+    font-weight: 600;
+  }
+
+  .return-btn {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    text-decoration: none;
+    transition: all 0.2s;
+    margin-top: 0.5rem;
+  }
+
+  .back-link:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: var(--primary-bg);
+  }
+
+  .form-footer {
+    margin-top: 1rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .forgot-password-container {
+      max-width: 100%;
+    }
+
+    .success-message {
+      flex-direction: column;
+      text-align: center;
+      gap: 0.5rem;
+    }
+  }
