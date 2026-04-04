@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Mail, AlertCircle, ArrowRight, CheckCircle } from 'lucide-svelte';
+  import { Mail, AlertCircle, ArrowRight, CheckCircle, ArrowLeft } from 'lucide-svelte';
   
   let email = $state('');
   let errors = $state<Record<string, string>>({});
@@ -52,36 +52,45 @@
   };
 </script>
 
-<div class="auth-form">
+<svelte:head>
+  <title>Reset Password - Lezie</title>
+</svelte:head>
+
+<div class="forgot-password-container">
   <!-- Header -->
-  <div class="mb-6">
-    <h1 class="text-2xl font-bold text-gray-800">Reset password</h1>
-    <p class="text-gray-500 mt-1">
+  <div class="forgot-password-header">
+    <h1 class="forgot-password-title">Reset password</h1>
+    <p class="forgot-password-subtitle">
       Enter your email address and we'll send you a link to reset your password
     </p>
   </div>
 
   {#if isSuccess}
-    <div class="flex items-center gap-2 px-4 py-3 mb-6 bg-green-50 text-green-600 rounded-xl border border-green-200">
-      <CheckCircle size={20} />
-      <span class="text-sm">
-        Password reset link sent! Check your email for instructions.
-      </span>
+    <div class="success-message">
+      <CheckCircle size={24} />
+      <div>
+        <h3>Check your email</h3>
+        <p>We've sent a password reset link to <strong>{email}</strong></p>
+      </div>
     </div>
-  {/if}
-  
-  {#if errors.submit && !isSuccess}
-    <div class="auth-alert-error">
-      <AlertCircle size={20} />
-      <span>{errors.submit}</span>
+    
+    <div class="form-footer">
+      <a href="/auth/signin" class="auth-btn-submit return-btn">
+        Return to Sign In
+      </a>
     </div>
-  {/if}
-  
-  {#if !isSuccess}
-    <form onsubmit={handleSubmit}>
+  {:else}
+    {#if errors.submit}
+      <div class="auth-alert-error">
+        <AlertCircle size={20} />
+        <span>{errors.submit}</span>
+      </div>
+    {/if}
+
+    <form class="forgot-password-form" onsubmit={handleSubmit}>
       <!-- Email -->
       <div class="auth-form-group">
-        <label for="email" class="auth-label">Email Address *</label>
+        <label for="email" class="auth-label">Email Address</label>
         <div class="auth-input-wrapper">
           <Mail size={18} class="auth-input-icon" />
           <input
@@ -96,12 +105,12 @@
           <span class="auth-error-message">{errors.email}</span>
         {/if}
       </div>
-      
+
       <!-- Submit Button -->
       <button
         type="submit"
         disabled={isLoading}
-        class="auth-btn-submit"
+        class="auth-btn-submit submit-btn"
       >
         {#if isLoading}
           <span class="auth-spinner"></span>
@@ -112,29 +121,16 @@
         {/if}
       </button>
     </form>
-    
+
     <!-- Divider -->
     <div class="auth-divider">
       <span>or</span>
     </div>
-    
+
     <!-- Back to Sign In -->
-    <a
-      href="/auth/signin"
-      class="auth-btn-google text-center block"
-      style="text-decoration: none;"
-    >
+    <a href="/auth/signin" class="back-link">
+      <ArrowLeft size={16} />
       Back to Sign In
     </a>
-  {:else}
-    <div class="text-center">
-      <a
-        href="/auth/signin"
-        class="auth-btn-submit inline-block"
-        style="text-decoration: none;"
-      >
-        Return to Sign In
-      </a>
-    </div>
   {/if}
 </div>
