@@ -1,26 +1,32 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { authStore } from '$lib/stores/auth';
   import { 
+    User, 
     Mail, 
     Lock, 
     Eye, 
     EyeOff,
-    User,
-    Phone,
     Calendar,
-    AlertCircle,
+    Phone,
+    Users,
+    Check,
+    CircleAlert,
     ArrowRight
   } from 'lucide-svelte';
   
   let formData = $state({
+    surname: '',
+    firstName: '',
+    middleName: '',
+    dateOfBirth: '',
+    gender: '',
+    phone: '',
     email: '',
     password: '',
     confirmPassword: '',
-    firstName: '',
-    lastName: '',
-    phone: '',
-    dateOfBirth: ''
+    agreeTerms: false
   });
   
   let errors = $state<Record<string, string>>({});
@@ -31,16 +37,16 @@
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
+    if (!formData.surname.trim()) {
+      newErrors.surname = 'Surname is required';
+    } else if (formData.surname.length < 2) {
+      newErrors.surname = 'Surname must be at least 2 characters';
+    }
+    
     if (!formData.firstName.trim()) {
       newErrors.firstName = 'First name is required';
     } else if (formData.firstName.length < 2) {
       newErrors.firstName = 'First name must be at least 2 characters';
-    }
-    
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
-    } else if (formData.lastName.length < 2) {
-      newErrors.lastName = 'Last name must be at least 2 characters';
     }
     
     if (!formData.dateOfBirth) {
@@ -49,7 +55,13 @@
       const age = calculateAge(new Date(formData.dateOfBirth));
       if (age < 13) {
         newErrors.dateOfBirth = 'You must be at least 13 years old';
+      } else if (age > 120) {
+        newErrors.dateOfBirth = 'Please enter a valid date of birth';
       }
+    }
+    
+    if (!formData.gender) {
+      newErrors.gender = 'Please select your gender';
     }
     
     if (!formData.phone.trim()) {
@@ -74,6 +86,10 @@
     
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
+    }
+    
+    if (!formData.agreeTerms) {
+      newErrors.agreeTerms = 'You must agree to the terms and conditions';
     }
     
     return newErrors;
@@ -106,9 +122,11 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          surname: formData.surname,
           firstName: formData.firstName,
-          lastName: formData.lastName,
+          middleName: formData.middleName,
           dateOfBirth: formData.dateOfBirth,
+          gender: formData.gender,
           phone: formData.phone,
           email: formData.email,
           password: formData.password,
@@ -122,13 +140,31 @@
       }
       
       await authStore.login(formData.email, formData.password);
-      goto('/dashboard');
+      goto('/auth/signin');
     } catch (error: unknown) {
       errors.submit = error instanceof Error ? error.message : 'An error occurred';
     } finally {
       isLoading = false;
     }
   };
+  
+  const handleGoogleSignup = async () => {
+    isLoading = true;
+    try {
+      window.location.href = '/api/auth/google';
+    } catch (error) {
+      console.error('Google signup failed:', error);
+      errors.submit = 'Google signup failed. Please try again.';
+      isLoading = false;
+    }
+  };
+  
+  // Commented out to allow viewing the signup page while logged in
+  // onMount(() => {
+  //   authStore.subscribe(user => {
+  //     if (user) goto('/dashboard');
+  //   })();
+  // });
 </script>
 
 <!-- Header content -->
@@ -137,17 +173,35 @@
   <p class="text-gray-500 mt-1">Join Lezie and start making your community safer</p>
 </div>
 
-<!-- Main form content -->
+<!-- Main form content using your global CSS classes -->
 <form class="auth-form" onsubmit={handleSubmit}>
   {#if errors.submit}
     <div class="auth-alert-error">
-      <AlertCircle size={20} />
+      <CircleAlert size={20} />
       <span>{errors.submit}</span>
     </div>
   {/if}
 
-  <!-- Name Fields -->
-  <div class="grid grid-cols-2 gap-4 mb-4">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Surname -->
+    <div class="auth-form-group">
+      <label for="surname" class="auth-label">Surname *</label>
+      <div class="auth-input-wrapper">
+        <User size={18} class="auth-input-icon" />
+        <input
+          type="text"
+          id="surname"
+          placeholder="Doe"
+          bind:value={formData.surname}
+          class="auth-input {errors.surname ? 'input-error' : ''}"
+        />
+      </div>
+      {#if errors.surname}
+        <span class="auth-error-message">{errors.surname}</span>
+      {/if}
+    </div>
+
+    <!-- First Name -->
     <div class="auth-form-group">
       <label for="firstName" class="auth-label">First Name *</label>
       <div class="auth-input-wrapper">
@@ -164,40 +218,62 @@
         <span class="auth-error-message">{errors.firstName}</span>
       {/if}
     </div>
+  </div>
 
-    <div class="auth-form-group">
-      <label for="lastName" class="auth-label">Last Name *</label>
-      <div class="auth-input-wrapper">
-        <User size={18} class="auth-input-icon" />
-        <input
-          type="text"
-          id="lastName"
-          placeholder="Doe"
-          bind:value={formData.lastName}
-          class="auth-input {errors.lastName ? 'input-error' : ''}"
-        />
-      </div>
-      {#if errors.lastName}
-        <span class="auth-error-message">{errors.lastName}</span>
-      {/if}
+  <!-- Middle Name -->
+  <div class="auth-form-group">
+    <label for="middleName" class="auth-label">Middle Name (Optional)</label>
+    <div class="auth-input-wrapper">
+      <User size={18} class="auth-input-icon" />
+      <input
+        type="text"
+        id="middleName"
+        placeholder="Robert"
+        bind:value={formData.middleName}
+        class="auth-input"
+      />
     </div>
   </div>
 
-  <!-- Date of Birth -->
-  <div class="auth-form-group">
-    <label for="dateOfBirth" class="auth-label">Date of Birth *</label>
-    <div class="auth-input-wrapper">
-      <Calendar size={18} class="auth-input-icon" />
-      <input
-        type="date"
-        id="dateOfBirth"
-        bind:value={formData.dateOfBirth}
-        class="auth-input {errors.dateOfBirth ? 'input-error' : ''}"
-      />
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Date of Birth -->
+    <div class="auth-form-group">
+      <label for="dateOfBirth" class="auth-label">Date of Birth *</label>
+      <div class="auth-input-wrapper">
+        <Calendar size={18} class="auth-input-icon" />
+        <input
+          type="date"
+          id="dateOfBirth"
+          bind:value={formData.dateOfBirth}
+          class="auth-input {errors.dateOfBirth ? 'input-error' : ''}"
+        />
+      </div>
+      {#if errors.dateOfBirth}
+        <span class="auth-error-message">{errors.dateOfBirth}</span>
+      {/if}
     </div>
-    {#if errors.dateOfBirth}
-      <span class="auth-error-message">{errors.dateOfBirth}</span>
-    {/if}
+
+    <!-- Gender -->
+    <div class="auth-form-group">
+      <label for="gender" class="auth-label">Gender *</label>
+      <div class="auth-input-wrapper">
+        <Users size={18} class="auth-input-icon" />
+        <select
+          id="gender"
+          bind:value={formData.gender}
+          class="auth-input {errors.gender ? 'input-error' : ''}"
+        >
+          <option value="">Select gender</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="non-binary">Non-binary</option>
+          <option value="prefer-not-to-say">Prefer not to say</option>
+        </select>
+      </div>
+      {#if errors.gender}
+        <span class="auth-error-message">{errors.gender}</span>
+      {/if}
+    </div>
   </div>
 
   <!-- Phone -->
@@ -244,7 +320,7 @@
       <input
         type={showPassword ? 'text' : 'password'}
         id="password"
-        placeholder="Create a strong password"
+        placeholder="••••••••"
         bind:value={formData.password}
         class="auth-input auth-input-has-toggle {errors.password ? 'input-error' : ''}"
       />
@@ -263,7 +339,7 @@
     </div>
     {#if errors.password}
       <span class="auth-error-message">{errors.password}</span>
-    {:else if formData.password}
+    {:else}
       <div class="auth-password-hints">
         <span class="auth-password-hint {formData.password.length >= 8 ? 'hint-valid' : ''}">✓ 8+ characters</span>
         <span class="auth-password-hint {/(?=.*[a-z])/.test(formData.password) ? 'hint-valid' : ''}">✓ Lowercase</span>
@@ -281,7 +357,7 @@
       <input
         type={showConfirmPassword ? 'text' : 'password'}
         id="confirmPassword"
-        placeholder="Confirm your password"
+        placeholder="••••••••"
         bind:value={formData.confirmPassword}
         class="auth-input auth-input-has-toggle {errors.confirmPassword ? 'input-error' : ''}"
       />
@@ -303,6 +379,25 @@
     {/if}
   </div>
 
+  <!-- Terms Checkbox -->
+  <div class="auth-checkbox-group">
+    <label class="auth-checkbox-label">
+      <input
+        type="checkbox"
+        bind:checked={formData.agreeTerms}
+      />
+      <span>
+        I agree to the
+        <a href="/terms" class="auth-link">Terms of Service</a>
+        and
+        <a href="/privacy" class="auth-link">Privacy Policy</a>
+      </span>
+    </label>
+    {#if errors.agreeTerms}
+      <span class="auth-error-message">{errors.agreeTerms}</span>
+    {/if}
+  </div>
+
   <!-- Submit Button -->
   <button
     type="submit"
@@ -317,73 +412,33 @@
       <ArrowRight size={16} />
     {/if}
   </button>
+
+  <!-- Divider -->
+  <div class="auth-divider">
+    <span>or continue with</span>
+  </div>
+
+  <!-- Google Signup -->
+  <button
+    type="button"
+    onclick={handleGoogleSignup}
+    disabled={isLoading}
+    class="auth-btn-google"
+  >
+    <svg width="20" height="20" viewBox="0 0 24 24">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    </svg>
+    Sign up with Google
+  </button>
 </form>
 
 <!-- Footer content -->
-<div class="mt-6 text-center">
+<div class="auth-footer-content mt-6 text-center">
   <p class="text-sm text-gray-500">
     Already have an account?
-    <a href="/auth/signin" class="auth-link">Sign in</a>
+    <a href="/auth/signin" class="text-blue-500 font-medium hover:underline">Sign in</a>
   </p>
 </div>
-
-<style>
-  .grid {
-    display: grid;
-  }
-  
-  .grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  
-  .gap-4 {
-    gap: 1rem;
-  }
-  
-  .mb-4 {
-    margin-bottom: 1rem;
-  }
-  
-  .mb-6 {
-    margin-bottom: 1.5rem;
-  }
-  
-  .mt-1 {
-    margin-top: 0.25rem;
-  }
-  
-  .mt-6 {
-    margin-top: 1.5rem;
-  }
-  
-  .text-center {
-    text-align: center;
-  }
-  
-  .text-2xl {
-    font-size: 1.5rem;
-  }
-  
-  .font-bold {
-    font-weight: 700;
-  }
-  
-  .text-gray-800 {
-    color: #1f2937;
-  }
-  
-  .text-gray-500 {
-    color: #6b7280;
-  }
-  
-  .text-sm {
-    font-size: 0.875rem;
-  }
-  
-  @media (max-width: 640px) {
-    .grid-cols-2 {
-      grid-template-columns: 1fr;
-      gap: 0;
-    }
-  }
-</style>
