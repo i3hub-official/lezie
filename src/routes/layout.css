@@ -1147,3 +1147,546 @@ main {
     display: inline-flex;
   }
 }
+
+/* ─── Report Page Styles ─────────────────────────────────────── */
+
+.report-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--primary-bg) 0%, #ffffff 100%);
+  padding: clamp(1rem, 5vw, 2rem);
+}
+
+.report-container {
+  max-width: min(800px, 100%);
+  margin: 0 auto;
+}
+
+/* Header */
+.report-header {
+  text-align: center;
+  margin-bottom: clamp(1.5rem, 4vw, 2rem);
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--gray-color);
+  font-size: clamp(0.813rem, 2vw, 0.875rem);
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  transition: color 0.2s;
+}
+
+.back-button:hover {
+  color: var(--primary-color);
+}
+
+.report-title {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  font-weight: 800;
+  color: var(--dark-color);
+  margin-bottom: 0.5rem;
+}
+
+.report-subtitle {
+  color: var(--gray-color);
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+}
+
+/* Form */
+.report-form {
+  background: white;
+  border-radius: clamp(1rem, 3vw, 1.5rem);
+  padding: clamp(1rem, 4vw, 2rem);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.form-group {
+  margin-bottom: clamp(1rem, 3vw, 1.5rem);
+}
+
+.form-label {
+  display: block;
+  font-weight: 600;
+  font-size: clamp(0.813rem, 2vw, 0.875rem);
+  color: var(--dark-color);
+  margin-bottom: 0.5rem;
+}
+
+.required {
+  color: var(--danger-color);
+}
+
+.form-input,
+.location-input {
+  width: 100%;
+  padding: clamp(0.5rem, 2vw, 0.75rem) clamp(0.75rem, 2vw, 1rem);
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  font-size: clamp(0.813rem, 2vw, 0.875rem);
+  transition: all 0.2s;
+}
+
+.form-input:focus,
+.location-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(106, 44, 145, 0.1);
+}
+
+.form-textarea {
+  width: 100%;
+  padding: clamp(0.5rem, 2vw, 0.75rem) clamp(0.75rem, 2vw, 1rem);
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  font-size: clamp(0.813rem, 2vw, 0.875rem);
+  font-family: inherit;
+  resize: vertical;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(106, 44, 145, 0.1);
+}
+
+.form-hint {
+  font-size: clamp(0.688rem, 1.8vw, 0.75rem);
+  color: var(--gray-color);
+  margin-top: 0.25rem;
+}
+
+/* Category Grid */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+  gap: clamp(0.5rem, 2vw, 0.75rem);
+}
+
+.category-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: clamp(0.5rem, 2vw, 0.6rem) clamp(0.75rem, 2vw, 1rem);
+  background: var(--light-color);
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  color: var(--dark-color);
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.category-btn:hover {
+  border-color: var(--primary-color);
+  background: var(--primary-bg);
+}
+
+.category-btn.selected {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+/* Severity Grid */
+.severity-grid {
+  display: flex;
+  gap: clamp(0.5rem, 2vw, 0.75rem);
+  flex-wrap: wrap;
+}
+
+.severity-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: clamp(0.4rem, 1.8vw, 0.5rem) clamp(0.75rem, 2vw, 1rem);
+  background: var(--light-color);
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.severity-btn.selected {
+  background: var(--severity-color);
+  border-color: var(--severity-color);
+  color: white;
+}
+
+.severity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* Location */
+.location-area {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.5rem, 2vw, 0.75rem);
+}
+
+.location-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: clamp(0.5rem, 2vw, 0.6rem) clamp(0.75rem, 2vw, 1rem);
+  background: var(--primary-bg);
+  border: 1px solid var(--primary-border);
+  border-radius: 0.75rem;
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  color: var(--primary-color);
+  cursor: pointer;
+  transition: all 0.2s;
+  width: fit-content;
+}
+
+.location-button:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+.location-input-group {
+  position: relative;
+}
+
+.location-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-color);
+  width: clamp(16px, 4vw, 18px);
+  height: clamp(16px, 4vw, 18px);
+}
+
+.location-input {
+  padding-left: clamp(2rem, 8vw, 2.5rem);
+}
+
+.location-confirmed {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: clamp(0.688rem, 1.8vw, 0.75rem);
+  color: var(--success-color);
+  background: #f0fdf4;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Media Upload */
+.upload-area {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 3vw, 1rem);
+  flex-wrap: wrap;
+}
+
+.upload-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: clamp(0.5rem, 2vw, 0.6rem) clamp(0.75rem, 3vw, 1.25rem);
+  background: var(--light-color);
+  border: 1px dashed #d1d5db;
+  border-radius: 0.75rem;
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.upload-button:hover {
+  border-color: var(--primary-color);
+  background: var(--primary-bg);
+}
+
+.upload-hint {
+  font-size: clamp(0.688rem, 1.8vw, 0.75rem);
+  color: var(--gray-color);
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100px, 25%), 1fr));
+  gap: clamp(0.5rem, 2vw, 0.75rem);
+  margin-top: 1rem;
+}
+
+.media-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.media-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-media {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: white;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+/* Checkbox */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  color: var(--dark-color);
+}
+
+.checkbox {
+  width: clamp(0.875rem, 2.5vw, 1rem);
+  height: clamp(0.875rem, 2.5vw, 1rem);
+  cursor: pointer;
+}
+
+/* Messages */
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: clamp(0.5rem, 2vw, 0.75rem) clamp(0.75rem, 2vw, 1rem);
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.75rem;
+  color: var(--danger-color);
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  margin-bottom: 1rem;
+}
+
+.success-message {
+  text-align: center;
+  padding: clamp(1.5rem, 5vw, 3rem);
+  background: white;
+  border-radius: 1.5rem;
+}
+
+.success-message h3 {
+  margin: 1rem 0 0.5rem;
+  color: var(--success-color);
+  font-size: clamp(1rem, 4vw, 1.25rem);
+}
+
+.success-message p {
+  font-size: clamp(0.813rem, 2.5vw, 0.875rem);
+}
+
+/* Submit Button */
+.form-actions {
+  margin-top: clamp(1.5rem, 4vw, 2rem);
+}
+
+.submit-button {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: clamp(0.75rem, 2.5vw, 0.875rem) clamp(1rem, 3vw, 1.5rem);
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.submit-button:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.submit-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+/* Safety Note */
+.safety-note {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: clamp(0.75rem, 2vw, 1rem);
+  background: #fef3c7;
+  border-radius: 0.75rem;
+  margin-top: 1.5rem;
+  font-size: clamp(0.688rem, 1.8vw, 0.75rem);
+  color: #92400e;
+}
+
+/* Tablet Responsive */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .report-container {
+    max-width: 700px;
+  }
+  
+  .category-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}
+
+/* Desktop Responsive */
+@media (min-width: 1025px) {
+  .report-container {
+    max-width: 800px;
+  }
+  
+  .report-form {
+    padding: 2rem;
+  }
+  
+  .category-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .report-container {
+    padding: 0;
+  }
+  
+  .report-form {
+    padding: 1.25rem;
+    border-radius: 1rem;
+  }
+  
+  .report-title {
+    font-size: 1.5rem;
+  }
+  
+  .category-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .category-btn {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.813rem;
+  }
+  
+  .severity-grid {
+    gap: 0.5rem;
+  }
+  
+  .severity-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.813rem;
+  }
+  
+  .location-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .upload-area {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .upload-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .media-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.5rem;
+  }
+  
+  .location-confirmed {
+    font-size: 0.688rem;
+  }
+  
+  .safety-note {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+}
+
+/* Small Mobile Responsive */
+@media (max-width: 480px) {
+  .report-page {
+    padding: 0.75rem;
+  }
+  
+  .report-form {
+    padding: 1rem;
+    border-radius: 0.875rem;
+  }
+  
+  .report-title {
+    font-size: 1.25rem;
+  }
+  
+  .report-subtitle {
+    font-size: 0.75rem;
+  }
+  
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .category-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+  
+  .severity-btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  
+  .submit-button {
+    padding: 0.7rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .category-btn,
+  .severity-btn,
+  .location-button,
+  .upload-button,
+  .submit-button {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .category-btn:active,
+  .severity-btn:active,
+  .location-button:active,
+  .upload-button:active {
+    transform: scale(0.98);
+  }
+                                            }
