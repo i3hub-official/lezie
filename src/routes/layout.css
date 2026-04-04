@@ -1561,7 +1561,6 @@ main {
 
 /* SIGNUP PAGE STYLE */
 
-<style>
   /* Header */
   .signup-header {
     text-align: center;
@@ -1773,4 +1772,3 @@ main {
       transform: translateY(0);
     }
   }
-</style>
