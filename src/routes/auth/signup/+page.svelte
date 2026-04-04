@@ -512,3 +512,217 @@
     <a href="/auth/signin" class="auth-link">Sign in</a>
   </p>
 </div>
+
+<style>
+  /* Header */
+  .signup-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .signup-title {
+    font-size: clamp(1.5rem, 5vw, 1.875rem);
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+  }
+
+  .signup-subtitle {
+    font-size: clamp(0.75rem, 3vw, 0.875rem);
+    color: var(--gray-color);
+  }
+
+  /* Progress Steps */
+  .signup-progress {
+    margin-bottom: 2rem;
+    padding: 0 1rem;
+  }
+
+  .signup-step-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .signup-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .signup-step-number {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--light-color);
+    border: 2px solid #e5e7eb;
+    border-radius: 50%;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-color);
+    transition: all 0.3s ease;
+  }
+
+  .signup-step.active .signup-step-number {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+  }
+
+  .signup-step.completed .signup-step-number {
+    background: var(--success-color);
+    border-color: var(--success-color);
+    color: white;
+  }
+
+  .signup-step-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--gray-color);
+  }
+
+  .signup-step.active .signup-step-label {
+    color: var(--primary-color);
+  }
+
+  .signup-step.completed .signup-step-label {
+    color: var(--success-color);
+  }
+
+  .signup-step-line {
+    width: 60px;
+    height: 2px;
+    background: #e5e7eb;
+    transition: background 0.3s ease;
+  }
+
+  .signup-step-line.active {
+    background: var(--primary-color);
+  }
+
+  /* Form Sections */
+  .signup-form {
+    width: 100%;
+  }
+
+  .signup-step-content {
+    animation: fadeInUp 0.4s ease;
+  }
+
+  .signup-section {
+    background: white;
+    border-radius: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .signup-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--primary-border);
+  }
+
+  .signup-section-header h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--dark-color);
+  }
+
+  .signup-section-header svg {
+    color: var(--primary-color);
+  }
+
+  .signup-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  /* Buttons */
+  .signup-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .signup-btn-next {
+    flex: 1;
+  }
+
+  .signup-btn-back {
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-color);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .signup-btn-back:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+
+  /* Footer */
+  .signup-footer {
+    margin-top: 1.5rem;
+    text-align: center;
+  }
+
+  .signup-footer-text {
+    font-size: clamp(0.75rem, 3vw, 0.875rem);
+    color: var(--gray-color);
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .signup-grid {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .signup-step-line {
+      width: 30px;
+    }
+
+    .signup-step-number {
+      width: 32px;
+      height: 32px;
+      font-size: 0.75rem;
+    }
+
+    .signup-step-label {
+      font-size: 0.688rem;
+    }
+
+    .signup-buttons {
+      flex-direction: column-reverse;
+      gap: 0.75rem;
+    }
+
+    .signup-btn-back {
+      width: 100%;
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
