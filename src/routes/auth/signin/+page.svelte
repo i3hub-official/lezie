@@ -101,14 +101,13 @@
         <label for="email" class="auth-label">Email Address</label>
         <div class="auth-input-wrapper">
           <Mail size={18} class="auth-input-icon" />
-          <input
-            type="email"
-            id="email"
-            placeholder="you@example.com"
-            bind:value={formData.email}
-            class="auth-input {errors.email ? 'input-error' : ''}"
-            autofocus
-          />
+     <input
+  type="email"
+  id="email"
+  placeholder="you@example.com"
+  bind:value={formData.email}
+  class="auth-input {errors.email ? 'input-error' : ''}"
+/>
         </div>
         {#if errors.email}
           <span class="auth-error-message">{errors.email}</span>
@@ -139,14 +138,13 @@
         <label for="password" class="auth-label">Password</label>
         <div class="auth-input-wrapper">
           <Lock size={18} class="auth-input-icon" />
-          <input
-            type={showPassword ? 'text' : 'password'}
-            id="password"
-            placeholder="Enter your password"
-            bind:value={formData.password}
-            class="auth-input auth-input-has-toggle {errors.password ? 'input-error' : ''}"
-            autofocus
-          />
+        <input
+  type={showPassword ? 'text' : 'password'}
+  id="password"
+  placeholder="Enter your password"
+  bind:value={formData.password}
+  class="auth-input auth-input-has-toggle {errors.password ? 'input-error' : ''}"
+/>
           <button
             type="button"
             class="auth-toggle-password"
