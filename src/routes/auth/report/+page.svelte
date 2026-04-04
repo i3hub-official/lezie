@@ -1,17 +1,14 @@
+
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import {
     MapPin,
     Camera,
-    Upload,
     X,
     AlertTriangle,
     Send,
     Navigation,
-    Image as ImageIcon,
-    Video,
-    Mic,
     Shield,
     EyeOff,
     CheckCircle,
@@ -125,18 +122,22 @@
     // Validation
     if (!title.trim()) {
       error = 'Please enter a title';
+      setTimeout(() => error = '', 3000);
       return;
     }
     if (!description.trim()) {
       error = 'Please enter a description';
+      setTimeout(() => error = '', 3000);
       return;
     }
     if (!category) {
       error = 'Please select a category';
+      setTimeout(() => error = '', 3000);
       return;
     }
     if (!location) {
       error = 'Please select a location';
+      setTimeout(() => error = '', 3000);
       return;
     }
     
@@ -181,6 +182,7 @@
       
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to submit report';
+      setTimeout(() => error = '', 3000);
     } finally {
       isSubmitting = false;
     }
@@ -194,7 +196,6 @@
 <svelte:head>
   <title>Report Incident - Lezie</title>
   <meta name="description" content="Report an incident in your community. Help keep your neighbourhood safe." />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
 </svelte:head>
 
 <div class="report-page">
