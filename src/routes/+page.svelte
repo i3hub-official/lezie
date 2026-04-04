@@ -25,7 +25,7 @@
     Clock,
     Upload,
     CheckCircle,
-Siren,
+    Siren,
   } from 'lucide-svelte';
 
   // Fix: Use $state() for reactive variable
@@ -54,8 +54,8 @@ Siren,
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </svelte:head>
 
-<!-- ── FLOATING ACTION BUTTON (LIKE CHAT BUTTON) ── -->
-<a href="/auth/signin" class="lz-fab" aria-label="Report an incident">
+<!-- ── FLOATING ACTION BUTTON (REPORT INCIDENT) ── -->
+<a href="/auth/report" class="lz-fab" aria-label="Report an incident">
   <FlagTriangleRight size={20} />
   <span>Report incident</span>
 </a>
@@ -85,7 +85,7 @@ Siren,
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('features')}>Features</button>
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('how-it-works')}>How it works</button>
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('safety-tips')}>Safety tips</button>
-      <a href="/auth/signin" class="lz-nav-cta">Report an incident</a>
+      <a href="/auth/report" class="lz-nav-cta">Report an incident</a>
     </div>
   </div>
 </nav>
@@ -161,7 +161,7 @@ Siren,
         <div class="lz-leg-item"><span class="lz-leg-dot" style="background:var(--primary-bg)"></span>Monitored</div>
       </div>
       <div style="margin-top: 1rem; text-align: center;">
-        <a href="/auth/signin" style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--primary-color); text-decoration: none;">
+        <a href="/auth/report" style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--primary-color); text-decoration: none;">
           <FlagTriangleRight size={14} />
           Report incident on this map
         </a>
@@ -184,7 +184,7 @@ Siren,
         <div class="lz-feat-icon"><Radio size={22} style="color:var(--primary-color)" /></div>
         <h3>Real-time incident reporting</h3>
         <p>Report incidents instantly with photos, videos, and precise location tracking. Get immediate alerts to nearby community members.</p>
-        <a href="/auth/signin" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report now →</a>
+        <a href="/auth/report" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report now →</a>
       </div>
       <div class="lz-feat-card animate-on-scroll">
         <div class="lz-feat-icon"><Cpu size={22} style="color:var(--primary-color)" /></div>
@@ -205,7 +205,7 @@ Siren,
         <div class="lz-feat-icon"><EyeOff size={22} style="color:var(--primary-color)" /></div>
         <h3>Anonymous reporting</h3>
         <p>Report safely and securely with optional anonymity. Your identity remains protected while helping your community stay safe.</p>
-        <a href="/auth/signin" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report anonymously →</a>
+        <a href="/auth/report" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report anonymously →</a>
       </div>
       <div class="lz-feat-card animate-on-scroll">
         <div class="lz-feat-icon"><BellRing size={22} style="color:var(--primary-color)" /></div>
@@ -234,7 +234,7 @@ Siren,
         <div class="lz-bdg-row">
           <span class="lz-bdg">"Suspicious activity on Main St"</span>
         </div>
-        <a href="/auth/signin" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Start reporting →</a>
+        <a href="/auth/report" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Start reporting →</a>
       </div>
       <div class="lz-step animate-on-scroll">
         <div class="lz-step-num">2</div>
@@ -293,7 +293,7 @@ Siren,
         <div class="lz-tip-ico"><FlagTriangleRight size={24} style="color:var(--primary-color)" /></div>
         <h3>Report suspicious activity</h3>
         <p>Don't hesitate to report suspicious behaviour. Your report could prevent a crime and help others.</p>
-        <a href="/auth/signin" style="display: inline-block; margin-top: 0.75rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report now →</a>
+        <a href="/auth/report" style="display: inline-block; margin-top: 0.75rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report now →</a>
       </div>
       <div class="lz-tip animate-on-scroll">
         <div class="lz-tip-ico"><PhoneCall size={24} style="color:var(--primary-color)" /></div>
@@ -315,7 +315,7 @@ Siren,
           Get started for free
           <ArrowRight size={16} />
         </a>
-        <a href="/auth/signin" class="lz-btn-outline-lg">
+        <a href="/auth/report" class="lz-btn-outline-lg">
           <FlagTriangleRight size={16} />
           Report an incident
         </a>
@@ -354,7 +354,7 @@ Siren,
         <button type="button" class="lz-foot-link" onclick={() => scrollToSection('features')}>Features</button>
         <button type="button" class="lz-foot-link" onclick={() => scrollToSection('how-it-works')}>How it works</button>
         <a href="/dashboard" class="lz-foot-link">Dashboard</a>
-        <a href="/auth/signin" class="lz-foot-link">Report incident</a>
+        <a href="/auth/report" class="lz-foot-link">Report incident</a>
       </div>
 
       <div class="lz-foot-col">
