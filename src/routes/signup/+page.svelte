@@ -449,7 +449,7 @@
 
       <!-- Footer -->
       <p class="su-footer-text">
-        Already have an account? <a href="/auth/signin" class="su-link">Sign in</a>
+        Already have an account? <a href="/signin" class="su-link">Sign in</a>
       </p>
     </div>
   </main>
