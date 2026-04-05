@@ -515,7 +515,6 @@
     width: 60px;
   height: auto;
   object-fit: contain;
-    display: block;
   }
 
   /* Panel copy */
