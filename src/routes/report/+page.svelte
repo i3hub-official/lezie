@@ -719,7 +719,15 @@
   .rp-cat-btn--active {
     background: var(--cat-color, var(--primary-color));
     border-color: var(--cat-color, var(--primary-color));
-    color: white;
+    color: white !important;
+  }
+
+  .rp-cat-btn--active span,
+  .rp-cat-btn--active:hover,
+  .rp-cat-btn--active:active,
+  .rp-cat-btn--active:focus {
+    color: white !important;
+    background: var(--cat-color, var(--primary-color));
   }
 
   .rp-cat-btn--active .rp-cat-icon { color: white !important; }
@@ -740,9 +748,19 @@
 
   .rp-sev-btn--active {
     border-color: var(--sev-color);
-    background: color-mix(in srgb, var(--sev-color) 10%, white);
+    background: color-mix(in srgb, var(--sev-color) 12%, white);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--sev-color) 15%, transparent);
   }
+
+  .rp-sev-btn--active:hover,
+  .rp-sev-btn--active:active,
+  .rp-sev-btn--active:focus {
+    background: color-mix(in srgb, var(--sev-color) 12%, white);
+    border-color: var(--sev-color);
+  }
+
+  .rp-sev-btn--active .rp-sev-label { color: var(--dark-color) !important; }
+  .rp-sev-btn--active .rp-sev-desc  { color: var(--gray-color) !important; }
 
   .rp-sev-pip {
     width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
