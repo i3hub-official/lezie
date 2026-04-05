@@ -74,7 +74,7 @@
     if (isAuthenticated) {
       goto('/dashboard');
     } else {
-      goto('/auth/signup');
+      goto('/signup');
     }
   };
 </script>
@@ -121,11 +121,11 @@
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('safety-tips')}>Safety tips</button>
       {#if isAuthenticated}
         <button class="lz-nav-link" onclick={() => goto('/dashboard')}>Dashboard</button>
-        <button class="lz-nav-link" onclick={() => goto('/auth/report')}>Report</button>
+        <button class="lz-nav-link" onclick={() => goto('/report')}>Report</button>
         <button class="lz-nav-link" onclick={() => authStore.logout()}>Sign Out</button>
       {:else}
-        <a href="/auth/signin" class="lz-nav-link">Sign In</a>
-        <a href="/auth/signup" class="lz-nav-cta">Get Started</a>
+        <a href="/signin" class="lz-nav-link">Sign In</a>
+        <a href="/signup" class="lz-nav-cta">Get Started</a>
       {/if}
     </div>
   </div>
@@ -218,7 +218,7 @@
           <div class="lz-leg-item"><span class="lz-leg-dot" style="background:var(--primary-color)"></span>Active</div>
           <div class="lz-leg-item"><span class="lz-leg-dot" style="background:var(--primary-light)"></span>Recent</div>
         </div>
-        <button class="lz-map-cta" onclick={() => goto('/auth/report')}>
+        <button class="lz-map-cta" onclick={() => goto('/report')}>
           <FlagTriangleRight size={14} />
           Report incident on this map
           <ChevronRight size={14} />
@@ -294,7 +294,7 @@
         <h3>Report an incident</h3>
         <p>Quickly report incidents with details, photos, and location. Choose to report anonymously or with your identity.</p>
         <div class="lz-step-example">"Suspicious activity on Main St"</div>
-        <button class="lz-step-link" onclick={() => goto('/auth/report')}>
+        <button class="lz-step-link" onclick={() => goto('/report')}>
           Start reporting <ChevronRight size={14} />
         </button>
       </div>
