@@ -713,7 +713,7 @@
     transition: all .2s; text-align: left;
   }
 
-  .rp-cat-btn:hover { border-color: var(--primary-border); background: var(--primary-bg); }
+  .rp-cat-btn:hover { border-color: var(--primary-color); background: white; }
   .rp-cat-btn:active { transform: scale(.98); }
 
   .rp-cat-btn--active {
@@ -735,7 +735,7 @@
     font-family: 'DM Sans', sans-serif; transition: all .2s;
   }
 
-  .rp-sev-btn:hover { border-color: var(--primary-border); background: var(--primary-bg); }
+  .rp-sev-btn:hover { border-color: var(--primary-color); background: white; }
   .rp-sev-btn:active { transform: scale(.99); }
 
   .rp-sev-btn--active {
