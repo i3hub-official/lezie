@@ -1,4 +1,3 @@
-// INCIDENT REPORT PAGE
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -29,7 +28,10 @@
     Store,
     Building2,
     Map,
-    Clock
+    Clock,
+    Crosshair,
+    Layers,
+    Check
   } from 'lucide-svelte';
 
   // State declarations
@@ -39,6 +41,7 @@
   let isSearchingLocation = $state(false);
   let locationSearchResults = $state<any[]>([]);
   let showLocationSearch = $state(false);
+  let isGettingUserLocation = $state(false);
   
   // Form fields
   let title = $state('');
@@ -50,27 +53,28 @@
   // User's fixed location (cannot be removed)
   let userLocation = $state<{ lat: number; lng: number; details: any } | null>(null);
   let isLoadingUserLocation = $state(true);
+  let locationError = $state('');
   
   // Additional location (can be added from search, max 1)
   let additionalLocation = $state<{ lat: number; lng: number; details: any } | null>(null);
   
   // Categories
   const categories = [
-    { value: 'suspicious', label: 'Suspicious Activity', icon: AlertTriangle, color: '#F59E0B' },
-    { value: 'theft', label: 'Theft / Robbery', icon: AlertOctagon, color: '#EF4444' },
-    { value: 'vandalism', label: 'Vandalism', icon: Building, color: '#F97316' },
-    { value: 'fire', label: 'Fire / Emergency', icon: Flame, color: '#DC2626' },
-    { value: 'accident', label: 'Accident', icon: Car, color: '#F59E0B' },
-    { value: 'noise', label: 'Noise Complaint', icon: Volume2, color: '#8B5CF6' },
-    { value: 'other', label: 'Other', icon: MoreHorizontal, color: '#6B7280' }
+    { value: 'suspicious', label: 'Suspicious Activity', icon: AlertTriangle, color: '#F59E0B', bg: '#FEF3C7' },
+    { value: 'theft', label: 'Theft / Robbery', icon: AlertOctagon, color: '#EF4444', bg: '#FEE2E2' },
+    { value: 'vandalism', label: 'Vandalism', icon: Building, color: '#F97316', bg: '#FFEDD5' },
+    { value: 'fire', label: 'Fire / Emergency', icon: Flame, color: '#DC2626', bg: '#FEE2E2' },
+    { value: 'accident', label: 'Accident', icon: Car, color: '#F59E0B', bg: '#FEF3C7' },
+    { value: 'noise', label: 'Noise Complaint', icon: Volume2, color: '#8B5CF6', bg: '#EDE9FE' },
+    { value: 'other', label: 'Other', icon: MoreHorizontal, color: '#6B7280', bg: '#F3F4F6' }
   ];
   
   // Severity options
   const severityOptions = [
-    { value: 'low', label: 'Low', color: '#10B981', description: 'Non-urgent, monitor situation' },
-    { value: 'medium', label: 'Medium', color: '#F59E0B', description: 'Caution advised' },
-    { value: 'high', label: 'High', color: '#F97316', description: 'Urgent, attention needed' },
-    { value: 'critical', label: 'Critical', color: '#EF4444', description: 'Emergency, immediate action' }
+    { value: 'low', label: 'Low', color: '#10B981', bg: '#D1FAE5', description: 'Non-urgent, monitor situation' },
+    { value: 'medium', label: 'Medium', color: '#F59E0B', bg: '#FEF3C7', description: 'Caution advised' },
+    { value: 'high', label: 'High', color: '#F97316', bg: '#FFEDD5', description: 'Urgent, attention needed' },
+    { value: 'critical', label: 'Critical', color: '#EF4444', bg: '#FEE2E2', description: 'Emergency, immediate action' }
   ];
   
   // Media files
@@ -84,6 +88,7 @@
   // Get user's fixed location (cannot be removed)
   async function getUserFixedLocation() {
     isLoadingUserLocation = true;
+    locationError = '';
     
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -96,12 +101,13 @@
         },
         async (err) => {
           console.error('Geolocation error:', err);
-          // Fallback to IP-based location
+          locationError = 'Unable to get your location. Please enable location services.';
           await getFallbackLocation();
           isLoadingUserLocation = false;
         }
       );
     } else {
+      locationError = 'Geolocation is not supported by your browser.';
       await getFallbackLocation();
       isLoadingUserLocation = false;
     }
@@ -112,13 +118,21 @@
     try {
       const response = await fetch('https://ipapi.co/json/');
       const data = await response.json();
-      const lat = data.latitude;
-      const lng = data.longitude;
-      const details = await getFullAddressFromCoords(lat, lng);
-      userLocation = { lat, lng, details };
+      if (data.latitude && data.longitude) {
+        const lat = data.latitude;
+        const lng = data.longitude;
+        const details = await getFullAddressFromCoords(lat, lng);
+        userLocation = { lat, lng, details };
+      }
     } catch (err) {
       console.error('IP location error:', err);
     }
+  }
+  
+  // Retry getting location
+  async function retryGetLocation() {
+    locationError = '';
+    await getUserFixedLocation();
   }
   
   // Get full address and nearby places
@@ -132,11 +146,11 @@
       
       // Get nearby places (within 500m)
       const nearbyResponse = await fetch(
-        `https://overpass-api.de/api/interpreter?data=[out:json];(node["name"] around:500,${lat},${lng};way["name"] around:500,${lat},${lng};rel["name"] around:500,${lat},${lng});out body;`
+        `https://overpass-api.de/api/interpreter?data=[out:json];(node["name"] around:500,${lat},${lng};way["name"] around:500,${lat},${lng});out body;`
       );
       const nearbyData = await nearbyResponse.json();
       
-      // Extract nearby places (shops, restaurants, landmarks, etc.)
+      // Extract nearby places
       const nearbyPlaces = [];
       const seenNames = new Set();
       
@@ -154,34 +168,37 @@
         }
       }
       
-      // Sort by distance and take top 10
       nearbyPlaces.sort((a, b) => a.distance - b.distance);
       
       const addr = reverseData.address || {};
       return {
-        street: [addr.road, addr.house_number].filter(Boolean).join(' ') || addr.suburb || addr.neighbourhood || '',
+        fullAddress: reverseData.display_name || '',
+        street: [addr.road, addr.house_number].filter(Boolean).join(' ') || '',
         city: addr.city || addr.town || addr.village || addr.municipality || '',
         state: addr.state || addr.region || '',
         postalCode: addr.postcode || '',
         country: addr.country || '',
-        displayName: reverseData.display_name || '',
-        nearbyPlaces: nearbyPlaces.slice(0, 10)
+        neighbourhood: addr.neighbourhood || addr.suburb || '',
+        road: addr.road || '',
+        nearbyPlaces: nearbyPlaces.slice(0, 8)
       };
     } catch (err) {
       console.error('Reverse geocoding error:', err);
       return {
+        fullAddress: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
         street: '',
         city: '',
         state: '',
         postalCode: '',
         country: '',
-        displayName: '',
+        neighbourhood: '',
+        road: '',
         nearbyPlaces: []
       };
     }
   }
   
-  // Calculate distance between two coordinates in meters
+  // Calculate distance
   function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371e3;
     const φ1 = lat1 * Math.PI / 180;
@@ -192,7 +209,7 @@
               Math.cos(φ1) * Math.cos(φ2) *
               Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+    return Math.round(R * c);
   }
   
   // Search for locations
@@ -213,48 +230,26 @@
         const lat = parseFloat(result.lat);
         const lon = parseFloat(result.lon);
         
-        // Get additional details for this location
         const detailsResponse = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`
         );
         const detailsData = await detailsResponse.json();
-        
-        // Get nearby places for this location
-        const nearbyResponse = await fetch(
-          `https://overpass-api.de/api/interpreter?data=[out:json];(node["name"] around:300,${lat},${lon};way["name"] around:300,${lat},${lon});out body;`
-        );
-        const nearbyData = await nearbyResponse.json();
-        
-        const nearbyPlaces = [];
-        const seenNames = new Set();
-        
-        if (nearbyData.elements) {
-          for (const element of nearbyData.elements) {
-            if (element.tags && element.tags.name && !seenNames.has(element.tags.name)) {
-              seenNames.add(element.tags.name);
-              const placeType = element.tags.shop || element.tags.amenity || element.tags.tourism || 'place';
-              nearbyPlaces.push({
-                name: element.tags.name,
-                type: placeType
-              });
-            }
-          }
-        }
         
         const addr = detailsData.address || {};
         return {
           lat,
           lon,
           displayName: result.display_name,
-          category: result.category || 'place',
+          category: result.category,
           type: result.type,
           details: {
-            street: [addr.road, addr.house_number].filter(Boolean).join(' ') || addr.suburb || '',
+            fullAddress: result.display_name,
+            street: [addr.road, addr.house_number].filter(Boolean).join(' ') || '',
             city: addr.city || addr.town || addr.village || '',
             state: addr.state || '',
             postalCode: addr.postcode || '',
             country: addr.country || '',
-            nearbyPlaces: nearbyPlaces.slice(0, 5)
+            neighbourhood: addr.neighbourhood || addr.suburb || ''
           }
         };
       }));
@@ -265,7 +260,7 @@
     }
   }
   
-  // Add location from search (replaces existing additional location)
+  // Add location from search
   function addLocationFromSearch(result: any) {
     additionalLocation = {
       lat: result.lat,
@@ -273,8 +268,7 @@
       details: {
         ...result.details,
         displayName: result.displayName,
-        category: result.category,
-        type: result.type
+        category: result.category
       }
     };
     showLocationSearch = false;
@@ -284,21 +278,6 @@
   // Remove additional location
   function removeAdditionalLocation() {
     additionalLocation = null;
-  }
-  
-  // Get place type icon
-  function getPlaceIcon(type: string) {
-    const icons: Record<string, any> = {
-      shop: Store,
-      restaurant: Building2,
-      cafe: Building2,
-      hotel: Building2,
-      school: Building,
-      hospital: Building,
-      park: Map,
-      default: MapPin
-    };
-    return icons[type] || icons.default;
   }
   
   // Handle file upload
@@ -337,7 +316,6 @@
   async function handleSubmit(e: Event) {
     e.preventDefault();
     
-    // Validation
     if (!title.trim()) {
       error = 'Please enter a title';
       setTimeout(() => error = '', 3000);
@@ -373,22 +351,6 @@
     error = '';
     
     try {
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('description', description);
-      formData.append('category', category);
-      formData.append('severity', severity);
-      formData.append('isAnonymous', String(isAnonymous));
-      formData.append('userLocation', JSON.stringify(userLocation));
-      if (additionalLocation) {
-        formData.append('additionalLocation', JSON.stringify(additionalLocation));
-      }
-      
-      mediaFiles.forEach(file => {
-        formData.append('media', file);
-      });
-      
-      // TODO: Replace with actual API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       console.log('Report submitted:', {
@@ -433,13 +395,13 @@
     <div class="report-header">
       <button class="back-button" onclick={goBack}>
         <ChevronLeft size={20} />
-        Back
+        Back to Dashboard
       </button>
       <div class="report-icon-wrapper">
         <AlertTriangle size={32} />
       </div>
       <h1 class="report-title">Report an Incident</h1>
-      <p class="report-subtitle">Your report helps keep the community safe</p>
+      <p class="report-subtitle">Your report helps keep the community safe and informed</p>
     </div>
 
     <!-- Success Message -->
@@ -459,304 +421,350 @@
 
     <!-- Form -->
     <form class="report-form" onsubmit={handleSubmit}>
-      <!-- Title -->
-      <div class="form-group">
-        <label class="form-label" for="title">
-          Incident Title <span class="required">*</span>
-        </label>
-        <input
-          id="title"
-          type="text"
-          bind:value={title}
-          class="form-input"
-          placeholder="e.g., Suspicious person near school, Break-in on Main St"
-          maxlength="200"
-        />
-        <div class="form-hint">
-          <span>{title.length}/200 characters</span>
-          {#if title.length < 5 && title.length > 0}
-            <span class="hint-warning">Minimum 5 characters</span>
-          {/if}
-        </div>
-      </div>
-
-      <!-- Category -->
-      <div class="form-group">
-        <label class="form-label">
-          Category <span class="required">*</span>
-        </label>
-        <div class="category-grid">
-          {#each categories as cat}
-            <button
-              type="button"
-              class="category-btn {category === cat.value ? 'selected' : ''}"
-              style={category === cat.value ? `--category-color: ${cat.color}` : ''}
-              onclick={() => category = cat.value}
-            >
-              <cat.icon size={18} />
-              <span>{cat.label}</span>
-            </button>
-          {/each}
-        </div>
-      </div>
-
-      <!-- Severity -->
-      <div class="form-group">
-        <label class="form-label">
-          Severity Level
-        </label>
-        <div class="severity-grid">
-          {#each severityOptions as opt}
-            <button
-              type="button"
-              class="severity-btn {severity === opt.value ? 'selected' : ''}"
-              style={severity === opt.value ? `--severity-color: ${opt.color}` : ''}
-              onclick={() => severity = opt.value}
-            >
-              <TrendingUp size={16} />
-              <div class="severity-info">
-                <span class="severity-label">{opt.label}</span>
-                <span class="severity-desc">{opt.description}</span>
-              </div>
-            </button>
-          {/each}
-        </div>
-      </div>
-
-      <!-- Description -->
-      <div class="form-group">
-        <label class="form-label" for="description">
-          Description <span class="required">*</span>
-        </label>
-        <textarea
-          id="description"
-          bind:value={description}
-          class="form-textarea"
-          rows="5"
-          placeholder="Provide detailed information about what happened. Include time, people involved, and any other relevant details..."
-        ></textarea>
-        <div class="form-hint">
-          <span>{description.length} characters</span>
-          {#if description.length < 20 && description.length > 0}
-            <span class="hint-warning">Minimum 20 characters</span>
-          {/if}
-        </div>
-      </div>
-
-      <!-- User's Fixed Location (Cannot be removed) -->
-      <div class="form-group">
-        <label class="form-label">
-          Your Location <span class="required">*</span>
-          <span class="location-badge">Fixed</span>
-        </label>
-        
-        {#if isLoadingUserLocation}
-          <div class="loading-location">
-            <Loader2 size={20} class="spinning" />
-            <span>Detecting your location...</span>
-          </div>
-        {:else if userLocation}
-          <div class="location-card fixed-location">
-            <div class="location-card-header">
-              <Home size={18} class="location-icon-primary" />
-              <strong>Your Current Location</strong>
-              <span class="fixed-badge">Cannot be removed</span>
-            </div>
-            <div class="location-details-grid">
-              {#if userLocation.details.street}
-                <div class="location-detail-item">
-                  <span class="detail-label">Street:</span>
-                  <span class="detail-value">{userLocation.details.street}</span>
-                </div>
-              {/if}
-              {#if userLocation.details.city}
-                <div class="location-detail-item">
-                  <span class="detail-label">City:</span>
-                  <span class="detail-value">{userLocation.details.city}</span>
-                </div>
-              {/if}
-              {#if userLocation.details.state}
-                <div class="location-detail-item">
-                  <span class="detail-label">State:</span>
-                  <span class="detail-value">{userLocation.details.state}</span>
-                </div>
-              {/if}
-              {#if userLocation.details.postalCode}
-                <div class="location-detail-item">
-                  <span class="detail-label">Postal Code:</span>
-                  <span class="detail-value">{userLocation.details.postalCode}</span>
-                </div>
-              {/if}
-            </div>
-            
-            <!-- Nearby Places -->
-            {#if userLocation.details.nearbyPlaces && userLocation.details.nearbyPlaces.length > 0}
-              <div class="nearby-places">
-                <div class="nearby-header">
-                  <Map size={14} />
-                  <span>Nearby places (within 500m)</span>
-                </div>
-                <div class="places-list">
-                  {#each userLocation.details.nearbyPlaces.slice(0, 5) as place}
-                    <div class="place-item">
-                      <svelte:component this={getPlaceIcon(place.type)} size={12} />
-                      <span>{place.name}</span>
-                      <span class="place-distance">{Math.round(place.distance)}m</span>
-                    </div>
-                  {/each}
-                </div>
-              </div>
-            {/if}
-          </div>
-        {/if}
-      </div>
-
-      <!-- Additional Location (Optional - Max 1) -->
-      <div class="form-group">
-        <label class="form-label">
-          Additional Location
-          <span class="optional-badge">Optional</span>
-        </label>
-        
-        {#if !additionalLocation}
-          <div class="add-location-area">
-            <button type="button" class="add-location-btn" onclick={() => showLocationSearch = !showLocationSearch}>
-              <Plus size={18} />
-              Add a specific location (shop, landmark, event center)
-            </button>
-            
-            {#if showLocationSearch}
-              <div class="location-search">
-                <div class="search-input-wrapper">
-                  <Search size={16} class="search-icon" />
-                  <input
-                    type="text"
-                    placeholder="Search for shop, restaurant, landmark, event center..."
-                    class="location-search-input"
-                    oninput={(e) => searchLocation(e.currentTarget.value)}
-                  />
-                </div>
-                
-                {#if isSearchingLocation}
-                  <div class="search-loading">
-                    <Loader2 size={20} class="spinning" />
-                    <span>Searching places...</span>
-                  </div>
-                {/if}
-                
-                {#if locationSearchResults.length > 0}
-                  <div class="search-results">
-                    {#each locationSearchResults as result}
-                      <button type="button" class="search-result-item" onclick={() => addLocationFromSearch(result)}>
-                        <div class="result-icon">
-                          <MapPin size={16} />
-                        </div>
-                        <div class="result-details">
-                          <strong>{result.displayName.split(',')[0]}</strong>
-                          <span>{result.displayName}</span>
-                          {#if result.details.nearbyPlaces && result.details.nearbyPlaces.length > 0}
-                            <div class="result-nearby">
-                              Near: {result.details.nearbyPlaces.slice(0, 2).map(p => p.name).join(', ')}
-                            </div>
-                          {/if}
-                        </div>
-                      </button>
-                    {/each}
-                  </div>
-                {/if}
-              </div>
-            {/if}
-          </div>
-        {:else}
-          <div class="location-card additional-location">
-            <div class="location-card-header">
-              <Store size={18} class="location-icon-secondary" />
-              <strong>{additionalLocation.details.displayName.split(',')[0]}</strong>
-              <button type="button" class="remove-location" onclick={removeAdditionalLocation}>
-                <Trash2 size={16} />
-              </button>
-            </div>
-            <div class="location-details-grid">
-              {#if additionalLocation.details.street}
-                <div class="location-detail-item">
-                  <span class="detail-label">Address:</span>
-                  <span class="detail-value">{additionalLocation.details.street}</span>
-                </div>
-              {/if}
-              {#if additionalLocation.details.city}
-                <div class="location-detail-item">
-                  <span class="detail-label">Area:</span>
-                  <span class="detail-value">{additionalLocation.details.city}</span>
-                </div>
-              {/if}
-            </div>
-            
-            <!-- Nearby places for additional location -->
-            {#if additionalLocation.details.nearbyPlaces && additionalLocation.details.nearbyPlaces.length > 0}
-              <div class="nearby-places">
-                <div class="nearby-header">
-                  <Map size={14} />
-                  <span>Nearby landmarks</span>
-                </div>
-                <div class="places-list">
-                  {#each additionalLocation.details.nearbyPlaces.slice(0, 3) as place}
-                    <div class="place-item">
-                      <svelte:component this={getPlaceIcon(place.type)} size={12} />
-                      <span>{place.name}</span>
-                    </div>
-                  {/each}
-                </div>
-              </div>
-            {/if}
-          </div>
-        {/if}
-        
-        <p class="form-hint">Add a specific location like a shop, restaurant, or event center for more precise reporting</p>
-      </div>
-
-      <!-- Media Upload -->
-      <div class="form-group">
-        <label class="form-label">
-          Photos & Videos
-        </label>
-        <div class="upload-area">
-          <label class="upload-button {mediaFiles.length >= 5 ? 'disabled' : ''}">
-            <Camera size={20} />
-            <span>Add Media</span>
+      <div class="form-two-columns">
+        <!-- Left Column -->
+        <div class="form-column">
+          <!-- Title -->
+          <div class="form-group">
+            <label class="form-label" for="title">
+              Incident Title <span class="required">*</span>
+            </label>
             <input
-              type="file"
-              accept="image/*,video/*"
-              multiple
-              hidden
-              onchange={handleFileUpload}
-              disabled={mediaFiles.length >= 5}
+              id="title"
+              type="text"
+              bind:value={title}
+              class="form-input"
+              placeholder="e.g., Suspicious person near school, Break-in on Main St"
+              maxlength="200"
             />
-          </label>
-          <p class="upload-hint">{mediaFiles.length}/5 files (max 10MB each)</p>
+            <div class="form-hint">
+              <span>{title.length}/200 characters</span>
+              {#if title.length < 5 && title.length > 0}
+                <span class="hint-warning">Minimum 5 characters</span>
+              {/if}
+            </div>
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label class="form-label">
+              Category <span class="required">*</span>
+            </label>
+            <div class="category-grid">
+              {#each categories as cat}
+                <button
+                  type="button"
+                  class="category-btn {category === cat.value ? 'selected' : ''}"
+                  style={category === cat.value ? `--category-color: ${cat.color}; --category-bg: ${cat.bg}` : ''}
+                  onclick={() => category = cat.value}
+                >
+                  <cat.icon size={18} />
+                  <span>{cat.label}</span>
+                  {#if category === cat.value}
+                    <Check size={14} class="check-icon" />
+                  {/if}
+                </button>
+              {/each}
+            </div>
+          </div>
+
+          <!-- Severity -->
+          <div class="form-group">
+            <label class="form-label">
+              Severity Level
+            </label>
+            <div class="severity-grid">
+              {#each severityOptions as opt}
+                <button
+                  type="button"
+                  class="severity-btn {severity === opt.value ? 'selected' : ''}"
+                  style={severity === opt.value ? `--severity-color: ${opt.color}; --severity-bg: ${opt.bg}` : ''}
+                  onclick={() => severity = opt.value}
+                >
+                  <TrendingUp size={16} />
+                  <div class="severity-info">
+                    <span class="severity-label">{opt.label}</span>
+                    <span class="severity-desc">{opt.description}</span>
+                  </div>
+                  {#if severity === opt.value}
+                    <Check size={14} class="check-icon" />
+                  {/if}
+                </button>
+              {/each}
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label class="form-label" for="description">
+              Description <span class="required">*</span>
+            </label>
+            <textarea
+              id="description"
+              bind:value={description}
+              class="form-textarea"
+              rows="5"
+              placeholder="Provide detailed information about what happened. Include time, people involved, and any other relevant details..."
+            ></textarea>
+            <div class="form-hint">
+              <span>{description.length} characters</span>
+              {#if description.length < 20 && description.length > 0}
+                <span class="hint-warning">Minimum 20 characters</span>
+              {/if}
+            </div>
+          </div>
         </div>
 
-        {#if mediaPreviews.length > 0}
-          <div class="media-grid">
-            {#each mediaPreviews as preview, index}
-              <div class="media-item">
-                <img src={preview} alt="Preview" class="media-preview" />
-                <button type="button" class="remove-media" onclick={() => removeMedia(index)}>
-                  <X size={16} />
+        <!-- Right Column -->
+        <div class="form-column">
+          <!-- User's Fixed Location -->
+          <div class="form-group">
+            <label class="form-label">
+              <Home size={14} />
+              Your Location <span class="required">*</span>
+              <span class="fixed-badge">Fixed - Cannot be removed</span>
+            </label>
+            
+            {#if isLoadingUserLocation}
+              <div class="loading-location">
+                <Loader2 size={20} class="spinning" />
+                <span>Detecting your location...</span>
+              </div>
+            {:else if locationError}
+              <div class="location-error">
+                <AlertCircle size={18} />
+                <span>{locationError}</span>
+                <button type="button" class="retry-btn" onclick={retryGetLocation}>
+                  <Crosshair size={14} />
+                  Retry
                 </button>
               </div>
-            {/each}
+            {:else if userLocation}
+              <div class="location-card fixed-location">
+                <div class="location-card-header">
+                  <div class="header-icon">
+                    <MapPin size={16} />
+                  </div>
+                  <div class="header-text">
+                    <strong>Your Current Location</strong>
+                    <span class="coords">{userLocation.lat.toFixed(6)}°, {userLocation.lng.toFixed(6)}°</span>
+                  </div>
+                </div>
+                
+                <div class="location-details">
+                  {#if userLocation.details.fullAddress}
+                    <div class="detail-row full-address">
+                      <Map size={14} />
+                      <span>{userLocation.details.fullAddress}</span>
+                    </div>
+                  {/if}
+                  
+                  <div class="detail-grid">
+                    {#if userLocation.details.street}
+                      <div class="detail-item">
+                        <span class="detail-label">Street:</span>
+                        <span class="detail-value">{userLocation.details.street}</span>
+                      </div>
+                    {/if}
+                    {#if userLocation.details.neighbourhood}
+                      <div class="detail-item">
+                        <span class="detail-label">Neighbourhood:</span>
+                        <span class="detail-value">{userLocation.details.neighbourhood}</span>
+                      </div>
+                    {/if}
+                    {#if userLocation.details.city}
+                      <div class="detail-item">
+                        <span class="detail-label">City:</span>
+                        <span class="detail-value">{userLocation.details.city}</span>
+                      </div>
+                    {/if}
+                    {#if userLocation.details.state}
+                      <div class="detail-item">
+                        <span class="detail-label">State:</span>
+                        <span class="detail-value">{userLocation.details.state}</span>
+                      </div>
+                    {/if}
+                    {#if userLocation.details.postalCode}
+                      <div class="detail-item">
+                        <span class="detail-label">Postal Code:</span>
+                        <span class="detail-value">{userLocation.details.postalCode}</span>
+                      </div>
+                    {/if}
+                    {#if userLocation.details.country}
+                      <div class="detail-item">
+                        <span class="detail-label">Country:</span>
+                        <span class="detail-value">{userLocation.details.country}</span>
+                      </div>
+                    {/if}
+                  </div>
+                </div>
+                
+                <!-- Nearby Places -->
+                {#if userLocation.details.nearbyPlaces && userLocation.details.nearbyPlaces.length > 0}
+                  <div class="nearby-section">
+                    <div class="nearby-header">
+                      <Layers size={14} />
+                      <span>Nearby landmarks & places (within 500m)</span>
+                    </div>
+                    <div class="nearby-grid">
+                      {#each userLocation.details.nearbyPlaces as place}
+                        <div class="nearby-item">
+                          <Store size={12} />
+                          <span>{place.name}</span>
+                          <span class="distance">{place.distance}m</span>
+                        </div>
+                      {/each}
+                    </div>
+                  </div>
+                {/if}
+              </div>
+            {/if}
           </div>
-        {/if}
-      </div>
 
-      <!-- Anonymous Option -->
-      <div class="form-group">
-        <label class="checkbox-label">
-          <input type="checkbox" bind:checked={isAnonymous} class="checkbox" />
-          <EyeOff size={16} />
-          <span>Report anonymously</span>
-        </label>
-        <p class="form-hint">Your identity will be hidden from public view</p>
+          <!-- Additional Location -->
+          <div class="form-group">
+            <label class="form-label">
+              <Store size={14} />
+              Additional Location
+              <span class="optional-badge">Optional - Add one specific place</span>
+            </label>
+            
+            {#if !additionalLocation}
+              <div class="add-location-area">
+                <button type="button" class="add-location-btn" onclick={() => showLocationSearch = !showLocationSearch}>
+                  <Plus size={18} />
+                  Add a specific location (shop, restaurant, landmark, event center)
+                </button>
+                
+                {#if showLocationSearch}
+                  <div class="location-search">
+                    <div class="search-input-wrapper">
+                      <Search size={16} class="search-icon" />
+                      <input
+                        type="text"
+                        placeholder="Search for shop, restaurant, landmark, event center..."
+                        class="location-search-input"
+                        oninput={(e) => searchLocation(e.currentTarget.value)}
+                      />
+                    </div>
+                    
+                    {#if isSearchingLocation}
+                      <div class="search-loading">
+                        <Loader2 size={20} class="spinning" />
+                        <span>Searching places...</span>
+                      </div>
+                    {/if}
+                    
+                    {#if locationSearchResults.length > 0}
+                      <div class="search-results">
+                        {#each locationSearchResults as result}
+                          <button type="button" class="search-result-item" onclick={() => addLocationFromSearch(result)}>
+                            <MapPin size={16} class="result-icon" />
+                            <div class="result-info">
+                              <strong>{result.displayName.split(',')[0]}</strong>
+                              <span>{result.details.city || result.details.state}</span>
+                              <span class="result-address">{result.details.street}</span>
+                            </div>
+                          </button>
+                        {/each}
+                      </div>
+                    {/if}
+                  </div>
+                {/if}
+              </div>
+            {:else}
+              <div class="location-card additional-location">
+                <div class="location-card-header">
+                  <div class="header-icon">
+                    <MapPin size={16} />
+                  </div>
+                  <div class="header-text">
+                    <strong>{additionalLocation.details.displayName.split(',')[0]}</strong>
+                    <span class="coords">{additionalLocation.lat.toFixed(6)}°, {additionalLocation.lng.toFixed(6)}°</span>
+                  </div>
+                  <button type="button" class="remove-btn" onclick={removeAdditionalLocation}>
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+                
+                <div class="location-details">
+                  {#if additionalLocation.details.fullAddress}
+                    <div class="detail-row">
+                      <Map size={14} />
+                      <span>{additionalLocation.details.fullAddress}</span>
+                    </div>
+                  {/if}
+                  <div class="detail-grid">
+                    {#if additionalLocation.details.street}
+                      <div class="detail-item">
+                        <span class="detail-label">Street:</span>
+                        <span class="detail-value">{additionalLocation.details.street}</span>
+                      </div>
+                    {/if}
+                    {#if additionalLocation.details.city}
+                      <div class="detail-item">
+                        <span class="detail-label">City:</span>
+                        <span class="detail-value">{additionalLocation.details.city}</span>
+                      </div>
+                    {/if}
+                    {#if additionalLocation.details.state}
+                      <div class="detail-item">
+                        <span class="detail-label">State:</span>
+                        <span class="detail-value">{additionalLocation.details.state}</span>
+                      </div>
+                    {/if}
+                  </div>
+                </div>
+              </div>
+            {/if}
+          </div>
+
+          <!-- Media Upload -->
+          <div class="form-group">
+            <label class="form-label">
+              <Camera size={14} />
+              Photos & Videos
+            </label>
+            <div class="upload-area">
+              <label class="upload-button {mediaFiles.length >= 5 ? 'disabled' : ''}">
+                <Camera size={20} />
+                <span>Add Media</span>
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  multiple
+                  hidden
+                  onchange={handleFileUpload}
+                  disabled={mediaFiles.length >= 5}
+                />
+              </label>
+              <p class="upload-hint">{mediaFiles.length}/5 files (max 10MB each)</p>
+            </div>
+
+            {#if mediaPreviews.length > 0}
+              <div class="media-grid">
+                {#each mediaPreviews as preview, index}
+                  <div class="media-item">
+                    <img src={preview} alt="Preview" class="media-preview" />
+                    <button type="button" class="remove-media" onclick={() => removeMedia(index)}>
+                      <X size={16} />
+                    </button>
+                  </div>
+                {/each}
+              </div>
+            {/if}
+          </div>
+
+          <!-- Anonymous Option -->
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" bind:checked={isAnonymous} class="checkbox" />
+              <EyeOff size={16} />
+              <span>Report anonymously</span>
+            </label>
+            <p class="form-hint">Your identity will be hidden from public view</p>
+          </div>
+        </div>
       </div>
 
       <!-- Error Message -->
@@ -799,9 +807,10 @@
   }
 
   .report-container {
-    max-width: 800px;
+    max-width: 1400px;
+    width: 100%;
     margin: 0 auto;
-    padding: clamp(1rem, 4vw, 2rem);
+    padding: clamp(1rem, 3vw, 2rem);
   }
 
   /* Header */
@@ -819,19 +828,27 @@
     color: #64748b;
     font-size: 0.875rem;
     cursor: pointer;
-    padding: 0.5rem;
+    padding: 0.5rem 0.75rem;
     margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+  }
+
+  .back-button:hover {
+    background: #f1f5f9;
+    color: var(--primary-color);
   }
 
   .report-icon-wrapper {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 64px;
-    height: 64px;
+    width: 72px;
+    height: 72px;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    border-radius: 1rem;
+    border-radius: 1.5rem;
     margin-bottom: 1rem;
+    box-shadow: 0 8px 24px rgba(106, 44, 145, 0.2);
   }
 
   .report-icon-wrapper svg {
@@ -839,7 +856,7 @@
   }
 
   .report-title {
-    font-size: clamp(1.5rem, 5vw, 2rem);
+    font-size: clamp(1.5rem, 4vw, 2rem);
     font-weight: 800;
     color: #0f172a;
     margin-bottom: 0.5rem;
@@ -850,17 +867,30 @@
     font-size: 0.875rem;
   }
 
-  /* Form */
+  /* Form - Two Columns for Desktop */
   .report-form {
     background: white;
     border-radius: 1.5rem;
-    padding: clamp(1.25rem, 4vw, 2rem);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    padding: clamp(1.5rem, 4vw, 2rem);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
     border: 1px solid #e2e8f0;
   }
 
+  .form-two-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+
+  .form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
   .form-group {
-    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
   }
 
   .form-label {
@@ -870,23 +900,23 @@
     font-weight: 600;
     font-size: 0.875rem;
     color: #0f172a;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
   }
 
   .required {
     color: #ef4444;
   }
 
-  .location-badge, .optional-badge {
+  .fixed-badge, .optional-badge {
     font-size: 0.625rem;
     font-weight: 500;
-    padding: 0.125rem 0.5rem;
+    padding: 0.1875rem 0.5rem;
     border-radius: 20px;
     background: #f1f5f9;
     color: #64748b;
   }
 
-  .location-badge {
+  .fixed-badge {
     background: #dbeafe;
     color: #2563eb;
   }
@@ -894,7 +924,7 @@
   .form-input, .form-textarea {
     width: 100%;
     padding: 0.75rem 1rem;
-    border: 1px solid #e2e8f0;
+    border: 1.5px solid #e2e8f0;
     border-radius: 0.75rem;
     font-size: 0.875rem;
     font-family: inherit;
@@ -910,7 +940,7 @@
   .form-hint {
     font-size: 0.688rem;
     color: #94a3b8;
-    margin-top: 0.25rem;
+    margin-top: 0.375rem;
   }
 
   .hint-warning {
@@ -920,67 +950,69 @@
   /* Category Grid */
   .category-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.75rem;
   }
 
   .category-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 0.875rem;
+    gap: 0.625rem;
+    padding: 0.75rem 1rem;
     background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    border: 1.5px solid #e2e8f0;
     border-radius: 0.75rem;
     font-size: 0.813rem;
+    font-weight: 500;
     color: #334155;
     cursor: pointer;
     transition: all 0.2s;
+    position: relative;
   }
 
-  .category-btn:active {
-    transform: scale(0.98);
+  .category-btn:hover {
+    border-color: var(--primary-color);
+    background: #f5f3ff;
   }
 
   .category-btn.selected {
-    background: var(--category-color, var(--primary-color));
+    background: var(--category-bg, #f5f3ff);
     border-color: var(--category-color, var(--primary-color));
-    color: white;
+    color: var(--category-color, var(--primary-color));
+  }
+
+  .check-icon {
+    margin-left: auto;
+    color: currentColor;
   }
 
   /* Severity Grid */
   .severity-grid {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.625rem;
   }
 
   .severity-btn {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.75rem 1rem;
+    padding: 0.875rem 1rem;
     background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    border: 1.5px solid #e2e8f0;
     border-radius: 0.75rem;
     cursor: pointer;
     transition: all 0.2s;
     text-align: left;
   }
 
-  .severity-btn:active {
-    transform: scale(0.99);
+  .severity-btn:hover {
+    border-color: var(--primary-color);
   }
 
   .severity-btn.selected {
-    background: var(--severity-color, #f59e0b);
+    background: var(--severity-bg, #fef3c7);
     border-color: var(--severity-color, #f59e0b);
-  }
-
-  .severity-btn.selected .severity-label,
-  .severity-btn.selected .severity-desc,
-  .severity-btn.selected svg {
-    color: white;
   }
 
   .severity-info {
@@ -1000,7 +1032,7 @@
     color: #64748b;
   }
 
-  /* Loading Location */
+  /* Location Cards */
   .loading-location {
     display: flex;
     align-items: center;
@@ -1010,6 +1042,15 @@
     border-radius: 0.75rem;
     color: #64748b;
   }
+
+  .location-error {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: #fef2f2;
+    border-radius: 0.75rem;
+    
 
   /* Location Cards */
   .location-card {
