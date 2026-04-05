@@ -327,7 +327,7 @@
             <FlagTriangleRight size={18} />
             Report Incident
           </button>
-          <button class="mobile-logout-btn" onclick={() => { goto('/auth/signin'); closeMobileMenu(); }}>
+          <button class="mobile-logout-btn" onclick={() => { goto('/signin'); closeMobileMenu(); }}>
             <LogOut size={18} />
             Sign Out
           </button>
