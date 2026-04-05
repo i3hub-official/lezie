@@ -214,7 +214,7 @@
 
       <!-- Footer -->
       <p class="fp-footer-text">
-        Don't have an account? <a href="/auth/signup" class="fp-link">Create account</a>
+        Don't have an account? <a href="/signup" class="fp-link">Create account</a>
       </p>
 
     </div>
