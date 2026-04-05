@@ -23,13 +23,21 @@
     Car,
     Building,
     Volume2,
-    MoreHorizontal
+    MoreHorizontal,
+    ChevronRight,
+    Zap,
+    ShieldCheck,
+    Globe,
+    Radio,
+    Activity,
+    CircleOff
   } from 'lucide-svelte';
   
   let isLoading = $state(true);
   let alerts = $state<any[]>([]);
   let showCreateModal = $state(false);
   let selectedAlert = $state<any>(null);
+  let activeTab = $state('active'); // 'active', 'inactive'
   
   // New alert form
   let newAlert = $state({
@@ -41,20 +49,20 @@
   });
   
   const categories = [
-    { value: 'suspicious', label: 'Suspicious Activity', icon: AlertTriangle, color: '#F59E0B' },
-    { value: 'theft', label: 'Theft / Robbery', icon: AlertOctagon, color: '#EF4444' },
-    { value: 'vandalism', label: 'Vandalism', icon: Building, color: '#F97316' },
-    { value: 'fire', label: 'Fire / Emergency', icon: Flame, color: '#DC2626' },
-    { value: 'accident', label: 'Accident', icon: Car, color: '#F59E0B' },
-    { value: 'noise', label: 'Noise Complaint', icon: Volume2, color: '#8B5CF6' },
-    { value: 'other', label: 'Other', icon: MoreHorizontal, color: '#6B7280' }
+    { value: 'suspicious', label: 'Suspicious Activity', icon: AlertTriangle, color: '#F59E0B', bg: '#FEF3C7' },
+    { value: 'theft', label: 'Theft / Robbery', icon: AlertOctagon, color: '#EF4444', bg: '#FEE2E2' },
+    { value: 'vandalism', label: 'Vandalism', icon: Building, color: '#F97316', bg: '#FFEDD5' },
+    { value: 'fire', label: 'Fire / Emergency', icon: Flame, color: '#DC2626', bg: '#FEE2E2' },
+    { value: 'accident', label: 'Accident', icon: Car, color: '#F59E0B', bg: '#FEF3C7' },
+    { value: 'noise', label: 'Noise Complaint', icon: Volume2, color: '#8B5CF6', bg: '#EDE9FE' },
+    { value: 'other', label: 'Other', icon: MoreHorizontal, color: '#6B7280', bg: '#F3F4F6' }
   ];
   
   const severityLevels = [
-    { value: 'low', label: 'Low', color: '#10B981' },
-    { value: 'medium', label: 'Medium', color: '#F59E0B' },
-    { value: 'high', label: 'High', color: '#F97316' },
-    { value: 'critical', label: 'Critical', color: '#EF4444' }
+    { value: 'low', label: 'Low', color: '#10B981', bg: '#D1FAE5', description: 'Non-urgent' },
+    { value: 'medium', label: 'Medium', color: '#F59E0B', bg: '#FEF3C7', description: 'Caution' },
+    { value: 'high', label: 'High', color: '#F97316', bg: '#FFEDD5', description: 'Urgent' },
+    { value: 'critical', label: 'Critical', color: '#EF4444', bg: '#FEE2E2', description: 'Emergency' }
   ];
   
   onMount(async () => {
@@ -63,8 +71,7 @@
   });
   
   async function loadAlerts() {
-    // TODO: Replace with actual API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 800));
     
     alerts = [
       {
@@ -76,7 +83,8 @@
         isActive: true,
         createdAt: new Date().toISOString(),
         lastTriggered: new Date(Date.now() - 3600000).toISOString(),
-        notificationCount: 12
+        notificationCount: 12,
+        location: 'Maple Street Area'
       },
       {
         id: 2,
@@ -87,7 +95,8 @@
         isActive: true,
         createdAt: new Date().toISOString(),
         lastTriggered: new Date(Date.now() - 86400000).toISOString(),
-        notificationCount: 5
+        notificationCount: 5,
+        location: 'Downtown Business District'
       },
       {
         id: 3,
@@ -98,7 +107,20 @@
         isActive: false,
         createdAt: new Date().toISOString(),
         lastTriggered: null,
-        notificationCount: 0
+        notificationCount: 0,
+        location: 'Lincoln Elementary Area'
+      },
+      {
+        id: 4,
+        name: 'Park Area',
+        radius: 1.5,
+        categories: ['vandalism', 'noise'],
+        severity: ['low', 'medium'],
+        isActive: true,
+        createdAt: new Date(Date.now() - 172800000).toISOString(),
+        lastTriggered: new Date(Date.now() - 172800000).toISOString(),
+        notificationCount: 3,
+        location: 'Central Park'
       }
     ];
   }
@@ -107,13 +129,13 @@
     const alert = alerts.find(a => a.id === alertId);
     if (alert) {
       alert.isActive = !alert.isActive;
-      // TODO: API call to update alert status
     }
   }
   
   function deleteAlert(alertId: number) {
-    alerts = alerts.filter(a => a.id !== alertId);
-    // TODO: API call to delete alert
+    if (confirm('Are you sure you want to delete this alert zone?')) {
+      alerts = alerts.filter(a => a.id !== alertId);
+    }
   }
   
   function createAlert() {
@@ -128,12 +150,12 @@
       isActive: newAlert.isActive,
       createdAt: new Date().toISOString(),
       lastTriggered: null,
-      notificationCount: 0
+      notificationCount: 0,
+      location: 'Custom Area'
     };
     
     alerts.unshift(alert);
     
-    // Reset form
     newAlert = {
       name: '',
       radius: 1,
@@ -143,7 +165,6 @@
     };
     
     showCreateModal = false;
-    // TODO: API call to create alert
   }
   
   function toggleCategory(category: string) {
@@ -171,8 +192,8 @@
     const days = Math.floor(hours / 24);
     
     if (hours < 1) return 'Just now';
-    if (hours < 24) return `${hours} hours ago`;
-    if (days < 7) return `${days} days ago`;
+    if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+    if (days < 7) return `${days} day${days !== 1 ? 's' : ''} ago`;
     return date.toLocaleDateString();
   }
   
@@ -180,164 +201,213 @@
     return categories.find(c => c.value === category)?.color || '#6B7280';
   }
   
+  function getCategoryBg(category: string) {
+    return categories.find(c => c.value === category)?.bg || '#F3F4F6';
+  }
+  
   function getSeverityColor(severity: string) {
     return severityLevels.find(s => s.value === severity)?.color || '#6B7280';
+  }
+  
+  function getActiveAlerts() {
+    return alerts.filter(a => a.isActive);
+  }
+  
+  function getInactiveAlerts() {
+    return alerts.filter(a => !a.isActive);
+  }
+  
+  function getDisplayAlerts() {
+    return activeTab === 'active' ? getActiveAlerts() : getInactiveAlerts();
   }
 </script>
 
 <svelte:head>
-  <title>Alerts - Lezie</title>
+  <title>Alert Zones - Lezie</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
 </svelte:head>
 
 <div class="alerts-page">
   <div class="alerts-container">
-    <!-- Header -->
+    <!-- Modern Header -->
     <div class="page-header">
-      <button class="back-button" onclick={() => goto('/dashboard')} aria-label="Go back">
-        <ChevronLeft size={20} />
-        Back
-      </button>
-      <div class="header-content">
-        <div class="header-icon">
-          <BellRing size={28} />
+      <div class="header-left">
+        <button class="back-btn" onclick={() => goto('/dashboard')}>
+          <ChevronLeft size={20} />
+          <span>Dashboard</span>
+        </button>
+      </div>
+      <div class="header-center">
+        <div class="logo-badge">
+          <BellRing size={24} />
         </div>
         <div>
-          <h1>Safety Alerts</h1>
-          <p>Manage your notification preferences and alert zones</p>
+          <h1>Alert Zones</h1>
+          <p>Monitor incidents that matter to you</p>
         </div>
       </div>
-      <button class="create-btn" onclick={() => showCreateModal = true}>
-        <Plus size={18} />
-        Create Alert
-      </button>
+      <div class="header-right">
+        <button class="create-btn" onclick={() => showCreateModal = true}>
+          <Plus size={18} />
+          <span>Create Alert</span>
+        </button>
+      </div>
     </div>
-    
+
     {#if isLoading}
-      <div class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading your alerts...</p>
+      <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>Loading your alert zones...</p>
       </div>
     {:else}
-      <!-- Stats Overview -->
-      <div class="stats-grid">
+      <!-- Stats Cards -->
+      <div class="stats-row">
         <div class="stat-card">
-          <div class="stat-icon" style="background: rgba(106, 44, 145, 0.1); color: var(--primary-color);">
-            <Bell size={24} />
+          <div class="stat-icon active-icon">
+            <Zap size={22} />
           </div>
-          <div class="stat-info">
-            <span class="stat-value">{alerts.filter(a => a.isActive).length}</span>
-            <span class="stat-label">Active Alerts</span>
+          <div class="stat-content">
+            <span class="stat-value">{getActiveAlerts().length}</span>
+            <span class="stat-label">Active Zones</span>
           </div>
         </div>
-        
         <div class="stat-card">
-          <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10B981;">
-            <BellRing size={24} />
+          <div class="stat-icon total-icon">
+            <Globe size={22} />
           </div>
-          <div class="stat-info">
-            <span class="stat-value">{alerts.reduce((sum, a) => sum + a.notificationCount, 0)}</span>
-            <span class="stat-label">Total Notifications</span>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: #F59E0B;">
-            <MapPin size={24} />
-          </div>
-          <div class="stat-info">
+          <div class="stat-content">
             <span class="stat-value">{alerts.length}</span>
-            <span class="stat-label">Alert Zones</span>
+            <span class="stat-label">Total Zones</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon notif-icon">
+            <Bell size={22} />
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{alerts.reduce((sum, a) => sum + a.notificationCount, 0)}</span>
+            <span class="stat-label">Notifications</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon radius-icon">
+            <MapPin size={22} />
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{alerts.reduce((sum, a) => sum + a.radius, 0).toFixed(1)}</span>
+            <span class="stat-label">Total km radius</span>
           </div>
         </div>
       </div>
-      
-      <!-- Alerts List -->
-      <div class="alerts-list">
-        {#if alerts.length === 0}
+
+      <!-- Tab Navigation -->
+      <div class="tabs-container">
+        <button 
+          class="tab-btn {activeTab === 'active' ? 'active' : ''}" 
+          onclick={() => activeTab = 'active'}
+        >
+          <Radio size={16} />
+          Active Alerts
+          <span class="tab-count">{getActiveAlerts().length}</span>
+        </button>
+        <button 
+          class="tab-btn {activeTab === 'inactive' ? 'active' : ''}" 
+          onclick={() => activeTab = 'inactive'}
+        >
+          <CircleOff size={16} />
+          Inactive Alerts
+          <span class="tab-count">{getInactiveAlerts().length}</span>
+        </button>
+      </div>
+
+      <!-- Alerts Grid -->
+      <div class="alerts-grid">
+        {#if getDisplayAlerts().length === 0}
           <div class="empty-state">
-            <BellOff size={64} />
-            <h3>No alerts set up yet</h3>
-            <p>Create your first alert zone to start receiving notifications about incidents in your area.</p>
-            <button class="empty-create-btn" onclick={() => showCreateModal = true}>
+            <div class="empty-icon">
+              <BellOff size={56} />
+            </div>
+            <h3>No {activeTab === 'active' ? 'active' : 'inactive'} alert zones</h3>
+            <p>Create an alert zone to start monitoring incidents in your area.</p>
+            <button class="empty-btn" onclick={() => showCreateModal = true}>
               <Plus size={18} />
-              Create Your First Alert
+              Create Alert Zone
             </button>
           </div>
         {:else}
-          {#each alerts as alert}
+          {#each getDisplayAlerts() as alert}
             <div class="alert-card">
-              <div class="alert-header">
-                <div class="alert-title">
-                  <div class="alert-icon" style="background: var(--primary-bg);">
+              <div class="card-header">
+                <div class="card-title">
+                  <div class="title-icon" style="background: var(--primary-bg);">
                     <MapPin size={18} style="color: var(--primary-color);" />
                   </div>
                   <div>
                     <h3>{alert.name}</h3>
-                    <div class="alert-meta">
-                      <span class="meta-item">
-                        <MapPin size={12} />
-                        {alert.radius} km radius
-                      </span>
-                      <span class="meta-item">
-                        <Clock size={12} />
-                        Created {formatDate(alert.createdAt)}
-                      </span>
-                    </div>
+                    <div class="location-text">{alert.location}</div>
                   </div>
                 </div>
-                <div class="alert-actions">
-                  <label class="toggle-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={alert.isActive} 
-                      onchange={() => toggleAlert(alert.id)}
-                    />
+                <div class="card-actions">
+                  <label class="toggle">
+                    <input type="checkbox" checked={alert.isActive} onchange={() => toggleAlert(alert.id)} />
                     <span class="toggle-slider"></span>
                   </label>
-                  <button class="delete-btn" onclick={() => deleteAlert(alert.id)} aria-label="Delete alert">
-                    <X size={18} />
+                  <button class="delete-btn" onclick={() => deleteAlert(alert.id)}>
+                    <X size={16} />
                   </button>
                 </div>
               </div>
               
-              <div class="alert-details">
-                <div class="detail-section">
-                  <span class="detail-label">Categories:</span>
-                  <div class="category-tags">
+              <div class="card-details">
+                <div class="detail-row">
+                  <div class="detail-badge">
+                    <MapPin size={12} />
+                    <span>{alert.radius} km radius</span>
+                  </div>
+                  <div class="detail-badge">
+                    <Clock size={12} />
+                    <span>Created {formatDate(alert.createdAt)}</span>
+                  </div>
+                  {#if alert.lastTriggered}
+                    <div class="detail-badge">
+                      <Activity size={12} />
+                      <span>Last {formatDate(alert.lastTriggered)}</span>
+                    </div>
+                  {/if}
+                </div>
+                
+                <div class="detail-row">
+                  <div class="detail-label">Categories:</div>
+                  <div class="tags-group">
                     {#each alert.categories as cat}
-                      <span class="category-tag" style="background: {getCategoryColor(cat)}20; color: {getCategoryColor(cat)};">
+                      <span class="category-tag" style="background: {getCategoryBg(cat)}; color: {getCategoryColor(cat)};">
                         {categories.find(c => c.value === cat)?.label || cat}
                       </span>
                     {/each}
                   </div>
                 </div>
                 
-                <div class="detail-section">
-                  <span class="detail-label">Severity Levels:</span>
-                  <div class="severity-tags">
+                <div class="detail-row">
+                  <div class="detail-label">Severity:</div>
+                  <div class="tags-group">
                     {#each alert.severity as sev}
-                      <span class="severity-tag" style="background: {getSeverityColor(sev)}20; color: {getSeverityColor(sev)};">
+                      <span class="severity-tag" style="background: {severityLevels.find(s => s.value === sev)?.bg}; color: {getSeverityColor(sev)};">
                         {sev}
                       </span>
                     {/each}
                   </div>
                 </div>
-                
-                <div class="detail-section">
-                  <span class="detail-label">Statistics:</span>
-                  <div class="stats">
-                    <span class="stat-badge">
-                      <Bell size={12} />
-                      {alert.notificationCount} notifications
-                    </span>
-                    {#if alert.lastTriggered}
-                      <span class="stat-badge">
-                        <Clock size={12} />
-                        Last triggered {formatDate(alert.lastTriggered)}
-                      </span>
-                    {/if}
-                  </div>
+              </div>
+              
+              <div class="card-footer">
+                <div class="notif-stats">
+                  <Bell size={12} />
+                  <span>{alert.notificationCount} notifications received</span>
                 </div>
+                <button class="view-btn" onclick={() => selectedAlert = alert}>
+                  View Details
+                  <ChevronRight size={14} />
+                </button>
               </div>
             </div>
           {/each}
@@ -345,57 +415,58 @@
       </div>
     {/if}
   </div>
-  
+
   <!-- Create Alert Modal -->
   {#if showCreateModal}
     <div class="modal-overlay" onclick={() => showCreateModal = false}>
-      <div class="modal-content" onclick={(e) => e.stopPropagation()}>
+      <div class="modal" onclick={(e) => e.stopPropagation()}>
         <div class="modal-header">
-          <h2>Create New Alert</h2>
+          <div class="modal-title">
+            <div class="modal-icon">
+              <Plus size={20} />
+            </div>
+            <h2>Create Alert Zone</h2>
+          </div>
           <button class="modal-close" onclick={() => showCreateModal = false}>
             <X size={20} />
           </button>
         </div>
         
         <div class="modal-body">
-          <!-- Alert Name -->
-          <div class="form-group">
-            <label class="form-label" for="alert-name">Alert Name</label>
-            <input
-              id="alert-name"
-              type="text"
-              bind:value={newAlert.name}
+          <div class="form-field">
+            <label>Zone Name</label>
+            <input 
+              type="text" 
+              bind:value={newAlert.name} 
+              placeholder="e.g., Home, Work, School"
               class="form-input"
-              placeholder="e.g., Home Area, Work Zone"
             />
           </div>
           
-          <!-- Radius -->
-          <div class="form-group">
-            <label class="form-label">Alert Radius</label>
-            <div class="radius-input">
-              <input
-                type="range"
-                min="0.5"
-                max="10"
-                step="0.5"
+          <div class="form-field">
+            <label>Radius (km)</label>
+            <div class="radius-control">
+              <input 
+                type="range" 
+                min="0.5" 
+                max="10" 
+                step="0.5" 
                 bind:value={newAlert.radius}
                 class="radius-slider"
               />
               <span class="radius-value">{newAlert.radius} km</span>
             </div>
-            <p class="form-hint">You'll receive alerts for incidents within this radius</p>
+            <p class="field-hint">You'll be alerted for incidents within this radius</p>
           </div>
           
-          <!-- Categories -->
-          <div class="form-group">
-            <span class="form-label">Incident Categories</span>
-            <div class="category-grid">
+          <div class="form-field">
+            <label>Incident Categories</label>
+            <div class="categories-grid">
               {#each categories as cat}
-                <button
+                <button 
                   type="button"
                   class="category-option {newAlert.categories.includes(cat.value) ? 'selected' : ''}"
-                  style={newAlert.categories.includes(cat.value) ? `background: ${cat.color}20; border-color: ${cat.color}; color: ${cat.color};` : ''}
+                  style={newAlert.categories.includes(cat.value) ? `background: ${cat.bg}; border-color: ${cat.color}; color: ${cat.color};` : ''}
                   onclick={() => toggleCategory(cat.value)}
                 >
                   <cat.icon size={16} />
@@ -408,12 +479,11 @@
             </div>
           </div>
           
-          <!-- Severity Levels -->
-          <div class="form-group">
-            <span class="form-label">Severity Levels</span>
-            <div class="severity-options">
+          <div class="form-field">
+            <label>Severity Levels</label>
+            <div class="severity-group">
               {#each severityLevels as level}
-                <button
+                <button 
                   type="button"
                   class="severity-option {newAlert.severity.includes(level.value) ? 'selected' : ''}"
                   style={newAlert.severity.includes(level.value) ? `background: ${level.color}; border-color: ${level.color}; color: white;` : ''}
@@ -434,18 +504,115 @@
             Cancel
           </button>
           <button class="btn-primary" onclick={createAlert}>
-            Create Alert
+            <Plus size={16} />
+            Create Zone
           </button>
         </div>
       </div>
     </div>
   {/if}
-  
-  <!-- Safety Tips Banner -->
+
+  <!-- Alert Detail Modal -->
+  {#if selectedAlert}
+    <div class="modal-overlay" onclick={() => selectedAlert = null}>
+      <div class="modal detail-modal" onclick={(e) => e.stopPropagation()}>
+        <div class="modal-header">
+          <div class="modal-title">
+            <div class="modal-icon" style="background: var(--primary-bg);">
+              <MapPin size={20} style="color: var(--primary-color);" />
+            </div>
+            <h2>{selectedAlert.name}</h2>
+          </div>
+          <button class="modal-close" onclick={() => selectedAlert = null}>
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="detail-info">
+            <div class="info-row">
+              <MapPin size={16} />
+              <span>{selectedAlert.location}</span>
+            </div>
+            <div class="info-row">
+              <Globe size={16} />
+              <span>{selectedAlert.radius} km radius</span>
+            </div>
+            <div class="info-row">
+              <Clock size={16} />
+              <span>Created {formatDate(selectedAlert.createdAt)}</span>
+            </div>
+            {#if selectedAlert.lastTriggered}
+              <div class="info-row">
+                <Activity size={16} />
+                <span>Last triggered {formatDate(selectedAlert.lastTriggered)}</span>
+              </div>
+            {/if}
+          </div>
+          
+          <div class="detail-section">
+            <h4>Categories</h4>
+            <div class="tags-group">
+              {#each selectedAlert.categories as cat}
+                <span class="category-tag" style="background: {getCategoryBg(cat)}; color: {getCategoryColor(cat)};">
+                  {categories.find(c => c.value === cat)?.label || cat}
+                </span>
+              {/each}
+            </div>
+          </div>
+          
+          <div class="detail-section">
+            <h4>Severity Levels</h4>
+            <div class="tags-group">
+              {#each selectedAlert.severity as sev}
+                <span class="severity-tag" style="background: {severityLevels.find(s => s.value === sev)?.bg}; color: {getSeverityColor(sev)};">
+                  {sev}
+                </span>
+              {/each}
+            </div>
+          </div>
+          
+          <div class="detail-section">
+            <h4>Statistics</h4>
+            <div class="stats-row-modal">
+              <div class="stat-item">
+                <Bell size={20} />
+                <div>
+                  <strong>{selectedAlert.notificationCount}</strong>
+                  <span>Notifications</span>
+                </div>
+              </div>
+              <div class="stat-item">
+                <Activity size={20} />
+                <div>
+                  <strong>{selectedAlert.isActive ? 'Active' : 'Inactive'}</strong>
+                  <span>Current Status</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick={() => selectedAlert = null}>
+            Close
+          </button>
+          <button class="btn-primary" onclick={() => {
+            toggleAlert(selectedAlert.id);
+            selectedAlert = null;
+          }}>
+            {selectedAlert.isActive ? 'Deactivate' : 'Activate'}
+          </button>
+        </div>
+      </div>
+    </div>
+  {/if}
+
+  <!-- Safety Banner -->
   <div class="safety-banner">
-    <Shield size={20} />
+    <ShieldCheck size={20} />
     <div>
-      <strong>Stay protected</strong> - Customize your alert zones to receive real-time notifications about incidents near you.
+      <strong>Proactive Protection</strong> - Custom alert zones help you stay informed about incidents that matter most to you and your family.
     </div>
   </div>
 </div>
@@ -453,55 +620,64 @@
 <style>
   .alerts-page {
     min-height: 100vh;
-    background: #f9fafb;
-    padding: 2rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 1.5rem;
+    font-family: 'Inter', system-ui, sans-serif;
   }
-  
+
   .alerts-container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
   }
-  
+
   /* Header */
   .page-header {
-    background: white;
-    border-radius: 1rem;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    background: white;
+    border-radius: 1.5rem;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e2e8f0;
   }
-  
-  .back-button {
+
+  .header-left, .header-right {
+    flex: 1;
+  }
+
+  .header-center {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .header-right {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .back-btn {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     background: none;
     border: none;
-    color: var(--gray-color);
+    color: #64748b;
+    font-size: 0.875rem;
     cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
     transition: all 0.2s;
   }
-  
-  .back-button:hover {
-    background: var(--primary-bg);
+
+  .back-btn:hover {
+    background: #f1f5f9;
     color: var(--primary-color);
   }
-  
-  .header-content {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex: 1;
-  }
-  
-  .header-icon {
+
+  .logo-badge {
     width: 48px;
     height: 48px;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
@@ -509,24 +685,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-  
-  .header-icon svg {
     color: white;
   }
-  
-  .header-content h1 {
-    font-size: 1.5rem;
+
+  .header-center h1 {
+    font-size: 1.25rem;
     font-weight: 700;
-    color: var(--dark-color);
-    margin-bottom: 0.25rem;
+    color: #0f172a;
+    margin-bottom: 0.125rem;
   }
-  
-  .header-content p {
-    font-size: 0.875rem;
-    color: var(--gray-color);
+
+  .header-center p {
+    font-size: 0.75rem;
+    color: #64748b;
   }
-  
+
   .create-btn {
     display: flex;
     align-items: center;
@@ -535,198 +708,214 @@
     background: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
   }
-  
+
   .create-btn:hover {
     background: var(--primary-dark);
     transform: translateY(-1px);
   }
-  
-  /* Loading State */
-  .loading-state {
+
+  /* Loading */
+  .loading-container {
     text-align: center;
     padding: 4rem;
-    color: var(--gray-color);
+    background: white;
+    border-radius: 1.5rem;
   }
-  
-  .spinner {
+
+  .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid var(--primary-bg);
+    border: 3px solid #e2e8f0;
     border-top-color: var(--primary-color);
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: spin 0.8s linear infinite;
     margin: 0 auto 1rem;
   }
-  
-  /* Stats Grid */
-  .stats-grid {
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Stats Row */
+  .stats-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
     margin-bottom: 2rem;
   }
-  
+
   .stat-card {
     background: white;
-    padding: 1.5rem;
     border-radius: 1rem;
+    padding: 1rem;
     display: flex;
     align-items: center;
-    gap: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    gap: 0.75rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
   }
-  
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
   .stat-icon {
     width: 48px;
     height: 48px;
+    border-radius: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 1rem;
   }
-  
-  .stat-info {
+
+  .active-icon { background: #D1FAE5; color: #10B981; }
+  .total-icon { background: #EDE9FE; color: #8B5CF6; }
+  .notif-icon { background: #FEF3C7; color: #F59E0B; }
+  .radius-icon { background: #DBEAFE; color: #3B82F6; }
+
+  .stat-content {
     flex: 1;
   }
-  
+
   .stat-value {
     display: block;
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--dark-color);
+    color: #0f172a;
   }
-  
+
   .stat-label {
-    font-size: 0.813rem;
-    color: var(--gray-color);
+    font-size: 0.688rem;
+    color: #64748b;
   }
-  
-  /* Alerts List */
-  .alerts-list {
+
+  /* Tabs */
+  .tabs-container {
     display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
-    background: white;
-    border-radius: 1rem;
-  }
-  
-  .empty-state svg {
-    color: var(--gray-color);
-    margin-bottom: 1rem;
-    opacity: 0.5;
-  }
-  
-  .empty-state h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--dark-color);
-    margin-bottom: 0.5rem;
-  }
-  
-  .empty-state p {
-    color: var(--gray-color);
+    gap: 0.5rem;
     margin-bottom: 1.5rem;
+    background: white;
+    padding: 0.25rem;
+    border-radius: 1rem;
+    width: fit-content;
+    border: 1px solid #e2e8f0;
   }
-  
-  .empty-create-btn {
-    display: inline-flex;
+
+  .tab-btn {
+    display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
+    padding: 0.5rem 1rem;
+    background: none;
+    border: none;
+    border-radius: 0.75rem;
+    font-size: 0.813rem;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab-btn.active {
     background: var(--primary-color);
     color: white;
-    border: none;
-    border-radius: 0.5rem;
-    cursor: pointer;
   }
-  
+
+  .tab-count {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.5rem;
+    font-size: 0.625rem;
+  }
+
+  .tab-btn.active .tab-count {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Alerts Grid */
+  .alerts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1.5rem;
+  }
+
   /* Alert Card */
   .alert-card {
     background: white;
     border-radius: 1rem;
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    padding: 1.25rem;
+    border: 1px solid #e2e8f0;
     transition: all 0.2s;
   }
-  
+
   .alert-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   }
-  
-  .alert-header {
+
+  .card-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
   }
-  
-  .alert-title {
+
+  .card-title {
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
   }
-  
-  .alert-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 0.5rem;
+
+  .title-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  
-  .alert-title h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--dark-color);
-    margin-bottom: 0.25rem;
+
+  .card-title h3 {
+    font-size: 0.938rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.125rem;
   }
-  
-  .alert-meta {
-    display: flex;
-    gap: 0.75rem;
-  }
-  
-  .meta-item {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
+
+  .location-text {
     font-size: 0.688rem;
-    color: var(--gray-color);
+    color: #64748b;
   }
-  
-  .alert-actions {
+
+  .card-actions {
     display: flex;
     align-items: center;
     gap: 0.5rem;
   }
-  
+
   /* Toggle Switch */
-  .toggle-switch {
+  .toggle {
     position: relative;
     display: inline-block;
     width: 44px;
     height: 24px;
   }
-  
-  .toggle-switch input {
+
+  .toggle input {
     opacity: 0;
     width: 0;
     height: 0;
   }
-  
+
   .toggle-slider {
     position: absolute;
     cursor: pointer;
@@ -734,11 +923,11 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
+    background-color: #cbd5e1;
     transition: 0.3s;
     border-radius: 24px;
   }
-  
+
   .toggle-slider:before {
     position: absolute;
     content: "";
@@ -750,78 +939,161 @@
     transition: 0.3s;
     border-radius: 50%;
   }
-  
+
   input:checked + .toggle-slider {
     background-color: var(--success-color);
   }
-  
+
   input:checked + .toggle-slider:before {
     transform: translateX(20px);
   }
-  
+
   .delete-btn {
     background: none;
     border: none;
     cursor: pointer;
-    padding: 0.25rem;
-    color: var(--gray-color);
-    border-radius: 0.25rem;
+    padding: 0.375rem;
+    color: #94a3b8;
+    border-radius: 0.5rem;
     transition: all 0.2s;
   }
-  
+
   .delete-btn:hover {
-    color: var(--danger-color);
-    background: #fef2f2;
+    background: #fee2e2;
+    color: #dc2626;
   }
-  
-  .alert-details {
+
+  /* Card Details */
+  .card-details {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    margin-bottom: 1rem;
   }
-  
-  .detail-section {
+
+  .detail-row {
     display: flex;
-    align-items: flex-start;
-    gap: 1rem;
+    align-items: center;
     flex-wrap: wrap;
+    gap: 0.75rem;
   }
-  
-  .detail-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--dark-color);
-    min-width: 100px;
-  }
-  
-  .category-tags, .severity-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  
-  .category-tag, .severity-tag {
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.375rem;
-    font-size: 0.688rem;
-    font-weight: 500;
-    text-transform: capitalize;
-  }
-  
-  .stats {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-  
-  .stat-badge {
+
+  .detail-badge {
     display: flex;
     align-items: center;
     gap: 0.25rem;
     font-size: 0.688rem;
-    color: var(--gray-color);
+    color: #64748b;
+    background: #f8fafc;
+    padding: 0.25rem 0.625rem;
+    border-radius: 0.5rem;
   }
-  
+
+  .detail-label {
+    font-size: 0.688rem;
+    font-weight: 600;
+    color: #475569;
+    min-width: 65px;
+  }
+
+  .tags-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .category-tag, .severity-tag {
+    font-size: 0.625rem;
+    font-weight: 500;
+    padding: 0.1875rem 0.5rem;
+    border-radius: 0.5rem;
+    text-transform: capitalize;
+  }
+
+  /* Card Footer */
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .notif-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.688rem;
+    color: #64748b;
+  }
+
+  .view-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: none;
+    border: none;
+    font-size: 0.688rem;
+    font-weight: 500;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+  }
+
+  .view-btn:hover {
+    background: var(--primary-bg);
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  .empty-icon {
+    width: 80px;
+    height: 80px;
+    background: #f1f5f9;
+    border-radius: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    color: #94a3b8;
+  }
+
+  .empty-state h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-state p {
+    font-size: 0.813rem;
+    color: #64748b;
+    margin-bottom: 1.5rem;
+  }
+
+  .empty-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0.75rem;
+    font-size: 0.813rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
   /* Modal */
   .modal-overlay {
     position: fixed;
@@ -829,214 +1101,305 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
   }
-  
-  .modal-content {
+
+  .modal {
     background: white;
-    border-radius: 1rem;
+    border-radius: 1.5rem;
     width: 90%;
-    max-width: 600px;
-    max-height: 90vh;
+    max-width: 560px;
+    max-height: 85vh;
     overflow-y: auto;
   }
-  
+
   .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem;
-    border-bottom: 1px solid #e5e7eb;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
   }
-  
+
+  .modal-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .modal-icon {
+    width: 36px;
+    height: 36px;
+    background: #f1f5f9;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .modal-header h2 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--dark-color);
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #0f172a;
   }
-  
+
   .modal-close {
     background: none;
     border: none;
     cursor: pointer;
-    color: var(--gray-color);
+    color: #94a3b8;
+    padding: 0.375rem;
+    border-radius: 0.5rem;
   }
-  
+
   .modal-body {
     padding: 1.5rem;
   }
-  
+
   .modal-footer {
     padding: 1rem 1.5rem;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid #f1f5f9;
     display: flex;
     justify-content: flex-end;
     gap: 0.75rem;
   }
-  
-  /* Form Elements */
-  .form-group {
-    margin-bottom: 1.5rem;
+
+  /* Form Fields */
+  .form-field {
+    margin-bottom: 1.25rem;
   }
-  
-  .form-label {
+
+  .form-field label {
     display: block;
-    font-size: 0.875rem;
+    font-size: 0.813rem;
     font-weight: 600;
-    color: var(--dark-color);
+    color: #0f172a;
     margin-bottom: 0.5rem;
   }
-  
+
   .form-input {
     width: 100%;
     padding: 0.625rem 0.875rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.75rem;
     font-size: 0.875rem;
+    transition: all 0.2s;
   }
-  
+
   .form-input:focus {
     outline: none;
     border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(106, 44, 145, 0.1);
   }
-  
-  .form-hint {
-    font-size: 0.688rem;
-    color: var(--gray-color);
+
+  .field-hint {
+    font-size: 0.625rem;
+    color: #94a3b8;
     margin-top: 0.25rem;
   }
-  
-  .radius-input {
+
+  .radius-control {
     display: flex;
     align-items: center;
     gap: 1rem;
   }
-  
+
   .radius-slider {
     flex: 1;
   }
-  
+
   .radius-value {
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--primary-color);
-    min-width: 60px;
+    min-width: 55px;
   }
-  
-  .category-grid {
+
+  .categories-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 0.5rem;
   }
-  
+
   .category-option, .severity-option {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
-    background: var(--light-color);
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    font-size: 0.813rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .category-option.selected, .severity-option.selected {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
-    color: white;
-  }
-  
-  .severity-options {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-  
-  .btn-primary, .btn-secondary {
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.75rem;
+    font-size: 0.75rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
   }
-  
+
+  .severity-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary, .btn-secondary {
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.813rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
   .btn-primary {
     background: var(--primary-color);
     color: white;
     border: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
-  
+
   .btn-primary:hover {
     background: var(--primary-dark);
   }
-  
+
   .btn-secondary {
     background: none;
-    border: 1px solid #e5e7eb;
-    color: var(--gray-color);
+    border: 1.5px solid #e2e8f0;
+    color: #64748b;
   }
-  
+
   .btn-secondary:hover {
     border-color: var(--primary-color);
     color: var(--primary-color);
   }
-  
+
+  /* Detail Modal */
+  .detail-info {
+    background: #f8fafc;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .info-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: #475569;
+    margin-bottom: 0.5rem;
+  }
+
+  .info-row:last-child {
+    margin-bottom: 0;
+  }
+
+  .detail-section {
+    margin-bottom: 1.25rem;
+  }
+
+  .detail-section h4 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .stats-row-modal {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .stat-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 0.75rem;
+  }
+
+  .stat-item strong {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .stat-item span {
+    font-size: 0.625rem;
+    color: #64748b;
+  }
+
   /* Safety Banner */
   .safety-banner {
     margin-top: 2rem;
-    padding: 1rem 1.5rem;
-    background: linear-gradient(135deg, var(--primary-bg), white);
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
     border-radius: 1rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    font-size: 0.813rem;
-    color: var(--dark-color);
+    font-size: 0.75rem;
+    color: #166534;
+    border: 1px solid #bbf7d0;
   }
-  
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .stats-row {
+      grid-template-columns: repeat(2, 1fr);
     }
   }
-  
+
   @media (max-width: 768px) {
     .alerts-page {
       padding: 1rem;
     }
-    
+
     .page-header {
       flex-direction: column;
-      align-items: stretch;
+      gap: 1rem;
+      text-align: center;
     }
-    
-    .create-btn {
+
+    .header-left, .header-right {
+      width: 100%;
+    }
+
+    .header-right {
       justify-content: center;
     }
-    
-    .stats-grid {
-      grid-template-columns: 1fr;
-    }
-    
-    .category-grid {
-      grid-template-columns: 1fr;
-    }
-    
-    .detail-section {
+
+    .header-center {
       flex-direction: column;
-      gap: 0.5rem;
     }
-    
-    .detail-label {
-      min-width: auto;
+
+    .stats-row {
+      grid-template-columns: 1fr;
+    }
+
+    .alerts-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .tabs-container {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .categories-grid {
+      grid-template-columns: 1fr;
     }
   }
 </style>
