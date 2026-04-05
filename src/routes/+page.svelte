@@ -6,8 +6,8 @@
     ShieldCheck, ArrowRight, MapPin, Radio, Cpu, BadgeCheck,
     Map, EyeOff, BellRing, Smartphone, BrainCircuit, Megaphone,
     ScanEye, Users, LockKeyhole, FlagTriangleRight, PhoneCall,
-    MessageCircle, X, Menu, CheckCircle, ChevronRight,
-    TrendingUp, Activity, Shield, AlertTriangle, Star, PlayCircle
+    MessageCircle, X, Menu, ChevronRight,
+    TrendingUp, Activity, Shield, Star, PlayCircle
   } from 'lucide-svelte';
 
   let isMenuOpen = $state(false);
@@ -53,7 +53,7 @@
   </button>
 {/if}
 
-<!-- ── NAV ── -->
+<!-- ── NAV ── (Visible only to authenticated users) -->
 {#if isAuthenticated}
   <nav class="lz-nav">
     <div class="lz-nav-inner">
@@ -70,7 +70,6 @@
         <button type="button" class="lz-nav-link" onclick={() => scrollTo('features')}>Features</button>
         <button type="button" class="lz-nav-link" onclick={() => scrollTo('how-it-works')}>How it works</button>
         <button type="button" class="lz-nav-link" onclick={() => scrollTo('safety-tips')}>Safety tips</button>
-        
         <button class="lz-nav-link" onclick={() => goto('/dashboard')}>Dashboard</button>
         <button class="lz-nav-link" onclick={() => authStore.logout()}>Sign out</button>
       </div>
@@ -461,15 +460,6 @@
 
   .lz-nav-link:hover { color: var(--primary-color); }
 
-  .lz-nav-cta {
-    background: var(--primary-color); color: white;
-    padding: .5rem 1.25rem; border-radius: 9999px;
-    text-decoration: none; font-size: .875rem; font-weight: 600;
-    transition: background .2s;
-  }
-
-  .lz-nav-cta:hover { background: var(--primary-dark); }
-
   /* ── HERO ── */
   .lz-hero {
     position: relative; overflow: hidden;
@@ -477,7 +467,6 @@
     max-width: 1280px; margin: 0 auto;
   }
 
-  /* Mesh blobs */
   .lz-hero-mesh { position: absolute; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
 
   .lz-mesh-blob {
@@ -509,7 +498,6 @@
     gap: 4rem; align-items: center;
   }
 
-  /* Eyebrow */
   .lz-eyebrow {
     display: inline-flex; align-items: center; gap: .5rem;
     background: var(--primary-bg); border: 1px solid var(--primary-border);
@@ -587,8 +575,7 @@
 
   .lz-card-topbar {
     display: flex; align-items: center; gap: .5rem;
-    margin-bottom: 1rem; font-size: .75rem; font-weight: 600; color: var(--dark-color);
-    color: var(--primary-color);
+    margin-bottom: 1rem; font-size: .75rem; font-weight: 600; color: var(--primary-color);
   }
 
   .lz-live-dot {
