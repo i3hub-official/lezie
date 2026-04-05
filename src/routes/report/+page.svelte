@@ -1050,14 +1050,6 @@
     padding: 1rem;
     background: #fef2f2;
     border-radius: 0.75rem;
-    
-
-  /* Location Cards */
-  .location-card {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    padding: 1rem;
   }
 
   .fixed-location {
