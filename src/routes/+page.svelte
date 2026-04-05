@@ -70,7 +70,7 @@
 </svelte:head>
 
 <!-- ── FLOATING ACTION BUTTON (REPORT INCIDENT) ── -->
-<a href="/auth/report" class="lz-fab" aria-label="Report an incident">
+<a href="/report" class="lz-fab" aria-label="Report an incident">
   <FlagTriangleRight size={20} />
   <span>Report incident</span>
 </a>
@@ -95,7 +95,7 @@
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('features')}>Features</button>
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('how-it-works')}>How it works</button>
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('safety-tips')}>Safety tips</button>
-      <a href="/auth/report" class="lz-nav-cta">Report an incident</a>
+      <a href="/report" class="lz-nav-cta">Report an incident</a>
     </div>
   </div>
 </nav>
@@ -303,7 +303,7 @@
         <div class="lz-tip-ico"><FlagTriangleRight size={24} style="color:var(--primary-color)" /></div>
         <h3>Report suspicious activity</h3>
         <p>Don't hesitate to report suspicious behaviour. Your report could prevent a crime and help others.</p>
-        <a href="/auth/report" style="display: inline-block; margin-top: 0.75rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report now →</a>
+        <a href="/report" style="display: inline-block; margin-top: 0.75rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report now →</a>
       </div>
       <div class="lz-tip animate-on-scroll">
         <div class="lz-tip-ico"><PhoneCall size={24} style="color:var(--primary-color)" /></div>
@@ -325,7 +325,7 @@
           Get started for free
           <ArrowRight size={16} />
         </a>
-        <a href="/auth/report" class="lz-btn-outline-lg">
+        <a href="/report" class="lz-btn-outline-lg">
           <FlagTriangleRight size={16} />
           Report an incident
         </a>
