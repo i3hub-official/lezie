@@ -21,10 +21,17 @@
     MoreHorizontal,
     TrendingUp,
     AlertOctagon,
-    Search
+    Search,
+    Plus,
+    Trash2,
+    Home,
+    Store,
+    Building2,
+    Map,
+    Clock
   } from 'lucide-svelte';
 
-  // State declarations using $state
+  // State declarations
   let isSubmitting = $state(false);
   let error = $state('');
   let success = $state(false);
@@ -38,17 +45,13 @@
   let category = $state('');
   let severity = $state('medium');
   let isAnonymous = $state(false);
-  let location = $state<{ lat: number; lng: number } | null>(null);
   
-  // Full location details
-  let locationDetails = $state({
-    street: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    country: '',
-    displayName: ''
-  });
+  // User's fixed location (cannot be removed)
+  let userLocation = $state<{ lat: number; lng: number; details: any } | null>(null);
+  let isLoadingUserLocation = $state(true);
+  
+  // Additional location (can be added from search, max 1)
+  let additionalLocation = $state<{ lat: number; lng: number; details: any } | null>(null);
   
   // Categories
   const categories = [
@@ -73,49 +76,125 @@
   let mediaFiles = $state<File[]>([]);
   let mediaPreviews = $state<string[]>([]);
   
-  onMount(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          location = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-          getFullAddressFromCoords(position.coords.latitude, position.coords.longitude);
-        },
-        (err) => {
-          console.error('Geolocation error:', err);
-        }
-      );
-    }
+  onMount(async () => {
+    await getUserFixedLocation();
   });
   
-  // Get full address from coordinates using reverse geocoding
-  async function getFullAddressFromCoords(lat: number, lng: number) {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+  // Get user's fixed location (cannot be removed)
+  async function getUserFixedLocation() {
+    isLoadingUserLocation = true;
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          const details = await getFullAddressFromCoords(lat, lng);
+          userLocation = { lat, lng, details };
+          isLoadingUserLocation = false;
+        },
+        async (err) => {
+          console.error('Geolocation error:', err);
+          // Fallback to IP-based location
+          await getFallbackLocation();
+          isLoadingUserLocation = false;
+        }
       );
-      const data = await response.json();
-      
-      if (data.address) {
-        const addr = data.address;
-        locationDetails = {
-          street: [addr.road, addr.house_number].filter(Boolean).join(' ') || addr.suburb || addr.neighbourhood || '',
-          city: addr.city || addr.town || addr.village || addr.municipality || '',
-          state: addr.state || addr.region || '',
-          postalCode: addr.postcode || '',
-          country: addr.country || '',
-          displayName: data.display_name || ''
-        };
-        locationDetails.street = locationDetails.street || addr.road || '';
-      }
-    } catch (err) {
-      console.error('Reverse geocoding error:', err);
+    } else {
+      await getFallbackLocation();
+      isLoadingUserLocation = false;
     }
   }
   
-  // Search for locations by query
+  // Fallback location using IP
+  async function getFallbackLocation() {
+    try {
+      const response = await fetch('https://ipapi.co/json/');
+      const data = await response.json();
+      const lat = data.latitude;
+      const lng = data.longitude;
+      const details = await getFullAddressFromCoords(lat, lng);
+      userLocation = { lat, lng, details };
+    } catch (err) {
+      console.error('IP location error:', err);
+    }
+  }
+  
+  // Get full address and nearby places
+  async function getFullAddressFromCoords(lat: number, lng: number) {
+    try {
+      // Get reverse geocoding for address
+      const reverseResponse = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+      );
+      const reverseData = await reverseResponse.json();
+      
+      // Get nearby places (within 500m)
+      const nearbyResponse = await fetch(
+        `https://overpass-api.de/api/interpreter?data=[out:json];(node["name"] around:500,${lat},${lng};way["name"] around:500,${lat},${lng};rel["name"] around:500,${lat},${lng});out body;`
+      );
+      const nearbyData = await nearbyResponse.json();
+      
+      // Extract nearby places (shops, restaurants, landmarks, etc.)
+      const nearbyPlaces = [];
+      const seenNames = new Set();
+      
+      if (nearbyData.elements) {
+        for (const element of nearbyData.elements) {
+          if (element.tags && element.tags.name && !seenNames.has(element.tags.name)) {
+            seenNames.add(element.tags.name);
+            const placeType = element.tags.shop || element.tags.amenity || element.tags.tourism || element.tags.leisure || 'place';
+            nearbyPlaces.push({
+              name: element.tags.name,
+              type: placeType,
+              distance: calculateDistance(lat, lng, element.lat, element.lon)
+            });
+          }
+        }
+      }
+      
+      // Sort by distance and take top 10
+      nearbyPlaces.sort((a, b) => a.distance - b.distance);
+      
+      const addr = reverseData.address || {};
+      return {
+        street: [addr.road, addr.house_number].filter(Boolean).join(' ') || addr.suburb || addr.neighbourhood || '',
+        city: addr.city || addr.town || addr.village || addr.municipality || '',
+        state: addr.state || addr.region || '',
+        postalCode: addr.postcode || '',
+        country: addr.country || '',
+        displayName: reverseData.display_name || '',
+        nearbyPlaces: nearbyPlaces.slice(0, 10)
+      };
+    } catch (err) {
+      console.error('Reverse geocoding error:', err);
+      return {
+        street: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        country: '',
+        displayName: '',
+        nearbyPlaces: []
+      };
+    }
+  }
+  
+  // Calculate distance between two coordinates in meters
+  function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371e3;
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+  
+  // Search for locations
   async function searchLocation(query: string) {
     if (!query.trim() || query.length < 3) {
       locationSearchResults = [];
@@ -125,15 +204,58 @@
     isSearchingLocation = true;
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=8&addressdetails=1&dedupe=1`
       );
       const data = await response.json();
       
-      locationSearchResults = data.map((result: any) => ({
-        lat: parseFloat(result.lat),
-        lng: parseFloat(result.lon),
-        displayName: result.display_name,
-        address: result.address
+      locationSearchResults = await Promise.all(data.map(async (result: any) => {
+        const lat = parseFloat(result.lat);
+        const lon = parseFloat(result.lon);
+        
+        // Get additional details for this location
+        const detailsResponse = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`
+        );
+        const detailsData = await detailsResponse.json();
+        
+        // Get nearby places for this location
+        const nearbyResponse = await fetch(
+          `https://overpass-api.de/api/interpreter?data=[out:json];(node["name"] around:300,${lat},${lon};way["name"] around:300,${lat},${lon});out body;`
+        );
+        const nearbyData = await nearbyResponse.json();
+        
+        const nearbyPlaces = [];
+        const seenNames = new Set();
+        
+        if (nearbyData.elements) {
+          for (const element of nearbyData.elements) {
+            if (element.tags && element.tags.name && !seenNames.has(element.tags.name)) {
+              seenNames.add(element.tags.name);
+              const placeType = element.tags.shop || element.tags.amenity || element.tags.tourism || 'place';
+              nearbyPlaces.push({
+                name: element.tags.name,
+                type: placeType
+              });
+            }
+          }
+        }
+        
+        const addr = detailsData.address || {};
+        return {
+          lat,
+          lon,
+          displayName: result.display_name,
+          category: result.category || 'place',
+          type: result.type,
+          details: {
+            street: [addr.road, addr.house_number].filter(Boolean).join(' ') || addr.suburb || '',
+            city: addr.city || addr.town || addr.village || '',
+            state: addr.state || '',
+            postalCode: addr.postcode || '',
+            country: addr.country || '',
+            nearbyPlaces: nearbyPlaces.slice(0, 5)
+          }
+        };
       }));
     } catch (err) {
       console.error('Location search error:', err);
@@ -142,62 +264,40 @@
     }
   }
   
-  // Select a location from search results
-  function selectLocation(result: any) {
-    location = { lat: result.lat, lng: result.lng };
-    
-    const addr = result.address || {};
-    locationDetails = {
-      street: [addr.road, addr.house_number].filter(Boolean).join(' ') || addr.suburb || '',
-      city: addr.city || addr.town || addr.village || addr.municipality || '',
-      state: addr.state || addr.region || '',
-      postalCode: addr.postcode || '',
-      country: addr.country || '',
-      displayName: result.displayName
+  // Add location from search (replaces existing additional location)
+  function addLocationFromSearch(result: any) {
+    additionalLocation = {
+      lat: result.lat,
+      lng: result.lon,
+      details: {
+        ...result.details,
+        displayName: result.displayName,
+        category: result.category,
+        type: result.type
+      }
     };
-    
     showLocationSearch = false;
     locationSearchResults = [];
   }
   
-  // Get current location with full address
-  async function getCurrentLocation() {
-    if (navigator.geolocation) {
-      error = '';
-      isSearchingLocation = true;
-      
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          location = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-          await getFullAddressFromCoords(position.coords.latitude, position.coords.longitude);
-          isSearchingLocation = false;
-        },
-        (err) => {
-          error = 'Unable to get your location. Please enable location services.';
-          setTimeout(() => error = '', 3000);
-          isSearchingLocation = false;
-        }
-      );
-    } else {
-      error = 'Geolocation is not supported by your browser.';
-      setTimeout(() => error = '', 3000);
-    }
+  // Remove additional location
+  function removeAdditionalLocation() {
+    additionalLocation = null;
   }
   
-  // Clear selected location
-  function clearLocation() {
-    location = null;
-    locationDetails = {
-      street: '',
-      city: '',
-      state: '',
-      postalCode: '',
-      country: '',
-      displayName: ''
+  // Get place type icon
+  function getPlaceIcon(type: string) {
+    const icons: Record<string, any> = {
+      shop: Store,
+      restaurant: Building2,
+      cafe: Building2,
+      hotel: Building2,
+      school: Building,
+      hospital: Building,
+      park: Map,
+      default: MapPin
     };
+    return icons[type] || icons.default;
   }
   
   // Handle file upload
@@ -262,8 +362,8 @@
       setTimeout(() => error = '', 3000);
       return;
     }
-    if (!location) {
-      error = 'Please select a location';
+    if (!userLocation) {
+      error = 'Unable to detect your location';
       setTimeout(() => error = '', 3000);
       return;
     }
@@ -278,8 +378,10 @@
       formData.append('category', category);
       formData.append('severity', severity);
       formData.append('isAnonymous', String(isAnonymous));
-      formData.append('location', JSON.stringify(location));
-      formData.append('locationDetails', JSON.stringify(locationDetails));
+      formData.append('userLocation', JSON.stringify(userLocation));
+      if (additionalLocation) {
+        formData.append('additionalLocation', JSON.stringify(additionalLocation));
+      }
       
       mediaFiles.forEach(file => {
         formData.append('media', file);
@@ -294,8 +396,8 @@
         category,
         severity,
         isAnonymous,
-        location,
-        locationDetails,
+        userLocation,
+        additionalLocation,
         mediaCount: mediaFiles.length
       });
       
@@ -440,115 +542,175 @@
         </div>
       </div>
 
-      <!-- Location with Full Details -->
+      <!-- User's Fixed Location (Cannot be removed) -->
       <div class="form-group">
         <label class="form-label">
-          Location <span class="required">*</span>
+          Your Location <span class="required">*</span>
+          <span class="location-badge">Fixed</span>
         </label>
         
-        <div class="location-actions">
-          <button type="button" class="location-btn-primary" onclick={getCurrentLocation} disabled={isSearchingLocation}>
-            {#if isSearchingLocation}
-              <Loader2 size={18} class="spinning" />
-              Getting location...
-            {:else}
-              <Navigation size={18} />
-              Use my current location
-            {/if}
-          </button>
-          
-          <button type="button" class="location-btn-secondary" onclick={() => showLocationSearch = !showLocationSearch}>
-            <Search size={18} />
-            Search address
-          </button>
-        </div>
-
-        <!-- Location Search -->
-        {#if showLocationSearch}
-          <div class="location-search">
-            <div class="search-input-wrapper">
-              <Search size={16} class="search-icon" />
-              <input
-                type="text"
-                placeholder="Search by street, city, or zip code..."
-                class="location-search-input"
-                oninput={(e) => searchLocation(e.currentTarget.value)}
-              />
+        {#if isLoadingUserLocation}
+          <div class="loading-location">
+            <Loader2 size={20} class="spinning" />
+            <span>Detecting your location...</span>
+          </div>
+        {:else if userLocation}
+          <div class="location-card fixed-location">
+            <div class="location-card-header">
+              <Home size={18} class="location-icon-primary" />
+              <strong>Your Current Location</strong>
+              <span class="fixed-badge">Cannot be removed</span>
+            </div>
+            <div class="location-details-grid">
+              {#if userLocation.details.street}
+                <div class="location-detail-item">
+                  <span class="detail-label">Street:</span>
+                  <span class="detail-value">{userLocation.details.street}</span>
+                </div>
+              {/if}
+              {#if userLocation.details.city}
+                <div class="location-detail-item">
+                  <span class="detail-label">City:</span>
+                  <span class="detail-value">{userLocation.details.city}</span>
+                </div>
+              {/if}
+              {#if userLocation.details.state}
+                <div class="location-detail-item">
+                  <span class="detail-label">State:</span>
+                  <span class="detail-value">{userLocation.details.state}</span>
+                </div>
+              {/if}
+              {#if userLocation.details.postalCode}
+                <div class="location-detail-item">
+                  <span class="detail-label">Postal Code:</span>
+                  <span class="detail-value">{userLocation.details.postalCode}</span>
+                </div>
+              {/if}
             </div>
             
-            {#if isSearchingLocation}
-              <div class="search-loading">
-                <Loader2 size={20} class="spinning" />
-                <span>Searching...</span>
-              </div>
-            {/if}
-            
-            {#if locationSearchResults.length > 0}
-              <div class="search-results">
-                {#each locationSearchResults as result}
-                  <button type="button" class="search-result-item" onclick={() => selectLocation(result)}>
-                    <MapPin size={16} />
-                    <div class="result-details">
-                      <strong>{result.displayName.split(',')[0]}</strong>
-                      <span>{result.displayName}</span>
+            <!-- Nearby Places -->
+            {#if userLocation.details.nearbyPlaces && userLocation.details.nearbyPlaces.length > 0}
+              <div class="nearby-places">
+                <div class="nearby-header">
+                  <Map size={14} />
+                  <span>Nearby places (within 500m)</span>
+                </div>
+                <div class="places-list">
+                  {#each userLocation.details.nearbyPlaces.slice(0, 5) as place}
+                    <div class="place-item">
+                      <svelte:component this={getPlaceIcon(place.type)} size={12} />
+                      <span>{place.name}</span>
+                      <span class="place-distance">{Math.round(place.distance)}m</span>
                     </div>
-                  </button>
-                {/each}
+                  {/each}
+                </div>
               </div>
             {/if}
           </div>
         {/if}
+      </div>
 
-        <!-- Selected Location Display -->
-        {#if location && locationDetails.displayName}
-          <div class="location-card">
+      <!-- Additional Location (Optional - Max 1) -->
+      <div class="form-group">
+        <label class="form-label">
+          Additional Location
+          <span class="optional-badge">Optional</span>
+        </label>
+        
+        {#if !additionalLocation}
+          <div class="add-location-area">
+            <button type="button" class="add-location-btn" onclick={() => showLocationSearch = !showLocationSearch}>
+              <Plus size={18} />
+              Add a specific location (shop, landmark, event center)
+            </button>
+            
+            {#if showLocationSearch}
+              <div class="location-search">
+                <div class="search-input-wrapper">
+                  <Search size={16} class="search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Search for shop, restaurant, landmark, event center..."
+                    class="location-search-input"
+                    oninput={(e) => searchLocation(e.currentTarget.value)}
+                  />
+                </div>
+                
+                {#if isSearchingLocation}
+                  <div class="search-loading">
+                    <Loader2 size={20} class="spinning" />
+                    <span>Searching places...</span>
+                  </div>
+                {/if}
+                
+                {#if locationSearchResults.length > 0}
+                  <div class="search-results">
+                    {#each locationSearchResults as result}
+                      <button type="button" class="search-result-item" onclick={() => addLocationFromSearch(result)}>
+                        <div class="result-icon">
+                          <MapPin size={16} />
+                        </div>
+                        <div class="result-details">
+                          <strong>{result.displayName.split(',')[0]}</strong>
+                          <span>{result.displayName}</span>
+                          {#if result.details.nearbyPlaces && result.details.nearbyPlaces.length > 0}
+                            <div class="result-nearby">
+                              Near: {result.details.nearbyPlaces.slice(0, 2).map(p => p.name).join(', ')}
+                            </div>
+                          {/if}
+                        </div>
+                      </button>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+            {/if}
+          </div>
+        {:else}
+          <div class="location-card additional-location">
             <div class="location-card-header">
-              <MapPin size={18} />
-              <strong>Selected Location</strong>
-              <button type="button" class="location-clear" onclick={clearLocation}>
-                <X size={16} />
+              <Store size={18} class="location-icon-secondary" />
+              <strong>{additionalLocation.details.displayName.split(',')[0]}</strong>
+              <button type="button" class="remove-location" onclick={removeAdditionalLocation}>
+                <Trash2 size={16} />
               </button>
             </div>
             <div class="location-details-grid">
-              {#if locationDetails.street}
+              {#if additionalLocation.details.street}
                 <div class="location-detail-item">
-                  <span class="detail-label">Street:</span>
-                  <span class="detail-value">{locationDetails.street}</span>
+                  <span class="detail-label">Address:</span>
+                  <span class="detail-value">{additionalLocation.details.street}</span>
                 </div>
               {/if}
-              {#if locationDetails.city}
+              {#if additionalLocation.details.city}
                 <div class="location-detail-item">
-                  <span class="detail-label">City:</span>
-                  <span class="detail-value">{locationDetails.city}</span>
-                </div>
-              {/if}
-              {#if locationDetails.state}
-                <div class="location-detail-item">
-                  <span class="detail-label">State:</span>
-                  <span class="detail-value">{locationDetails.state}</span>
-                </div>
-              {/if}
-              {#if locationDetails.postalCode}
-                <div class="location-detail-item">
-                  <span class="detail-label">Postal Code:</span>
-                  <span class="detail-value">{locationDetails.postalCode}</span>
-                </div>
-              {/if}
-              {#if locationDetails.country}
-                <div class="location-detail-item">
-                  <span class="detail-label">Country:</span>
-                  <span class="detail-value">{locationDetails.country}</span>
+                  <span class="detail-label">Area:</span>
+                  <span class="detail-value">{additionalLocation.details.city}</span>
                 </div>
               {/if}
             </div>
-            <div class="location-coords">
-              <span>Lat: {location.lat.toFixed(6)}</span>
-              <span>Lng: {location.lng.toFixed(6)}</span>
-            </div>
+            
+            <!-- Nearby places for additional location -->
+            {#if additionalLocation.details.nearbyPlaces && additionalLocation.details.nearbyPlaces.length > 0}
+              <div class="nearby-places">
+                <div class="nearby-header">
+                  <Map size={14} />
+                  <span>Nearby landmarks</span>
+                </div>
+                <div class="places-list">
+                  {#each additionalLocation.details.nearbyPlaces.slice(0, 3) as place}
+                    <div class="place-item">
+                      <svelte:component this={getPlaceIcon(place.type)} size={12} />
+                      <span>{place.name}</span>
+                    </div>
+                  {/each}
+                </div>
+              </div>
+            {/if}
           </div>
         {/if}
         
-        <p class="form-hint">Your exact location helps alert nearby community members</p>
+        <p class="form-hint">Add a specific location like a shop, restaurant, or event center for more precise reporting</p>
       </div>
 
       <!-- Media Upload -->
@@ -701,7 +863,9 @@
   }
 
   .form-label {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     font-weight: 600;
     font-size: 0.875rem;
     color: #0f172a;
@@ -710,6 +874,20 @@
 
   .required {
     color: #ef4444;
+  }
+
+  .location-badge, .optional-badge {
+    font-size: 0.625rem;
+    font-weight: 500;
+    padding: 0.125rem 0.5rem;
+    border-radius: 20px;
+    background: #f1f5f9;
+    color: #64748b;
+  }
+
+  .location-badge {
+    background: #dbeafe;
+    color: #2563eb;
   }
 
   .form-input, .form-textarea {
@@ -732,8 +910,6 @@
     font-size: 0.688rem;
     color: #94a3b8;
     margin-top: 0.25rem;
-    display: flex;
-    justify-content: space-between;
   }
 
   .hint-warning {
@@ -823,57 +999,166 @@
     color: #64748b;
   }
 
-  /* Location Actions */
-  .location-actions {
+  /* Loading Location */
+  .loading-location {
     display: flex;
+    align-items: center;
     gap: 0.75rem;
-    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 0.75rem;
+    color: #64748b;
   }
 
-  .location-btn-primary, .location-btn-secondary {
+  /* Location Cards */
+  .location-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1rem;
+  }
+
+  .fixed-location {
+    border-left: 4px solid #2563eb;
+  }
+
+  .additional-location {
+    border-left: 4px solid #10b981;
+  }
+
+  .location-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .location-card-header strong {
     flex: 1;
+    font-size: 0.875rem;
+    color: #0f172a;
+  }
+
+  .location-icon-primary {
+    color: #2563eb;
+  }
+
+  .location-icon-secondary {
+    color: #10b981;
+  }
+
+  .fixed-badge {
+    font-size: 0.563rem;
+    font-weight: 500;
+    padding: 0.125rem 0.5rem;
+    background: #dbeafe;
+    color: #2563eb;
+    border-radius: 12px;
+  }
+
+  .remove-location {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ef4444;
+    padding: 0.25rem;
+    display: flex;
+  }
+
+  .location-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .location-detail-item {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .detail-label {
+    font-weight: 600;
+    color: #475569;
+    min-width: 65px;
+  }
+
+  .detail-value {
+    color: #0f172a;
+  }
+
+  /* Nearby Places */
+  .nearby-places {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .nearby-header {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.688rem;
+    font-weight: 500;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+  }
+
+  .places-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .place-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.688rem;
+    color: #475569;
+    background: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .place-distance {
+    font-size: 0.563rem;
+    color: #94a3b8;
+  }
+
+  /* Add Location */
+  .add-location-area {
+    margin-top: 0.25rem;
+  }
+
+  .add-location-btn {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    padding: 0.625rem;
+    width: 100%;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
     border-radius: 0.75rem;
     font-size: 0.813rem;
-    font-weight: 500;
+    color: var(--primary-color);
     cursor: pointer;
     transition: all 0.2s;
   }
 
-  .location-btn-primary {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-  }
-
-  .location-btn-primary:active {
-    background: var(--primary-dark);
-    transform: scale(0.98);
-  }
-
-  .location-btn-primary:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .location-btn-secondary {
-    background: white;
-    border: 1px solid #e2e8f0;
-    color: #475569;
-  }
-
-  .location-btn-secondary:active {
-    background: #f8fafc;
+  .add-location-btn:active {
+    background: #f1f5f9;
     transform: scale(0.98);
   }
 
   /* Location Search */
   .location-search {
-    margin-bottom: 1rem;
+    margin-top: 0.75rem;
   }
 
   .search-input-wrapper {
@@ -916,6 +1201,8 @@
     border: 1px solid #e2e8f0;
     border-radius: 0.75rem;
     overflow: hidden;
+    max-height: 300px;
+    overflow-y: auto;
   }
 
   .search-result-item {
@@ -940,6 +1227,12 @@
     background: #f8fafc;
   }
 
+  .result-icon {
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+    color: #94a3b8;
+  }
+
   .result-details {
     flex: 1;
     min-width: 0;
@@ -952,7 +1245,7 @@
     margin-bottom: 0.125rem;
   }
 
-  .result-details span {
+  .result-details > span {
     font-size: 0.688rem;
     color: #64748b;
     overflow: hidden;
@@ -961,70 +1254,10 @@
     display: block;
   }
 
-  /* Location Card */
-  .location-card {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    padding: 1rem;
-    margin-top: 0.5rem;
-  }
-
-  .location-card-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #e2e8f0;
-  }
-
-  .location-card-header strong {
-    flex: 1;
-    font-size: 0.813rem;
-    color: #0f172a;
-  }
-
-  .location-clear {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #94a3b8;
-    padding: 0.25rem;
-    display: flex;
-  }
-
-  .location-details-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .location-detail-item {
-    display: flex;
-    gap: 0.5rem;
-    font-size: 0.75rem;
-  }
-
-  .detail-label {
-    font-weight: 600;
-    color: #475569;
-    min-width: 70px;
-  }
-
-  .detail-value {
-    color: #0f172a;
-  }
-
-  .location-coords {
-    display: flex;
-    gap: 1rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid #e2e8f0;
-    font-size: 0.688rem;
-    font-family: monospace;
-    color: #64748b;
+  .result-nearby {
+    font-size: 0.625rem;
+    color: #10b981;
+    margin-top: 0.25rem;
   }
 
   /* Upload */
@@ -1239,16 +1472,20 @@
       grid-template-columns: repeat(2, 1fr);
     }
 
-    .location-actions {
-      flex-direction: column;
-    }
-
     .location-details-grid {
       grid-template-columns: 1fr;
     }
 
     .detail-label {
       min-width: 60px;
+    }
+
+    .places-list {
+      flex-direction: column;
+    }
+
+    .place-item {
+      width: fit-content;
     }
   }
 </style>
