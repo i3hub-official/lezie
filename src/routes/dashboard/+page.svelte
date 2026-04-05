@@ -199,11 +199,6 @@
     }
   }
   
-  function getStatusIcon(status: string) {
-    if (status === 'verified' || status === 'resolved') return CheckCircle;
-    return AlertCircle;
-  }
-  
   function formatTime(dateString: string) {
     const date = new Date(dateString);
     const now = new Date();
@@ -392,8 +387,13 @@
                         </div>
                       </div>
                       <div class="incident-status" style="color: {getStatusColor(incident.status)}">
-                        {@const StatusIcon = getStatusIcon(incident.status)}
-                        <StatusIcon size={14} />
+                        {#if incident.status === 'verified'}
+                          <CheckCircle size={14} />
+                        {:else if incident.status === 'resolved'}
+                          <CheckCircle size={14} />
+                        {:else}
+                          <AlertCircle size={14} />
+                        {/if}
                         <span>{incident.status}</span>
                       </div>
                     </div>
@@ -459,7 +459,7 @@
               
               <div class="notifications-list">
                 {#each notifications.slice(0, 5) as notification}
-                  <div 
+                  <button 
                     class="notification-card {!notification.read ? 'unread' : ''}"
                     onclick={() => {
                       markNotificationAsRead(notification.id);
@@ -486,7 +486,7 @@
                       </div>
                       <p>{notification.message}</p>
                     </div>
-                  </div>
+                  </button>
                 {/each}
               </div>
               
@@ -912,6 +912,7 @@
     cursor: pointer;
     transition: all 0.2s;
     text-align: left;
+    width: 100%;
   }
   
   .action-card:hover {
@@ -954,6 +955,10 @@
     border-radius: 0.5rem;
     cursor: pointer;
     transition: all 0.2s;
+    width: 100%;
+    background: none;
+    border: none;
+    text-align: left;
   }
   
   .notification-card.unread {
@@ -1067,10 +1072,6 @@
       transform: translateX(-100%);
       transition: transform 0.3s;
       z-index: 100;
-    }
-    
-    .sidebar.open {
-      transform: translateX(0);
     }
     
     .main-content {
