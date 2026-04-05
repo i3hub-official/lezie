@@ -20,7 +20,6 @@
     User,
     Settings,
     BellRing,
-    Calendar,
     MessageCircle,
     ThumbsUp,
     Flame,
@@ -32,7 +31,12 @@
     X,
     LogOut,
     HelpCircle,
-    Award
+    Award,
+    FileText,
+    Calendar,
+    Star,
+    Globe,
+    Activity
   } from 'lucide-svelte';
   
   let isLoading = $state(true);
@@ -49,21 +53,11 @@
   let notifications = $state<any[]>([]);
   let safetyTips = $state<string[]>([]);
   let isMobileMenuOpen = $state(false);
-  let isMobile = $state(false);
   
   onMount(() => {
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
     loadDashboardData();
     isLoading = false;
   });
-  
-  function checkMobile() {
-    isMobile = window.innerWidth < 768;
-    if (!isMobile) {
-      isMobileMenuOpen = false;
-    }
-  }
   
   async function loadDashboardData() {
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -236,6 +230,19 @@
   function closeMobileMenu() {
     isMobileMenuOpen = false;
   }
+  
+  // Navigation items for sidebar
+  const navItems = [
+    { path: '/dashboard', icon: Home, label: 'Dashboard', active: true },
+    { path: '/map', icon: MapPin, label: 'Map View', active: false },
+    { path: '/alerts', icon: Bell, label: 'Alerts', active: false },
+    { path: '/statistics', icon: BarChart3, label: 'Statistics', active: false },
+    { path: '/reports-history', icon: FileText, label: 'My Reports', active: false },
+    { path: '/community', icon: Users, label: 'Community', active: false },
+    { path: '/profile', icon: User, label: 'Profile', active: false },
+    { path: '/settings', icon: Settings, label: 'Settings', active: false },
+    { path: '/help', icon: HelpCircle, label: 'Help Center', active: false }
+  ];
 </script>
 
 <svelte:head>
@@ -249,7 +256,7 @@
     <button class="mobile-menu-btn" onclick={() => isMobileMenuOpen = true}>
       <Menu size={24} />
     </button>
-    <div class="mobile-logo">
+    <div class="mobile-logo" onclick={() => goto('/dashboard')}>
       <div class="logo-mark">
         <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
           <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
@@ -271,7 +278,7 @@
     <div class="mobile-overlay" onclick={closeMobileMenu}>
       <div class="mobile-sidebar" onclick={(e) => e.stopPropagation()}>
         <div class="mobile-sidebar-header">
-          <div class="mobile-logo-full">
+          <div class="mobile-logo-full" onclick={() => { goto('/dashboard'); closeMobileMenu(); }}>
             <div class="logo-mark">
               <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
                 <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
@@ -296,30 +303,15 @@
         </div>
         
         <nav class="mobile-nav">
-          <button class="mobile-nav-item active" onclick={() => { goto('/dashboard'); closeMobileMenu(); }}>
-            <Home size={20} />
-            <span>Dashboard</span>
-          </button>
-          <button class="mobile-nav-item" onclick={() => { goto('/map'); closeMobileMenu(); }}>
-            <MapPin size={20} />
-            <span>Map View</span>
-          </button>
-          <button class="mobile-nav-item" onclick={() => { goto('/alerts'); closeMobileMenu(); }}>
-            <Bell size={20} />
-            <span>Alerts</span>
-          </button>
-          <button class="mobile-nav-item" onclick={() => { goto('/statistics'); closeMobileMenu(); }}>
-            <BarChart3 size={20} />
-            <span>Statistics</span>
-          </button>
-          <button class="mobile-nav-item" onclick={() => { goto('/profile'); closeMobileMenu(); }}>
-            <User size={20} />
-            <span>Profile</span>
-          </button>
-          <button class="mobile-nav-item" onclick={() => { goto('/settings'); closeMobileMenu(); }}>
-            <Settings size={20} />
-            <span>Settings</span>
-          </button>
+          {#each navItems as item}
+            <button 
+              class="mobile-nav-item {item.active ? 'active' : ''}" 
+              onclick={() => { goto(item.path); closeMobileMenu(); }}
+            >
+              <item.icon size={20} />
+              <span>{item.label}</span>
+            </button>
+          {/each}
         </nav>
         
         <div class="mobile-sidebar-footer">
@@ -327,7 +319,7 @@
             <FlagTriangleRight size={18} />
             Report Incident
           </button>
-          <button class="mobile-logout-btn" onclick={() => { goto('/signin'); closeMobileMenu(); }}>
+          <button class="mobile-logout-btn" onclick={() => { goto('/auth/signin'); closeMobileMenu(); }}>
             <LogOut size={18} />
             Sign Out
           </button>
@@ -340,7 +332,7 @@
     <!-- Desktop Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="logo">
+        <div class="logo" onclick={() => goto('/dashboard')}>
           <div class="logo-mark">
             <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
               <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
@@ -352,30 +344,12 @@
       </div>
 
       <nav class="sidebar-nav">
-        <button class="nav-item active" onclick={() => goto('/dashboard')}>
-          <Home size={20} />
-          <span>Dashboard</span>
-        </button>
-        <button class="nav-item" onclick={() => goto('/map')}>
-          <MapPin size={20} />
-          <span>Map View</span>
-        </button>
-        <button class="nav-item" onclick={() => goto('/alerts')}>
-          <Bell size={20} />
-          <span>Alerts</span>
-        </button>
-        <button class="nav-item" onclick={() => goto('/statistics')}>
-          <BarChart3 size={20} />
-          <span>Statistics</span>
-        </button>
-        <button class="nav-item" onclick={() => goto('/profile')}>
-          <User size={20} />
-          <span>Profile</span>
-        </button>
-        <button class="nav-item" onclick={() => goto('/settings')}>
-          <Settings size={20} />
-          <span>Settings</span>
-        </button>
+        {#each navItems as item}
+          <button class="nav-item {item.active ? 'active' : ''}" onclick={() => goto(item.path)}>
+            <item.icon size={20} />
+            <span>{item.label}</span>
+          </button>
+        {/each}
       </nav>
 
       <div class="sidebar-footer">
@@ -412,7 +386,7 @@
 
         <!-- Stats Grid -->
         <div class="stats-grid">
-          <div class="stat-card">
+          <div class="stat-card" onclick={() => goto('/statistics')}>
             <div class="stat-icon purple">
               <FlagTriangleRight size={22} />
             </div>
@@ -422,7 +396,7 @@
             </div>
           </div>
 
-          <div class="stat-card">
+          <div class="stat-card" onclick={() => goto('/statistics')}>
             <div class="stat-icon green">
               <CheckCircle size={22} />
             </div>
@@ -432,7 +406,7 @@
             </div>
           </div>
 
-          <div class="stat-card">
+          <div class="stat-card" onclick={() => goto('/alerts')}>
             <div class="stat-icon orange">
               <Bell size={22} />
             </div>
@@ -442,7 +416,7 @@
             </div>
           </div>
 
-          <div class="stat-card">
+          <div class="stat-card" onclick={() => goto('/statistics')}>
             <div class="stat-icon blue">
               <Shield size={22} />
             </div>
@@ -450,6 +424,53 @@
               <span class="stat-value">{stats.safetyScore}%</span>
               <span class="stat-label">Safety Score</span>
             </div>
+          </div>
+        </div>
+
+        <!-- Quick Navigation Cards -->
+        <div class="quick-nav-section">
+          <h2>Quick Navigation</h2>
+          <div class="quick-nav-grid">
+            <button class="quick-nav-card" onclick={() => goto('/map')}>
+              <div class="quick-nav-icon map-bg">
+                <MapPin size={24} />
+              </div>
+              <div class="quick-nav-text">
+                <h4>Live Map</h4>
+                <p>View incidents in real-time</p>
+              </div>
+              <ChevronRight size={16} class="arrow" />
+            </button>
+            <button class="quick-nav-card" onclick={() => goto('/alerts')}>
+              <div class="quick-nav-icon alert-bg">
+                <Bell size={24} />
+              </div>
+              <div class="quick-nav-text">
+                <h4>Alert Zones</h4>
+                <p>Manage your notifications</p>
+              </div>
+              <ChevronRight size={16} class="arrow" />
+            </button>
+            <button class="quick-nav-card" onclick={() => goto('/reports-history')}>
+              <div class="quick-nav-icon report-bg">
+                <FileText size={24} />
+              </div>
+              <div class="quick-nav-text">
+                <h4>My Reports</h4>
+                <p>View your incident history</p>
+              </div>
+              <ChevronRight size={16} class="arrow" />
+            </button>
+            <button class="quick-nav-card" onclick={() => goto('/community')}>
+              <div class="quick-nav-icon community-bg">
+                <Users size={24} />
+              </div>
+              <div class="quick-nav-text">
+                <h4>Community</h4>
+                <p>Connect with neighbors</p>
+              </div>
+              <ChevronRight size={16} class="arrow" />
+            </button>
           </div>
         </div>
 
@@ -514,42 +535,6 @@
 
           <!-- Right Column -->
           <div class="right-column">
-            <!-- Quick Actions -->
-            <div class="section">
-              <div class="section-header">
-                <h2>Quick Actions</h2>
-              </div>
-              <div class="quick-actions">
-                <button class="action-card" onclick={() => goto('/auth/report')}>
-                  <div class="action-icon purple-bg">
-                    <FlagTriangleRight size={20} />
-                  </div>
-                  <div class="action-text">
-                    <h4>Report Incident</h4>
-                    <p>File a new incident report</p>
-                  </div>
-                </button>
-                <button class="action-card" onclick={() => goto('/alerts')}>
-                  <div class="action-icon orange-bg">
-                    <Bell size={20} />
-                  </div>
-                  <div class="action-text">
-                    <h4>Manage Alerts</h4>
-                    <p>Customize your alert zones</p>
-                  </div>
-                </button>
-                <button class="action-card" onclick={() => goto('/statistics')}>
-                  <div class="action-icon green-bg">
-                    <TrendingUp size={20} />
-                  </div>
-                  <div class="action-text">
-                    <h4>View Statistics</h4>
-                    <p>See community safety trends</p>
-                  </div>
-                </button>
-              </div>
-            </div>
-
             <!-- Notifications -->
             <div class="section">
               <div class="section-header">
@@ -589,7 +574,7 @@
             </div>
 
             <!-- Safety Score -->
-            <div class="section safety-score">
+            <div class="section safety-score" onclick={() => goto('/statistics')}>
               <div class="score-circle">
                 <svg viewBox="0 0 100 100">
                   <circle cx="50" cy="50" r="45" fill="none" stroke="#E5E7EB" stroke-width="8"/>
@@ -653,6 +638,17 @@
     font-weight: 700;
     font-size: 1.125rem;
     color: var(--primary-dark);
+    cursor: pointer;
+  }
+  
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    background: var(--primary-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .mobile-menu-btn, .mobile-notif-btn {
@@ -723,6 +719,7 @@
     font-weight: 700;
     font-size: 1.125rem;
     color: var(--primary-dark);
+    cursor: pointer;
   }
   
   .close-menu {
@@ -772,6 +769,7 @@
     flex-direction: column;
     padding: 0 1rem;
     gap: 0.25rem;
+    overflow-y: auto;
   }
   
   .mobile-nav-item {
@@ -861,16 +859,7 @@
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--primary-dark);
-  }
-  
-  .logo-mark {
-    width: 32px;
-    height: 32px;
-    background: var(--primary-color);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    cursor: pointer;
   }
   
   .sidebar-nav {
@@ -879,6 +868,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    overflow-y: auto;
   }
   
   .nav-item {
@@ -1024,6 +1014,7 @@
     gap: 1rem;
     border: 1px solid #E5E7EB;
     transition: all 0.2s;
+    cursor: pointer;
   }
   
   .stat-card:hover {
@@ -1059,6 +1050,77 @@
   .stat-label {
     font-size: 0.75rem;
     color: #64748B;
+  }
+  
+  /* Quick Navigation */
+  .quick-nav-section {
+    margin-bottom: 2rem;
+  }
+  
+  .quick-nav-section h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0F172A;
+    margin-bottom: 1rem;
+  }
+  
+  .quick-nav-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+  
+  .quick-nav-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+  }
+  
+  .quick-nav-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-color: var(--primary-color);
+  }
+  
+  .quick-nav-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .quick-nav-icon.map-bg { background: #DBEAFE; color: #3B82F6; }
+  .quick-nav-icon.alert-bg { background: #FEF3C7; color: #F59E0B; }
+  .quick-nav-icon.report-bg { background: #F5F3FF; color: var(--primary-color); }
+  .quick-nav-icon.community-bg { background: #D1FAE5; color: #10B981; }
+  
+  .quick-nav-text {
+    flex: 1;
+  }
+  
+  .quick-nav-text h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #0F172A;
+    margin-bottom: 0.125rem;
+  }
+  
+  .quick-nav-text p {
+    font-size: 0.688rem;
+    color: #64748B;
+  }
+  
+  .arrow {
+    color: #94A3B8;
   }
   
   /* Two Column Layout */
@@ -1205,55 +1267,6 @@
     color: #64748B;
   }
   
-  /* Quick Actions */
-  .quick-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  
-  .action-card {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.875rem;
-    background: #F8FAFC;
-    border: 1px solid #E5E7EB;
-    border-radius: 0.75rem;
-    cursor: pointer;
-    width: 100%;
-    text-align: left;
-  }
-  
-  .action-card:active {
-    transform: scale(0.98);
-  }
-  
-  .action-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .purple-bg { background: #F5F3FF; color: var(--primary-color); }
-  .orange-bg { background: #FEF3C7; color: #F59E0B; }
-  .green-bg { background: #D1FAE5; color: #10B981; }
-  
-  .action-text h4 {
-    font-size: 0.813rem;
-    font-weight: 600;
-    color: #0F172A;
-    margin-bottom: 0.125rem;
-  }
-  
-  .action-text p {
-    font-size: 0.688rem;
-    color: #64748B;
-  }
-  
   /* Notifications */
   .unread-badge {
     font-size: 0.625rem;
@@ -1342,6 +1355,7 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+    cursor: pointer;
   }
   
   .score-circle {
@@ -1416,6 +1430,10 @@
       grid-template-columns: repeat(2, 1fr);
     }
     
+    .quick-nav-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
     .two-columns {
       grid-template-columns: 1fr;
     }
@@ -1461,6 +1479,10 @@
       font-size: 1.125rem;
     }
     
+    .quick-nav-grid {
+      grid-template-columns: 1fr;
+    }
+    
     .section {
       padding: 1rem;
     }
@@ -1490,4 +1512,3 @@
     }
   }
 </style>
-
