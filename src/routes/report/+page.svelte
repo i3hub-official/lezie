@@ -1,1254 +1,716 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
-  import {
-    MapPin,
-    Camera,
-    X,
-    AlertTriangle,
-    Send,
-    Navigation,
-    Shield,
-    EyeOff,
-    CheckCircle,
-    AlertCircle,
-    ChevronLeft,
-    Loader2,
-    Flame,
-    Car,
-    Building,
-    Volume2,
-    MoreHorizontal,
-    TrendingUp,
-    AlertOctagon,
-    Search
-  } from 'lucide-svelte';
-
-  // State declarations using $state
-  let isSubmitting = $state(false);
-  let error = $state('');
-  let success = $state(false);
-  let isSearchingLocation = $state(false);
-  let locationSearchResults = $state<any[]>([]);
-  let showLocationSearch = $state(false);
+  import { Mail, AlertCircle, ArrowRight, CheckCircle, ArrowLeft, Shield, MapPin, Users, Bell } from 'lucide-svelte';
   
-  // Form fields
-  let title = $state('');
-  let description = $state('');
-  let category = $state('');
-  let severity = $state('medium');
-  let isAnonymous = $state(false);
-  let location = $state<{ lat: number; lng: number } | null>(null);
+  let email = $state('');
+  let errors = $state<Record<string, string>>({});
+  let isLoading = $state(false);
+  let isSuccess = $state(false);
   
-  // Full location details
-  let locationDetails = $state({
-    street: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    country: '',
-    displayName: ''
-  });
-  
-  // Categories
-  const categories = [
-    { value: 'suspicious', label: 'Suspicious Activity', icon: AlertTriangle, color: '#F59E0B' },
-    { value: 'theft', label: 'Theft / Robbery', icon: AlertOctagon, color: '#EF4444' },
-    { value: 'vandalism', label: 'Vandalism', icon: Building, color: '#F97316' },
-    { value: 'fire', label: 'Fire / Emergency', icon: Flame, color: '#DC2626' },
-    { value: 'accident', label: 'Accident', icon: Car, color: '#F59E0B' },
-    { value: 'noise', label: 'Noise Complaint', icon: Volume2, color: '#8B5CF6' },
-    { value: 'other', label: 'Other', icon: MoreHorizontal, color: '#6B7280' }
-  ];
-  
-  // Severity options
-  const severityOptions = [
-    { value: 'low', label: 'Low', color: '#10B981', description: 'Non-urgent, monitor situation' },
-    { value: 'medium', label: 'Medium', color: '#F59E0B', description: 'Caution advised' },
-    { value: 'high', label: 'High', color: '#F97316', description: 'Urgent, attention needed' },
-    { value: 'critical', label: 'Critical', color: '#EF4444', description: 'Emergency, immediate action' }
-  ];
-  
-  // Media files
-  let mediaFiles = $state<File[]>([]);
-  let mediaPreviews = $state<string[]>([]);
-  
-  onMount(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          location = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-          getFullAddressFromCoords(position.coords.latitude, position.coords.longitude);
-        },
-        (err) => {
-          console.error('Geolocation error:', err);
-        }
-      );
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(email)) {
+      newErrors.email = 'Please enter a valid email address';
     }
-  });
+    return newErrors;
+  };
   
-  // Get full address from coordinates using reverse geocoding
-  async function getFullAddressFromCoords(lat: number, lng: number) {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
-      );
-      const data = await response.json();
-      
-      if (data.address) {
-        const addr = data.address;
-        locationDetails = {
-          street: [addr.road, addr.house_number].filter(Boolean).join(' ') || addr.suburb || addr.neighbourhood || '',
-          city: addr.city || addr.town || addr.village || addr.municipality || '',
-          state: addr.state || addr.region || '',
-          postalCode: addr.postcode || '',
-          country: addr.country || '',
-          displayName: data.display_name || ''
-        };
-        locationDetails.street = locationDetails.street || addr.road || '';
-      }
-    } catch (err) {
-      console.error('Reverse geocoding error:', err);
-    }
-  }
-  
-  // Search for locations by query
-  async function searchLocation(query: string) {
-    if (!query.trim() || query.length < 3) {
-      locationSearchResults = [];
-      return;
-    }
-    
-    isSearchingLocation = true;
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`
-      );
-      const data = await response.json();
-      
-      locationSearchResults = data.map((result: any) => ({
-        lat: parseFloat(result.lat),
-        lng: parseFloat(result.lon),
-        displayName: result.display_name,
-        address: result.address
-      }));
-    } catch (err) {
-      console.error('Location search error:', err);
-    } finally {
-      isSearchingLocation = false;
-    }
-  }
-  
-  // Select a location from search results
-  function selectLocation(result: any) {
-    location = { lat: result.lat, lng: result.lng };
-    
-    const addr = result.address || {};
-    locationDetails = {
-      street: [addr.road, addr.house_number].filter(Boolean).join(' ') || addr.suburb || '',
-      city: addr.city || addr.town || addr.village || addr.municipality || '',
-      state: addr.state || addr.region || '',
-      postalCode: addr.postcode || '',
-      country: addr.country || '',
-      displayName: result.displayName
-    };
-    
-    showLocationSearch = false;
-    locationSearchResults = [];
-  }
-  
-  // Get current location with full address
-  async function getCurrentLocation() {
-    if (navigator.geolocation) {
-      error = '';
-      isSearchingLocation = true;
-      
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          location = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-          await getFullAddressFromCoords(position.coords.latitude, position.coords.longitude);
-          isSearchingLocation = false;
-        },
-        (err) => {
-          error = 'Unable to get your location. Please enable location services.';
-          setTimeout(() => error = '', 3000);
-          isSearchingLocation = false;
-        }
-      );
-    } else {
-      error = 'Geolocation is not supported by your browser.';
-      setTimeout(() => error = '', 3000);
-    }
-  }
-  
-  // Clear selected location
-  function clearLocation() {
-    location = null;
-    locationDetails = {
-      street: '',
-      city: '',
-      state: '',
-      postalCode: '',
-      country: '',
-      displayName: ''
-    };
-  }
-  
-  // Handle file upload
-  function handleFileUpload(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const files = Array.from(input.files || []);
-    
-    const remaining = 5 - mediaFiles.length;
-    const newFiles = files.slice(0, remaining);
-    
-    const validFiles = newFiles.filter(file => file.size <= 10 * 1024 * 1024);
-    if (validFiles.length !== newFiles.length) {
-      error = 'Some files exceed 10MB limit and were skipped';
-      setTimeout(() => error = '', 3000);
-    }
-    
-    mediaFiles = [...mediaFiles, ...validFiles];
-    
-    validFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        mediaPreviews = [...mediaPreviews, e.target?.result as string];
-      };
-      reader.readAsDataURL(file);
-    });
-    
-    input.value = '';
-  }
-  
-  function removeMedia(index: number) {
-    mediaFiles = mediaFiles.filter((_, i) => i !== index);
-    mediaPreviews = mediaPreviews.filter((_, i) => i !== index);
-  }
-  
-  // Submit form
-  async function handleSubmit(e: Event) {
+  const handleSubmit = async (e: Event) => {
     e.preventDefault();
-    
-    // Validation
-    if (!title.trim()) {
-      error = 'Please enter a title';
-      setTimeout(() => error = '', 3000);
-      return;
-    }
-    if (title.length < 5) {
-      error = 'Title must be at least 5 characters';
-      setTimeout(() => error = '', 3000);
-      return;
-    }
-    if (!description.trim()) {
-      error = 'Please enter a description';
-      setTimeout(() => error = '', 3000);
-      return;
-    }
-    if (description.length < 20) {
-      error = 'Please provide more details (at least 20 characters)';
-      setTimeout(() => error = '', 3000);
-      return;
-    }
-    if (!category) {
-      error = 'Please select a category';
-      setTimeout(() => error = '', 3000);
-      return;
-    }
-    if (!location) {
-      error = 'Please select a location';
-      setTimeout(() => error = '', 3000);
-      return;
-    }
-    
-    isSubmitting = true;
-    error = '';
-    
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) { errors = validationErrors; return; }
+    isLoading = true;
+    errors = {};
     try {
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('description', description);
-      formData.append('category', category);
-      formData.append('severity', severity);
-      formData.append('isAnonymous', String(isAnonymous));
-      formData.append('location', JSON.stringify(location));
-      formData.append('locationDetails', JSON.stringify(locationDetails));
-      
-      mediaFiles.forEach(file => {
-        formData.append('media', file);
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
       });
-      
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log('Report submitted:', {
-        title,
-        description,
-        category,
-        severity,
-        isAnonymous,
-        location,
-        locationDetails,
-        mediaCount: mediaFiles.length
-      });
-      
-      success = true;
-      
-      setTimeout(() => {
-        goto('/dashboard');
-      }, 2000);
-      
-    } catch (err) {
-      error = err instanceof Error ? err.message : 'Failed to submit report';
-      setTimeout(() => error = '', 3000);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to send reset email');
+      isSuccess = true;
+    } catch (error: unknown) {
+      errors.submit = error instanceof Error ? error.message : 'An error occurred';
     } finally {
-      isSubmitting = false;
+      isLoading = false;
     }
-  }
-  
-  function goBack() {
-    goto('/');
-  }
+  };
 </script>
 
 <svelte:head>
-  <title>Report Incident - Lezie</title>
-  <meta name="description" content="Report an incident in your community. Help keep your neighbourhood safe." />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+  <title>Reset Password - Lezie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
 </svelte:head>
 
-<div class="report-page">
-  <div class="report-container">
-    <!-- Header -->
-    <div class="report-header">
-      <button class="back-button" onclick={goBack}>
-        <ChevronLeft size={20} />
-        Back
-      </button>
-      <div class="report-icon-wrapper">
-        <AlertTriangle size={32} />
+<div class="fp-page">
+
+  <!-- ── LEFT PANEL (desktop only) ── -->
+  <aside class="fp-panel">
+    <div class="fp-panel-inner">
+
+      <a href="/" class="fp-logo-link">
+        <img src="/icons/lz_ico.png" alt="Lezie" class="fp-logo-img fp-logo-img--desktop" />
+      </a>
+
+      <div class="fp-panel-hero">
+        <p class="fp-panel-eyebrow">Account Recovery</p>
+        <h2 class="fp-panel-headline">
+          We've got<br/>
+          <em>your back.</em>
+        </h2>
+        <p class="fp-panel-desc">
+          Happens to the best of us. Enter your email and we'll send a secure link to get you back into your account in seconds.
+        </p>
       </div>
-      <h1 class="report-title">Report an Incident</h1>
-      <p class="report-subtitle">Your report helps keep the community safe</p>
+
+      <ul class="fp-features">
+        <li class="fp-feature">
+          <div class="fp-feature-icon"><Shield size={16} /></div>
+          <div>
+            <strong>Secure Reset Link</strong>
+            <span>Expires in 15 minutes for your safety</span>
+          </div>
+        </li>
+        <li class="fp-feature">
+          <div class="fp-feature-icon"><Mail size={16} /></div>
+          <div>
+            <strong>Check Your Inbox</strong>
+            <span>Link sent instantly to your registered email</span>
+          </div>
+        </li>
+        <li class="fp-feature">
+          <div class="fp-feature-icon"><Users size={16} /></div>
+          <div>
+            <strong>Still Need Help?</strong>
+            <span>Contact support if you no longer have access</span>
+          </div>
+        </li>
+      </ul>
+
+      <div class="fp-social-proof">
+        <div class="fp-avatars">
+          {#each ['var(--secondary-color)','#a78bfa','#8b5cf6','var(--primary-color)'] as color}
+            <div class="fp-avatar" style="background:{color}"></div>
+          {/each}
+        </div>
+        <p><strong>12,400+</strong> members keeping communities safe</p>
+      </div>
+
     </div>
+    <div class="fp-panel-glow"></div>
+  </aside>
 
-    <!-- Success Message -->
-    {#if success}
-      <div class="success-state">
-        <div class="success-animation">
-          <CheckCircle size={64} />
-        </div>
-        <h2>Report Submitted Successfully!</h2>
-        <p>Thank you for helping keep your community safe.</p>
-        <p class="success-note">Redirecting you to dashboard...</p>
-        <div class="success-spinner">
-          <Loader2 size={24} class="spinning" />
-        </div>
-      </div>
-    {:else}
+  <!-- ── RIGHT / FORM ── -->
+  <main class="fp-main">
+    <div class="fp-form-shell">
 
-    <!-- Form -->
-    <form class="report-form" onsubmit={handleSubmit}>
-      <!-- Title -->
-      <div class="form-group">
-        <label class="form-label" for="title">
-          Incident Title <span class="required">*</span>
-        </label>
-        <input
-          id="title"
-          type="text"
-          bind:value={title}
-          class="form-input"
-          placeholder="e.g., Suspicious person near school, Break-in on Main St"
-          maxlength="200"
-        />
-        <div class="form-hint">
-          <span>{title.length}/200 characters</span>
-          {#if title.length < 5 && title.length > 0}
-            <span class="hint-warning">Minimum 5 characters</span>
-          {/if}
-        </div>
+      <!-- Mobile logo -->
+      <div class="fp-mobile-logo">
+        <a href="/" class="fp-logo-link">
+          <img src="/icons/lz_ico.png" alt="Lezie" class="fp-logo-img fp-logo-img--mobile" />
+        </a>
       </div>
 
-      <!-- Category -->
-      <div class="form-group">
-        <label class="form-label">
-          Category <span class="required">*</span>
-        </label>
-        <div class="category-grid">
-          {#each categories as cat}
-            <button
-              type="button"
-              class="category-btn {category === cat.value ? 'selected' : ''}"
-              style={category === cat.value ? `--category-color: ${cat.color}` : ''}
-              onclick={() => category = cat.value}
-            >
-              <cat.icon size={18} />
-              <span>{cat.label}</span>
-            </button>
-          {/each}
-        </div>
+      <!-- Header -->
+      <div class="fp-form-header">
+        <h1 class="fp-form-title">
+          {isSuccess ? 'Email sent!' : 'Reset password'}
+        </h1>
+        <p class="fp-form-subtitle">
+          {isSuccess
+            ? 'Check your inbox for the reset link'
+            : 'Enter your email and we\'ll send you a reset link'}
+        </p>
       </div>
 
-      <!-- Severity -->
-      <div class="form-group">
-        <label class="form-label">
-          Severity Level
-        </label>
-        <div class="severity-grid">
-          {#each severityOptions as opt}
-            <button
-              type="button"
-              class="severity-btn {severity === opt.value ? 'selected' : ''}"
-              style={severity === opt.value ? `--severity-color: ${opt.color}` : ''}
-              onclick={() => severity = opt.value}
-            >
-              <TrendingUp size={16} />
-              <div class="severity-info">
-                <span class="severity-label">{opt.label}</span>
-                <span class="severity-desc">{opt.description}</span>
-              </div>
-            </button>
-          {/each}
-        </div>
-      </div>
+      <!-- Card -->
+      <div class="fp-card">
 
-      <!-- Description -->
-      <div class="form-group">
-        <label class="form-label" for="description">
-          Description <span class="required">*</span>
-        </label>
-        <textarea
-          id="description"
-          bind:value={description}
-          class="form-textarea"
-          rows="5"
-          placeholder="Provide detailed information about what happened. Include time, people involved, and any other relevant details..."
-        ></textarea>
-        <div class="form-hint">
-          <span>{description.length} characters</span>
-          {#if description.length < 20 && description.length > 0}
-            <span class="hint-warning">Minimum 20 characters</span>
-          {/if}
-        </div>
-      </div>
-
-      <!-- Location with Full Details -->
-      <div class="form-group">
-        <label class="form-label">
-          Location <span class="required">*</span>
-        </label>
-        
-        <div class="location-actions">
-          <button type="button" class="location-btn-primary" onclick={getCurrentLocation} disabled={isSearchingLocation}>
-            {#if isSearchingLocation}
-              <Loader2 size={18} class="spinning" />
-              Getting location...
-            {:else}
-              <Navigation size={18} />
-              Use my current location
-            {/if}
-          </button>
-          
-          <button type="button" class="location-btn-secondary" onclick={() => showLocationSearch = !showLocationSearch}>
-            <Search size={18} />
-            Search address
-          </button>
-        </div>
-
-        <!-- Location Search -->
-        {#if showLocationSearch}
-          <div class="location-search">
-            <div class="search-input-wrapper">
-              <Search size={16} class="search-icon" />
-              <input
-                type="text"
-                placeholder="Search by street, city, or zip code..."
-                class="location-search-input"
-                oninput={(e) => searchLocation(e.currentTarget.value)}
-              />
+        {#if isSuccess}
+          <!-- Success state -->
+          <div class="fp-success" style="animation: stepIn .35s ease both">
+            <div class="fp-success-icon">
+              <CheckCircle size={40} strokeWidth={1.5} />
             </div>
-            
-            {#if isSearchingLocation}
-              <div class="search-loading">
-                <Loader2 size={20} class="spinning" />
-                <span>Searching...</span>
-              </div>
-            {/if}
-            
-            {#if locationSearchResults.length > 0}
-              <div class="search-results">
-                {#each locationSearchResults as result}
-                  <button type="button" class="search-result-item" onclick={() => selectLocation(result)}>
-                    <MapPin size={16} />
-                    <div class="result-details">
-                      <strong>{result.displayName.split(',')[0]}</strong>
-                      <span>{result.displayName}</span>
-                    </div>
-                  </button>
-                {/each}
-              </div>
-            {/if}
+            <h3 class="fp-success-title">Check your email</h3>
+            <p class="fp-success-body">
+              We sent a password reset link to
+            </p>
+            <div class="fp-success-email">
+              <Mail size={14} />
+              <span>{email}</span>
+            </div>
+            <p class="fp-success-note">
+              Didn't receive it? Check your spam folder or wait a minute before trying again.
+            </p>
+            <a href="/auth/signin" class="fp-btn-primary">
+              Return to Sign In <ArrowRight size={15} />
+            </a>
+            <button
+              type="button"
+              class="fp-btn-resend"
+              onclick={() => { isSuccess = false; }}
+            >
+              Try a different email
+            </button>
           </div>
-        {/if}
 
-        <!-- Selected Location Display -->
-        {#if location && locationDetails.displayName}
-          <div class="location-card">
-            <div class="location-card-header">
-              <MapPin size={18} />
-              <strong>Selected Location</strong>
-              <button type="button" class="location-clear" onclick={clearLocation}>
-                <X size={16} />
+        {:else}
+          <!-- Form state -->
+          <div style="animation: stepIn .35s ease both">
+
+            {#if errors.submit}
+              <div class="fp-alert-error">
+                <AlertCircle size={18} />
+                <span>{errors.submit}</span>
+              </div>
+            {/if}
+
+            <form onsubmit={handleSubmit}>
+              <div class="fp-field">
+                <label class="fp-label" for="email">
+                  Email Address <span class="fp-req">*</span>
+                </label>
+                <div class="fp-input-wrap">
+                  <Mail size={16} class="fp-input-icon" />
+                  <input
+                    type="email"
+                    id="email"
+                    placeholder="you@example.com"
+                    bind:value={email}
+                    class="fp-input {errors.email ? 'fp-input--err' : ''}"
+                    autocomplete="email"
+                  />
+                </div>
+                {#if errors.email}
+                  <p class="fp-err">{errors.email}</p>
+                {:else}
+                  <p class="fp-hint">We'll send a secure reset link to this address</p>
+                {/if}
+              </div>
+
+              <button type="submit" disabled={isLoading} class="fp-btn-primary">
+                {#if isLoading}
+                  <span class="fp-spinner"></span> Sending…
+                {:else}
+                  Send Reset Link <ArrowRight size={15} />
+                {/if}
               </button>
-            </div>
-            <div class="location-details-grid">
-              {#if locationDetails.street}
-                <div class="location-detail-item">
-                  <span class="detail-label">Street:</span>
-                  <span class="detail-value">{locationDetails.street}</span>
-                </div>
-              {/if}
-              {#if locationDetails.city}
-                <div class="location-detail-item">
-                  <span class="detail-label">City:</span>
-                  <span class="detail-value">{locationDetails.city}</span>
-                </div>
-              {/if}
-              {#if locationDetails.state}
-                <div class="location-detail-item">
-                  <span class="detail-label">State:</span>
-                  <span class="detail-value">{locationDetails.state}</span>
-                </div>
-              {/if}
-              {#if locationDetails.postalCode}
-                <div class="location-detail-item">
-                  <span class="detail-label">Postal Code:</span>
-                  <span class="detail-value">{locationDetails.postalCode}</span>
-                </div>
-              {/if}
-              {#if locationDetails.country}
-                <div class="location-detail-item">
-                  <span class="detail-label">Country:</span>
-                  <span class="detail-value">{locationDetails.country}</span>
-                </div>
-              {/if}
-            </div>
-            <div class="location-coords">
-              <span>Lat: {location.lat.toFixed(6)}</span>
-              <span>Lng: {location.lng.toFixed(6)}</span>
-            </div>
+            </form>
+
+            <div class="fp-divider"><span>or</span></div>
+
+            <a href="/auth/signin" class="fp-btn-back">
+              <ArrowLeft size={15} /> Back to Sign In
+            </a>
+
           </div>
         {/if}
-        
-        <p class="form-hint">Your exact location helps alert nearby community members</p>
+
       </div>
 
-      <!-- Media Upload -->
-      <div class="form-group">
-        <label class="form-label">
-          Photos & Videos
-        </label>
-        <div class="upload-area">
-          <label class="upload-button {mediaFiles.length >= 5 ? 'disabled' : ''}">
-            <Camera size={20} />
-            <span>Add Media</span>
-            <input
-              type="file"
-              accept="image/*,video/*"
-              multiple
-              hidden
-              onchange={handleFileUpload}
-              disabled={mediaFiles.length >= 5}
-            />
-          </label>
-          <p class="upload-hint">{mediaFiles.length}/5 files (max 10MB each)</p>
-        </div>
+      <!-- Footer -->
+      <p class="fp-footer-text">
+        Don't have an account? <a href="/auth/signup" class="fp-link">Create account</a>
+      </p>
 
-        {#if mediaPreviews.length > 0}
-          <div class="media-grid">
-            {#each mediaPreviews as preview, index}
-              <div class="media-item">
-                <img src={preview} alt="Preview" class="media-preview" />
-                <button type="button" class="remove-media" onclick={() => removeMedia(index)}>
-                  <X size={16} />
-                </button>
-              </div>
-            {/each}
-          </div>
-        {/if}
-      </div>
-
-      <!-- Anonymous Option -->
-      <div class="form-group">
-        <label class="checkbox-label">
-          <input type="checkbox" bind:checked={isAnonymous} class="checkbox" />
-          <EyeOff size={16} />
-          <span>Report anonymously</span>
-        </label>
-        <p class="form-hint">Your identity will be hidden from public view</p>
-      </div>
-
-      <!-- Error Message -->
-      {#if error}
-        <div class="error-message">
-          <AlertCircle size={18} />
-          <span>{error}</span>
-        </div>
-      {/if}
-
-      <!-- Submit Button -->
-      <div class="form-actions">
-        <button type="submit" class="submit-button" disabled={isSubmitting}>
-          {#if isSubmitting}
-            <Loader2 size={18} class="spinning" />
-            Submitting Report...
-          {:else}
-            <Send size={18} />
-            Submit Report
-          {/if}
-        </button>
-      </div>
-
-      <!-- Safety Note -->
-      <div class="safety-note">
-        <Shield size={18} />
-        <div>
-          <strong>Emergency?</strong> If this is an emergency, call your local emergency services immediately.
-        </div>
-      </div>
-    </form>
-    {/if}
-  </div>
+    </div>
+  </main>
 </div>
 
 <style>
-  .report-page {
+  :global(.fp-page *) {
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+
+  /* ── Layout ── */
+  .fp-page {
+    display: flex;
     min-height: 100vh;
-    background: linear-gradient(135deg, #f5f3ff 0%, #ffffff 100%);
+    background: var(--light-color);
   }
 
-  .report-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: clamp(1rem, 4vw, 2rem);
-  }
-
-  /* Header */
-  .report-header {
-    text-align: center;
-    margin-bottom: 2rem;
-  }
-
-  .back-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: none;
-    border: none;
-    color: #64748b;
-    font-size: 0.875rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .report-icon-wrapper {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 64px;
-    height: 64px;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    border-radius: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .report-icon-wrapper svg {
-    color: white;
-  }
-
-  .report-title {
-    font-size: clamp(1.5rem, 5vw, 2rem);
-    font-weight: 800;
-    color: #0f172a;
-    margin-bottom: 0.5rem;
-  }
-
-  .report-subtitle {
-    color: #64748b;
-    font-size: 0.875rem;
-  }
-
-  /* Form */
-  .report-form {
-    background: white;
-    border-radius: 1.5rem;
-    padding: clamp(1.25rem, 4vw, 2rem);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e2e8f0;
-  }
-
-  .form-group {
-    margin-bottom: 1.5rem;
-  }
-
-  .form-label {
-    display: block;
-    font-weight: 600;
-    font-size: 0.875rem;
-    color: #0f172a;
-    margin-bottom: 0.5rem;
-  }
-
-  .required {
-    color: #ef4444;
-  }
-
-  .form-input, .form-textarea {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    font-size: 0.875rem;
-    font-family: inherit;
-    transition: all 0.2s;
-  }
-
-  .form-input:focus, .form-textarea:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(106, 44, 145, 0.1);
-  }
-
-  .form-hint {
-    font-size: 0.688rem;
-    color: #94a3b8;
-    margin-top: 0.25rem;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .hint-warning {
-    color: #f59e0b;
-  }
-
-  /* Category Grid */
-  .category-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 0.5rem;
-  }
-
-  .category-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 0.875rem;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    font-size: 0.813rem;
-    color: #334155;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .category-btn:active {
-    transform: scale(0.98);
-  }
-
-  .category-btn.selected {
-    background: var(--category-color, var(--primary-color));
-    border-color: var(--category-color, var(--primary-color));
-    color: white;
-  }
-
-  /* Severity Grid */
-  .severity-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .severity-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: left;
-  }
-
-  .severity-btn:active {
-    transform: scale(0.99);
-  }
-
-  .severity-btn.selected {
-    background: var(--severity-color, #f59e0b);
-    border-color: var(--severity-color, #f59e0b);
-  }
-
-  .severity-btn.selected .severity-label,
-  .severity-btn.selected .severity-desc,
-  .severity-btn.selected svg {
-    color: white;
-  }
-
-  .severity-info {
-    flex: 1;
-  }
-
-  .severity-label {
-    display: block;
-    font-size: 0.813rem;
-    font-weight: 600;
-    color: #0f172a;
-  }
-
-  .severity-desc {
-    display: block;
-    font-size: 0.688rem;
-    color: #64748b;
-  }
-
-  /* Location Actions */
-  .location-actions {
-    display: flex;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-  }
-
-  .location-btn-primary, .location-btn-secondary {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.625rem;
-    border-radius: 0.75rem;
-    font-size: 0.813rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .location-btn-primary {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-  }
-
-  .location-btn-primary:active {
-    background: var(--primary-dark);
-    transform: scale(0.98);
-  }
-
-  .location-btn-primary:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .location-btn-secondary {
-    background: white;
-    border: 1px solid #e2e8f0;
-    color: #475569;
-  }
-
-  .location-btn-secondary:active {
-    background: #f8fafc;
-    transform: scale(0.98);
-  }
-
-  /* Location Search */
-  .location-search {
-    margin-bottom: 1rem;
-  }
-
-  .search-input-wrapper {
+  /* ── LEFT PANEL ── */
+  .fp-panel {
+    display: none;
     position: relative;
-  }
-
-  .search-icon {
-    position: absolute;
-    left: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #94a3b8;
-  }
-
-  .location-search-input {
-    width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    font-size: 0.875rem;
-  }
-
-  .location-search-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(106, 44, 145, 0.1);
-  }
-
-  .search-loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 1rem;
-    color: #64748b;
-  }
-
-  .search-results {
-    margin-top: 0.5rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
+    width: 420px;
+    flex-shrink: 0;
+    background: linear-gradient(160deg, var(--primary-color) 0%, var(--primary-dark) 40%, var(--primary-dark) 100%);
     overflow: hidden;
   }
 
-  .search-result-item {
+  @media (min-width: 1024px) {
+    .fp-panel { display: flex; }
+  }
+
+  .fp-panel-inner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    padding: 2.5rem;
+    height: 100%;
+  }
+
+  .fp-panel-glow {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background:
+      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(167,139,250,0.25) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 20% 80%, rgba(109,40,217,0.4) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* ── Logo ── */
+  .fp-logo-link {
+    display: inline-block;
+    line-height: 0;
+    margin-bottom: 2.5rem;
+    transition: opacity 0.2s;
+  }
+
+  .fp-logo-link:hover { opacity: 0.85; }
+
+  .fp-logo-img--desktop {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    display: block;
+  }
+
+  .fp-logo-img--mobile {
+    width: 96px;
+    height: 96px;
+    object-fit: contain;
+    display: block;
+  }
+
+  /* ── Panel copy ── */
+  .fp-panel-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(196,181,253,0.9);
+    margin-bottom: 0.875rem;
+  }
+
+  .fp-panel-headline {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 2.5rem;
+    line-height: 1.15;
+    color: white;
+    margin-bottom: 1rem;
+  }
+
+  .fp-panel-headline em {
+    color: var(--secondary-color);
+    font-style: italic;
+  }
+
+  .fp-panel-desc {
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: rgba(221,214,254,0.85);
+    margin-bottom: 2.5rem;
+  }
+
+  /* Features */
+  .fp-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.125rem;
+  }
+
+  .fp-feature {
     display: flex;
     align-items: flex-start;
-    gap: 0.75rem;
-    width: 100%;
-    padding: 0.75rem;
-    background: white;
-    border: none;
-    border-bottom: 1px solid #f1f5f9;
-    text-align: left;
-    cursor: pointer;
-    transition: background 0.2s;
+    gap: 0.875rem;
   }
 
-  .search-result-item:last-child {
-    border-bottom: none;
+  .fp-feature-icon {
+    width: 32px;
+    height: 32px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ddd6fe;
+    flex-shrink: 0;
+    margin-top: 1px;
   }
 
-  .search-result-item:active {
-    background: #f8fafc;
-  }
-
-  .result-details {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .result-details strong {
+  .fp-feature strong {
     display: block;
     font-size: 0.813rem;
-    color: #0f172a;
+    font-weight: 600;
+    color: white;
     margin-bottom: 0.125rem;
   }
 
-  .result-details span {
-    font-size: 0.688rem;
-    color: #64748b;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    display: block;
-  }
-
-  /* Location Card */
-  .location-card {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    padding: 1rem;
-    margin-top: 0.5rem;
-  }
-
-  .location-card-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #e2e8f0;
-  }
-
-  .location-card-header strong {
-    flex: 1;
-    font-size: 0.813rem;
-    color: #0f172a;
-  }
-
-  .location-clear {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #94a3b8;
-    padding: 0.25rem;
-    display: flex;
-  }
-
-  .location-details-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .location-detail-item {
-    display: flex;
-    gap: 0.5rem;
+  .fp-feature span {
     font-size: 0.75rem;
+    color: rgba(196,181,253,0.8);
+    line-height: 1.5;
   }
 
-  .detail-label {
-    font-weight: 600;
-    color: #475569;
-    min-width: 70px;
-  }
-
-  .detail-value {
-    color: #0f172a;
-  }
-
-  .location-coords {
-    display: flex;
-    gap: 1rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid #e2e8f0;
-    font-size: 0.688rem;
-    font-family: monospace;
-    color: #64748b;
-  }
-
-  /* Upload */
-  .upload-area {
+  /* Social proof */
+  .fp-social-proof {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
+    gap: 0.875rem;
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255,255,255,0.12);
   }
 
-  .upload-button {
-    display: inline-flex;
+  .fp-avatars { display: flex; }
+
+  .fp-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-dark);
+    margin-left: -8px;
+  }
+
+  .fp-avatar:first-child { margin-left: 0; }
+
+  .fp-social-proof p {
+    font-size: 0.75rem;
+    color: rgba(221,214,254,0.9);
+    line-height: 1.4;
+  }
+
+  .fp-social-proof strong { color: white; font-weight: 600; }
+
+  /* ── RIGHT / MAIN ── */
+  .fp-main {
+    flex: 1;
+    display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
-    background: #f8fafc;
-    border: 1px dashed #cbd5e1;
-    border-radius: 0.75rem;
-    font-size: 0.813rem;
-    cursor: pointer;
-    transition: all 0.2s;
+    justify-content: center;
+    padding: 2rem 1.25rem;
+    min-height: 100vh;
   }
 
-  .upload-button:active:not(.disabled) {
-    background: #f1f5f9;
-    transform: scale(0.98);
-  }
-
-  .upload-button.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .upload-hint {
-    font-size: 0.688rem;
-    color: #94a3b8;
-  }
-
-  .media-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 0.5rem;
-    margin-top: 1rem;
-  }
-
-  .media-item {
-    position: relative;
-    aspect-ratio: 1;
-    border-radius: 0.5rem;
-    overflow: hidden;
-  }
-
-  .media-preview {
+  .fp-form-shell {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .remove-media {
-    position: absolute;
-    top: 0.25rem;
-    right: 0.25rem;
-    background: rgba(0, 0, 0, 0.6);
-    border: none;
-    color: white;
-    padding: 0.25rem;
-    border-radius: 0.25rem;
-    cursor: pointer;
+    max-width: 440px;
     display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
   }
 
-  /* Checkbox */
-  .checkbox-label {
+  /* Mobile logo */
+  .fp-mobile-logo {
+    display: flex;
+    justify-content: center;
+  }
+
+  .fp-mobile-logo .fp-logo-link { margin-bottom: 0; }
+
+  @media (min-width: 1024px) {
+    .fp-mobile-logo { display: none; }
+  }
+
+  /* Header */
+  .fp-form-header { text-align: center; }
+
+  .fp-form-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: clamp(1.625rem, 4vw, 2rem);
+    color: var(--dark-color);
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.02em;
+  }
+
+  .fp-form-subtitle {
+    font-size: 0.875rem;
+    color: var(--gray-color);
+  }
+
+  /* Card */
+  .fp-card {
+    background: white;
+    border-radius: 1.5rem;
+    border: 1px solid #e2e8f0;
+    padding: clamp(1.25rem, 5vw, 2rem);
+    box-shadow:
+      0 1px 2px rgba(0,0,0,0.04),
+      0 4px 16px rgba(0,0,0,0.06),
+      0 16px 48px rgba(0,0,0,0.04);
+  }
+
+  /* Alert */
+  .fp-alert-error {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    font-size: 0.813rem;
-    color: #0f172a;
-  }
-
-  .checkbox {
-    width: 1rem;
-    height: 1rem;
-    cursor: pointer;
-    accent-color: var(--primary-color);
-  }
-
-  /* Error */
-  .error-message {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    gap: 0.625rem;
     padding: 0.75rem 1rem;
     background: #fef2f2;
     border: 1px solid #fecaca;
     border-radius: 0.75rem;
-    color: #dc2626;
+    color: var(--danger-color);
     font-size: 0.813rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
   }
 
-  /* Submit */
-  .form-actions {
-    margin-top: 1.5rem;
+  /* Field */
+  .fp-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin-bottom: 1.25rem;
   }
 
-  .submit-button {
+  .fp-label {
+    font-size: 0.813rem;
+    font-weight: 600;
+    color: #374151;
+    letter-spacing: 0.01em;
+  }
+
+  .fp-req { color: var(--primary-color); }
+
+  .fp-input-wrap { position: relative; }
+
+  :global(.fp-input-icon) {
+    position: absolute;
+    left: 0.875rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    pointer-events: none;
+  }
+
+  .fp-input {
+    width: 100%;
+    padding: 0.75rem 0.875rem 0.75rem 2.625rem;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--dark-color);
+    background: var(--light-color);
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .fp-input:hover { border-color: var(--primary-border); background: white; }
+  .fp-input:focus {
+    border-color: var(--primary-color);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(106,44,145,0.1);
+  }
+  .fp-input--err { border-color: #f87171; background: #fff5f5; }
+
+  .fp-err { font-size: 0.75rem; color: var(--danger-color); }
+
+  .fp-hint { font-size: 0.75rem; color: var(--gray-color); }
+
+  /* Buttons */
+  .fp-btn-primary {
     width: 100%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    padding: 0.875rem 1.5rem;
-    background: var(--primary-color);
+    padding: 0.8125rem 1.25rem;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
     color: white;
     border: none;
     border-radius: 0.75rem;
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
     font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
     cursor: pointer;
+    box-shadow: 0 4px 14px rgba(106,44,145,0.3);
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .fp-btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(106,44,145,0.4);
+  }
+
+  .fp-btn-primary:active:not(:disabled) { transform: translateY(0); }
+  .fp-btn-primary:disabled { opacity: 0.65; cursor: not-allowed; }
+
+  .fp-btn-back {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: white;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--gray-color);
+    cursor: pointer;
+    text-decoration: none;
     transition: all 0.2s;
   }
 
-  .submit-button:active:not(:disabled) {
-    background: var(--primary-dark);
-    transform: scale(0.98);
+  .fp-btn-back:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: var(--primary-bg);
   }
 
-  .submit-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+  /* Divider */
+  .fp-divider {
+    position: relative;
+    text-align: center;
+    margin: 1.25rem 0;
   }
 
-  /* Safety Note */
-  .safety-note {
+  .fp-divider::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+    background: #e5e7eb;
+  }
+
+  .fp-divider span {
+    position: relative;
+    background: white;
+    padding: 0 0.875rem;
+    font-size: 0.75rem;
+    color: #9ca3af;
+    font-weight: 500;
+  }
+
+  /* Success state */
+  .fp-success {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .fp-success-icon {
+    width: 72px;
+    height: 72px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 50%;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.875rem;
-    background: #fef3c7;
-    border-radius: 0.75rem;
-    margin-top: 1rem;
-    font-size: 0.75rem;
-    color: #92400e;
+    justify-content: center;
+    color: var(--success-color);
+    margin-bottom: 0.25rem;
   }
 
-  /* Success State */
-  .success-state {
+  .fp-success-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 1.375rem;
+    color: var(--dark-color);
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .fp-success-body {
+    font-size: 0.875rem;
+    color: var(--gray-color);
+    margin: 0;
+  }
+
+  .fp-success-email {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--primary-bg);
+    border: 1px solid var(--primary-border);
+    border-radius: 0.625rem;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.813rem;
+    font-weight: 600;
+    color: var(--primary-dark);
+  }
+
+  .fp-success-note {
+    font-size: 0.75rem;
+    color: var(--gray-color);
+    line-height: 1.6;
+    max-width: 300px;
+    margin: 0.25rem 0 0.75rem;
+  }
+
+  .fp-success .fp-btn-primary { margin-top: 0.25rem; }
+
+  .fp-btn-resend {
+    background: none;
+    border: none;
+    font-size: 0.813rem;
+    color: var(--gray-color);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    text-decoration: underline;
+    padding: 0;
+    transition: color 0.2s;
+  }
+
+  .fp-btn-resend:hover { color: var(--primary-color); }
+
+  /* Link */
+  .fp-link {
+    color: var(--primary-color);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .fp-link:hover { text-decoration: underline; }
+
+  /* Footer */
+  .fp-footer-text {
     text-align: center;
-    padding: 3rem 2rem;
-    background: white;
-    border-radius: 1.5rem;
-    animation: fadeInUp 0.5s ease;
+    font-size: 0.875rem;
+    color: var(--gray-color);
   }
 
-  .success-animation svg {
-    color: #10b981;
-    animation: scaleUp 0.5s ease;
+  /* Spinner */
+  .fp-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    flex-shrink: 0;
   }
 
-  .success-state h2 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #0f172a;
-    margin-bottom: 0.5rem;
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @keyframes stepIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
-  .success-state p {
-    color: #64748b;
-  }
-
-  .success-note {
-    font-size: 0.75rem;
-  }
-
-  .success-spinner {
-    margin-top: 1rem;
-  }
-
-  .spinning {
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes scaleUp {
-    from {
-      transform: scale(0);
-    }
-    to {
-      transform: scale(1);
-    }
-  }
-
-  /* Mobile Responsive */
+  /* ── Responsive ── */
   @media (max-width: 640px) {
-    .category-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .location-actions {
-      flex-direction: column;
-    }
-
-    .location-details-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .detail-label {
-      min-width: 60px;
-    }
+    .fp-main { padding: 1.5rem 1rem; align-items: flex-start; }
+    .fp-form-shell { gap: 1.25rem; }
+    .fp-card { border-radius: 1.25rem; }
   }
 </style>
