@@ -52,7 +52,7 @@
     <div class="fp-panel-inner">
 
       <a href="/" class="fp-logo-link">
-        <img src="/icons/lz_ico.png" alt="Lezie" class="fp-logo-img fp-logo-img--desktop" />
+        <img src="/icons/lz_logo_t.png" alt="Lezie" class="fp-logo-img fp-logo-img--desktop" />
       </a>
 
       <div class="fp-panel-hero">
