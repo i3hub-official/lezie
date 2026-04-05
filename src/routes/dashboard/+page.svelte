@@ -37,7 +37,10 @@
     Star,
     Globe,
     Activity,
-    ChevronLeft
+    ChevronLeft,
+    Menu as MenuIcon,
+    PanelLeftClose,
+    PanelLeftOpen
   } from 'lucide-svelte';
   
   let isLoading = $state(true);
@@ -54,22 +57,33 @@
   let notifications = $state<any[]>([]);
   let safetyTips = $state<string[]>([]);
   let isMobileMenuOpen = $state(false);
-  let activeNav = $state('dashboard');
+  let activePage = $state('dashboard');
+  let isSidebarCollapsed = $state(false);
+  let isMobile = $state(false);
+  
+  // Page components cache
+  let currentPageComponent: any = null;
   
   onMount(() => {
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
     loadDashboardData();
+    loadPage('dashboard');
     isLoading = false;
-    
-    // Close menu on window resize if screen becomes desktop
-    window.addEventListener('resize', () => {
-      if (window.innerWidth >= 768 && isMobileMenuOpen) {
-        isMobileMenuOpen = false;
-      }
-    });
   });
   
+  function checkMobile() {
+    isMobile = window.innerWidth < 768;
+    if (!isMobile && isMobileMenuOpen) {
+      isMobileMenuOpen = false;
+    }
+    if (isMobile) {
+      isSidebarCollapsed = true;
+    }
+  }
+  
   async function loadDashboardData() {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 800));
     
     user = {
       name: 'Alex Morgan',
@@ -159,6 +173,52 @@
     ];
   }
   
+  async function loadPage(page: string) {
+    activePage = page;
+    
+    // Dynamically import page components
+    try {
+      switch(page) {
+        case 'dashboard':
+          currentPageComponent = null; // Show dashboard content
+          break;
+        case 'map':
+          const mapModule = await import('$lib/pages/MapPage.svelte');
+          currentPageComponent = mapModule.default;
+          break;
+        case 'alerts':
+          const alertsModule = await import('$lib/pages/AlertsPage.svelte');
+          currentPageComponent = alertsModule.default;
+          break;
+        case 'statistics':
+          const statsModule = await import('$lib/pages/StatisticsPage.svelte');
+          currentPageComponent = statsModule.default;
+          break;
+        case 'reports':
+          const reportsModule = await import('$lib/pages/ReportsPage.svelte');
+          currentPageComponent = reportsModule.default;
+          break;
+        case 'community':
+          const communityModule = await import('$lib/pages/CommunityPage.svelte');
+          currentPageComponent = communityModule.default;
+          break;
+        case 'profile':
+          const profileModule = await import('$lib/pages/ProfilePage.svelte');
+          currentPageComponent = profileModule.default;
+          break;
+        case 'settings':
+          const settingsModule = await import('$lib/pages/SettingsPage.svelte');
+          currentPageComponent = settingsModule.default;
+          break;
+        default:
+          currentPageComponent = null;
+      }
+    } catch (err) {
+      console.error('Failed to load page:', err);
+      currentPageComponent = null;
+    }
+  }
+  
   function getCategoryIcon(category: string) {
     const icons: Record<string, any> = {
       suspicious: AlertTriangle,
@@ -210,40 +270,48 @@
     return notifications.filter(n => !n.read).length;
   }
   
+  function toggleMobileMenu() {
+    isMobileMenuOpen = !isMobileMenuOpen;
+  }
+  
   function closeMobileMenu() {
     isMobileMenuOpen = false;
   }
   
-  function handleNavigation(path: string, navName: string) {
-    activeNav = navName;
+  function toggleSidebar() {
+    isSidebarCollapsed = !isSidebarCollapsed;
+  }
+  
+  function handleNavigation(page: string) {
+    activePage = page;
     closeMobileMenu();
-    goto(path);
+    loadPage(page);
   }
   
   const navItems = [
-    { path: '/dashboard', icon: Home, label: 'Dashboard', name: 'dashboard' },
-    { path: '/map', icon: MapPin, label: 'Map View', name: 'map' },
-    { path: '/alerts', icon: Bell, label: 'Alerts', name: 'alerts' },
-    { path: '/statistics', icon: BarChart3, label: 'Statistics', name: 'statistics' },
-    { path: '/reports-history', icon: FileText, label: 'My Reports', name: 'reports' },
-    { path: '/community', icon: Users, label: 'Community', name: 'community' },
-    { path: '/profile', icon: User, label: 'Profile', name: 'profile' },
-    { path: '/settings', icon: Settings, label: 'Settings', name: 'settings' }
+    { path: 'dashboard', icon: Home, label: 'Dashboard' },
+    { path: 'map', icon: MapPin, label: 'Map View' },
+    { path: 'alerts', icon: Bell, label: 'Alerts' },
+    { path: 'statistics', icon: BarChart3, label: 'Statistics' },
+    { path: 'reports', icon: FileText, label: 'My Reports' },
+    { path: 'community', icon: Users, label: 'Community' },
+    { path: 'profile', icon: User, label: 'Profile' },
+    { path: 'settings', icon: Settings, label: 'Settings' }
   ];
 </script>
 
 <svelte:head>
-  <title>Dashboard - Lezie</title>
+  <title>{activePage.charAt(0).toUpperCase() + activePage.slice(1)} - Lezie</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
 </svelte:head>
 
 <div class="dashboard-page">
   <!-- Mobile Header -->
   <div class="mobile-header">
-    <button class="mobile-menu-btn" onclick={() => isMobileMenuOpen = true}>
-      <Menu size={22} />
+    <button class="mobile-menu-btn" onclick={toggleMobileMenu}>
+      <MenuIcon size={22} />
     </button>
-    <div class="mobile-logo" onclick={() => handleNavigation('/dashboard', 'dashboard')}>
+    <div class="mobile-logo" onclick={() => handleNavigation('dashboard')}>
       <div class="logo-mark">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
@@ -252,7 +320,7 @@
       </div>
       <span>Lezie</span>
     </div>
-    <button class="mobile-notif-btn" onclick={() => handleNavigation('/alerts', 'alerts')}>
+    <button class="mobile-notif-btn" onclick={() => handleNavigation('alerts')}>
       <BellRing size={18} />
       {#if getUnreadCount() > 0}
         <span class="notif-badge">{getUnreadCount()}</span>
@@ -265,7 +333,7 @@
     <div class="mobile-overlay" onclick={closeMobileMenu}>
       <div class="mobile-sidebar" onclick={(e) => e.stopPropagation()}>
         <div class="mobile-sidebar-header">
-          <div class="mobile-logo-full" onclick={() => handleNavigation('/dashboard', 'dashboard')}>
+          <div class="mobile-logo-full" onclick={() => handleNavigation('dashboard')}>
             <div class="logo-mark">
               <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
                 <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
@@ -292,8 +360,8 @@
         <nav class="mobile-nav">
           {#each navItems as item}
             <button 
-              class="mobile-nav-item {activeNav === item.name ? 'active' : ''}" 
-              onclick={() => handleNavigation(item.path, item.name)}
+              class="mobile-nav-item {activePage === item.path ? 'active' : ''}" 
+              onclick={() => handleNavigation(item.path)}
             >
               <item.icon size={18} />
               <span>{item.label}</span>
@@ -302,11 +370,11 @@
         </nav>
         
         <div class="mobile-sidebar-footer">
-          <button class="mobile-report-btn" onclick={() => handleNavigation('/auth/report', 'report')}>
+          <button class="mobile-report-btn" onclick={() => handleNavigation('report')}>
             <FlagTriangleRight size={16} />
             Report Incident
           </button>
-          <button class="mobile-logout-btn" onclick={() => handleNavigation('/auth/signin', 'logout')}>
+          <button class="mobile-logout-btn" onclick={() => goto('/auth/signin')}>
             <LogOut size={16} />
             Sign Out
           </button>
@@ -316,235 +384,263 @@
   {/if}
 
   <div class="dashboard-container">
-    <!-- Desktop Sidebar -->
-    <aside class="sidebar">
+    <!-- Desktop Sidebar - Collapsible -->
+    <aside class="sidebar {isSidebarCollapsed ? 'collapsed' : ''}">
       <div class="sidebar-header">
-        <div class="logo" onclick={() => handleNavigation('/dashboard', 'dashboard')}>
+        <div class="logo" onclick={() => handleNavigation('dashboard')}>
           <div class="logo-mark">
             <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
               <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
               <path d="M1 4.5V11.5L8 15L15 11.5V4.5" stroke="white" stroke-opacity=".6" stroke-width="1.2" fill="none"/>
             </svg>
           </div>
-          <span>Lezie</span>
+          {#if !isSidebarCollapsed}
+            <span>Lezie</span>
+          {/if}
         </div>
+        <button class="collapse-btn" onclick={toggleSidebar}>
+          {#if isSidebarCollapsed}
+            <PanelLeftOpen size={18} />
+          {:else}
+            <PanelLeftClose size={18} />
+          {/if}
+        </button>
       </div>
 
       <nav class="sidebar-nav">
         {#each navItems as item}
-          <button class="nav-item {activeNav === item.name ? 'active' : ''}" onclick={() => handleNavigation(item.path, item.name)}>
+          <button 
+            class="nav-item {activePage === item.path ? 'active' : ''}" 
+            onclick={() => handleNavigation(item.path)}
+            title={isSidebarCollapsed ? item.label : ''}
+          >
             <item.icon size={18} />
-            <span>{item.label}</span>
+            {#if !isSidebarCollapsed}
+              <span>{item.label}</span>
+            {/if}
           </button>
         {/each}
       </nav>
 
       <div class="sidebar-footer">
-        <button class="report-btn" onclick={() => handleNavigation('/auth/report', 'report')}>
+        <button class="report-btn" onclick={() => handleNavigation('report')} title={isSidebarCollapsed ? 'Report Incident' : ''}>
           <FlagTriangleRight size={16} />
-          Report Incident
+          {#if !isSidebarCollapsed}
+            <span>Report Incident</span>
+          {/if}
         </button>
       </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="main-content">
-      {#if isLoading}
-        <div class="loading-state">
-          <Loader2 size={36} class="spinning" />
-          <p>Loading your dashboard...</p>
-        </div>
-      {:else}
-        <!-- Welcome Header - Compact -->
-        <div class="welcome-header">
-          <div>
-            <h1>Hi, {user?.name.split(' ')[0]}</h1>
-            <p>Your community safety summary</p>
+    <main class="main-content {isSidebarCollapsed ? 'expanded' : ''}">
+      {#if activePage === 'dashboard'}
+        <!-- Dashboard Content -->
+        {#if isLoading}
+          <div class="loading-state">
+            <Loader2 size={36} class="spinning" />
+            <p>Loading your dashboard...</p>
           </div>
-        </div>
-
-        <!-- Stats Grid - Compact for Mobile -->
-        <div class="stats-grid">
-          <div class="stat-card" onclick={() => handleNavigation('/statistics', 'statistics')}>
-            <div class="stat-icon purple">
-              <FlagTriangleRight size={18} />
-            </div>
-            <div class="stat-info">
-              <span class="stat-value">{stats.totalReports}</span>
-              <span class="stat-label">Reports</span>
+        {:else}
+          <!-- Welcome Header -->
+          <div class="welcome-header">
+            <div>
+              <h1>Hi, {user?.name.split(' ')[0]}</h1>
+              <p>Your community safety summary</p>
             </div>
           </div>
 
-          <div class="stat-card" onclick={() => handleNavigation('/statistics', 'statistics')}>
-            <div class="stat-icon green">
-              <CheckCircle size={18} />
-            </div>
-            <div class="stat-info">
-              <span class="stat-value">{stats.verifiedReports}</span>
-              <span class="stat-label">Verified</span>
-            </div>
-          </div>
-
-          <div class="stat-card" onclick={() => handleNavigation('/alerts', 'alerts')}>
-            <div class="stat-icon orange">
-              <Bell size={18} />
-            </div>
-            <div class="stat-info">
-              <span class="stat-value">{stats.activeAlerts}</span>
-              <span class="stat-label">Alerts</span>
-            </div>
-          </div>
-
-          <div class="stat-card" onclick={() => handleNavigation('/statistics', 'statistics')}>
-            <div class="stat-icon blue">
-              <Shield size={18} />
-            </div>
-            <div class="stat-info">
-              <span class="stat-value">{stats.safetyScore}%</span>
-              <span class="stat-label">Safety</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Quick Navigation - Compact -->
-        <div class="quick-nav-section">
-          <div class="quick-nav-scroll">
-            <button class="quick-nav-card" onclick={() => handleNavigation('/map', 'map')}>
-              <div class="quick-nav-icon map-bg">
-                <MapPin size={18} />
+          <!-- Stats Grid -->
+          <div class="stats-grid">
+            <div class="stat-card" onclick={() => handleNavigation('statistics')}>
+              <div class="stat-icon purple">
+                <FlagTriangleRight size={18} />
               </div>
-              <span>Live Map</span>
-            </button>
-            <button class="quick-nav-card" onclick={() => handleNavigation('/alerts', 'alerts')}>
-              <div class="quick-nav-icon alert-bg">
+              <div class="stat-info">
+                <span class="stat-value">{stats.totalReports}</span>
+                <span class="stat-label">Reports</span>
+              </div>
+            </div>
+
+            <div class="stat-card" onclick={() => handleNavigation('statistics')}>
+              <div class="stat-icon green">
+                <CheckCircle size={18} />
+              </div>
+              <div class="stat-info">
+                <span class="stat-value">{stats.verifiedReports}</span>
+                <span class="stat-label">Verified</span>
+              </div>
+            </div>
+
+            <div class="stat-card" onclick={() => handleNavigation('alerts')}>
+              <div class="stat-icon orange">
                 <Bell size={18} />
               </div>
-              <span>Alerts</span>
-            </button>
-            <button class="quick-nav-card" onclick={() => handleNavigation('/reports-history', 'reports')}>
-              <div class="quick-nav-icon report-bg">
-                <FileText size={18} />
+              <div class="stat-info">
+                <span class="stat-value">{stats.activeAlerts}</span>
+                <span class="stat-label">Alerts</span>
               </div>
-              <span>My Reports</span>
-            </button>
-            <button class="quick-nav-card" onclick={() => handleNavigation('/community', 'community')}>
-              <div class="quick-nav-icon community-bg">
-                <Users size={18} />
-              </div>
-              <span>Community</span>
-            </button>
-          </div>
-        </div>
+            </div>
 
-        <!-- Content Grid -->
-        <div class="content-grid">
-          <!-- Recent Incidents -->
-          <div class="section">
-            <div class="section-header">
-              <h2>Recent Incidents</h2>
-              <button class="section-link" onclick={() => handleNavigation('/map', 'map')}>
-                View all
-                <ChevronRight size={14} />
+            <div class="stat-card" onclick={() => handleNavigation('statistics')}>
+              <div class="stat-icon blue">
+                <Shield size={18} />
+              </div>
+              <div class="stat-info">
+                <span class="stat-value">{stats.safetyScore}%</span>
+                <span class="stat-label">Safety</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Navigation -->
+          <div class="quick-nav-section">
+            <div class="quick-nav-scroll">
+              <button class="quick-nav-card" onclick={() => handleNavigation('map')}>
+                <div class="quick-nav-icon map-bg">
+                  <MapPin size={18} />
+                </div>
+                <span>Live Map</span>
+              </button>
+              <button class="quick-nav-card" onclick={() => handleNavigation('alerts')}>
+                <div class="quick-nav-icon alert-bg">
+                  <Bell size={18} />
+                </div>
+                <span>Alerts</span>
+              </button>
+              <button class="quick-nav-card" onclick={() => handleNavigation('reports')}>
+                <div class="quick-nav-icon report-bg">
+                  <FileText size={18} />
+                </div>
+                <span>My Reports</span>
+              </button>
+              <button class="quick-nav-card" onclick={() => handleNavigation('community')}>
+                <div class="quick-nav-icon community-bg">
+                  <Users size={18} />
+                </div>
+                <span>Community</span>
               </button>
             </div>
-
-            <div class="incidents-list">
-              {#each recentIncidents as incident}
-                {@const IconComponent = getCategoryIcon(incident.category)}
-                <button class="incident-card" onclick={() => goto(`/incident/${incident.id}`)}>
-                  <div class="incident-row">
-                    <div class="incident-icon" style="background: {getSeverityColor(incident.severity)}15;">
-                      <IconComponent size={12} style="color: {getSeverityColor(incident.severity)};" />
-                    </div>
-                    <div class="incident-info">
-                      <div class="incident-title-row">
-                        <h3>{incident.title}</h3>
-                        <div class="incident-status" style="color: {getStatusColor(incident.status)}">
-                          <span class="status-dot" style="background: {getStatusColor(incident.status)}"></span>
-                          <span>{incident.status}</span>
-                        </div>
-                      </div>
-                      <div class="incident-meta">
-                        <span><MapPin size={10} /> {incident.location.split(' ').slice(0, 2).join(' ')}</span>
-                        <span><Clock size={10} /> {formatTime(incident.time)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              {/each}
-            </div>
           </div>
 
-          <!-- Notifications & Tips -->
-          <div class="right-panel">
-            <!-- Notifications -->
+          <!-- Content Grid -->
+          <div class="content-grid">
+            <!-- Recent Incidents -->
             <div class="section">
               <div class="section-header">
-                <h2>Notifications</h2>
-                {#if getUnreadCount() > 0}
-                  <span class="unread-badge">{getUnreadCount()}</span>
-                {/if}
+                <h2>Recent Incidents</h2>
+                <button class="section-link" onclick={() => handleNavigation('map')}>
+                  View all
+                  <ChevronRight size={14} />
+                </button>
               </div>
 
-              <div class="notifications-list">
-                {#each notifications as notification}
-                  <div class="notification-item {!notification.read ? 'unread' : ''}">
-                    <div class="notification-icon">
-                      {#if notification.type === 'critical'}
-                        <AlertTriangle size={14} style="color: #EF4444;" />
-                      {:else if notification.type === 'success'}
-                        <CheckCircle size={14} style="color: #10B981;" />
-                      {:else}
-                        <BellRing size={14} style="color: var(--primary-color);" />
-                      {/if}
+              <div class="incidents-list">
+                {#each recentIncidents as incident}
+                  {@const IconComponent = getCategoryIcon(incident.category)}
+                  <button class="incident-card" onclick={() => goto(`/incident/${incident.id}`)}>
+                    <div class="incident-row">
+                      <div class="incident-icon" style="background: {getSeverityColor(incident.severity)}15;">
+                        <IconComponent size={12} style="color: {getSeverityColor(incident.severity)};" />
+                      </div>
+                      <div class="incident-info">
+                        <div class="incident-title-row">
+                          <h3>{incident.title}</h3>
+                          <div class="incident-status" style="color: {getStatusColor(incident.status)}">
+                            <span class="status-dot" style="background: {getStatusColor(incident.status)}"></span>
+                            <span>{incident.status}</span>
+                          </div>
+                        </div>
+                        <div class="incident-meta">
+                          <span><MapPin size={10} /> {incident.location.split(' ').slice(0, 2).join(' ')}</span>
+                          <span><Clock size={10} /> {formatTime(incident.time)}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div class="notification-info">
-                      <p>{notification.message}</p>
-                      <span>{formatTime(notification.time)}</span>
-                    </div>
-                  </div>
+                  </button>
                 {/each}
-              </div>
-
-              <button class="view-all-btn" onclick={() => handleNavigation('/alerts', 'alerts')}>
-                View all
-                <ChevronRight size={12} />
-              </button>
-            </div>
-
-            <!-- Safety Score -->
-            <div class="safety-score-card" onclick={() => handleNavigation('/statistics', 'statistics')}>
-              <div class="score-ring">
-                <svg viewBox="0 0 60 60">
-                  <circle cx="30" cy="30" r="26" fill="none" stroke="#E5E7EB" stroke-width="5"/>
-                  <circle cx="30" cy="30" r="26" fill="none" stroke="var(--primary-color)" stroke-width="5" 
-                          stroke-dasharray="163" stroke-dashoffset={163 - (163 * stats.safetyScore / 100)}
-                          transform="rotate(-90 30 30)"/>
-                </svg>
-                <div class="score-value">{stats.safetyScore}%</div>
-              </div>
-              <div class="score-info">
-                <h4>Safety Score</h4>
-                <p>{stats.safetyScore >= 80 ? 'Good' : stats.safetyScore >= 60 ? 'Fair' : 'Needs improvement'}</p>
               </div>
             </div>
 
-            <!-- Safety Tips -->
-            <div class="section safety-section">
-              <div class="section-header">
-                <h2>Safety Tips</h2>
-                <Shield size={16} style="color: var(--primary-color);" />
+            <!-- Right Panel -->
+            <div class="right-panel">
+              <!-- Notifications -->
+              <div class="section">
+                <div class="section-header">
+                  <h2>Notifications</h2>
+                  {#if getUnreadCount() > 0}
+                    <span class="unread-badge">{getUnreadCount()}</span>
+                  {/if}
+                </div>
+
+                <div class="notifications-list">
+                  {#each notifications as notification}
+                    <div class="notification-item {!notification.read ? 'unread' : ''}">
+                      <div class="notification-icon">
+                        {#if notification.type === 'critical'}
+                          <AlertTriangle size={14} style="color: #EF4444;" />
+                        {:else if notification.type === 'success'}
+                          <CheckCircle size={14} style="color: #10B981;" />
+                        {:else}
+                          <BellRing size={14} style="color: var(--primary-color);" />
+                        {/if}
+                      </div>
+                      <div class="notification-info">
+                        <p>{notification.message}</p>
+                        <span>{formatTime(notification.time)}</span>
+                      </div>
+                    </div>
+                  {/each}
+                </div>
+
+                <button class="view-all-btn" onclick={() => handleNavigation('alerts')}>
+                  View all
+                  <ChevronRight size={12} />
+                </button>
               </div>
-              <ul class="safety-tips-list">
-                {#each safetyTips as tip}
-                  <li>
-                    <span class="tip-dot"></span>
-                    <span>{tip}</span>
-                  </li>
-                {/each}
-              </ul>
+
+              <!-- Safety Score -->
+              <div class="safety-score-card" onclick={() => handleNavigation('statistics')}>
+                <div class="score-ring">
+                  <svg viewBox="0 0 60 60">
+                    <circle cx="30" cy="30" r="26" fill="none" stroke="#E5E7EB" stroke-width="5"/>
+                    <circle cx="30" cy="30" r="26" fill="none" stroke="var(--primary-color)" stroke-width="5" 
+                            stroke-dasharray="163" stroke-dashoffset={163 - (163 * stats.safetyScore / 100)}
+                            transform="rotate(-90 30 30)"/>
+                  </svg>
+                  <div class="score-value">{stats.safetyScore}%</div>
+                </div>
+                <div class="score-info">
+                  <h4>Safety Score</h4>
+                  <p>{stats.safetyScore >= 80 ? 'Good' : stats.safetyScore >= 60 ? 'Fair' : 'Needs improvement'}</p>
+                </div>
+              </div>
+
+              <!-- Safety Tips -->
+              <div class="section safety-section">
+                <div class="section-header">
+                  <h2>Safety Tips</h2>
+                  <Shield size={16} style="color: var(--primary-color);" />
+                </div>
+                <ul class="safety-tips-list">
+                  {#each safetyTips as tip}
+                    <li>
+                      <span class="tip-dot"></span>
+                      <span>{tip}</span>
+                    </li>
+                  {/each}
+                </ul>
+              </div>
             </div>
           </div>
+        {/if}
+      {:else if currentPageComponent}
+        <!-- Dynamically loaded page component -->
+        <svelte:component this={currentPageComponent} />
+      {:else}
+        <div class="loading-state">
+          <Loader2 size={36} class="spinning" />
+          <p>Loading page...</p>
         </div>
       {/if}
     </main>
@@ -760,7 +856,7 @@
     color: #EF4444;
   }
   
-  /* Desktop Sidebar */
+  /* Desktop Sidebar - Collapsible */
   .sidebar {
     width: 260px;
     background: white;
@@ -772,11 +868,19 @@
     left: 0;
     top: 0;
     z-index: 10;
+    transition: width 0.3s ease;
+  }
+  
+  .sidebar.collapsed {
+    width: 70px;
   }
   
   .sidebar-header {
     padding: 1.25rem;
     border-bottom: 1px solid #F1F5F9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
   
   .logo {
@@ -787,6 +891,32 @@
     font-weight: 700;
     color: var(--primary-dark);
     cursor: pointer;
+  }
+  
+  .sidebar.collapsed .logo span {
+    display: none;
+  }
+  
+  .collapse-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.375rem;
+    border-radius: 0.5rem;
+    color: #64748B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .collapse-btn:hover {
+    background: #F1F5F9;
+    color: var(--primary-color);
+  }
+  
+  .sidebar.collapsed .collapse-btn {
+    margin-left: auto;
+    margin-right: auto;
   }
   
   .sidebar-nav {
@@ -812,6 +942,16 @@
     font-size: 0.813rem;
     font-weight: 500;
     transition: all 0.2s;
+    white-space: nowrap;
+  }
+  
+  .sidebar.collapsed .nav-item {
+    justify-content: center;
+    padding: 0.625rem;
+  }
+  
+  .sidebar.collapsed .nav-item span {
+    display: none;
   }
   
   .nav-item:hover {
@@ -843,6 +983,16 @@
     font-weight: 600;
     font-size: 0.813rem;
     cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  
+  .sidebar.collapsed .report-btn span {
+    display: none;
+  }
+  
+  .report-btn:hover {
+    background: var(--primary-dark);
   }
   
   /* Main Content */
@@ -850,6 +1000,11 @@
     flex: 1;
     margin-left: 260px;
     padding: 1.25rem;
+    transition: margin-left 0.3s ease;
+  }
+  
+  .main-content.expanded {
+    margin-left: 70px;
   }
   
   .loading-state {
@@ -907,8 +1062,9 @@
     transition: all 0.2s;
   }
   
-  .stat-card:active {
-    transform: scale(0.98);
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   }
   
   .stat-icon {
@@ -964,6 +1120,12 @@
     border-radius: 0.75rem;
     cursor: pointer;
     min-width: 70px;
+    transition: all 0.2s;
+  }
+  
+  .quick-nav-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
   }
   
   .quick-nav-card span {
@@ -989,7 +1151,7 @@
   /* Content Grid */
   .content-grid {
     display: grid;
-    grid-template-columns: 1fr 300px;
+    grid-template-columns: 1fr 320px;
     gap: 1rem;
   }
   
@@ -1043,6 +1205,12 @@
     cursor: pointer;
     background: white;
     text-align: left;
+    transition: all 0.2s;
+  }
+  
+  .incident-card:hover {
+    border-color: var(--primary-color);
+    background: #F8FAFC;
   }
   
   .incident-row {
@@ -1177,6 +1345,12 @@
     align-items: center;
     gap: 0.75rem;
     cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .safety-score-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   }
   
   .score-ring {
@@ -1270,6 +1444,10 @@
     .main-content {
       margin-left: 0;
       padding: 0.875rem;
+    }
+    
+    .main-content.expanded {
+      margin-left: 0;
     }
     
     .stats-grid {
