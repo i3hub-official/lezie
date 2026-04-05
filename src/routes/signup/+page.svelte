@@ -655,8 +655,8 @@
   }
 
   .su-mobile-brand .su-logo-img {
-                width: 80px;
-  height: 80px;
+                width: 96px;
+  height: 96px;
   }
 
   @media (min-width: 1024px) {
