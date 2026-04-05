@@ -74,7 +74,7 @@
     <div class="si-panel-inner">
 
       <a href="/" class="si-logo-link">
-        <img src="/icons/lz_ico.png" alt="Lezie" class="si-logo-img si-logo-img--desktop" />
+        <img src="/icons/lz_logo_t.png" alt="Lezie" class="si-logo-img si-logo-img--desktop" />
       </a>
 
       <div class="si-panel-hero">
