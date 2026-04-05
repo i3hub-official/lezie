@@ -5,7 +5,7 @@
     MapPin, Camera, X, AlertTriangle, Send, Navigation, Shield,
     EyeOff, CheckCircle, AlertCircle, ChevronLeft, Loader2,
     Flame, Car, Building, Volume2, MoreHorizontal, TrendingUp,
-    AlertOctagon, Search, Bell, Users
+    AlertOctagon, Search, Bell, Users, PlusCircle, Trash2
   } from 'lucide-svelte';
 
   let isSubmitting = $state(false);
@@ -20,11 +20,23 @@
   let category = $state('');
   let severity = $state('medium');
   let isAnonymous = $state(false);
-  let location = $state<{ lat: number; lng: number } | null>(null);
-
-  let locationDetails = $state({
+  
+  // User's fixed location (auto-detected, cannot be edited)
+  let userLocation = $state<{ lat: number; lng: number } | null>(null);
+  let userLocationDetails = $state({
     street: '', city: '', state: '', postalCode: '', country: '', displayName: ''
   });
+  let isGettingUserLocation = $state(false);
+  
+  // Additional location (optional, user can add one more)
+  let additionalLocation = $state<{ lat: number; lng: number } | null>(null);
+  let additionalLocationDetails = $state({
+    street: '', city: '', state: '', postalCode: '', country: '', displayName: ''
+  });
+  let showAdditionalLocationSearch = $state(false);
+  let additionalLocationSearchQuery = $state('');
+  let additionalLocationSearchResults = $state<any[]>([]);
+  let isSearchingAdditionalLocation = $state(false);
 
   const categories = [
     { value: 'suspicious', label: 'Suspicious Activity', icon: AlertTriangle, color: '#F59E0B' },
@@ -46,25 +58,63 @@
   let mediaFiles = $state<File[]>([]);
   let mediaPreviews = $state<string[]>([]);
 
+  // On mount: auto-get user's real-time location
   onMount(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          location = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          getFullAddressFromCoords(pos.coords.latitude, pos.coords.longitude);
-        },
-        () => {}
-      );
-    }
+    getUserRealTimeLocation();
   });
 
-  async function getFullAddressFromCoords(lat: number, lng: number) {
+  async function getUserRealTimeLocation() {
+    if (!navigator.geolocation) {
+      error = 'Geolocation is not supported by your browser';
+      return;
+    }
+    
+    isGettingUserLocation = true;
+    error = '';
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        userLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+        await getUserAddressFromCoords(userLocation.lat, userLocation.lng);
+        isGettingUserLocation = false;
+      },
+      (err) => {
+        console.error('Geolocation error:', err);
+        let errorMsg = 'Unable to get your location. ';
+        switch(err.code) {
+          case err.PERMISSION_DENIED:
+            errorMsg += 'Please enable location permissions.';
+            break;
+          case err.POSITION_UNAVAILABLE:
+            errorMsg += 'Location information is unavailable.';
+            break;
+          case err.TIMEOUT:
+            errorMsg += 'Location request timed out.';
+            break;
+          default:
+            errorMsg += 'Please check your location settings.';
+        }
+        error = errorMsg;
+        isGettingUserLocation = false;
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  }
+
+  async function getUserAddressFromCoords(lat: number, lng: number) {
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=\( {lat}&lon= \){lng}&zoom=18&addressdetails=1`);
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
       const data = await res.json();
       if (data.address) {
         const a = data.address;
-        locationDetails = {
+        userLocationDetails = {
           street: [a.road, a.house_number].filter(Boolean).join(' ') || a.suburb || a.neighbourhood || '',
           city: a.city || a.town || a.village || a.municipality || '',
           state: a.state || a.region || '',
@@ -73,34 +123,38 @@
           displayName: data.display_name || ''
         };
       }
-    } catch {}
+    } catch (err) {
+      console.error('Failed to get address:', err);
+    }
   }
 
-  async function searchLocation(query: string) {
-    if (!query.trim() || query.length < 3) { 
-      locationSearchResults = []; 
-      return; 
+  async function searchAdditionalLocation(query: string) {
+    additionalLocationSearchQuery = query;
+    if (!query.trim() || query.length < 3) {
+      additionalLocationSearchResults = [];
+      return;
     }
-    isSearchingLocation = true;
+    isSearchingAdditionalLocation = true;
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`);
       const data = await res.json();
-      locationSearchResults = data.map((r: any) => ({
-        lat: parseFloat(r.lat), 
+      additionalLocationSearchResults = data.map((r: any) => ({
+        lat: parseFloat(r.lat),
         lng: parseFloat(r.lon),
-        displayName: r.display_name, 
+        displayName: r.display_name,
         address: r.address
       }));
-    } catch {} 
-    finally { 
-      isSearchingLocation = false; 
+    } catch (err) {
+      console.error('Search failed:', err);
+    } finally {
+      isSearchingAdditionalLocation = false;
     }
   }
 
-  function selectLocation(result: any) {
-    location = { lat: result.lat, lng: result.lng };
+  function selectAdditionalLocation(result: any) {
+    additionalLocation = { lat: result.lat, lng: result.lng };
     const a = result.address || {};
-    locationDetails = {
+    additionalLocationDetails = {
       street: [a.road, a.house_number].filter(Boolean).join(' ') || a.suburb || '',
       city: a.city || a.town || a.village || a.municipality || '',
       state: a.state || a.region || '',
@@ -108,47 +162,30 @@
       country: a.country || '',
       displayName: result.displayName
     };
-    showLocationSearch = false;
-    locationSearchResults = [];
+    showAdditionalLocationSearch = false;
+    additionalLocationSearchResults = [];
+    additionalLocationSearchQuery = '';
   }
 
-  async function getCurrentLocation() {
-    if (!navigator.geolocation) { 
-      error = 'Geolocation not supported'; 
-      return; 
-    }
-    error = '';
-    isSearchingLocation = true;
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        location = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        await getFullAddressFromCoords(pos.coords.latitude, pos.coords.longitude);
-        isSearchingLocation = false;
-      },
-      () => { 
-        error = 'Unable to get location. Please enable location services.'; 
-        isSearchingLocation = false; 
-      }
-    );
-  }
-
-  function clearLocation() {
-    location = null;
-    locationDetails = { street: '', city: '', state: '', postalCode: '', country: '', displayName: '' };
+  function removeAdditionalLocation() {
+    additionalLocation = null;
+    additionalLocationDetails = {
+      street: '', city: '', state: '', postalCode: '', country: '', displayName: ''
+    };
   }
 
   function handleFileUpload(event: Event) {
     const input = event.target as HTMLInputElement;
     const files = Array.from(input.files || []).slice(0, 5 - mediaFiles.length);
     const valid = files.filter(f => f.size <= 10 * 1024 * 1024);
-    if (valid.length !== files.length) { 
-      error = 'Some files exceed 10MB and were skipped'; 
+    if (valid.length !== files.length) {
+      error = 'Some files exceed 10MB and were skipped';
     }
     mediaFiles = [...mediaFiles, ...valid];
     valid.forEach(file => {
       const reader = new FileReader();
-      reader.onload = (e) => { 
-        mediaPreviews = [...mediaPreviews, e.target?.result as string]; 
+      reader.onload = (e) => {
+        mediaPreviews = [...mediaPreviews, e.target?.result as string];
       };
       reader.readAsDataURL(file);
     });
@@ -162,33 +199,54 @@
 
   async function handleSubmit(e: Event) {
     e.preventDefault();
-    if (!title.trim() || title.length < 5) { 
-      error = 'Title must be at least 5 characters'; 
-      return; 
+    if (!title.trim() || title.length < 5) {
+      error = 'Title must be at least 5 characters';
+      return;
     }
-    if (!description.trim() || description.length < 20) { 
-      error = 'Description must be at least 20 characters'; 
-      return; 
+    if (!description.trim() || description.length < 20) {
+      error = 'Description must be at least 20 characters';
+      return;
     }
-    if (!category) { 
-      error = 'Please select a category'; 
-      return; 
+    if (!category) {
+      error = 'Please select a category';
+      return;
     }
-    if (!location) { 
-      error = 'Please select a location'; 
-      return; 
+    if (!userLocation) {
+      error = 'Unable to get your location. Please enable location services.';
+      return;
     }
 
-    isSubmitting = true; 
+    isSubmitting = true;
     error = '';
     try {
+      // Prepare report data with both locations (if additional exists)
+      const reportData = {
+        title,
+        description,
+        category,
+        severity,
+        isAnonymous,
+        userLocation: {
+          lat: userLocation.lat,
+          lng: userLocation.lng,
+          address: userLocationDetails
+        },
+        additionalLocation: additionalLocation ? {
+          lat: additionalLocation.lat,
+          lng: additionalLocation.lng,
+          address: additionalLocationDetails
+        } : null,
+        mediaFiles: mediaFiles.map(f => f.name)
+      };
+      console.log('Submitting report:', reportData);
+      
       await new Promise(r => setTimeout(r, 1500));
       success = true;
       setTimeout(() => goto('/dashboard'), 2000);
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to submit report';
-    } finally { 
-      isSubmitting = false; 
+    } finally {
+      isSubmitting = false;
     }
   }
 </script>
@@ -326,27 +384,78 @@
             </div>
           </div>
 
-          <!-- Location -->
+          <!-- User's Fixed Location (Auto-detected, cannot be edited) -->
           <div class="rp-card rp-section">
             <div class="rp-section-head">
               <div class="rp-section-num">5</div>
-              <h3 class="rp-section-title">Location <span class="rp-req">*</span></h3>
+              <h3 class="rp-section-title">Your Location <span class="rp-req">*</span></h3>
             </div>
 
-            <div class="rp-loc-actions">
-              <button type="button" class="rp-loc-btn-primary" onclick={getCurrentLocation} disabled={isSearchingLocation}>
-                {#if isSearchingLocation}
-                  <Loader2 size={16} class="rp-spinning" /> Getting location…
-                {:else}
-                  <Navigation size={16} /> Use my current location
-                {/if}
-              </button>
-              <button type="button" class="rp-loc-btn-secondary" onclick={() => showLocationSearch = !showLocationSearch}>
-                <Search size={16} /> Search by address
-              </button>
+            {#if isGettingUserLocation}
+              <div class="rp-loc-loading">
+                <Loader2 size={20} class="rp-spinning" />
+                <span>Getting your real-time location...</span>
+              </div>
+            {:else if userLocation}
+              <div class="rp-loc-card rp-loc-card--fixed">
+                <div class="rp-loc-card-head">
+                  <Navigation size={15} />
+                  <strong>Your Current Location (Auto-detected)</strong>
+                  <button 
+                    type="button" 
+                    class="rp-loc-refresh" 
+                    onclick={getUserRealTimeLocation}
+                    title="Refresh location"
+                  >
+                    <Loader2 size={14} />
+                  </button>
+                </div>
+                <div class="rp-loc-details">
+                  {#if userLocationDetails.street}<div class="rp-loc-row"><span>Street</span><span>{userLocationDetails.street}</span></div>{/if}
+                  {#if userLocationDetails.city}<div class="rp-loc-row"><span>City</span><span>{userLocationDetails.city}</span></div>{/if}
+                  {#if userLocationDetails.state}<div class="rp-loc-row"><span>State</span><span>{userLocationDetails.state}</span></div>{/if}
+                  {#if userLocationDetails.postalCode}<div class="rp-loc-row"><span>Postcode</span><span>{userLocationDetails.postalCode}</span></div>{/if}
+                  {#if userLocationDetails.country}<div class="rp-loc-row"><span>Country</span><span>{userLocationDetails.country}</span></div>{/if}
+                </div>
+                <div class="rp-loc-coords">
+                  <span>Lat {userLocation.lat.toFixed(6)}</span>
+                  <span>·</span>
+                  <span>Lng {userLocation.lng.toFixed(6)}</span>
+                </div>
+              </div>
+            {:else}
+              <div class="rp-loc-error">
+                <AlertCircle size={16} />
+                <span>Unable to get your location.</span>
+                <button type="button" class="rp-retry-btn" onclick={getUserRealTimeLocation}>
+                  Retry
+                </button>
+              </div>
+            {/if}
+          </div>
+
+          <!-- Additional Location (Optional, only one can be added) -->
+          <div class="rp-card rp-section">
+            <div class="rp-section-head">
+              <div class="rp-section-num">6</div>
+              <h3 class="rp-section-title">Additional Location <span class="rp-optional">optional</span></h3>
             </div>
 
-            {#if showLocationSearch}
+            {#if !additionalLocation}
+              <div class="rp-add-location-btn-wrap">
+                <button 
+                  type="button" 
+                  class="rp-add-location-btn"
+                  onclick={() => showAdditionalLocationSearch = !showAdditionalLocationSearch}
+                >
+                  <PlusCircle size={16} />
+                  <span>Add one more location</span>
+                </button>
+                <p class="rp-hint">Add a related location if the incident spans multiple areas</p>
+              </div>
+            {/if}
+
+            {#if showAdditionalLocationSearch && !additionalLocation}
               <div class="rp-loc-search">
                 <div class="rp-search-wrap">
                   <Search size={15} class="rp-search-ico" />
@@ -354,16 +463,17 @@
                     type="text"
                     placeholder="Search by street, city, or postcode…"
                     class="rp-search-input"
-                    oninput={(e) => searchLocation(e.currentTarget.value)}
+                    bind:value={additionalLocationSearchQuery}
+                    oninput={(e) => searchAdditionalLocation(e.currentTarget.value)}
                   />
                 </div>
-                {#if isSearchingLocation}
+                {#if isSearchingAdditionalLocation}
                   <div class="rp-search-loading"><Loader2 size={18} class="rp-spinning" /> Searching…</div>
                 {/if}
-                {#if locationSearchResults.length > 0}
+                {#if additionalLocationSearchResults.length > 0}
                   <div class="rp-search-results">
-                    {#each locationSearchResults as result}
-                      <button type="button" class="rp-search-item" onclick={() => selectLocation(result)}>
+                    {#each additionalLocationSearchResults as result}
+                      <button type="button" class="rp-search-item" onclick={() => selectAdditionalLocation(result)}>
                         <MapPin size={14} />
                         <div class="rp-search-item-info">
                           <strong>{result.displayName.split(',')[0]}</strong>
@@ -376,37 +486,35 @@
               </div>
             {/if}
 
-            {#if location && locationDetails.displayName}
-              <div class="rp-loc-card">
+            {#if additionalLocation && additionalLocationDetails.displayName}
+              <div class="rp-loc-card rp-loc-card--additional">
                 <div class="rp-loc-card-head">
                   <MapPin size={15} />
-                  <strong>Selected Location</strong>
-                  <button type="button" class="rp-loc-clear" onclick={clearLocation}>
-                    <X size={14} />
+                  <strong>Additional Location</strong>
+                  <button type="button" class="rp-loc-clear" onclick={removeAdditionalLocation}>
+                    <Trash2 size={14} />
                   </button>
                 </div>
                 <div class="rp-loc-details">
-                  {#if locationDetails.street}<div class="rp-loc-row"><span>Street</span><span>{locationDetails.street}</span></div>{/if}
-                  {#if locationDetails.city}<div class="rp-loc-row"><span>City</span><span>{locationDetails.city}</span></div>{/if}
-                  {#if locationDetails.state}<div class="rp-loc-row"><span>State</span><span>{locationDetails.state}</span></div>{/if}
-                  {#if locationDetails.postalCode}<div class="rp-loc-row"><span>Postcode</span><span>{locationDetails.postalCode}</span></div>{/if}
-                  {#if locationDetails.country}<div class="rp-loc-row"><span>Country</span><span>{locationDetails.country}</span></div>{/if}
+                  {#if additionalLocationDetails.street}<div class="rp-loc-row"><span>Street</span><span>{additionalLocationDetails.street}</span></div>{/if}
+                  {#if additionalLocationDetails.city}<div class="rp-loc-row"><span>City</span><span>{additionalLocationDetails.city}</span></div>{/if}
+                  {#if additionalLocationDetails.state}<div class="rp-loc-row"><span>State</span><span>{additionalLocationDetails.state}</span></div>{/if}
+                  {#if additionalLocationDetails.postalCode}<div class="rp-loc-row"><span>Postcode</span><span>{additionalLocationDetails.postalCode}</span></div>{/if}
+                  {#if additionalLocationDetails.country}<div class="rp-loc-row"><span>Country</span><span>{additionalLocationDetails.country}</span></div>{/if}
                 </div>
                 <div class="rp-loc-coords">
-                  <span>Lat {location.lat.toFixed(6)}</span>
+                  <span>Lat {additionalLocation.lat.toFixed(6)}</span>
                   <span>·</span>
-                  <span>Lng {location.lng.toFixed(6)}</span>
+                  <span>Lng {additionalLocation.lng.toFixed(6)}</span>
                 </div>
               </div>
-            {:else if !location}
-              <p class="rp-hint" style="margin-top:.5rem">Your location helps alert nearby community members</p>
             {/if}
           </div>
 
           <!-- Media Upload -->
           <div class="rp-card rp-section">
             <div class="rp-section-head">
-              <div class="rp-section-num">6</div>
+              <div class="rp-section-num">7</div>
               <h3 class="rp-section-title">Photos & Videos <span class="rp-optional">optional</span></h3>
             </div>
             <div class="rp-upload-row">
@@ -451,9 +559,11 @@
           </div>
 
           <!-- Submit Button -->
-          <button type="submit" disabled={isSubmitting} class="rp-submit-btn">
+          <button type="submit" disabled={isSubmitting || !userLocation} class="rp-submit-btn">
             {#if isSubmitting}
               <Loader2 size={18} class="rp-spinning" /> Submitting Report…
+            {:else if !userLocation}
+              <AlertCircle size={18} /> Waiting for location…
             {:else}
               <Send size={18} /> Submit Report
             {/if}
@@ -473,7 +583,7 @@
 </div>
 
 <style>
-  /* All your existing styles remain the same */
+  /* All existing styles remain exactly the same */
   :global(.rp-page *) {
     font-family: 'DM Sans', system-ui, sans-serif;
     box-sizing: border-box;
@@ -500,13 +610,7 @@
     gap: 1rem;
   }
 
-  /* Keep all other styles exactly as they were in your original file */
-  /* (from .rp-form-header down to the end of @media queries) */
-
-  /* Only change: hide the old left panel completely */
   .rp-panel { display: none; }
-
-
 
   /* Header */
   .rp-form-header { text-align: center; margin-bottom: .5rem; }
@@ -660,30 +764,105 @@
 
   :global(.rp-sev-check) { color: var(--primary-color); flex-shrink: 0; }
 
-  /* Location */
-  .rp-loc-actions { display: flex; gap: .625rem; margin-bottom: .875rem; }
-
-  .rp-loc-btn-primary, .rp-loc-btn-secondary {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    gap: .5rem; padding: .625rem; border-radius: .75rem;
-    font-size: .813rem; font-weight: 500; cursor: pointer;
-    font-family: 'DM Sans', sans-serif; transition: all .2s;
+  /* Location styles */
+  .rp-loc-loading {
+    display: flex; align-items: center; gap: .75rem;
+    padding: 1rem; background: var(--primary-bg);
+    border-radius: .75rem; color: var(--primary-color);
+    font-size: .813rem;
   }
 
-  .rp-loc-btn-primary {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    color: white; border: none;
-    box-shadow: 0 2px 8px rgba(106,44,145,.25);
+  .rp-loc-error {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .75rem 1rem; background: #fef2f2;
+    border-radius: .75rem; color: var(--danger-color);
+    font-size: .813rem; flex-wrap: wrap;
   }
 
-  .rp-loc-btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(106,44,145,.35); }
-  .rp-loc-btn-primary:disabled { opacity: .6; cursor: not-allowed; }
-
-  .rp-loc-btn-secondary {
-    background: white; border: 1.5px solid #e5e7eb; color: #475569;
+  .rp-retry-btn {
+    background: var(--danger-color); color: white;
+    border: none; padding: .25rem .75rem;
+    border-radius: .5rem; cursor: pointer;
+    font-size: .75rem; font-family: 'DM Sans', sans-serif;
+    margin-left: auto;
   }
 
-  .rp-loc-btn-secondary:hover { border-color: var(--primary-border); color: var(--primary-color); background: var(--primary-bg); }
+  .rp-retry-btn:hover { opacity: .9; }
+
+  .rp-loc-card--fixed {
+    background: linear-gradient(135deg, var(--primary-bg) 0%, #f0eaf5 100%);
+    border-color: var(--primary-color);
+  }
+
+  .rp-loc-card--additional {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+  }
+
+  .rp-loc-refresh {
+    background: none; border: none;
+    cursor: pointer; padding: .2rem;
+    border-radius: .375rem; color: var(--primary-color);
+    transition: all .2s;
+  }
+
+  .rp-loc-refresh:hover {
+    background: rgba(106,44,145,.1);
+    transform: rotate(180deg);
+  }
+
+  .rp-add-location-btn-wrap {
+    text-align: center;
+  }
+
+  .rp-add-location-btn {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .75rem 1.25rem;
+    background: white; border: 2px dashed #cbd5e1;
+    border-radius: .75rem; font-size: .875rem;
+    font-weight: 600; color: var(--primary-color);
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all .2s; width: 100%; justify-content: center;
+  }
+
+  .rp-add-location-btn:hover {
+    border-color: var(--primary-color);
+    background: var(--primary-bg);
+  }
+
+  .rp-loc-card {
+    background: var(--primary-bg); border: 1px solid var(--primary-border);
+    border-radius: .75rem; padding: .875rem; margin-top: .5rem;
+  }
+
+  .rp-loc-card-head {
+    display: flex; align-items: center; gap: .5rem;
+    margin-bottom: .625rem; padding-bottom: .5rem;
+    border-bottom: 1px solid var(--primary-border);
+    color: var(--primary-color);
+  }
+
+  .rp-loc-card-head strong { flex: 1; font-size: .813rem; color: var(--dark-color); }
+
+  .rp-loc-clear {
+    background: none; border: none; cursor: pointer;
+    color: var(--gray-color); padding: .2rem; display: flex;
+    border-radius: .375rem; transition: all .2s;
+  }
+
+  .rp-loc-clear:hover { background: rgba(239,68,68,.1); color: var(--danger-color); }
+
+  .rp-loc-details { display: flex; flex-direction: column; gap: .375rem; margin-bottom: .5rem; }
+
+  .rp-loc-row { display: flex; gap: .625rem; font-size: .75rem; }
+  .rp-loc-row span:first-child { font-weight: 600; color: #475569; min-width: 60px; }
+  .rp-loc-row span:last-child { color: var(--dark-color); }
+
+  .rp-loc-coords {
+    display: flex; gap: .5rem; padding-top: .5rem;
+    border-top: 1px solid var(--primary-border);
+    font-size: .688rem; font-family: monospace; color: var(--gray-color);
+  }
 
   /* Search */
   .rp-loc-search { margin-bottom: .875rem; }
@@ -725,41 +904,6 @@
 
   .rp-search-item-info strong { display: block; font-size: .813rem; color: var(--dark-color); margin-bottom: .125rem; }
   .rp-search-item-info span { font-size: .688rem; color: var(--gray-color); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 420px; }
-
-  /* Location card */
-  .rp-loc-card {
-    background: var(--primary-bg); border: 1px solid var(--primary-border);
-    border-radius: .75rem; padding: .875rem; margin-top: .5rem;
-  }
-
-  .rp-loc-card-head {
-    display: flex; align-items: center; gap: .5rem;
-    margin-bottom: .625rem; padding-bottom: .5rem;
-    border-bottom: 1px solid var(--primary-border);
-    color: var(--primary-color);
-  }
-
-  .rp-loc-card-head strong { flex: 1; font-size: .813rem; color: var(--dark-color); }
-
-  .rp-loc-clear {
-    background: none; border: none; cursor: pointer;
-    color: var(--gray-color); padding: .2rem; display: flex;
-    border-radius: .375rem; transition: all .2s;
-  }
-
-  .rp-loc-clear:hover { background: rgba(239,68,68,.1); color: var(--danger-color); }
-
-  .rp-loc-details { display: flex; flex-direction: column; gap: .375rem; margin-bottom: .5rem; }
-
-  .rp-loc-row { display: flex; gap: .625rem; font-size: .75rem; }
-  .rp-loc-row span:first-child { font-weight: 600; color: #475569; min-width: 60px; }
-  .rp-loc-row span:last-child { color: var(--dark-color); }
-
-  .rp-loc-coords {
-    display: flex; gap: .5rem; padding-top: .5rem;
-    border-top: 1px solid var(--primary-border);
-    font-size: .688rem; font-family: monospace; color: var(--gray-color);
-  }
 
   /* Upload */
   .rp-upload-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
@@ -884,13 +1028,11 @@
     to   { transform: scale(1); opacity: 1; }
   }
 
-  /* ── Responsive ── */
+  /* Responsive */
   @media (max-width: 640px) {
     .rp-main { padding: 1.25rem .875rem; }
     .rp-category-grid { grid-template-columns: repeat(2, 1fr); }
     .rp-severity-grid { grid-template-columns: 1fr 1fr; }
-    .rp-loc-actions { flex-direction: column; }
-    .rp-loc-btn-primary, .rp-loc-btn-secondary { width: 100%; }
     .rp-upload-row { flex-direction: column; align-items: flex-start; }
     .rp-upload-btn { width: 100%; justify-content: center; }
   }
