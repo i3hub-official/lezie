@@ -27,7 +27,12 @@
     Car,
     Building,
     Volume2,
-    AlertOctagon
+    AlertOctagon,
+    Menu,
+    X,
+    LogOut,
+    HelpCircle,
+    Award
   } from 'lucide-svelte';
   
   let isLoading = $state(true);
@@ -43,14 +48,24 @@
   });
   let notifications = $state<any[]>([]);
   let safetyTips = $state<string[]>([]);
+  let isMobileMenuOpen = $state(false);
+  let isMobile = $state(false);
   
-  onMount(async () => {
-    await loadDashboardData();
+  onMount(() => {
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    loadDashboardData();
     isLoading = false;
   });
   
+  function checkMobile() {
+    isMobile = window.innerWidth < 768;
+    if (!isMobile) {
+      isMobileMenuOpen = false;
+    }
+  }
+  
   async function loadDashboardData() {
-    // TODO: Replace with actual API calls
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     user = {
@@ -131,7 +146,7 @@
       {
         id: 2,
         title: 'Your report was verified',
-        message: 'Community members confirmed your report about the suspicious vehicle',
+        message: 'Community members confirmed your report',
         time: new Date(Date.now() - 1 * 3600000).toISOString(),
         read: false,
         type: 'success',
@@ -140,7 +155,7 @@
       {
         id: 3,
         title: 'Weekly safety report ready',
-        message: 'Your neighborhood safety score improved by 5% this week',
+        message: 'Your neighborhood safety score improved by 5%',
         time: new Date(Date.now() - 1 * 86400000).toISOString(),
         read: true,
         type: 'info',
@@ -161,7 +176,7 @@
       'Always be aware of your surroundings',
       'Report suspicious activity immediately',
       'Share your location with trusted contacts',
-      'Keep emergency numbers saved in your phone',
+      'Keep emergency numbers saved',
       'Join your neighborhood watch group',
       'Install security cameras at entry points'
     ];
@@ -191,11 +206,11 @@
   
   function getStatusColor(status: string) {
     switch(status) {
-      case 'verified': return 'var(--success-color)';
+      case 'verified': return '#10B981';
       case 'resolved': return '#6B7280';
-      case 'investigating': return 'var(--warning-color)';
-      case 'active': return 'var(--danger-color)';
-      default: return 'var(--gray-color)';
+      case 'investigating': return '#F59E0B';
+      case 'active': return '#EF4444';
+      default: return '#6B7280';
     }
   }
   
@@ -208,32 +223,121 @@
     const days = Math.floor(hours / 24);
     
     if (minutes < 1) return 'Just now';
-    if (hours < 1) return `${minutes} minutes ago`;
-    if (hours < 24) return `${hours} hours ago`;
-    if (days < 7) return `${days} days ago`;
+    if (hours < 1) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
     return date.toLocaleDateString();
-  }
-  
-  function markNotificationAsRead(notificationId: number) {
-    const notification = notifications.find(n => n.id === notificationId);
-    if (notification) {
-      notification.read = true;
-      // TODO: API call to mark as read
-    }
   }
   
   function getUnreadCount() {
     return notifications.filter(n => !n.read).length;
   }
+  
+  function closeMobileMenu() {
+    isMobileMenuOpen = false;
+  }
 </script>
 
 <svelte:head>
   <title>Dashboard - Lezie</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
 </svelte:head>
 
 <div class="dashboard-page">
+  <!-- Mobile Header -->
+  <div class="mobile-header">
+    <button class="mobile-menu-btn" onclick={() => isMobileMenuOpen = true}>
+      <Menu size={24} />
+    </button>
+    <div class="mobile-logo">
+      <div class="logo-mark">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+          <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
+          <path d="M1 4.5V11.5L8 15L15 11.5V4.5" stroke="white" stroke-opacity=".6" stroke-width="1.2" fill="none"/>
+        </svg>
+      </div>
+      <span>Lezie</span>
+    </div>
+    <button class="mobile-notif-btn" onclick={() => goto('/alerts')}>
+      <BellRing size={20} />
+      {#if getUnreadCount() > 0}
+        <span class="notif-badge">{getUnreadCount()}</span>
+      {/if}
+    </button>
+  </div>
+
+  <!-- Mobile Sidebar Overlay -->
+  {#if isMobileMenuOpen}
+    <div class="mobile-overlay" onclick={closeMobileMenu}>
+      <div class="mobile-sidebar" onclick={(e) => e.stopPropagation()}>
+        <div class="mobile-sidebar-header">
+          <div class="mobile-logo-full">
+            <div class="logo-mark">
+              <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+                <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
+                <path d="M1 4.5V11.5L8 15L15 11.5V4.5" stroke="white" stroke-opacity=".6" stroke-width="1.2" fill="none"/>
+              </svg>
+            </div>
+            <span>Lezie</span>
+          </div>
+          <button class="close-menu" onclick={closeMobileMenu}>
+            <X size={24} />
+          </button>
+        </div>
+        
+        <div class="mobile-user-info">
+          <div class="mobile-avatar">
+            <User size={24} />
+          </div>
+          <div>
+            <h4>{user?.name}</h4>
+            <p>{user?.email}</p>
+          </div>
+        </div>
+        
+        <nav class="mobile-nav">
+          <button class="mobile-nav-item active" onclick={() => { goto('/dashboard'); closeMobileMenu(); }}>
+            <Home size={20} />
+            <span>Dashboard</span>
+          </button>
+          <button class="mobile-nav-item" onclick={() => { goto('/map'); closeMobileMenu(); }}>
+            <MapPin size={20} />
+            <span>Map View</span>
+          </button>
+          <button class="mobile-nav-item" onclick={() => { goto('/alerts'); closeMobileMenu(); }}>
+            <Bell size={20} />
+            <span>Alerts</span>
+          </button>
+          <button class="mobile-nav-item" onclick={() => { goto('/statistics'); closeMobileMenu(); }}>
+            <BarChart3 size={20} />
+            <span>Statistics</span>
+          </button>
+          <button class="mobile-nav-item" onclick={() => { goto('/profile'); closeMobileMenu(); }}>
+            <User size={20} />
+            <span>Profile</span>
+          </button>
+          <button class="mobile-nav-item" onclick={() => { goto('/settings'); closeMobileMenu(); }}>
+            <Settings size={20} />
+            <span>Settings</span>
+          </button>
+        </nav>
+        
+        <div class="mobile-sidebar-footer">
+          <button class="mobile-report-btn" onclick={() => { goto('/auth/report'); closeMobileMenu(); }}>
+            <FlagTriangleRight size={18} />
+            Report Incident
+          </button>
+          <button class="mobile-logout-btn" onclick={() => { goto('/auth/signin'); closeMobileMenu(); }}>
+            <LogOut size={18} />
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
+  {/if}
+
   <div class="dashboard-container">
-    <!-- Sidebar -->
+    <!-- Desktop Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="logo">
@@ -246,7 +350,7 @@
           <span>Lezie</span>
         </div>
       </div>
-      
+
       <nav class="sidebar-nav">
         <button class="nav-item active" onclick={() => goto('/dashboard')}>
           <Home size={20} />
@@ -273,7 +377,7 @@
           <span>Settings</span>
         </button>
       </nav>
-      
+
       <div class="sidebar-footer">
         <button class="report-btn" onclick={() => goto('/auth/report')}>
           <FlagTriangleRight size={18} />
@@ -281,7 +385,7 @@
         </button>
       </div>
     </aside>
-    
+
     <!-- Main Content -->
     <main class="main-content">
       {#if isLoading}
@@ -297,7 +401,7 @@
             <p>Here's what's happening in your community</p>
           </div>
           <div class="header-actions">
-            <button class="icon-btn" onclick={() => goto('/alerts')} aria-label="Notifications">
+            <button class="icon-btn desktop-only" onclick={() => goto('/alerts')}>
               <BellRing size={20} />
               {#if getUnreadCount() > 0}
                 <span class="notification-badge">{getUnreadCount()}</span>
@@ -305,42 +409,42 @@
             </button>
           </div>
         </div>
-        
+
         <!-- Stats Grid -->
         <div class="stats-grid">
           <div class="stat-card">
-            <div class="stat-icon" style="background: rgba(106, 44, 145, 0.1); color: var(--primary-color);">
-              <FlagTriangleRight size={24} />
+            <div class="stat-icon purple">
+              <FlagTriangleRight size={22} />
             </div>
             <div class="stat-info">
               <span class="stat-value">{stats.totalReports}</span>
               <span class="stat-label">Total Reports</span>
             </div>
           </div>
-          
+
           <div class="stat-card">
-            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10B981;">
-              <CheckCircle size={24} />
+            <div class="stat-icon green">
+              <CheckCircle size={22} />
             </div>
             <div class="stat-info">
               <span class="stat-value">{stats.verifiedReports}</span>
-              <span class="stat-label">Verified Reports</span>
+              <span class="stat-label">Verified</span>
             </div>
           </div>
-          
+
           <div class="stat-card">
-            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: #F59E0B;">
-              <Bell size={24} />
+            <div class="stat-icon orange">
+              <Bell size={22} />
             </div>
             <div class="stat-info">
               <span class="stat-value">{stats.activeAlerts}</span>
               <span class="stat-label">Active Alerts</span>
             </div>
           </div>
-          
+
           <div class="stat-card">
-            <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1); color: #3B82F6;">
-              <Shield size={24} />
+            <div class="stat-icon blue">
+              <Shield size={22} />
             </div>
             <div class="stat-info">
               <span class="stat-value">{stats.safetyScore}%</span>
@@ -348,7 +452,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Two Column Layout -->
         <div class="two-columns">
           <!-- Left Column -->
@@ -362,52 +466,44 @@
                   <ChevronRight size={16} />
                 </button>
               </div>
-              
+
               <div class="incidents-list">
-                {#each recentIncidents as incident}
+                {#each recentIncidents.slice(0, 3) as incident}
                   {@const IconComponent = getCategoryIcon(incident.category)}
                   <button class="incident-card" onclick={() => goto(`/incident/${incident.id}`)}>
                     <div class="incident-header">
                       <div class="incident-title">
-                        <div class="incident-icon" style="background: {getSeverityColor(incident.severity)}20;">
-                          <IconComponent size={16} style="color: {getSeverityColor(incident.severity)};" />
+                        <div class="incident-icon" style="background: {getSeverityColor(incident.severity)}15;">
+                          <IconComponent size={14} style="color: {getSeverityColor(incident.severity)};" />
                         </div>
                         <div>
                           <h3>{incident.title}</h3>
                           <div class="incident-meta">
                             <span class="meta-item">
-                              <MapPin size={12} />
-                              {incident.location}
+                              <MapPin size={10} />
+                              {incident.location.split(' ').slice(0, 2).join(' ')}
                             </span>
                             <span class="meta-item">
-                              <Clock size={12} />
+                              <Clock size={10} />
                               {formatTime(incident.time)}
                             </span>
                           </div>
                         </div>
                       </div>
                       <div class="incident-status" style="color: {getStatusColor(incident.status)}">
-                        {#if incident.status === 'verified'}
-                          <CheckCircle size={14} />
-                        {:else if incident.status === 'resolved'}
-                          <CheckCircle size={14} />
-                        {:else}
-                          <AlertCircle size={14} />
-                        {/if}
+                        <span class="status-dot" style="background: {getStatusColor(incident.status)}"></span>
                         <span>{incident.status}</span>
                       </div>
                     </div>
-                    
                     <p class="incident-description">{incident.description}</p>
-                    
                     <div class="incident-stats">
                       <span class="stat-badge">
-                        <ThumbsUp size={12} />
-                        {incident.verificationCount} verifications
+                        <ThumbsUp size={10} />
+                        {incident.verificationCount}
                       </span>
                       <span class="stat-badge">
-                        <MessageCircle size={12} />
-                        {incident.commentCount} comments
+                        <MessageCircle size={10} />
+                        {incident.commentCount}
                       </span>
                     </div>
                   </button>
@@ -415,7 +511,7 @@
               </div>
             </div>
           </div>
-          
+
           <!-- Right Column -->
           <div class="right-column">
             <!-- Quick Actions -->
@@ -425,58 +521,54 @@
               </div>
               <div class="quick-actions">
                 <button class="action-card" onclick={() => goto('/auth/report')}>
-                  <FlagTriangleRight size={24} style="color: var(--primary-color);" />
-                  <div>
+                  <div class="action-icon purple-bg">
+                    <FlagTriangleRight size={20} />
+                  </div>
+                  <div class="action-text">
                     <h4>Report Incident</h4>
                     <p>File a new incident report</p>
                   </div>
                 </button>
                 <button class="action-card" onclick={() => goto('/alerts')}>
-                  <Bell size={24} style="color: var(--primary-color);" />
-                  <div>
+                  <div class="action-icon orange-bg">
+                    <Bell size={20} />
+                  </div>
+                  <div class="action-text">
                     <h4>Manage Alerts</h4>
                     <p>Customize your alert zones</p>
                   </div>
                 </button>
                 <button class="action-card" onclick={() => goto('/statistics')}>
-                  <TrendingUp size={24} style="color: var(--primary-color);" />
-                  <div>
+                  <div class="action-icon green-bg">
+                    <TrendingUp size={20} />
+                  </div>
+                  <div class="action-text">
                     <h4>View Statistics</h4>
                     <p>See community safety trends</p>
                   </div>
                 </button>
               </div>
             </div>
-            
+
             <!-- Notifications -->
             <div class="section">
               <div class="section-header">
-                <h2>Recent Notifications</h2>
+                <h2>Notifications</h2>
                 {#if getUnreadCount() > 0}
                   <span class="unread-badge">{getUnreadCount()} new</span>
                 {/if}
               </div>
-              
+
               <div class="notifications-list">
-                {#each notifications.slice(0, 5) as notification}
-                  <button 
-                    class="notification-card {!notification.read ? 'unread' : ''}"
-                    onclick={() => {
-                      markNotificationAsRead(notification.id);
-                      if (notification.incidentId) {
-                        goto(`/incident/${notification.incidentId}`);
-                      }
-                    }}
-                  >
+                {#each notifications.slice(0, 3) as notification}
+                  <button class="notification-card {!notification.read ? 'unread' : ''}">
                     <div class="notification-icon">
                       {#if notification.type === 'critical'}
-                        <AlertTriangle size={18} style="color: var(--danger-color);" />
+                        <AlertTriangle size={16} style="color: #EF4444;" />
                       {:else if notification.type === 'success'}
-                        <CheckCircle size={18} style="color: var(--success-color);" />
-                      {:else if notification.type === 'alert'}
-                        <Bell size={18} style="color: var(--warning-color);" />
+                        <CheckCircle size={16} style="color: #10B981;" />
                       {:else}
-                        <BellRing size={18} style="color: var(--primary-color);" />
+                        <BellRing size={16} style="color: var(--primary-color);" />
                       {/if}
                     </div>
                     <div class="notification-content">
@@ -484,38 +576,49 @@
                         <h4>{notification.title}</h4>
                         <span class="notification-time">{formatTime(notification.time)}</span>
                       </div>
-                      <p>{notification.message}</p>
+                      <p>{notification.message.length > 50 ? notification.message.slice(0, 50) + '...' : notification.message}</p>
                     </div>
                   </button>
                 {/each}
               </div>
-              
-              {#if notifications.length > 5}
-                <button class="view-all-btn" onclick={() => goto('/alerts')}>
-                  View all notifications
-                  <ChevronRight size={16} />
-                </button>
-              {/if}
+
+              <button class="view-all-btn" onclick={() => goto('/alerts')}>
+                View all notifications
+                <ChevronRight size={14} />
+              </button>
             </div>
-            
+
+            <!-- Safety Score -->
+            <div class="section safety-score">
+              <div class="score-circle">
+                <svg viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="#E5E7EB" stroke-width="8"/>
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="var(--primary-color)" stroke-width="8" 
+                          stroke-dasharray="283" stroke-dashoffset={283 - (283 * stats.safetyScore / 100)}
+                          transform="rotate(-90 50 50)"/>
+                </svg>
+                <div class="score-value">{stats.safetyScore}%</div>
+              </div>
+              <div class="score-text">
+                <h4>Community Safety Score</h4>
+                <p>Based on recent incidents and community reports</p>
+              </div>
+            </div>
+
             <!-- Safety Tips -->
             <div class="section safety-section">
               <div class="section-header">
                 <h2>Safety Tips</h2>
-                <Shield size={18} style="color: var(--primary-color);" />
+                <Award size={18} style="color: var(--primary-color);" />
               </div>
               <ul class="safety-tips-list">
-                {#each safetyTips.slice(0, 5) as tip}
+                {#each safetyTips.slice(0, 4) as tip}
                   <li>
                     <span class="tip-dot"></span>
                     <span>{tip}</span>
                   </li>
                 {/each}
               </ul>
-              <button class="tips-link" onclick={() => goto('/safety-tips')}>
-                View all safety tips
-                <ChevronRight size={14} />
-              </button>
             </div>
           </div>
         </div>
@@ -527,19 +630,216 @@
 <style>
   .dashboard-page {
     min-height: 100vh;
-    background: #f9fafb;
+    background: #F9FAFB;
   }
   
-  .dashboard-container {
+  /* Mobile Header */
+  .mobile-header {
+    display: none;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: white;
+    padding: 0.75rem 1rem;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #E5E7EB;
+  }
+  
+  .mobile-logo {
     display: flex;
-    min-height: 100vh;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: var(--primary-dark);
   }
   
-  /* Sidebar */
+  .mobile-menu-btn, .mobile-notif-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    color: #64748B;
+    position: relative;
+  }
+  
+  .mobile-menu-btn:active, .mobile-notif-btn:active {
+    background: #F1F5F9;
+  }
+  
+  .notif-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: #EF4444;
+    color: white;
+    font-size: 0.625rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+  }
+  
+  /* Mobile Sidebar */
+  .mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    display: flex;
+  }
+  
+  .mobile-sidebar {
+    width: 85%;
+    max-width: 320px;
+    height: 100%;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    animation: slideIn 0.3s ease;
+  }
+  
+  @keyframes slideIn {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+  
+  .mobile-sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem;
+    border-bottom: 1px solid #F1F5F9;
+  }
+  
+  .mobile-logo-full {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: var(--primary-dark);
+  }
+  
+  .close-menu {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: #64748B;
+  }
+  
+  .mobile-user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    background: #F8FAFC;
+    margin: 1rem;
+    border-radius: 1rem;
+  }
+  
+  .mobile-avatar {
+    width: 48px;
+    height: 48px;
+    background: #E2E8F0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748B;
+  }
+  
+  .mobile-user-info h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #0F172A;
+    margin-bottom: 0.125rem;
+  }
+  
+  .mobile-user-info p {
+    font-size: 0.688rem;
+    color: #64748B;
+  }
+  
+  .mobile-nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 1rem;
+    gap: 0.25rem;
+  }
+  
+  .mobile-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #64748B;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+  }
+  
+  .mobile-nav-item.active {
+    background: var(--primary-bg);
+    color: var(--primary-color);
+  }
+  
+  .mobile-nav-item:active {
+    background: #F1F5F9;
+  }
+  
+  .mobile-sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid #F1F5F9;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .mobile-report-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  
+  .mobile-logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: none;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.75rem;
+    color: #EF4444;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  
+  /* Desktop Sidebar */
   .sidebar {
     width: 280px;
     background: white;
-    border-right: 1px solid #e5e7eb;
+    border-right: 1px solid #E5E7EB;
     display: flex;
     flex-direction: column;
     position: fixed;
@@ -551,7 +851,7 @@
   
   .sidebar-header {
     padding: 1.5rem;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #F1F5F9;
   }
   
   .logo {
@@ -586,31 +886,31 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
-    color: #6b7280;
+    color: #64748B;
     background: none;
     border: none;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     cursor: pointer;
-    transition: all 0.2s;
     width: 100%;
     text-align: left;
     font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
   }
   
   .nav-item:hover {
-    background: var(--primary-bg);
+    background: #F8FAFC;
     color: var(--primary-color);
   }
   
   .nav-item.active {
     background: var(--primary-bg);
     color: var(--primary-color);
-    font-weight: 500;
   }
   
   .sidebar-footer {
     padding: 1.5rem;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid #F1F5F9;
   }
   
   .report-btn {
@@ -623,7 +923,7 @@
     background: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
@@ -648,11 +948,15 @@
     justify-content: center;
     height: 50vh;
     gap: 1rem;
-    color: var(--gray-color);
+    color: #64748B;
   }
   
   .spinning {
     animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
   
   /* Welcome Header */
@@ -666,16 +970,13 @@
   .welcome-header h1 {
     font-size: 1.875rem;
     font-weight: 700;
-    color: var(--dark-color);
+    color: #0F172A;
     margin-bottom: 0.25rem;
   }
   
   .welcome-header p {
-    color: var(--gray-color);
-  }
-  
-  .header-actions {
-    position: relative;
+    color: #64748B;
+    font-size: 0.875rem;
   }
   
   .icon-btn {
@@ -684,13 +985,13 @@
     border: none;
     padding: 0.5rem;
     cursor: pointer;
-    color: var(--gray-color);
+    color: #64748B;
     border-radius: 0.5rem;
     transition: all 0.2s;
   }
   
   .icon-btn:hover {
-    background: var(--primary-bg);
+    background: #F8FAFC;
     color: var(--primary-color);
   }
   
@@ -698,7 +999,7 @@
     position: absolute;
     top: -2px;
     right: -2px;
-    background: var(--danger-color);
+    background: #EF4444;
     color: white;
     font-size: 0.625rem;
     padding: 0.125rem 0.375rem;
@@ -709,35 +1010,40 @@
   /* Stats Grid */
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 1.5rem;
     margin-bottom: 2rem;
   }
   
   .stat-card {
     background: white;
-    padding: 1.5rem;
+    padding: 1.25rem;
     border-radius: 1rem;
     display: flex;
     align-items: center;
     gap: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #E5E7EB;
     transition: all 0.2s;
   }
   
   .stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
   
   .stat-icon {
     width: 48px;
     height: 48px;
+    border-radius: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 1rem;
   }
+  
+  .stat-icon.purple { background: #F5F3FF; color: var(--primary-color); }
+  .stat-icon.green { background: #D1FAE5; color: #10B981; }
+  .stat-icon.orange { background: #FEF3C7; color: #F59E0B; }
+  .stat-icon.blue { background: #DBEAFE; color: #3B82F6; }
   
   .stat-info {
     flex: 1;
@@ -747,12 +1053,12 @@
     display: block;
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--dark-color);
+    color: #0F172A;
   }
   
   .stat-label {
-    font-size: 0.813rem;
-    color: var(--gray-color);
+    font-size: 0.75rem;
+    color: #64748B;
   }
   
   /* Two Column Layout */
@@ -766,9 +1072,9 @@
   .section {
     background: white;
     border-radius: 1rem;
-    padding: 1.5rem;
+    padding: 1.25rem;
     margin-bottom: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #E5E7EB;
   }
   
   .section-header {
@@ -777,13 +1083,13 @@
     align-items: center;
     margin-bottom: 1rem;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #F1F5F9;
   }
   
   .section-header h2 {
-    font-size: 1rem;
+    font-size: 0.938rem;
     font-weight: 600;
-    color: var(--dark-color);
+    color: #0F172A;
   }
   
   .section-link {
@@ -802,42 +1108,41 @@
   .incidents-list {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
   }
   
   .incident-card {
     width: 100%;
-    padding: 1rem;
-    border: 1px solid #e5e7eb;
+    padding: 0.875rem;
+    border: 1px solid #E5E7EB;
     border-radius: 0.75rem;
     cursor: pointer;
-    transition: all 0.2s;
     background: white;
     text-align: left;
+    transition: all 0.2s;
   }
   
   .incident-card:hover {
     border-color: var(--primary-color);
-    background: var(--primary-bg);
-    transform: translateX(4px);
+    background: #F8FAFC;
   }
   
   .incident-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
   }
   
   .incident-title {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
     flex: 1;
   }
   
   .incident-icon {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border-radius: 0.5rem;
     display: flex;
     align-items: center;
@@ -846,52 +1151,58 @@
   }
   
   .incident-title h3 {
-    font-size: 0.875rem;
+    font-size: 0.813rem;
     font-weight: 600;
-    color: var(--dark-color);
+    color: #0F172A;
     margin-bottom: 0.25rem;
   }
   
   .incident-meta {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
   
   .meta-item {
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    font-size: 0.688rem;
-    color: var(--gray-color);
+    font-size: 0.625rem;
+    color: #64748B;
   }
   
   .incident-status {
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    font-size: 0.688rem;
+    font-size: 0.625rem;
     font-weight: 500;
     text-transform: capitalize;
   }
   
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  
   .incident-description {
-    font-size: 0.75rem;
-    color: var(--gray-color);
-    margin-bottom: 0.75rem;
+    font-size: 0.688rem;
+    color: #64748B;
+    margin-bottom: 0.5rem;
     line-height: 1.4;
   }
   
   .incident-stats {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
   }
   
   .stat-badge {
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    font-size: 0.688rem;
-    color: var(--gray-color);
+    font-size: 0.625rem;
+    color: #64748B;
   }
   
   /* Quick Actions */
@@ -904,40 +1215,50 @@
   .action-card {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background: var(--light-color);
-    border: 1px solid #e5e7eb;
+    gap: 0.75rem;
+    padding: 0.875rem;
+    background: #F8FAFC;
+    border: 1px solid #E5E7EB;
     border-radius: 0.75rem;
     cursor: pointer;
-    transition: all 0.2s;
-    text-align: left;
     width: 100%;
+    text-align: left;
   }
   
-  .action-card:hover {
-    border-color: var(--primary-color);
-    background: var(--primary-bg);
-    transform: translateX(4px);
+  .action-card:active {
+    transform: scale(0.98);
   }
   
-  .action-card h4 {
+  .action-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .purple-bg { background: #F5F3FF; color: var(--primary-color); }
+  .orange-bg { background: #FEF3C7; color: #F59E0B; }
+  .green-bg { background: #D1FAE5; color: #10B981; }
+  
+  .action-text h4 {
     font-size: 0.813rem;
     font-weight: 600;
-    color: var(--dark-color);
+    color: #0F172A;
     margin-bottom: 0.125rem;
   }
   
-  .action-card p {
+  .action-text p {
     font-size: 0.688rem;
-    color: var(--gray-color);
+    color: #64748B;
   }
   
   /* Notifications */
   .unread-badge {
-    font-size: 0.688rem;
+    font-size: 0.625rem;
     padding: 0.125rem 0.5rem;
-    background: var(--danger-color);
+    background: #EF4444;
     color: white;
     border-radius: 0.75rem;
   }
@@ -952,9 +1273,8 @@
     display: flex;
     gap: 0.75rem;
     padding: 0.75rem;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     cursor: pointer;
-    transition: all 0.2s;
     width: 100%;
     background: none;
     border: none;
@@ -962,11 +1282,11 @@
   }
   
   .notification-card.unread {
-    background: var(--primary-bg);
+    background: #F5F3FF;
   }
   
-  .notification-card:hover {
-    background: #f3f4f6;
+  .notification-card:active {
+    background: #F1F5F9;
   }
   
   .notification-icon {
@@ -985,29 +1305,29 @@
   }
   
   .notification-header h4 {
-    font-size: 0.813rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    color: var(--dark-color);
+    color: #0F172A;
   }
   
   .notification-time {
-    font-size: 0.688rem;
-    color: var(--gray-color);
+    font-size: 0.625rem;
+    color: #64748B;
   }
   
   .notification-content p {
-    font-size: 0.75rem;
-    color: var(--gray-color);
+    font-size: 0.688rem;
+    color: #64748B;
   }
   
   .view-all-btn {
     width: 100%;
-    margin-top: 1rem;
+    margin-top: 0.75rem;
     padding: 0.5rem;
     background: none;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    font-size: 0.75rem;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.75rem;
+    font-size: 0.688rem;
     color: var(--primary-color);
     cursor: pointer;
     display: flex;
@@ -1016,15 +1336,62 @@
     gap: 0.25rem;
   }
   
+  /* Safety Score */
+  .safety-score {
+    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .score-circle {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+  }
+  
+  .score-circle svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+  
+  .score-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary-color);
+  }
+  
+  .score-text {
+    text-align: left;
+  }
+  
+  .score-text h4 {
+    font-size: 0.813rem;
+    font-weight: 600;
+    color: #0F172A;
+    margin-bottom: 0.25rem;
+  }
+  
+  .score-text p {
+    font-size: 0.688rem;
+    color: #64748B;
+  }
+  
   /* Safety Tips */
   .safety-section {
-    background: linear-gradient(135deg, var(--primary-bg) 0%, #ffffff 100%);
+    background: linear-gradient(135deg, #F5F3FF 0%, #FFFFFF 100%);
   }
   
   .safety-tips-list {
     list-style: none;
     padding: 0;
-    margin: 0 0 1rem 0;
+    margin: 0;
   }
   
   .safety-tips-list li {
@@ -1033,7 +1400,7 @@
     gap: 0.5rem;
     padding: 0.5rem 0;
     font-size: 0.75rem;
-    color: var(--gray-color);
+    color: #475569;
   }
   
   .tip-dot {
@@ -1043,35 +1410,24 @@
     border-radius: 50%;
   }
   
-  .tips-link {
-    background: none;
-    border: none;
-    color: var(--primary-color);
-    font-size: 0.75rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
-  
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  
   /* Responsive */
   @media (max-width: 1024px) {
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
     .two-columns {
       grid-template-columns: 1fr;
     }
   }
   
   @media (max-width: 768px) {
+    .mobile-header {
+      display: flex;
+    }
+    
     .sidebar {
-      transform: translateX(-100%);
-      transition: transform 0.3s;
-      z-index: 100;
+      display: none;
     }
     
     .main-content {
@@ -1079,19 +1435,58 @@
       padding: 1rem;
     }
     
+    .welcome-header h1 {
+      font-size: 1.25rem;
+    }
+    
+    .desktop-only {
+      display: none;
+    }
+    
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+    
+    .stat-card {
+      padding: 0.875rem;
+    }
+    
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+    }
+    
+    .stat-value {
+      font-size: 1.125rem;
+    }
+    
+    .section {
+      padding: 1rem;
+    }
+    
+    .safety-score {
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .score-text {
+      text-align: center;
+    }
+  }
+  
+  @media (max-width: 480px) {
     .stats-grid {
       grid-template-columns: 1fr;
-      gap: 1rem;
     }
     
-    .welcome-header {
+    .incident-header {
       flex-direction: column;
-      align-items: flex-start;
-      gap: 1rem;
+      gap: 0.5rem;
     }
     
-    .welcome-header h1 {
-      font-size: 1.5rem;
+    .incident-status {
+      align-self: flex-start;
     }
   }
 </style>
