@@ -183,276 +183,547 @@
   <title>Sign Up - Lezie</title>
 </svelte:head>
 
-<!-- Header -->
-<div class="signup-header">
-  <h1 class="signup-title">Create an account</h1>
-  <p class="signup-subtitle">Join Lezie and start making your community safer</p>
-</div>
+<div class="signup-wrapper">
+  <!-- Header -->
+  <div class="signup-header">
+    <h1 class="signup-title">Create an account</h1>
+    <p class="signup-subtitle">Join Lezie and start making your community safer</p>
+  </div>
 
-<!-- Progress Steps -->
-<div class="signup-progress">
-  <div class="step-indicator">
-    <div class="step {currentStep >= 1 ? 'active' : ''} {currentStep > 1 ? 'completed' : ''}">
-      <div class="step-number">
-        {#if currentStep > 1}
-          <Check size={16} />
-        {:else}
-          1
-        {/if}
+  <!-- Progress Steps -->
+  <div class="signup-progress">
+    <div class="step-indicator">
+      <div class="step {currentStep >= 1 ? 'active' : ''} {currentStep > 1 ? 'completed' : ''}">
+        <div class="step-number">
+          {#if currentStep > 1}
+            <Check size={16} />
+          {:else}
+            1
+          {/if}
+        </div>
+        <span class="step-label">Personal</span>
       </div>
-      <span class="step-label">Personal</span>
-    </div>
-    <div class="step-line {currentStep >= 2 ? 'active' : ''}"></div>
-    <div class="step {currentStep >= 2 ? 'active' : ''} {currentStep > 2 ? 'completed' : ''}">
-      <div class="step-number">
-        {#if currentStep > 2}
-          <Check size={16} />
-        {:else}
-          2
-        {/if}
+      <div class="step-line {currentStep >= 2 ? 'active' : ''}"></div>
+      <div class="step {currentStep >= 2 ? 'active' : ''} {currentStep > 2 ? 'completed' : ''}">
+        <div class="step-number">
+          {#if currentStep > 2}
+            <Check size={16} />
+          {:else}
+            2
+          {/if}
+        </div>
+        <span class="step-label">Contact</span>
       </div>
-      <span class="step-label">Contact</span>
-    </div>
-    <div class="step-line {currentStep >= 3 ? 'active' : ''}"></div>
-    <div class="step {currentStep >= 3 ? 'active' : ''}">
-      <div class="step-number">3</div>
-      <span class="step-label">Security</span>
+      <div class="step-line {currentStep >= 3 ? 'active' : ''}"></div>
+      <div class="step {currentStep >= 3 ? 'active' : ''}">
+        <div class="step-number">3</div>
+        <span class="step-label">Security</span>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Form -->
-<form class="signup-form" onsubmit={currentStep === 3 ? handleSubmit : handleNextStep}>
-  {#if errors.submit}
-    <div class="auth-alert-error">
-      <AlertCircle size={20} />
-      <span>{errors.submit}</span>
-    </div>
-  {/if}
-
-  <!-- Step 1: Personal Information -->
-  {#if currentStep === 1}
-    <div class="step-content">
-      <div class="form-section">
-        <div class="section-header">
-          <UserRound size={18} />
-          <h3>Personal Information</h3>
-        </div>
-
-        <div class="form-row">
-          <div class="auth-form-group">
-            <label for="firstName" class="auth-label">First Name *</label>
-            <div class="auth-input-wrapper">
-              <User size={18} class="auth-input-icon" />
-              <input
-                type="text"
-                id="firstName"
-                placeholder="John"
-                bind:value={formData.firstName}
-                class="auth-input {errors.firstName ? 'input-error' : ''}"
-              />
-            </div>
-            {#if errors.firstName}
-              <span class="auth-error-message">{errors.firstName}</span>
-            {/if}
-          </div>
-
-          <div class="auth-form-group">
-            <label for="lastName" class="auth-label">Last Name *</label>
-            <div class="auth-input-wrapper">
-              <User size={18} class="auth-input-icon" />
-              <input
-                type="text"
-                id="lastName"
-                placeholder="Doe"
-                bind:value={formData.lastName}
-                class="auth-input {errors.lastName ? 'input-error' : ''}"
-              />
-            </div>
-            {#if errors.lastName}
-              <span class="auth-error-message">{errors.lastName}</span>
-            {/if}
-          </div>
-        </div>
-
-        <div class="auth-form-group">
-          <label for="dateOfBirth" class="auth-label">Date of Birth *</label>
-          <div class="auth-input-wrapper">
-            <Calendar size={18} class="auth-input-icon" />
-            <input
-              type="date"
-              id="dateOfBirth"
-              bind:value={formData.dateOfBirth}
-              class="auth-input {errors.dateOfBirth ? 'input-error' : ''}"
-            />
-          </div>
-          {#if errors.dateOfBirth}
-            <span class="auth-error-message">{errors.dateOfBirth}</span>
-          {/if}
-        </div>
+  <!-- Form -->
+  <form class="signup-form" onsubmit={currentStep === 3 ? handleSubmit : handleNextStep}>
+    {#if errors.submit}
+      <div class="auth-alert-error">
+        <AlertCircle size={20} />
+        <span>{errors.submit}</span>
       </div>
-    </div>
-  {/if}
-
-  <!-- Step 2: Contact Information -->
-  {#if currentStep === 2}
-    <div class="step-content">
-      <div class="form-section">
-        <div class="section-header">
-          <Mail size={18} />
-          <h3>Contact Information</h3>
-        </div>
-
-        <div class="auth-form-group">
-          <label for="phone" class="auth-label">Phone Number *</label>
-          <div class="auth-input-wrapper">
-            <Phone size={18} class="auth-input-icon" />
-            <input
-              type="tel"
-              id="phone"
-              placeholder="+1 234 567 8900"
-              bind:value={formData.phone}
-              class="auth-input {errors.phone ? 'input-error' : ''}"
-            />
-          </div>
-          {#if errors.phone}
-            <span class="auth-error-message">{errors.phone}</span>
-          {/if}
-        </div>
-
-        <div class="auth-form-group">
-          <label for="email" class="auth-label">Email Address *</label>
-          <div class="auth-input-wrapper">
-            <Mail size={18} class="auth-input-icon" />
-            <input
-              type="email"
-              id="email"
-              placeholder="you@example.com"
-              bind:value={formData.email}
-              class="auth-input {errors.email ? 'input-error' : ''}"
-            />
-          </div>
-          {#if errors.email}
-            <span class="auth-error-message">{errors.email}</span>
-          {/if}
-        </div>
-      </div>
-    </div>
-  {/if}
-
-  <!-- Step 3: Security -->
-  {#if currentStep === 3}
-    <div class="step-content">
-      <div class="form-section">
-        <div class="section-header">
-          <Shield size={18} />
-          <h3>Secure Your Account</h3>
-        </div>
-
-        <div class="auth-form-group">
-          <label for="password" class="auth-label">Password *</label>
-          <div class="auth-input-wrapper">
-            <Lock size={18} class="auth-input-icon" />
-            <input
-              type={showPassword ? 'text' : 'password'}
-              id="password"
-              placeholder="Create a strong password"
-              bind:value={formData.password}
-              class="auth-input auth-input-has-toggle {errors.password ? 'input-error' : ''}"
-            />
-            <button
-              type="button"
-              class="auth-toggle-password"
-              onclick={() => showPassword = !showPassword}
-              aria-label="Toggle password visibility"
-            >
-              {#if showPassword}
-                <EyeOff size={18} />
-              {:else}
-                <Eye size={18} />
-              {/if}
-            </button>
-          </div>
-          {#if errors.password}
-            <span class="auth-error-message">{errors.password}</span>
-          {:else if formData.password}
-            <div class="auth-password-hints">
-              <span class="auth-password-hint {formData.password.length >= 8 ? 'hint-valid' : ''}">✓ 8+ characters</span>
-              <span class="auth-password-hint {/(?=.*[a-z])/.test(formData.password) ? 'hint-valid' : ''}">✓ Lowercase</span>
-              <span class="auth-password-hint {/(?=.*[A-Z])/.test(formData.password) ? 'hint-valid' : ''}">✓ Uppercase</span>
-              <span class="auth-password-hint {/(?=.*\d)/.test(formData.password) ? 'hint-valid' : ''}">✓ Number</span>
-            </div>
-          {/if}
-        </div>
-
-        <div class="auth-form-group">
-          <label for="confirmPassword" class="auth-label">Confirm Password *</label>
-          <div class="auth-input-wrapper">
-            <Lock size={18} class="auth-input-icon" />
-            <input
-              type={showConfirmPassword ? 'text' : 'password'}
-              id="confirmPassword"
-              placeholder="Confirm your password"
-              bind:value={formData.confirmPassword}
-              class="auth-input auth-input-has-toggle {errors.confirmPassword ? 'input-error' : ''}"
-            />
-            <button
-              type="button"
-              class="auth-toggle-password"
-              onclick={() => showConfirmPassword = !showConfirmPassword}
-              aria-label="Toggle confirm password visibility"
-            >
-              {#if showConfirmPassword}
-                <EyeOff size={18} />
-              {:else}
-                <Eye size={18} />
-              {/if}
-            </button>
-          </div>
-          {#if errors.confirmPassword}
-            <span class="auth-error-message">{errors.confirmPassword}</span>
-          {/if}
-        </div>
-      </div>
-    </div>
-  {/if}
-
-  <!-- Navigation Buttons -->
-  <div class="form-buttons">
-    {#if currentStep > 1}
-      <button
-        type="button"
-        class="btn-back"
-        onclick={handlePreviousStep}
-      >
-        <ArrowLeft size={16} />
-        Back
-      </button>
     {/if}
-    
-    <button
-      type="submit"
-      disabled={isLoading}
-      class="auth-btn-submit btn-next"
-    >
-      {#if isLoading}
-        <span class="auth-spinner"></span>
-        Creating account...
-      {:else if currentStep === 3}
-        Sign Up
-        <ArrowRight size={16} />
-      {:else}
-        Continue
-        <ArrowRight size={16} />
-      {/if}
-    </button>
-  </div>
-</form>
 
-<!-- Footer -->
-<div class="signup-footer">
-  <p class="signup-footer-text">
-    Already have an account?
-    <a href="/auth/signin" class="auth-link">Sign in</a>
-  </p>
+    <!-- Step 1: Personal Information -->
+    {#if currentStep === 1}
+      <div class="step-content">
+        <div class="form-section">
+          <div class="section-header">
+            <UserRound size={18} />
+            <h3>Personal Information</h3>
+          </div>
+
+          <div class="form-row">
+            <div class="auth-form-group">
+              <label for="firstName" class="auth-label">First Name *</label>
+              <div class="auth-input-wrapper">
+                <User size={18} class="auth-input-icon" />
+                <input
+                  type="text"
+                  id="firstName"
+                  placeholder="John"
+                  bind:value={formData.firstName}
+                  class="auth-input {errors.firstName ? 'input-error' : ''}"
+                />
+              </div>
+              {#if errors.firstName}
+                <span class="auth-error-message">{errors.firstName}</span>
+              {/if}
+            </div>
+
+            <div class="auth-form-group">
+              <label for="lastName" class="auth-label">Last Name *</label>
+              <div class="auth-input-wrapper">
+                <User size={18} class="auth-input-icon" />
+                <input
+                  type="text"
+                  id="lastName"
+                  placeholder="Doe"
+                  bind:value={formData.lastName}
+                  class="auth-input {errors.lastName ? 'input-error' : ''}"
+                />
+              </div>
+              {#if errors.lastName}
+                <span class="auth-error-message">{errors.lastName}</span>
+              {/if}
+            </div>
+          </div>
+
+          <div class="auth-form-group">
+            <label for="dateOfBirth" class="auth-label">Date of Birth *</label>
+            <div class="auth-input-wrapper">
+              <Calendar size={18} class="auth-input-icon" />
+              <input
+                type="date"
+                id="dateOfBirth"
+                bind:value={formData.dateOfBirth}
+                class="auth-input {errors.dateOfBirth ? 'input-error' : ''}"
+              />
+            </div>
+            {#if errors.dateOfBirth}
+              <span class="auth-error-message">{errors.dateOfBirth}</span>
+            {/if}
+          </div>
+        </div>
+      </div>
+    {/if}
+
+    <!-- Step 2: Contact Information -->
+    {#if currentStep === 2}
+      <div class="step-content">
+        <div class="form-section">
+          <div class="section-header">
+            <Mail size={18} />
+            <h3>Contact Information</h3>
+          </div>
+
+          <div class="auth-form-group">
+            <label for="phone" class="auth-label">Phone Number *</label>
+            <div class="auth-input-wrapper">
+              <Phone size={18} class="auth-input-icon" />
+              <input
+                type="tel"
+                id="phone"
+                placeholder="+1 234 567 8900"
+                bind:value={formData.phone}
+                class="auth-input {errors.phone ? 'input-error' : ''}"
+              />
+            </div>
+            {#if errors.phone}
+              <span class="auth-error-message">{errors.phone}</span>
+            {/if}
+          </div>
+
+          <div class="auth-form-group">
+            <label for="email" class="auth-label">Email Address *</label>
+            <div class="auth-input-wrapper">
+              <Mail size={18} class="auth-input-icon" />
+              <input
+                type="email"
+                id="email"
+                placeholder="you@example.com"
+                bind:value={formData.email}
+                class="auth-input {errors.email ? 'input-error' : ''}"
+              />
+            </div>
+            {#if errors.email}
+              <span class="auth-error-message">{errors.email}</span>
+            {/if}
+          </div>
+        </div>
+      </div>
+    {/if}
+
+    <!-- Step 3: Security -->
+    {#if currentStep === 3}
+      <div class="step-content">
+        <div class="form-section">
+          <div class="section-header">
+            <Shield size={18} />
+            <h3>Secure Your Account</h3>
+          </div>
+
+          <div class="auth-form-group">
+            <label for="password" class="auth-label">Password *</label>
+            <div class="auth-input-wrapper">
+              <Lock size={18} class="auth-input-icon" />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                placeholder="Create a strong password"
+                bind:value={formData.password}
+                class="auth-input auth-input-has-toggle {errors.password ? 'input-error' : ''}"
+              />
+              <button
+                type="button"
+                class="auth-toggle-password"
+                onclick={() => showPassword = !showPassword}
+                aria-label="Toggle password visibility"
+              >
+                {#if showPassword}
+                  <EyeOff size={18} />
+                {:else}
+                  <Eye size={18} />
+                {/if}
+              </button>
+            </div>
+            {#if errors.password}
+              <span class="auth-error-message">{errors.password}</span>
+            {:else if formData.password}
+              <div class="auth-password-hints">
+                <span class="auth-password-hint {formData.password.length >= 8 ? 'hint-valid' : ''}">✓ 8+ characters</span>
+                <span class="auth-password-hint {/(?=.*[a-z])/.test(formData.password) ? 'hint-valid' : ''}">✓ Lowercase</span>
+                <span class="auth-password-hint {/(?=.*[A-Z])/.test(formData.password) ? 'hint-valid' : ''}">✓ Uppercase</span>
+                <span class="auth-password-hint {/(?=.*\d)/.test(formData.password) ? 'hint-valid' : ''}">✓ Number</span>
+              </div>
+            {/if}
+          </div>
+
+          <div class="auth-form-group">
+            <label for="confirmPassword" class="auth-label">Confirm Password *</label>
+            <div class="auth-input-wrapper">
+              <Lock size={18} class="auth-input-icon" />
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                id="confirmPassword"
+                placeholder="Confirm your password"
+                bind:value={formData.confirmPassword}
+                class="auth-input auth-input-has-toggle {errors.confirmPassword ? 'input-error' : ''}"
+              />
+              <button
+                type="button"
+                class="auth-toggle-password"
+                onclick={() => showConfirmPassword = !showConfirmPassword}
+                aria-label="Toggle confirm password visibility"
+              >
+                {#if showConfirmPassword}
+                  <EyeOff size={18} />
+                {:else}
+                  <Eye size={18} />
+                {/if}
+              </button>
+            </div>
+            {#if errors.confirmPassword}
+              <span class="auth-error-message">{errors.confirmPassword}</span>
+            {/if}
+          </div>
+        </div>
+      </div>
+    {/if}
+
+    <!-- Navigation Buttons -->
+    <div class="form-buttons">
+      {#if currentStep > 1}
+        <button
+          type="button"
+          class="btn-back"
+          onclick={handlePreviousStep}
+        >
+          <ArrowLeft size={16} />
+          Back
+        </button>
+      {/if}
+
+      <button
+        type="submit"
+        disabled={isLoading}
+        class="auth-btn-submit btn-next"
+      >
+        {#if isLoading}
+          <span class="auth-spinner"></span>
+          Creating account...
+        {:else if currentStep === 3}
+          Sign Up
+          <ArrowRight size={16} />
+        {:else}
+          Continue
+          <ArrowRight size={16} />
+        {/if}
+      </button>
+    </div>
+  </form>
+
+  <!-- Footer -->
+  <div class="signup-footer">
+    <p class="signup-footer-text">
+      Already have an account?
+      <a href="/auth/signin" class="auth-link">Sign in</a>
+    </p>
+  </div>
 </div>
+
+<style>
+  /* Wrapper for full width and responsiveness */
+  .signup-wrapper {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 1rem;
+  }
+
+  /* Header */
+  .signup-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .signup-title {
+    font-size: clamp(1.5rem, 5vw, 1.875rem);
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+  }
+
+  .signup-subtitle {
+    font-size: clamp(0.75rem, 3vw, 0.875rem);
+    color: var(--gray-color);
+  }
+
+  /* Progress Steps */
+  .signup-progress {
+    margin-bottom: 2rem;
+    padding: 0 0.5rem;
+    overflow-x: auto;
+  }
+
+  .step-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 280px;
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .step-number {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--light-color);
+    border: 2px solid #e5e7eb;
+    border-radius: 50%;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-color);
+    transition: all 0.3s ease;
+  }
+
+  .step.active .step-number {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+  }
+
+  .step.completed .step-number {
+    background: var(--success-color);
+    border-color: var(--success-color);
+    color: white;
+  }
+
+  .step-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--gray-color);
+    white-space: nowrap;
+  }
+
+  .step.active .step-label {
+    color: var(--primary-color);
+  }
+
+  .step.completed .step-label {
+    color: var(--success-color);
+  }
+
+  .step-line {
+    width: 60px;
+    height: 2px;
+    background: #e5e7eb;
+    transition: background 0.3s ease;
+  }
+
+  .step-line.active {
+    background: var(--primary-color);
+  }
+
+  /* Form */
+  .signup-form {
+    width: 100%;
+  }
+
+  .step-content {
+    animation: fadeInUp 0.4s ease;
+  }
+
+  .form-section {
+    background: white;
+    border-radius: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--primary-border);
+  }
+
+  .section-header h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--dark-color);
+  }
+
+  .section-header svg {
+    color: var(--primary-color);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  /* Buttons */
+  .form-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .btn-next {
+    flex: 1;
+  }
+
+  .btn-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-color);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-back:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+
+  /* Footer */
+  .signup-footer {
+    margin-top: 1.5rem;
+    text-align: center;
+  }
+
+  .signup-footer-text {
+    font-size: 0.875rem;
+    color: var(--gray-color);
+  }
+
+  /* Animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Responsive Breakpoints */
+  @media (max-width: 768px) {
+    .signup-wrapper {
+      padding: 0.75rem;
+    }
+    
+    .form-row {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    
+    .step-line {
+      width: 40px;
+    }
+    
+    .step-number {
+      width: 32px;
+      height: 32px;
+      font-size: 0.75rem;
+    }
+    
+    .step-label {
+      font-size: 0.688rem;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .signup-wrapper {
+      padding: 0.5rem;
+    }
+    
+    .form-buttons {
+      flex-direction: column-reverse;
+      gap: 0.75rem;
+    }
+    
+    .btn-back {
+      width: 100%;
+    }
+    
+    .step-indicator {
+      gap: 0.25rem;
+    }
+    
+    .step-line {
+      width: 30px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .signup-title {
+      font-size: 1.25rem;
+    }
+    
+    .signup-subtitle {
+      font-size: 0.75rem;
+    }
+    
+    .step-label {
+      font-size: 0.625rem;
+    }
+    
+    .step-number {
+      width: 28px;
+      height: 28px;
+      font-size: 0.688rem;
+    }
+  }
+</style>
