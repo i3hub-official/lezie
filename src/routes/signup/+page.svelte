@@ -512,8 +512,8 @@
   .su-logo-link:hover { opacity: 0.85; }
 
   .su-logo-img {
-                width="32"
-            height="32"
+                width: 80px;
+  height: 80px;
   object-fit: contain;
   }
 
@@ -655,8 +655,8 @@
   }
 
   .su-mobile-brand .su-logo-img {
-                width="32"
-            height="32"
+                width: 80px;
+  height: 80px;
   }
 
   @media (min-width: 1024px) {
