@@ -54,31 +54,29 @@
 {/if}
 
 <!-- ── NAV ── -->
-<nav class="lz-nav">
-  <div class="lz-nav-inner">
-    <button type="button" class="lz-logo" onclick={() => scrollTo('home')}>
-      <img src="/icons/lz_ico.png" alt="Lezie" class="lz-logo-img" />
-      <span class="lz-logo-text">Lezie</span>
-    </button>
+{#if isAuthenticated}
+  <nav class="lz-nav">
+    <div class="lz-nav-inner">
+      <button type="button" class="lz-logo" onclick={() => scrollTo('home')}>
+        <img src="/icons/lz_ico.png" alt="Lezie" class="lz-logo-img" />
+        <span class="lz-logo-text">Lezie</span>
+      </button>
 
-    <button class="lz-hamburger" onclick={() => isMenuOpen = !isMenuOpen} aria-label="Toggle menu">
-      {#if isMenuOpen}<X size={22} />{:else}<Menu size={22} />{/if}
-    </button>
+      <button class="lz-hamburger" onclick={() => isMenuOpen = !isMenuOpen} aria-label="Toggle menu">
+        {#if isMenuOpen}<X size={22} />{:else}<Menu size={22} />{/if}
+      </button>
 
-    <div class="lz-nav-links" class:open={isMenuOpen}>
-      <button type="button" class="lz-nav-link" onclick={() => scrollTo('features')}>Features</button>
-      <button type="button" class="lz-nav-link" onclick={() => scrollTo('how-it-works')}>How it works</button>
-      <button type="button" class="lz-nav-link" onclick={() => scrollTo('safety-tips')}>Safety tips</button>
-      {#if isAuthenticated}
+      <div class="lz-nav-links" class:open={isMenuOpen}>
+        <button type="button" class="lz-nav-link" onclick={() => scrollTo('features')}>Features</button>
+        <button type="button" class="lz-nav-link" onclick={() => scrollTo('how-it-works')}>How it works</button>
+        <button type="button" class="lz-nav-link" onclick={() => scrollTo('safety-tips')}>Safety tips</button>
+        
         <button class="lz-nav-link" onclick={() => goto('/dashboard')}>Dashboard</button>
         <button class="lz-nav-link" onclick={() => authStore.logout()}>Sign out</button>
-      {:else}
-        <a href="/signin" class="lz-nav-link">Sign in</a>
-        <a href="/signup" class="lz-nav-cta">Get started</a>
-      {/if}
+      </div>
     </div>
-  </div>
-</nav>
+  </nav>
+{/if}
 
 <!-- ── HERO ── -->
 <section id="home" class="lz-hero">
