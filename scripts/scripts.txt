@@ -1,3 +1,4 @@
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
-h
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+
