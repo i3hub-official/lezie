@@ -162,11 +162,8 @@
   <!-- ── LEFT PANEL (desktop only) ── -->
   <aside class="su-panel">
     <div class="su-panel-inner">
-      <a href="/" class="su-brand">
-        <div class="lz-logo-mark">
-          <img src="/icons/lz_ico.png" alt="Lezie" width="22" height="22" />
-        </div>
-        <span class="lz-logo-text">Lezie</span>
+      <a href="/" class="su-logo-link">
+        <img src="/icons/lz_ico.png" alt="Lezie" class="su-logo-img" />
       </a>
 
       <div class="su-panel-hero">
@@ -226,13 +223,10 @@
   <main class="su-main">
     <div class="su-form-shell">
 
-      <!-- Mobile brand -->
+      <!-- Logo -->
       <div class="su-mobile-brand">
-        <a href="/" class="su-brand">
-          <div class="lz-logo-mark">
-            <img src="/icons/lz_ico.png" alt="Lezie" width="18" height="18" />
-          </div>
-          <span class="lz-logo-text">Lezie</span>
+        <a href="/" class="su-logo-link">
+          <img src="/icons/lz_ico.png" alt="Lezie" class="su-logo-img" />
         </a>
       </div>
 
@@ -508,35 +502,20 @@
   }
 
   /* Brand */
-  .su-brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.625rem;
-    text-decoration: none;
-    margin-bottom: 3rem;
+  .su-logo-link {
+    display: inline-block;
+    line-height: 0;
+    margin-bottom: 2.5rem;
+    transition: opacity 0.2s;
   }
 
-  .lz-logo-mark {
-    width: 36px;
-    height: 36px;
-    background: var(--primary-color);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
+  .su-logo-link:hover { opacity: 0.85; }
 
-  .lz-logo-mark img {
-    display: block;
+  .su-logo-img {
+    width: 44px;
+    height: 44px;
     object-fit: contain;
-  }
-
-  .lz-logo-text {
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 1.375rem;
-    color: white;
-    letter-spacing: -0.01em;
+    display: block;
   }
 
   /* Panel copy */
@@ -666,14 +645,19 @@
     gap: 1.5rem;
   }
 
-  /* Mobile brand (hidden on desktop) */
+  /* Logo (hidden on desktop — panel has it) */
   .su-mobile-brand {
     display: flex;
     justify-content: center;
   }
 
-  .su-mobile-brand .lz-logo-text {
-    color: var(--dark-color);
+  .su-mobile-brand .su-logo-link {
+    margin-bottom: 0;
+  }
+
+  .su-mobile-brand .su-logo-img {
+    width: 40px;
+    height: 40px;
   }
 
   @media (min-width: 1024px) {
