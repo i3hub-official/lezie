@@ -78,13 +78,8 @@
 <!-- ── NAV ─────────────────────────────────────────────────── -->
 <nav class="lz-nav">
   <div class="lz-nav-inner">
-    <button type="button" class="lz-logo" onclick={() => scrollToSection('home')}>
-      <div class="lz-logo-mark">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
-          <path d="M1 4.5V11.5L8 15L15 11.5V4.5" stroke="white" stroke-opacity=".6" stroke-width="1.2" fill="none"/>
-        </svg>
-      </div>
+    <button type="button" class="lz-logo" onclick={() => scrollTo('home')}>
+      <img src="/icons/lz_ico.png" alt="Lezie" class="lz-logo-img" />
       <span class="lz-logo-text">Lezie</span>
     </button>
 
