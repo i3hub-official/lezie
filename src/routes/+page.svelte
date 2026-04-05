@@ -1,7 +1,8 @@
+
+
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
-  import { authStore } from '$lib/stores/auth';
+import { authStore } from '$lib/stores/auth';
   import { 
     ShieldCheck, 
     ArrowRight, 
@@ -30,11 +31,12 @@
     Siren,
   } from 'lucide-svelte';
 
+  // Fix: Use $state() for reactive variable
   let isMenuOpen = $state(false);
-  let isLoading = $state(true);   // Controls the loading overlay
 
   onMount(() => {
-    // Check authentication
+
+// Check authentication
     const unsubscribe = authStore.subscribe((state) => {
       if (state.user) {
         // Authenticated user → redirect to dashboard
@@ -45,17 +47,14 @@
       }
     });
 
-    // Scroll animations
     const observer = new IntersectionObserver(
       (entries) => entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')),
       { threshold: 0.1 }
     );
     document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
     
-    return () => {
-      observer.disconnect();
-      unsubscribe();
-    };
+    // Cleanup
+    return () => observer.disconnect();
   });
 
   const scrollToSection = (id: string) => {
@@ -70,32 +69,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </svelte:head>
 
-<!-- Custom Loading Overlay -->
-{#if isLoading}
-  <div class="lz-loading-overlay">
-    <div class="lz-loading-content">
-      <div class="lz-loading-logo">
-        <div class="lz-logo-mark">
-          <svg width="32" height="32" viewBox="0 0 16 16" fill="none">
-            <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
-            <path d="M1 4.5V11.5L8 15L15 11.5V4.5" stroke="white" stroke-opacity=".6" stroke-width="1.2" fill="none"/>
-          </svg>
-        </div>
-        <span class="lz-logo-text">Lezie</span>
-      </div>
-      <div class="lz-spinner"></div>
-      <p>Verifying access...</p>
-    </div>
-  </div>
-{/if}
-
-<!-- FLOATING ACTION BUTTON -->
+<!-- ── FLOATING ACTION BUTTON (REPORT INCIDENT) ── -->
 <a href="/auth/report" class="lz-fab" aria-label="Report an incident">
   <FlagTriangleRight size={20} />
   <span>Report incident</span>
 </a>
 
-<!-- HERO -->
+<!-- ── NAV ─────────────────────────────────────────────────── -->
+<nav class="lz-nav">
+  <div class="lz-nav-inner">
+    <button type="button" class="lz-logo" onclick={() => scrollToSection('home')}>
+      <div class="lz-logo-mark">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
+          <path d="M1 4.5V11.5L8 15L15 11.5V4.5" stroke="white" stroke-opacity=".6" stroke-width="1.2" fill="none"/>
+        </svg>
+      </div>
+      <span class="lz-logo-text">Lezie</span>
+    </button>
+
+    <button class="lz-hamburger" onclick={() => isMenuOpen = !isMenuOpen} aria-label="Toggle menu">
+      {#if isMenuOpen}
+        <X size={22} />
+      {:else}
+        <Menu size={22} />
+      {/if}
+    </button>
+
+    <div class="lz-nav-links" class:open={isMenuOpen}>
+      <button type="button" class="lz-nav-link" onclick={() => scrollToSection('features')}>Features</button>
+      <button type="button" class="lz-nav-link" onclick={() => scrollToSection('how-it-works')}>How it works</button>
+      <button type="button" class="lz-nav-link" onclick={() => scrollToSection('safety-tips')}>Safety tips</button>
+      <a href="/auth/report" class="lz-nav-cta">Report an incident</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── HERO ────────────────────────────────────────────────── -->
 <section id="home" class="lz-hero">
   <div class="lz-hero-content">
     <div class="lz-badge animate-on-scroll">
@@ -166,7 +176,7 @@
         <div class="lz-leg-item"><span class="lz-leg-dot" style="background:var(--primary-bg)"></span>Monitored</div>
       </div>
       <div style="margin-top: 1rem; text-align: center;">
-        <a href="/auth/report" style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--primary-color); text-decoration: none;">
+        <a href="/report" style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--primary-color); text-decoration: none;">
           <FlagTriangleRight size={14} />
           Report incident on this map
         </a>
@@ -175,7 +185,7 @@
   </div>
 </section>
 
-<!-- FEATURES -->
+<!-- ── FEATURES ───────────────────────────────────────────── -->
 <section id="features" class="lz-section lz-section-alt">
   <div class="lz-container">
     <div class="lz-sec-head animate-on-scroll">
@@ -185,83 +195,200 @@
     </div>
 
     <div class="lz-feat-grid">
-      <!-- Your existing feature cards here (unchanged) -->
       <div class="lz-feat-card animate-on-scroll">
         <div class="lz-feat-icon"><Radio size={22} style="color:var(--primary-color)" /></div>
         <h3>Real-time incident reporting</h3>
         <p>Report incidents instantly with photos, videos, and precise location tracking. Get immediate alerts to nearby community members.</p>
-        <a href="/auth/report" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report now →</a>
+        <a href="/report" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report now →</a>
       </div>
-      <!-- Repeat the other 5 cards exactly as in your pasted file -->
+      <div class="lz-feat-card animate-on-scroll">
+        <div class="lz-feat-icon"><Cpu size={22} style="color:var(--primary-color)" /></div>
+        <h3>AI-powered threat detection</h3>
+        <p>Advanced AI analyses reports to identify patterns, predict high-risk areas, and provide threat scores for better decision-making.</p>
+      </div>
+      <div class="lz-feat-card animate-on-scroll">
+        <div class="lz-feat-icon"><BadgeCheck size={22} style="color:var(--primary-color)" /></div>
+        <h3>Community verification</h3>
+        <p>Trust through transparency. Community members and authorities can verify reports, ensuring accurate and reliable information.</p>
+      </div>
+      <div class="lz-feat-card animate-on-scroll">
+        <div class="lz-feat-icon"><Map size={22} style="color:var(--primary-color)" /></div>
+        <h3>Real-time heatmaps</h3>
+        <p>Visualise incident patterns with interactive heatmaps. Identify high-risk areas and stay informed about safety trends in your area.</p>
+      </div>
+      <div class="lz-feat-card animate-on-scroll">
+        <div class="lz-feat-icon"><EyeOff size={22} style="color:var(--primary-color)" /></div>
+        <h3>Anonymous reporting</h3>
+        <p>Report safely and securely with optional anonymity. Your identity remains protected while helping your community stay safe.</p>
+        <a href="/report" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report anonymously →</a>
+      </div>
+      <div class="lz-feat-card animate-on-scroll">
+        <div class="lz-feat-icon"><BellRing size={22} style="color:var(--primary-color)" /></div>
+        <h3>Instant alerts</h3>
+        <p>Receive real-time notifications about incidents in your area. Customise alert radius and severity levels to suit your needs.</p>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- HOW IT WORKS, SAFETY TIPS, CTA, and FOOTER sections remain exactly as you provided in the pasted file. -->
+<!-- ── HOW IT WORKS ───────────────────────────────────────── -->
+<section id="how-it-works" class="lz-section">
+  <div class="lz-container">
+    <div class="lz-sec-head animate-on-scroll">
+      <span class="lz-tag">Simple process</span>
+      <h2>How Lezie works</h2>
+      <p>Three simple steps to safer communities</p>
+    </div>
 
-<!-- Custom Loading Styles + your existing <style> block -->
-<style>
-  :global(:root) {
-    --primary-color: #6a2c91;   /* Adjust if your design uses a different primary */
-    --primary-light: #9b4fcc;
-    --primary-bg: #f5f3ff;
-  }
+    <div class="lz-steps">
+      <div class="lz-step animate-on-scroll">
+        <div class="lz-step-num">1</div>
+        <div class="lz-step-ico"><Smartphone size={28} style="color:var(--primary-color)" /></div>
+        <h3>Report an incident</h3>
+        <p>Quickly report incidents with details, photos, and location. Choose to report anonymously or with your identity.</p>
+        <div class="lz-bdg-row">
+          <span class="lz-bdg">"Suspicious activity on Main St"</span>
+        </div>
+        <a href="/report" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Start reporting →</a>
+      </div>
+      <div class="lz-step animate-on-scroll">
+        <div class="lz-step-num">2</div>
+        <div class="lz-step-ico"><BrainCircuit size={28} style="color:var(--primary-color)" /></div>
+        <h3>AI analysis &amp; verification</h3>
+        <p>Our AI analyses the report for threat level and credibility. Community members and authorities verify information.</p>
+        <div class="lz-bdg-row">
+          <span class="lz-bdg lz-bdg-danger">High severity detected</span>
+          <span class="lz-bdg">Community verified</span>
+        </div>
+      </div>
+      <div class="lz-step animate-on-scroll">
+        <div class="lz-step-num">3</div>
+        <div class="lz-step-ico"><Megaphone size={28} style="color:var(--primary-color)" /></div>
+        <h3>Alert &amp; response</h3>
+        <p>Nearby community members receive instant alerts. Authorities are notified for critical incidents requiring immediate attention.</p>
+        <div class="lz-bdg-row">
+          <span class="lz-bdg">Alert sent to 500+ nearby users</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-  .lz-loading-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(255, 255, 255, 0.98);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-  }
+<!-- ── SAFETY TIPS ────────────────────────────────────────── -->
+<section id="safety-tips" class="lz-section lz-section-alt">
+  <div class="lz-container">
+    <div class="lz-sec-head animate-on-scroll">
+      <span class="lz-tag">Safety first</span>
+      <h2>Essential safety tips</h2>
+      <p>Expert advice to help you stay safe in your community</p>
+    </div>
 
-  .lz-loading-content {
-    text-align: center;
-  }
+    <div class="lz-tips-grid">
+      <div class="lz-tip animate-on-scroll">
+        <div class="lz-tip-ico"><ScanEye size={24} style="color:var(--primary-color)" /></div>
+        <h3>Stay alert</h3>
+        <p>Always be aware of your surroundings. Trust your instincts — if something feels wrong, it probably is.</p>
+      </div>
+      <div class="lz-tip animate-on-scroll">
+        <div class="lz-tip-ico"><Users size={24} style="color:var(--primary-color)" /></div>
+        <h3>Travel in groups</h3>
+        <p>There's safety in numbers. When possible, travel with others, especially during late hours.</p>
+      </div>
+      <div class="lz-tip animate-on-scroll">
+        <div class="lz-tip-ico"><MapPin size={24} style="color:var(--primary-color)" /></div>
+        <h3>Share your location</h3>
+        <p>Use Lezie to share your location with trusted contacts. Enable real-time tracking for peace of mind.</p>
+      </div>
+      <div class="lz-tip animate-on-scroll">
+        <div class="lz-tip-ico"><LockKeyhole size={24} style="color:var(--primary-color)" /></div>
+        <h3>Secure your home</h3>
+        <p>Always lock doors and windows. Consider security cameras and proper lighting around your property.</p>
+      </div>
+      <div class="lz-tip animate-on-scroll">
+        <div class="lz-tip-ico"><FlagTriangleRight size={24} style="color:var(--primary-color)" /></div>
+        <h3>Report suspicious activity</h3>
+        <p>Don't hesitate to report suspicious behaviour. Your report could prevent a crime and help others.</p>
+        <a href="/auth/report" style="display: inline-block; margin-top: 0.75rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report now →</a>
+      </div>
+      <div class="lz-tip animate-on-scroll">
+        <div class="lz-tip-ico"><PhoneCall size={24} style="color:var(--primary-color)" /></div>
+        <h3>Know emergency numbers</h3>
+        <p>Save local emergency contacts. In critical situations, always call emergency services first.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-  .lz-loading-logo {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 2rem;
-    justify-content: center;
-  }
+<!-- ── CTA ─────────────────────────────────────────────────── -->
+<section class="lz-section">
+  <div class="lz-container">
+    <div class="lz-cta animate-on-scroll">
+      <h2>Ready to make your community safer?</h2>
+      <p>Join thousands of users already using Lezie to protect their neighbourhoods.</p>
+      <div class="lz-cta-btns">
+        <a href="/signup" class="lz-btn-primary lz-btn-lg">
+          Get started for free
+          <ArrowRight size={16} />
+        </a>
+        <a href="/auth/report" class="lz-btn-outline-lg">
+          <FlagTriangleRight size={16} />
+          Report an incident
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
 
-  .lz-logo-mark {
-    width: 48px;
-    height: 48px;
-    background: var(--primary-color);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+<!-- ── FOOTER ─────────────────────────────────────────────── -->
+<footer class="lz-footer">
+  <div class="lz-container">
+    <div class="lz-foot-grid">
+      <div>
+        <div class="lz-foot-logo">
+          <div class="lz-logo-mark" style="width:26px;height:26px;border-radius:6px; background: var(--primary-color); display: flex; align-items: center; justify-content: center;">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
+              <path d="M1 4.5V11.5L8 15L15 11.5V4.5" stroke="white" stroke-opacity=".6" stroke-width="1.2" fill="none"/>
+            </svg>
+          </div>
+          Lezie
+        </div>
+        <p class="lz-foot-desc">Making communities safer through technology and collective action.</p>
+        <div class="lz-socials">
+          <button type="button" class="lz-soc" aria-label="X / Twitter">
+            <X size={15} />
+          </button>
+          <button type="button" class="lz-soc" aria-label="Discord">
+            <MessageCircle size={15} />
+          </button>
+        </div>
+      </div>
 
-  .lz-logo-text {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--primary-color);
-  }
+      <div class="lz-foot-col">
+        <h4>Product</h4>
+        <button type="button" class="lz-foot-link" onclick={() => scrollToSection('features')}>Features</button>
+        <button type="button" class="lz-foot-link" onclick={() => scrollToSection('how-it-works')}>How it works</button>
+        <a href="/dashboard" class="lz-foot-link">Dashboard</a>
+        <a href="/report" class="lz-foot-link">Report incident</a>
+      </div>
 
-  .lz-spinner {
-    width: 56px;
-    height: 56px;
-    border: 6px solid #f3f3f3;
-    border-top: 6px solid var(--primary-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 1.25rem;
-  }
+      <div class="lz-foot-col">
+        <h4>Company</h4>
+        <button type="button" class="lz-foot-link">About us</button>
+        <button type="button" class="lz-foot-link">Contact</button>
+      </div>
 
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
+      <div class="lz-foot-col">
+        <h4>Resources</h4>
+        <button type="button" class="lz-foot-link">Help centre</button>
+        <button type="button" class="lz-foot-link" onclick={() => scrollToSection('safety-tips')}>Safety tips</button>
+        <button type="button" class="lz-foot-link">Privacy policy</button>
+        <button type="button" class="lz-foot-link">Terms of service</button>
+      </div>
+    </div>
 
-  .lz-loading-overlay p {
-    color: #6b7280;
-    font-size: 1rem;
-  }
-
-</style>
+    <div class="lz-foot-bottom">
+      <p>&copy; 2025 Lezie. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
