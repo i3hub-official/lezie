@@ -27,21 +27,24 @@
     Building,
     Volume2,
     AlertOctagon,
-    Menu,
+    Menu as MenuIcon,
     X,
     LogOut,
     HelpCircle,
     Award,
     FileText,
-    Calendar,
-    Star,
-    Globe,
-    Activity,
-    ChevronLeft,
-    Menu as MenuIcon,
     PanelLeftClose,
     PanelLeftOpen
   } from 'lucide-svelte';
+  
+  // Import pages from same directory
+  import MapPage from './MapPage.svelte';
+  import AlertsPage from './AlertsPage.svelte';
+  import StatisticsPage from './StatisticsPage.svelte';
+  import ReportsPage from './ReportsPage.svelte';
+  import CommunityPage from './CommunityPage.svelte';
+  import ProfilePage from './ProfilePage.svelte';
+  import SettingsPage from './SettingsPage.svelte';
   
   let isLoading = $state(true);
   let user = $state<{ name: string; email: string; avatar?: string } | null>(null);
@@ -61,14 +64,22 @@
   let isSidebarCollapsed = $state(false);
   let isMobile = $state(false);
   
-  // Page components cache
-  let currentPageComponent: any = null;
+  // Page components mapping
+  const pages: Record<string, any> = {
+    dashboard: null,
+    map: MapPage,
+    alerts: AlertsPage,
+    statistics: StatisticsPage,
+    reports: ReportsPage,
+    community: CommunityPage,
+    profile: ProfilePage,
+    settings: SettingsPage
+  };
   
   onMount(() => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     loadDashboardData();
-    loadPage('dashboard');
     isLoading = false;
   });
   
@@ -173,52 +184,6 @@
     ];
   }
   
-  async function loadPage(page: string) {
-    activePage = page;
-    
-    // Dynamically import page components
-    try {
-      switch(page) {
-        case 'dashboard':
-          currentPageComponent = null; // Show dashboard content
-          break;
-        case 'map':
-          const mapModule = await import('$lib/pages/MapPage.svelte');
-          currentPageComponent = mapModule.default;
-          break;
-        case 'alerts':
-          const alertsModule = await import('$lib/pages/AlertsPage.svelte');
-          currentPageComponent = alertsModule.default;
-          break;
-        case 'statistics':
-          const statsModule = await import('$lib/pages/StatisticsPage.svelte');
-          currentPageComponent = statsModule.default;
-          break;
-        case 'reports':
-          const reportsModule = await import('$lib/pages/ReportsPage.svelte');
-          currentPageComponent = reportsModule.default;
-          break;
-        case 'community':
-          const communityModule = await import('$lib/pages/CommunityPage.svelte');
-          currentPageComponent = communityModule.default;
-          break;
-        case 'profile':
-          const profileModule = await import('$lib/pages/ProfilePage.svelte');
-          currentPageComponent = profileModule.default;
-          break;
-        case 'settings':
-          const settingsModule = await import('$lib/pages/SettingsPage.svelte');
-          currentPageComponent = settingsModule.default;
-          break;
-        default:
-          currentPageComponent = null;
-      }
-    } catch (err) {
-      console.error('Failed to load page:', err);
-      currentPageComponent = null;
-    }
-  }
-  
   function getCategoryIcon(category: string) {
     const icons: Record<string, any> = {
       suspicious: AlertTriangle,
@@ -285,7 +250,11 @@
   function handleNavigation(page: string) {
     activePage = page;
     closeMobileMenu();
-    loadPage(page);
+    
+    // Update URL without page reload
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', page);
+    window.history.pushState({}, '', url);
   }
   
   const navItems = [
@@ -298,6 +267,9 @@
     { path: 'profile', icon: User, label: 'Profile' },
     { path: 'settings', icon: Settings, label: 'Settings' }
   ];
+  
+  // Get current page component
+  $: CurrentPageComponent = pages[activePage];
 </script>
 
 <svelte:head>
@@ -398,7 +370,7 @@
             <span>Lezie</span>
           {/if}
         </div>
-        <button class="collapse-btn" onclick={toggleSidebar}>
+        <button class="collapse-btn" onclick={toggleSidebar} title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
           {#if isSidebarCollapsed}
             <PanelLeftOpen size={18} />
           {:else}
@@ -634,9 +606,9 @@
             </div>
           </div>
         {/if}
-      {:else if currentPageComponent}
+      {:else if CurrentPageComponent}
         <!-- Dynamically loaded page component -->
-        <svelte:component this={currentPageComponent} />
+        <svelte:component this={CurrentPageComponent} />
       {:else}
         <div class="loading-state">
           <Loader2 size={36} class="spinning" />
