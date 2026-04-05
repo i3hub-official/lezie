@@ -76,6 +76,9 @@
     settings: SettingsPage
   };
   
+  // Use $derived instead of $: for reactive computation
+  let CurrentPageComponent = $derived(pages[activePage]);
+  
   onMount(() => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -267,9 +270,6 @@
     { path: 'profile', icon: User, label: 'Profile' },
     { path: 'settings', icon: Settings, label: 'Settings' }
   ];
-  
-  // Get current page component
-  $: CurrentPageComponent = pages[activePage];
 </script>
 
 <svelte:head>
