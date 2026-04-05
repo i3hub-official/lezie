@@ -2,7 +2,7 @@
 
 <script lang="ts">
   import { onMount } from 'svelte';
-import { authStore } from '$lib/stores/auth';
+//import { authStore } from '$lib/stores/auth';
   import { 
     ShieldCheck, 
     ArrowRight, 
@@ -37,15 +37,15 @@ import { authStore } from '$lib/stores/auth';
   onMount(() => {
 
 // Check authentication
-    const unsubscribe = authStore.subscribe((state) => {
-      if (state.user) {
+  //  const unsubscribe = authStore.subscribe((state) => {
+   //   if (state.user) {
         // Authenticated user → redirect to dashboard
-        goto('/dashboard');
-      } else {
+     //   goto('/dashboard');
+     // } else {
         // Not authenticated → show landing page
-        isLoading = false;
-      }
-    });
+     //   isLoading = false;
+   //   }
+  //  });
 
     const observer = new IntersectionObserver(
       (entries) => entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')),
