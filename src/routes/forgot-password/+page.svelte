@@ -146,7 +146,7 @@
             <p class="fp-success-note">
               Didn't receive it? Check your spam folder or wait a minute before trying again.
             </p>
-            <a href="/auth/signin" class="fp-btn-primary">
+            <a href="/signin" class="fp-btn-primary">
               Return to Sign In <ArrowRight size={15} />
             </a>
             <button
@@ -203,7 +203,7 @@
 
             <div class="fp-divider"><span>or</span></div>
 
-            <a href="/auth/signin" class="fp-btn-back">
+            <a href="/signin" class="fp-btn-back">
               <ArrowLeft size={15} /> Back to Sign In
             </a>
 
