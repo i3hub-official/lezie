@@ -27,7 +27,7 @@
       Back
     </button>
     <h1>My Reports</h1>
-    <button class="new-btn" onclick={() => goto('/auth/report')}>
+    <button class="new-btn" onclick={() => goto('/report')}>
       <FlagTriangleRight size={18} />
       New Report
     </button>
