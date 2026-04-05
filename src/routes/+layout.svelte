@@ -21,7 +21,7 @@
   
   function handleLogout() {
     authStore.logout();
-    goto('/auth/signin');
+    goto('/signin');
   }
 </script>
 
