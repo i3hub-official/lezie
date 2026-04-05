@@ -512,9 +512,9 @@
   .su-logo-link:hover { opacity: 0.85; }
 
   .su-logo-img {
-    width: 44px;
-    height: 44px;
-    object-fit: contain;
+    width: 60px;
+  height: auto;
+  object-fit: contain;
     display: block;
   }
 
