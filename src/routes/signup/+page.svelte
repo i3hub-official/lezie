@@ -163,12 +163,10 @@
   <aside class="su-panel">
     <div class="su-panel-inner">
       <a href="/" class="su-brand">
-        <div class="su-brand-mark">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
+        <div class="lz-logo-mark">
+          <img src="/icons/lz_ico.png" alt="Lezie" width="22" height="22" />
         </div>
-        <span class="su-brand-name">Lezie</span>
+        <span class="lz-logo-text">Lezie</span>
       </a>
 
       <div class="su-panel-hero">
@@ -231,12 +229,10 @@
       <!-- Mobile brand -->
       <div class="su-mobile-brand">
         <a href="/" class="su-brand">
-          <div class="su-brand-mark">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
+          <div class="lz-logo-mark">
+            <img src="/icons/lz_ico.png" alt="Lezie" width="18" height="18" />
           </div>
-          <span class="su-brand-name">Lezie</span>
+          <span class="lz-logo-text">Lezie</span>
         </a>
       </div>
 
@@ -520,19 +516,23 @@
     margin-bottom: 3rem;
   }
 
-  .su-brand-mark {
+  .lz-logo-mark {
     width: 36px;
     height: 36px;
-    background: rgba(255,255,255,0.2);
-    border: 1px solid rgba(255,255,255,0.3);
-    border-radius: 10px;
+    background: var(--primary-color);
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
   }
 
-  .su-brand-name {
+  .lz-logo-mark img {
+    display: block;
+    object-fit: contain;
+  }
+
+  .lz-logo-text {
     font-family: 'DM Serif Display', Georgia, serif;
     font-size: 1.375rem;
     color: white;
@@ -672,12 +672,7 @@
     justify-content: center;
   }
 
-  .su-mobile-brand .su-brand-mark {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
-  }
-
-  .su-mobile-brand .su-brand-name {
+  .su-mobile-brand .lz-logo-text {
     color: var(--dark-color);
   }
 
