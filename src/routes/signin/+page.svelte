@@ -205,7 +205,7 @@
               <div class="si-field">
                 <div class="si-label-row">
                   <label class="si-label" for="password">Password <span class="si-req">*</span></label>
-                  <a href="/auth/forgot-password" class="si-link si-forgot">Forgot password?</a>
+                  <a href="/forgot-password" class="si-link si-forgot">Forgot password?</a>
                 </div>
                 <div class="si-input-wrap">
                   <Lock size={16} class="si-input-icon" />
@@ -249,7 +249,7 @@
 
       <!-- Footer -->
       <p class="si-footer-text">
-        Don't have an account? <a href="/auth/signup" class="si-link">Create account</a>
+        Don't have an account? <a href="/signup" class="si-link">Create account</a>
       </p>
 
     </div>
