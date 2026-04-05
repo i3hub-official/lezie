@@ -58,24 +58,26 @@
   // Additional location (can be added from search, max 1)
   let additionalLocation = $state<{ lat: number; lng: number; details: any } | null>(null);
   
-  // Categories
+  // Categories with proper icons
   const categories = [
-    { value: 'suspicious', label: 'Suspicious Activity', icon: AlertTriangle, color: '#F59E0B', bg: '#FEF3C7' },
-    { value: 'theft', label: 'Theft / Robbery', icon: AlertOctagon, color: '#EF4444', bg: '#FEE2E2' },
-    { value: 'vandalism', label: 'Vandalism', icon: Building, color: '#F97316', bg: '#FFEDD5' },
-    { value: 'fire', label: 'Fire / Emergency', icon: Flame, color: '#DC2626', bg: '#FEE2E2' },
-    { value: 'accident', label: 'Accident', icon: Car, color: '#F59E0B', bg: '#FEF3C7' },
-    { value: 'noise', label: 'Noise Complaint', icon: Volume2, color: '#8B5CF6', bg: '#EDE9FE' },
-    { value: 'other', label: 'Other', icon: MoreHorizontal, color: '#6B7280', bg: '#F3F4F6' }
+    { value: 'suspicious', label: 'Suspicious Activity', icon: AlertTriangle, color: '#F59E0B' },
+    { value: 'theft', label: 'Theft / Robbery', icon: AlertOctagon, color: '#EF4444' },
+    { value: 'vandalism', label: 'Vandalism', icon: Building, color: '#F97316' },
+    { value: 'fire', label: 'Fire / Emergency', icon: Flame, color: '#DC2626' },
+    { value: 'accident', label: 'Accident', icon: Car, color: '#F59E0B' },
+    { value: 'noise', label: 'Noise Complaint', icon: Volume2, color: '#8B5CF6' },
+    { value: 'other', label: 'Other', icon: MoreHorizontal, color: '#6B7280' }
   ];
   
   // Severity options
   const severityOptions = [
-    { value: 'low', label: 'Low', color: '#10B981', bg: '#D1FAE5', description: 'Non-urgent, monitor situation' },
-    { value: 'medium', label: 'Medium', color: '#F59E0B', bg: '#FEF3C7', description: 'Caution advised' },
-    { value: 'high', label: 'High', color: '#F97316', bg: '#FFEDD5', description: 'Urgent, attention needed' },
-    { value: 'critical', label: 'Critical', color: '#EF4444', bg: '#FEE2E2', description: 'Emergency, immediate action' }
+    { value: 'low', label: 'Low', color: '#10B981', description: 'Non-urgent, monitor situation' },
+    { value: 'medium', label: 'Medium', color: '#F59E0B', description: 'Caution advised' },
+    { value: 'high', label: 'High', color: '#F97316', description: 'Urgent, attention needed' },
+    { value: 'critical', label: 'Critical', color: '#EF4444', description: 'Emergency, immediate action' }
   ];
+
+ 
   
   // Media files
   let mediaFiles = $state<File[]>([]);
