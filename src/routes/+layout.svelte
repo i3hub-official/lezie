@@ -55,14 +55,10 @@
       <nav class="global-nav">
         <div class="nav-container">
           <div class="nav-brand" onclick={() => goto('/dashboard')}>
-            <div class="logo-mark">
-              <svg width="24" height="24" viewBox="0 0 16 16" fill="none">
-                <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
-                <path d="M1 4.5V11.5L8 15L15 11.5V4.5" stroke="white" stroke-opacity=".6" stroke-width="1.2" fill="none"/>
-              </svg>
-            </div>
-            <span>Lezie</span>
-          </div>
+            <button type="button" class="lz-logo" onclick={() => scrollTo('home')}>
+      <img src="/icons/lz_ico.png" alt="Lezie" class="lz-logo-img" />
+      <span class="lz-logo-text">Lezie</span>
+    </button>
           
           <div class="nav-links">
             <button class="nav-link" onclick={() => goto('/dashboard')}>
