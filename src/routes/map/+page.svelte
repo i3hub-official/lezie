@@ -25,7 +25,11 @@
     Eye,
     Shield,
     Layers,
-    Compass
+    Compass,
+    Menu,
+    Zap,
+    Activity,
+    Radio
   } from 'lucide-svelte';
   
   let isLoading = $state(true);
@@ -40,25 +44,27 @@
   let selectedIncident = $state<any>(null);
   let mapView = $state('default');
   let isMobileMenuOpen = $state(false);
+  let userLocation = $state<{ lat: number; lng: number } | null>(null);
   
   const categories = [
-    { value: 'suspicious', label: 'Suspicious', color: '#F59E0B', icon: AlertTriangle },
-    { value: 'theft', label: 'Theft', color: '#EF4444', icon: AlertOctagon },
-    { value: 'vandalism', label: 'Vandalism', color: '#F97316', icon: Building },
-    { value: 'fire', label: 'Fire', color: '#DC2626', icon: Flame },
-    { value: 'accident', label: 'Accident', color: '#F59E0B', icon: Car },
-    { value: 'noise', label: 'Noise', color: '#8B5CF6', icon: Volume2 }
+    { value: 'suspicious', label: 'Suspicious', color: '#F59E0B', bg: '#FEF3C7', icon: AlertTriangle },
+    { value: 'theft', label: 'Theft', color: '#EF4444', bg: '#FEE2E2', icon: AlertOctagon },
+    { value: 'vandalism', label: 'Vandalism', color: '#F97316', bg: '#FFEDD5', icon: Building },
+    { value: 'fire', label: 'Fire', color: '#DC2626', bg: '#FEE2E2', icon: Flame },
+    { value: 'accident', label: 'Accident', color: '#F59E0B', bg: '#FEF3C7', icon: Car },
+    { value: 'noise', label: 'Noise', color: '#8B5CF6', bg: '#EDE9FE', icon: Volume2 }
   ];
   
   const severityLevels = [
-    { value: 'low', label: 'Low', color: '#10B981', description: 'Non-urgent' },
-    { value: 'medium', label: 'Medium', color: '#F59E0B', description: 'Caution advised' },
-    { value: 'high', label: 'High', color: '#F97316', description: 'Urgent' },
-    { value: 'critical', label: 'Critical', color: '#EF4444', description: 'Emergency' }
+    { value: 'low', label: 'Low', color: '#10B981', bg: '#D1FAE5', description: 'Non-urgent' },
+    { value: 'medium', label: 'Medium', color: '#F59E0B', bg: '#FEF3C7', description: 'Caution advised' },
+    { value: 'high', label: 'High', color: '#F97316', bg: '#FFEDD5', description: 'Urgent' },
+    { value: 'critical', label: 'Critical', color: '#EF4444', bg: '#FEE2E2', description: 'Emergency' }
   ];
   
   onMount(async () => {
     await loadIncidents();
+    getCurrentLocation();
     isLoading = false;
   });
   
@@ -129,8 +135,16 @@
     return categories.find(c => c.value === category)?.color || '#6B7280';
   }
   
+  function getCategoryBg(category: string) {
+    return categories.find(c => c.value === category)?.bg || '#F3F4F6';
+  }
+  
   function getSeverityColor(severity: string) {
     return severityLevels.find(s => s.value === severity)?.color || '#6B7280';
+  }
+  
+  function getSeverityBg(severity: string) {
+    return severityLevels.find(s => s.value === severity)?.bg || '#F3F4F6';
   }
   
   function getCategoryIcon(category: string) {
@@ -186,7 +200,10 @@
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          console.log('User location:', position.coords.latitude, position.coords.longitude);
+          userLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
         },
         (err) => {
           console.error('Geolocation error:', err);
@@ -202,42 +219,44 @@
     const hours = Math.floor(diff / 3600000);
     const minutes = Math.floor((diff % 3600000) / 60000);
     
-    if (hours < 1) return `${minutes} min ago`;
-    if (hours < 24) return `${hours} hr ago`;
+    if (minutes < 1) return 'Just now';
+    if (hours < 1) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
     return date.toLocaleDateString();
+  }
+  
+  function getActiveCount() {
+    return getFilteredIncidents().filter(i => i.isLive).length;
   }
 </script>
 
 <svelte:head>
   <title>Live Incident Map - Lezie</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
 </svelte:head>
 
 <div class="map-page">
-  <!-- Mobile Header -->
+  <!-- Modern Header -->
   <header class="map-header">
     <div class="header-container">
-      <div class="header-row">
+      <div class="header-left">
         <button class="back-btn" onclick={() => goto('/dashboard')}>
           <ChevronLeft size={20} />
+          <span>Back</span>
         </button>
         <div class="header-title">
-          <MapPin size={18} />
-          <h1>Live Map</h1>
+          <div class="title-icon">
+            <MapPin size={18} />
+          </div>
+          <h1>Incident Map</h1>
         </div>
-        <button class="menu-btn" onclick={() => isMobileMenuOpen = !isMobileMenuOpen}>
-          <Filter size={18} />
-        </button>
       </div>
-      
-      <!-- Search Bar - Full Width -->
-      <div class="search-container">
+
+      <div class="header-right">
         <div class="search-wrapper">
           <Search size={16} class="search-icon" />
           <input
             type="text"
-            placeholder="Search incidents or locations..."
+            placeholder="Search incidents..."
             bind:value={searchQuery}
             class="search-input"
           />
@@ -247,138 +266,182 @@
             </button>
           {/if}
         </div>
-        <button class="location-btn" onclick={getCurrentLocation}>
+        
+        <button class="filter-btn" onclick={() => showFilters = !showFilters}>
+          <Filter size={16} />
+          <span>Filter</span>
+        </button>
+        
+        <button class="location-btn" onclick={getCurrentLocation} title="My location">
           <Navigation size={16} />
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Mobile Filter Drawer -->
-  {#if isMobileMenuOpen}
-    <div class="mobile-drawer-overlay" onclick={() => isMobileMenuOpen = false}>
-      <div class="mobile-drawer" onclick={(e) => e.stopPropagation()}>
-        <div class="drawer-header">
-          <h3>Filters</h3>
-          <button class="close-drawer" onclick={() => isMobileMenuOpen = false}>
-            <X size={20} />
-          </button>
+  <!-- Filter Drawer -->
+  {#if showFilters}
+    <div class="filter-drawer">
+      <div class="filter-drawer-header">
+        <h3>Filter Incidents</h3>
+        <button class="close-filter" onclick={() => showFilters = false}>
+          <X size={18} />
+        </button>
+      </div>
+      <div class="filter-drawer-content">
+        <div class="filter-section">
+          <label>Categories</label>
+          <div class="filter-chips">
+            {#each categories as cat}
+              <button
+                class="filter-chip {filters.categories.includes(cat.value) ? 'active' : ''}"
+                style={filters.categories.includes(cat.value) ? `background: ${cat.color}; border-color: ${cat.color}; color: white;` : ''}
+                onclick={() => toggleCategory(cat.value)}
+              >
+                <svelte:component this={cat.icon} size={12} />
+                {cat.label}
+              </button>
+            {/each}
+          </div>
         </div>
-        <div class="drawer-content">
-          <div class="filter-group">
-            <label>Categories</label>
-            <div class="filter-chips">
-              {#each categories as cat}
-                <button
-                  class="chip {filters.categories.includes(cat.value) ? 'active' : ''}"
-                  style={filters.categories.includes(cat.value) ? `background: ${cat.color}; border-color: ${cat.color};` : ''}
-                  onclick={() => toggleCategory(cat.value)}
-                >
-                  <svelte:component this={cat.icon} size={12} />
-                  {cat.label}
-                </button>
-              {/each}
-            </div>
+        
+        <div class="filter-section">
+          <label>Severity</label>
+          <div class="filter-chips">
+            {#each severityLevels as level}
+              <button
+                class="filter-chip {filters.severity.includes(level.value) ? 'active' : ''}"
+                style={filters.severity.includes(level.value) ? `background: ${level.color}; border-color: ${level.color}; color: white;` : ''}
+                onclick={() => toggleSeverity(level.value)}
+              >
+                {level.label}
+              </button>
+            {/each}
           </div>
-          <div class="filter-group">
-            <label>Severity</label>
-            <div class="filter-chips">
-              {#each severityLevels as level}
-                <button
-                  class="chip {filters.severity.includes(level.value) ? 'active' : ''}"
-                  style={filters.severity.includes(level.value) ? `background: ${level.color}; border-color: ${level.color};` : ''}
-                  onclick={() => toggleSeverity(level.value)}
-                >
-                  {level.label}
-                </button>
-              {/each}
-            </div>
-          </div>
-          <div class="filter-group">
-            <label>Date Range</label>
-            <div class="filter-chips">
-              <button class="chip {filters.dateRange === 'day' ? 'active' : ''}" onclick={() => filters.dateRange = 'day'}>Today</button>
-              <button class="chip {filters.dateRange === 'week' ? 'active' : ''}" onclick={() => filters.dateRange = 'week'}>This Week</button>
-              <button class="chip {filters.dateRange === 'month' ? 'active' : ''}" onclick={() => filters.dateRange = 'month'}>This Month</button>
-            </div>
-          </div>
-          <button class="clear-filters-btn" onclick={clearFilters}>Clear All Filters</button>
         </div>
+        
+        <div class="filter-section">
+          <label>Date Range</label>
+          <div class="filter-chips">
+            <button class="filter-chip {filters.dateRange === 'day' ? 'active' : ''}" onclick={() => filters.dateRange = 'day'}>Today</button>
+            <button class="filter-chip {filters.dateRange === 'week' ? 'active' : ''}" onclick={() => filters.dateRange = 'week'}>This Week</button>
+            <button class="filter-chip {filters.dateRange === 'month' ? 'active' : ''}" onclick={() => filters.dateRange = 'month'}>This Month</button>
+          </div>
+        </div>
+        
+        <button class="clear-filters" onclick={clearFilters}>
+          Clear all filters
+        </button>
       </div>
     </div>
   {/if}
 
-  <!-- Main Map Layout -->
-  <div class="map-layout">
-    <!-- Map Canvas -->
-    <div class="map-canvas">
+  <!-- Main Content -->
+  <div class="map-content">
+    <!-- Map Area -->
+    <div class="map-area">
       {#if isLoading}
-        <div class="loading-overlay">
+        <div class="map-loading">
           <div class="loading-spinner"></div>
-          <p>Loading map data...</p>
+          <p>Loading map...</p>
         </div>
-      {/if}
-      
-      <div class="map-grid">
-        {#each getFilteredIncidents() as incident}
-          <button 
-            class="map-marker"
-            style="left: {((incident.lng + 74.02) / 0.04) * 100}%; top: {((40.73 - incident.lat) / 0.04) * 100}%"
-            onclick={() => selectedIncident = incident}
-          >
-            <div class="marker-dot" style="background: {getSeverityColor(incident.severity)}">
-              <svelte:component this={getCategoryIcon(incident.category)} size={10} />
+      {:else}
+        <div class="map-container">
+          <!-- Map Grid Background -->
+          <div class="map-grid">
+            <!-- Map Markers -->
+            {#each getFilteredIncidents() as incident}
+              <button 
+                class="map-marker"
+                style="left: {((incident.lng + 74.02) / 0.04) * 100}%; top: {((40.73 - incident.lat) / 0.04) * 100}%"
+                onclick={() => selectedIncident = incident}
+              >
+                <div class="marker-outer" style="background: {getSeverityColor(incident.severity)}20;">
+                  <div class="marker-inner" style="background: {getSeverityColor(incident.severity)};">
+                    <svelte:component this={getCategoryIcon(incident.category)} size={10} />
+                  </div>
+                </div>
+                <div class="marker-pulse" style="background: {getSeverityColor(incident.severity)};"></div>
+              </button>
+            {/each}
+          </div>
+          
+          <!-- Map Overlay Controls -->
+          <div class="map-overlay">
+            <div class="live-stats">
+              <span class="live-dot"></span>
+              <span>{getActiveCount()} active incidents</span>
             </div>
-            <div class="marker-pulse" style="background: {getSeverityColor(incident.severity)}"></div>
-          </button>
-        {/each}
-
-        <div class="map-stats">
-          <div class="stats-badge">
-            <span class="stats-dot"></span>
-            <span>{getFilteredIncidents().length} active</span>
+            <div class="map-controls">
+              <button class="map-control" onclick={() => getCurrentLocation()}>
+                <Compass size={14} />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      {/if}
     </div>
 
-    <!-- Incidents List -->
-    <div class="incidents-panel">
-      <div class="panel-header">
-        <h3>Recent Reports</h3>
-        <span class="incident-count">{getFilteredIncidents().length} incidents</span>
+    <!-- Incidents Sidebar -->
+    <div class="incidents-sidebar">
+      <div class="sidebar-header">
+        <div>
+          <h3>Recent Reports</h3>
+          <p>{getFilteredIncidents().length} incidents nearby</p>
+        </div>
+        <div class="live-indicator">
+          <Radio size={12} />
+          <span>Live feed</span>
+        </div>
       </div>
 
       <div class="incidents-list">
         {#if getFilteredIncidents().length === 0}
-          <div class="empty-state">
-            <AlertTriangle size={40} />
+          <div class="empty-incidents">
+            <div class="empty-icon">
+              <AlertTriangle size={40} />
+            </div>
             <h4>No incidents found</h4>
-            <button class="clear-btn" onclick={clearFilters}>Clear filters</button>
+            <p>Try adjusting your filters</p>
+            <button class="empty-clear" onclick={clearFilters}>Clear filters</button>
           </div>
         {:else}
           {#each getFilteredIncidents() as incident}
             <div 
-              class="incident-item"
+              class="incident-card {selectedIncident?.id === incident.id ? 'selected' : ''}"
               onclick={() => selectedIncident = incident}
             >
-              <div class="incident-status" style="background: {getSeverityColor(incident.severity)}"></div>
-              <div class="incident-details">
-                <div class="incident-header">
-                  <div class="incident-title">
-                    <svelte:component this={getCategoryIcon(incident.category)} size={14} style="color: {getCategoryColor(incident.category)}" />
+              <div class="incident-status-bar" style="background: {getSeverityColor(incident.severity)};"></div>
+              <div class="incident-card-content">
+                <div class="incident-card-header">
+                  <div class="incident-type">
+                    <div class="type-icon" style="background: {getCategoryBg(incident.category)};">
+                      <svelte:component this={getCategoryIcon(incident.category)} size={12} style="color: {getCategoryColor(incident.category)};" />
+                    </div>
                     <h4>{incident.title}</h4>
                   </div>
                   {#if incident.isLive}
-                    <span class="live-tag">LIVE</span>
+                    <span class="live-badge">LIVE</span>
                   {/if}
                 </div>
-                <p class="incident-desc">{incident.description}</p>
-                <div class="incident-footer">
-                  <span class="time">{formatTime(incident.time)}</span>
-                  <button class="view-btn" onclick={(e) => { e.stopPropagation(); goto(`/incident/${incident.id}`); }}>
-                    Details →
-                  </button>
+                <p class="incident-description">{incident.description}</p>
+                <div class="incident-meta">
+                  <span class="meta-time">
+                    <Clock size={10} />
+                    {formatTime(incident.time)}
+                  </span>
+                  <span class="meta-witnesses">
+                    <Users size={10} />
+                    {incident.witnesses} witnesses
+                  </span>
+                </div>
+                <div class="incident-tags">
+                  <span class="category-tag" style="background: {getCategoryBg(incident.category)}; color: {getCategoryColor(incident.category)};">
+                    {incident.category}
+                  </span>
+                  <span class="severity-tag" style="background: {getSeverityBg(incident.severity)}; color: {getSeverityColor(incident.severity)};">
+                    {incident.severity}
+                  </span>
                 </div>
               </div>
             </div>
@@ -386,86 +449,125 @@
         {/if}
       </div>
     </div>
+  </div>
 
-    <!-- Incident Popup -->
-    {#if selectedIncident}
-      <div class="popup-overlay" onclick={() => selectedIncident = null}>
-        <div class="incident-popup" onclick={(e) => e.stopPropagation()}>
-          <button class="popup-close" onclick={() => selectedIncident = null}>
-            <X size={18} />
+  <!-- Incident Detail Modal -->
+  {#if selectedIncident}
+    <div class="modal-overlay" onclick={() => selectedIncident = null}>
+      <div class="incident-modal" onclick={(e) => e.stopPropagation()}>
+        <button class="modal-close" onclick={() => selectedIncident = null}>
+          <X size={18} />
+        </button>
+        
+        <div class="modal-header">
+          <div class="modal-type-icon" style="background: {getCategoryBg(selectedIncident.category)};">
+            <svelte:component this={getCategoryIcon(selectedIncident.category)} size={20} style="color: {getCategoryColor(selectedIncident.category)};" />
+          </div>
+          <div>
+            <h2>{selectedIncident.title}</h2>
+            <div class="modal-status">
+              <span class="status-dot" style="background: {getSeverityColor(selectedIncident.severity)};"></span>
+              <span>{selectedIncident.severity.toUpperCase()} severity</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-body">
+          <p class="modal-description">{selectedIncident.description}</p>
+          
+          <div class="modal-details">
+            <div class="detail-item">
+              <MapPin size={14} />
+              <span>Location: {selectedIncident.lat.toFixed(4)}, {selectedIncident.lng.toFixed(4)}</span>
+            </div>
+            <div class="detail-item">
+              <Clock size={14} />
+              <span>Reported: {formatTime(selectedIncident.time)}</span>
+            </div>
+            <div class="detail-item">
+              <Users size={14} />
+              <span>{selectedIncident.witnesses} community witnesses</span>
+            </div>
+            <div class="detail-item">
+              <Activity size={14} />
+              <span>{selectedIncident.updates} status updates</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick={() => selectedIncident = null}>
+            Close
           </button>
-          <div class="popup-header">
-            <svelte:component this={getCategoryIcon(selectedIncident.category)} size={20} style="color: {getCategoryColor(selectedIncident.category)}" />
-            <h4>{selectedIncident.title}</h4>
-          </div>
-          <div class="popup-tags">
-            <span class="category-tag" style="background: {getCategoryColor(selectedIncident.category)}20; color: {getCategoryColor(selectedIncident.category)}">
-              {selectedIncident.category}
-            </span>
-            <span class="severity-tag" style="color: {getSeverityColor(selectedIncident.severity)}">
-              {selectedIncident.severity}
-            </span>
-          </div>
-          <p class="popup-desc">{selectedIncident.description}</p>
-          <div class="popup-meta">
-            <span><Clock size={12} /> {formatTime(selectedIncident.time)}</span>
-            <span><Users size={12} /> {selectedIncident.witnesses} witnesses</span>
-          </div>
-          <button class="full-details-btn" onclick={() => goto(`/incident/${selectedIncident.id}`)}>
-            View Full Details →
+          <button class="btn-primary" onclick={() => goto(`/incident/${selectedIncident.id}`)}>
+            View Full Report
+            <ChevronLeft size={14} class="rotate" />
           </button>
         </div>
       </div>
-    {/if}
-  </div>
+    </div>
+  {/if}
 </div>
 
 <style>
   .map-page {
     min-height: 100vh;
-    background: #f8fafc;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #F8FAFC;
   }
 
-  /* Header Styles */
+  /* Header */
   .map-header {
     background: white;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid #E5E7EB;
     position: sticky;
     top: 0;
-    z-index: 30;
-    padding: 0.75rem 1rem;
+    z-index: 20;
+    padding: 0.75rem 1.5rem;
   }
 
   .header-container {
+    max-width: 1400px;
+    margin: 0 auto;
     display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .header-row {
-    display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
   }
 
-  .back-btn, .menu-btn {
-    width: 40px;
-    height: 40px;
+  .header-left {
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: #f1f5f9;
+    gap: 1rem;
+  }
+
+  .back-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    background: none;
     border: none;
-    border-radius: 12px;
+    color: #64748B;
+    font-size: 0.875rem;
     cursor: pointer;
-    color: #475569;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.5rem;
     transition: all 0.2s;
   }
 
-  .back-btn:active, .menu-btn:active {
-    background: #e2e8f0;
-    transform: scale(0.95);
+  .back-btn:hover {
+    background: #F1F5F9;
+    color: var(--primary-color);
+  }
+
+  .title-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--primary-bg);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
   }
 
   .header-title {
@@ -474,29 +576,21 @@
     gap: 0.5rem;
   }
 
-  .header-title svg {
-    color: var(--primary-color);
-  }
-
   .header-title h1 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #0F172A;
   }
 
-  /* Search Container */
-  .search-container {
+  .header-right {
     display: flex;
-    gap: 0.75rem;
     align-items: center;
+    gap: 0.75rem;
   }
 
   .search-wrapper {
-    flex: 1;
     position: relative;
+    width: 280px;
   }
 
   .search-icon {
@@ -504,19 +598,16 @@
     left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #94a3b8;
-    pointer-events: none;
+    color: #94A3B8;
   }
 
   .search-input {
     width: 100%;
-    height: 44px;
-    padding: 0 1rem 0 2.5rem;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    font-size: 0.875rem;
-    font-family: inherit;
+    padding: 0.5rem 2rem 0.5rem 2.25rem;
+    background: #F8FAFC;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.75rem;
+    font-size: 0.813rem;
     transition: all 0.2s;
   }
 
@@ -529,103 +620,94 @@
 
   .search-clear {
     position: absolute;
-    right: 12px;
+    right: 8px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
     cursor: pointer;
-    color: #94a3b8;
-    padding: 4px;
-    display: flex;
+    color: #94A3B8;
+    padding: 2px;
   }
 
-  .location-btn {
-    width: 44px;
-    height: 44px;
+  .filter-btn, .location-btn {
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    cursor: pointer;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    background: #F8FAFC;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.75rem;
+    font-size: 0.813rem;
+    font-weight: 500;
     color: #475569;
+    cursor: pointer;
     transition: all 0.2s;
-    flex-shrink: 0;
   }
 
-  .location-btn:active {
-    background: #e2e8f0;
-    transform: scale(0.95);
+  .filter-btn:hover, .location-btn:hover {
+    background: white;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
   }
 
-  /* Mobile Drawer */
-  .mobile-drawer-overlay {
+  /* Filter Drawer */
+  .filter-drawer {
     position: fixed;
     top: 0;
-    left: 0;
     right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 100;
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .mobile-drawer {
-    width: 85%;
-    max-width: 320px;
-    height: 100%;
+    width: 320px;
+    height: 100vh;
     background: white;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+    z-index: 50;
     display: flex;
     flex-direction: column;
-    animation: slideIn 0.3s ease;
+    animation: slideInRight 0.3s ease;
   }
 
-  @keyframes slideIn {
+  @keyframes slideInRight {
     from { transform: translateX(100%); }
     to { transform: translateX(0); }
   }
 
-  .drawer-header {
+  .filter-drawer-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.25rem;
-    border-bottom: 1px solid #f1f5f9;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #F1F5F9;
   }
 
-  .drawer-header h3 {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: #0f172a;
+  .filter-drawer-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0F172A;
   }
 
-  .close-drawer {
+  .close-filter {
     background: none;
     border: none;
     cursor: pointer;
-    color: #94a3b8;
-    padding: 8px;
-    display: flex;
+    color: #94A3B8;
+    padding: 0.25rem;
   }
 
-  .drawer-content {
+  .filter-drawer-content {
     flex: 1;
-    padding: 1.25rem;
+    padding: 1.5rem;
     overflow-y: auto;
   }
 
-  .filter-group {
+  .filter-section {
     margin-bottom: 1.5rem;
   }
 
-  .filter-group label {
+  .filter-section label {
     display: block;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #334155;
+    color: #475569;
     margin-bottom: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -637,14 +719,14 @@
     gap: 0.5rem;
   }
 
-  .chip {
+  .filter-chip {
     display: flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0.5rem 1rem;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 40px;
+    padding: 0.375rem 0.875rem;
+    background: #F8FAFC;
+    border: 1px solid #E5E7EB;
+    border-radius: 2rem;
     font-size: 0.75rem;
     font-weight: 500;
     color: #475569;
@@ -652,61 +734,56 @@
     transition: all 0.2s;
   }
 
-  .chip:active {
-    transform: scale(0.96);
-  }
-
-  .chip.active {
+  .filter-chip.active {
     color: white;
   }
 
-  .clear-filters-btn {
+  .clear-filters {
     width: 100%;
-    padding: 0.875rem;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 12px;
-    font-size: 0.875rem;
+    padding: 0.75rem;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: 0.75rem;
+    font-size: 0.813rem;
     font-weight: 500;
-    color: #dc2626;
+    color: #DC2626;
     cursor: pointer;
     margin-top: 1rem;
+    transition: all 0.2s;
   }
 
-  .clear-filters-btn:active {
-    background: #fee2e2;
+  .clear-filters:hover {
+    background: #FEE2E2;
   }
 
-  /* Map Layout */
-  .map-layout {
+  /* Map Content */
+  .map-content {
     display: flex;
-    flex-direction: column;
-    height: calc(100vh - 125px);
+    height: calc(100vh - 73px);
   }
 
-  .map-canvas {
-    height: 45vh;
-    min-height: 300px;
+  /* Map Area */
+  .map-area {
+    flex: 1;
     position: relative;
-    overflow: hidden;
+    background: #F1F5F9;
   }
 
-  .loading-overlay {
+  .map-loading {
     position: absolute;
     inset: 0;
-    background: rgba(255, 255, 255, 0.95);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    z-index: 10;
+    background: white;
   }
 
   .loading-spinner {
     width: 36px;
     height: 36px;
-    border: 3px solid #e2e8f0;
+    border: 3px solid #E2E8F0;
     border-top-color: var(--primary-color);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
@@ -716,17 +793,25 @@
     to { transform: rotate(360deg); }
   }
 
+  .map-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
   .map-grid {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #f5f3ff 0%, #ffffff 100%);
+    background: linear-gradient(135deg, #F5F3FF 0%, #FFFFFF 100%);
     background-image: 
-      linear-gradient(#e2e8f0 1px, transparent 1px),
-      linear-gradient(90deg, #e2e8f0 1px, transparent 1px);
-    background-size: 40px 40px;
+      linear-gradient(#E2E8F0 1px, transparent 1px),
+      linear-gradient(90deg, #E2E8F0 1px, transparent 1px);
+    background-size: 50px 50px;
     position: relative;
   }
 
+  /* Map Markers */
   .map-marker {
     position: absolute;
     transform: translate(-50%, -50%);
@@ -737,24 +822,33 @@
     padding: 0;
   }
 
-  .marker-dot {
-    width: 32px;
-    height: 32px;
+  .marker-outer {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+  }
+
+  .marker-inner {
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     border: 2px solid white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    transition: transform 0.2s;
   }
 
-  .marker-dot svg {
+  .marker-inner svg {
     color: white;
   }
 
-  .map-marker:active .marker-dot {
-    transform: scale(1.15);
+  .map-marker:hover .marker-outer {
+    transform: scale(1.1);
   }
 
   .marker-pulse {
@@ -762,243 +856,317 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     opacity: 0.4;
-    animation: pulse 2s infinite;
+    animation: markerPulse 2s infinite;
     z-index: -1;
   }
 
-  @keyframes pulse {
+  @keyframes markerPulse {
     0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.5; }
-    100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
   }
 
-  .map-stats {
+  /* Map Overlay */
+  .map-overlay {
     position: absolute;
-    bottom: 12px;
-    left: 12px;
-    right: 12px;
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
   }
 
-  .stats-badge {
+  .live-stats {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(8px);
     padding: 0.5rem 1rem;
-    border-radius: 40px;
+    border-radius: 2rem;
     font-size: 0.75rem;
     font-weight: 500;
     color: white;
+    pointer-events: auto;
   }
 
-  .stats-dot {
+  .live-dot {
     width: 8px;
     height: 8px;
-    background: #10b981;
+    background: #10B981;
     border-radius: 50%;
     animation: pulse 1.5s infinite;
   }
 
-  /* Incidents Panel */
-  .incidents-panel {
-    flex: 1;
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .map-controls {
+    display: flex;
+    gap: 0.5rem;
+    pointer-events: auto;
+  }
+
+  .map-control {
+    width: 36px;
+    height: 36px;
     background: white;
-    border-top: 1px solid #e2e8f0;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #64748B;
+    transition: all 0.2s;
+  }
+
+  .map-control:hover {
+    background: var(--primary-bg);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+
+  /* Incidents Sidebar */
+  .incidents-sidebar {
+    width: 380px;
+    background: white;
+    border-left: 1px solid #E5E7EB;
     display: flex;
     flex-direction: column;
     overflow: hidden;
   }
 
-  .panel-header {
-    padding: 1rem;
-    border-bottom: 1px solid #f1f5f9;
+  .sidebar-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #F1F5F9;
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: flex-start;
   }
 
-  .panel-header h3 {
-    font-size: 0.875rem;
+  .sidebar-header h3 {
+    font-size: 1rem;
     font-weight: 600;
-    color: #0f172a;
+    color: #0F172A;
+    margin-bottom: 0.25rem;
   }
 
-  .incident-count {
+  .sidebar-header p {
+    font-size: 0.75rem;
+    color: #64748B;
+  }
+
+  .live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    background: #FEF2F2;
+    padding: 0.375rem 0.75rem;
+    border-radius: 2rem;
     font-size: 0.688rem;
-    color: #64748b;
-    background: #f1f5f9;
-    padding: 0.25rem 0.5rem;
-    border-radius: 20px;
+    font-weight: 500;
+    color: #DC2626;
   }
 
+  /* Incidents List */
   .incidents-list {
     flex: 1;
     overflow-y: auto;
-    padding: 0.75rem;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
   }
 
-  .empty-state {
+  .empty-incidents {
     text-align: center;
     padding: 3rem 1rem;
-    color: #64748b;
   }
 
-  .empty-state svg {
-    margin-bottom: 0.75rem;
-    opacity: 0.5;
+  .empty-icon {
+    width: 64px;
+    height: 64px;
+    background: #F1F5F9;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    color: #94A3B8;
   }
 
-  .empty-state h4 {
+  .empty-incidents h4 {
     font-size: 0.875rem;
     font-weight: 600;
     color: #334155;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
   }
 
-  .clear-btn {
-    margin-top: 0.75rem;
+  .empty-incidents p {
+    font-size: 0.75rem;
+    color: #64748B;
+    margin-bottom: 1rem;
+  }
+
+  .empty-clear {
     padding: 0.5rem 1rem;
-    background: #f1f5f9;
+    background: #F1F5F9;
     border: none;
-    border-radius: 8px;
+    border-radius: 0.5rem;
     font-size: 0.75rem;
     cursor: pointer;
   }
 
-  .incident-item {
+  .incident-card {
     display: flex;
-    gap: 0.75rem;
-    padding: 0.875rem;
     background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.75rem;
+    overflow: hidden;
     cursor: pointer;
     transition: all 0.2s;
   }
 
-  .incident-item:active {
-    transform: scale(0.99);
-    background: #fafafa;
+  .incident-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary-border);
   }
 
-  .incident-status {
+  .incident-card.selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(106, 44, 145, 0.12);
+  }
+
+  .incident-status-bar {
     width: 4px;
-    border-radius: 4px;
     flex-shrink: 0;
   }
 
-  .incident-details {
+  .incident-card-content {
     flex: 1;
-    min-width: 0;
+    padding: 1rem;
   }
 
-  .incident-header {
+  .incident-card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 0.5rem;
   }
 
-  .incident-title {
+  .incident-type {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    flex: 1;
-    min-width: 0;
   }
 
-  .incident-title h4 {
+  .type-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .incident-type h4 {
     font-size: 0.813rem;
     font-weight: 600;
-    color: #0f172a;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    color: #0F172A;
   }
 
-  .live-tag {
+  .live-badge {
     font-size: 0.563rem;
     font-weight: 700;
     padding: 0.125rem 0.5rem;
-    background: #fee2e2;
-    color: #dc2626;
-    border-radius: 12px;
-    flex-shrink: 0;
+    background: #FEE2E2;
+    color: #DC2626;
+    border-radius: 1rem;
   }
 
-  .incident-desc {
+  .incident-description {
     font-size: 0.688rem;
-    color: #64748b;
+    color: #64748B;
     line-height: 1.4;
     margin-bottom: 0.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
-  .incident-footer {
+  .incident-meta {
     display: flex;
-    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.625rem;
+    color: #94A3B8;
+  }
+
+  .incident-meta span {
+    display: flex;
     align-items: center;
+    gap: 0.25rem;
   }
 
-  .time {
-    font-size: 0.625rem;
-    color: #94a3b8;
+  .incident-tags {
+    display: flex;
+    gap: 0.5rem;
   }
 
-  .view-btn {
-    background: none;
-    border: none;
-    font-size: 0.625rem;
-    font-weight: 500;
-    color: var(--primary-color);
-    cursor: pointer;
-    padding: 0.25rem 0.5rem;
+  .category-tag, .severity-tag {
+    font-size: 0.563rem;
+    font-weight: 600;
+    padding: 0.125rem 0.5rem;
+    border-radius: 1rem;
+    text-transform: capitalize;
   }
 
-  /* Popup */
-  .popup-overlay {
+  /* Modal */
+  .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.6);
-    z-index: 200;
+    backdrop-filter: blur(4px);
+    z-index: 100;
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
   }
 
-  .incident-popup {
-    width: 100%;
-    max-width: 400px;
+  .incident-modal {
     background: white;
-    border-radius: 24px 24px 0 0;
-    padding: 1.25rem;
-    animation: slideUp 0.3s ease;
+    border-radius: 1.5rem;
+    width: 90%;
+    max-width: 500px;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    animation: modalFadeIn 0.2s ease;
   }
 
-  @keyframes slideUp {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
+  @keyframes modalFadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
   }
 
-  .popup-close {
+  .modal-close {
     position: absolute;
     top: 1rem;
     right: 1rem;
-    background: #f1f5f9;
+    background: #F1F5F9;
     border: none;
     width: 32px;
     height: 32px;
@@ -1007,112 +1175,190 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: #64748b;
+    color: #64748B;
+    z-index: 1;
   }
 
-  .popup-header {
+  .modal-header {
+    display: flex;
+    gap: 1rem;
+    padding: 1.5rem 1.5rem 0;
+  }
+
+  .modal-type-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 1rem;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
-    padding-right: 2rem;
+    justify-content: center;
   }
 
-  .popup-header h4 {
-    font-size: 1rem;
+  .modal-header h2 {
+    font-size: 1.125rem;
     font-weight: 700;
-    color: #0f172a;
+    color: #0F172A;
+    margin-bottom: 0.25rem;
   }
 
-  .popup-tags {
+  .modal-status {
     display: flex;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
+    align-items: center;
+    gap: 0.375rem;
   }
 
-  .category-tag, .severity-tag {
-    font-size: 0.625rem;
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .modal-status span {
+    font-size: 0.688rem;
     font-weight: 600;
-    padding: 0.25rem 0.625rem;
-    border-radius: 20px;
-    text-transform: capitalize;
+    color: #64748B;
   }
 
-  .popup-desc {
-    font-size: 0.75rem;
-    color: #64748b;
-    line-height: 1.5;
+  .modal-body {
+    padding: 1rem 1.5rem;
+  }
+
+  .modal-description {
+    font-size: 0.813rem;
+    color: #475569;
+    line-height: 1.6;
     margin-bottom: 1rem;
   }
 
-  .popup-meta {
+  .modal-details {
+    background: #F8FAFC;
+    border-radius: 0.75rem;
+    padding: 1rem;
     display: flex;
-    gap: 1rem;
-    font-size: 0.688rem;
-    color: #94a3b8;
-    margin-bottom: 1.25rem;
+    flex-direction: column;
+    gap: 0.5rem;
   }
 
-  .popup-meta span {
+  .detail-item {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: #64748B;
   }
 
-  .full-details-btn {
-    width: 100%;
-    padding: 0.75rem;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 12px;
+  .modal-footer {
+    padding: 1rem 1.5rem 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .btn-primary, .btn-secondary {
+    flex: 1;
+    padding: 0.625rem;
+    border-radius: 0.75rem;
     font-size: 0.813rem;
     font-weight: 600;
     cursor: pointer;
+    transition: all 0.2s;
   }
 
-  .full-details-btn:active {
+  .btn-primary {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .btn-primary:hover {
     background: var(--primary-dark);
-    transform: scale(0.98);
   }
 
-  /* Tablet and Desktop Adjustments */
-  @media (min-width: 768px) {
-    .map-layout {
-      flex-direction: row;
-      height: calc(100vh - 80px);
+  .btn-secondary {
+    background: none;
+    border: 1px solid #E5E7EB;
+    color: #64748B;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+
+  .rotate {
+    transform: rotate(180deg);
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .incidents-sidebar {
+      width: 320px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .map-header {
+      padding: 0.75rem 1rem;
     }
 
-    .map-canvas {
+    .header-container {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .header-left {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .header-right {
+      width: 100%;
+    }
+
+    .search-wrapper {
       flex: 1;
-      height: auto;
     }
 
-    .incidents-panel {
-      width: 360px;
-      border-top: none;
-      border-left: 1px solid #e2e8f0;
+    .map-content {
+      flex-direction: column;
     }
 
-    .popup-overlay {
-      align-items: center;
+    .map-area {
+      height: 50vh;
+      min-height: 300px;
     }
 
-    .incident-popup {
-      border-radius: 24px;
-      width: 360px;
-      animation: fadeIn 0.2s ease;
+    .incidents-sidebar {
+      width: 100%;
+      border-left: none;
+      border-top: 1px solid #E5E7EB;
+      max-height: 40vh;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
+    .filter-drawer {
+      width: 100%;
+    }
+
+    .incident-modal {
+      width: calc(100% - 2rem);
+      margin: 1rem;
     }
   }
 
-  @media (min-width: 1024px) {
-    .incidents-panel {
-      width: 400px;
+  @media (max-width: 640px) {
+    .header-right {
+      flex-wrap: wrap;
+    }
+
+    .filter-btn span {
+      display: none;
+    }
+
+    .filter-btn {
+      padding: 0.5rem;
     }
   }
 </style>
