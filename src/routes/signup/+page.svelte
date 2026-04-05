@@ -163,7 +163,7 @@
   <aside class="su-panel">
     <div class="su-panel-inner">
       <a href="/" class="su-logo-link">
-        <img src="/icons/lz_ico.png" alt="Lezie" class="su-logo-img" />
+        <img src="/icons/lz_logo_t.png" alt="Lezie" class="su-logo-img" />
       </a>
 
       <div class="su-panel-hero">
