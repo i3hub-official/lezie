@@ -36,7 +36,8 @@
     Calendar,
     Star,
     Globe,
-    Activity
+    Activity,
+    ChevronLeft
   } from 'lucide-svelte';
   
   let isLoading = $state(true);
@@ -53,10 +54,18 @@
   let notifications = $state<any[]>([]);
   let safetyTips = $state<string[]>([]);
   let isMobileMenuOpen = $state(false);
+  let activeNav = $state('dashboard');
   
   onMount(() => {
     loadDashboardData();
     isLoading = false;
+    
+    // Close menu on window resize if screen becomes desktop
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 768 && isMobileMenuOpen) {
+        isMobileMenuOpen = false;
+      }
+    });
   });
   
   async function loadDashboardData() {
@@ -109,21 +118,9 @@
         time: new Date(Date.now() - 1 * 86400000).toISOString(),
         location: 'Oak Park',
         status: 'resolved',
-        description: 'Graffiti on park equipment and benches',
+        description: 'Graffiti on park equipment',
         verificationCount: 8,
         commentCount: 3
-      },
-      {
-        id: 4,
-        title: 'Structure fire reported',
-        category: 'fire',
-        severity: 'critical',
-        time: new Date(Date.now() - 3 * 3600000).toISOString(),
-        location: 'Downtown Business District',
-        status: 'active',
-        description: 'Fire at commercial building, emergency services on scene',
-        verificationCount: 25,
-        commentCount: 12
       }
     ];
     
@@ -134,8 +131,7 @@
         message: 'Suspicious activity reported on Maple Street',
         time: new Date(Date.now() - 10 * 60000).toISOString(),
         read: false,
-        type: 'alert',
-        incidentId: 1
+        type: 'alert'
       },
       {
         id: 2,
@@ -143,26 +139,15 @@
         message: 'Community members confirmed your report',
         time: new Date(Date.now() - 1 * 3600000).toISOString(),
         read: false,
-        type: 'success',
-        incidentId: null
+        type: 'success'
       },
       {
         id: 3,
         title: 'Weekly safety report ready',
-        message: 'Your neighborhood safety score improved by 5%',
+        message: 'Your neighborhood safety score improved',
         time: new Date(Date.now() - 1 * 86400000).toISOString(),
         read: true,
-        type: 'info',
-        incidentId: null
-      },
-      {
-        id: 4,
-        title: 'Critical alert nearby',
-        message: 'Fire reported 0.5km from your location',
-        time: new Date(Date.now() - 2 * 3600000).toISOString(),
-        read: false,
-        type: 'critical',
-        incidentId: 4
+        type: 'info'
       }
     ];
     
@@ -170,9 +155,7 @@
       'Always be aware of your surroundings',
       'Report suspicious activity immediately',
       'Share your location with trusted contacts',
-      'Keep emergency numbers saved',
-      'Join your neighborhood watch group',
-      'Install security cameras at entry points'
+      'Keep emergency numbers saved'
     ];
   }
   
@@ -231,17 +214,21 @@
     isMobileMenuOpen = false;
   }
   
-  // Navigation items for sidebar
+  function handleNavigation(path: string, navName: string) {
+    activeNav = navName;
+    closeMobileMenu();
+    goto(path);
+  }
+  
   const navItems = [
-    { path: '/dashboard', icon: Home, label: 'Dashboard', active: true },
-    { path: '/map', icon: MapPin, label: 'Map View', active: false },
-    { path: '/alerts', icon: Bell, label: 'Alerts', active: false },
-    { path: '/statistics', icon: BarChart3, label: 'Statistics', active: false },
-    { path: '/reports-history', icon: FileText, label: 'My Reports', active: false },
-    { path: '/community', icon: Users, label: 'Community', active: false },
-    { path: '/profile', icon: User, label: 'Profile', active: false },
-    { path: '/settings', icon: Settings, label: 'Settings', active: false },
-    { path: '/help', icon: HelpCircle, label: 'Help Center', active: false }
+    { path: '/dashboard', icon: Home, label: 'Dashboard', name: 'dashboard' },
+    { path: '/map', icon: MapPin, label: 'Map View', name: 'map' },
+    { path: '/alerts', icon: Bell, label: 'Alerts', name: 'alerts' },
+    { path: '/statistics', icon: BarChart3, label: 'Statistics', name: 'statistics' },
+    { path: '/reports-history', icon: FileText, label: 'My Reports', name: 'reports' },
+    { path: '/community', icon: Users, label: 'Community', name: 'community' },
+    { path: '/profile', icon: User, label: 'Profile', name: 'profile' },
+    { path: '/settings', icon: Settings, label: 'Settings', name: 'settings' }
   ];
 </script>
 
@@ -254,19 +241,19 @@
   <!-- Mobile Header -->
   <div class="mobile-header">
     <button class="mobile-menu-btn" onclick={() => isMobileMenuOpen = true}>
-      <Menu size={24} />
+      <Menu size={22} />
     </button>
-    <div class="mobile-logo" onclick={() => goto('/dashboard')}>
+    <div class="mobile-logo" onclick={() => handleNavigation('/dashboard', 'dashboard')}>
       <div class="logo-mark">
-        <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
           <path d="M1 4.5V11.5L8 15L15 11.5V4.5" stroke="white" stroke-opacity=".6" stroke-width="1.2" fill="none"/>
         </svg>
       </div>
       <span>Lezie</span>
     </div>
-    <button class="mobile-notif-btn" onclick={() => goto('/alerts')}>
-      <BellRing size={20} />
+    <button class="mobile-notif-btn" onclick={() => handleNavigation('/alerts', 'alerts')}>
+      <BellRing size={18} />
       {#if getUnreadCount() > 0}
         <span class="notif-badge">{getUnreadCount()}</span>
       {/if}
@@ -278,7 +265,7 @@
     <div class="mobile-overlay" onclick={closeMobileMenu}>
       <div class="mobile-sidebar" onclick={(e) => e.stopPropagation()}>
         <div class="mobile-sidebar-header">
-          <div class="mobile-logo-full" onclick={() => { goto('/dashboard'); closeMobileMenu(); }}>
+          <div class="mobile-logo-full" onclick={() => handleNavigation('/dashboard', 'dashboard')}>
             <div class="logo-mark">
               <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
                 <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
@@ -288,13 +275,13 @@
             <span>Lezie</span>
           </div>
           <button class="close-menu" onclick={closeMobileMenu}>
-            <X size={24} />
+            <X size={22} />
           </button>
         </div>
         
         <div class="mobile-user-info">
           <div class="mobile-avatar">
-            <User size={24} />
+            <User size={22} />
           </div>
           <div>
             <h4>{user?.name}</h4>
@@ -305,22 +292,22 @@
         <nav class="mobile-nav">
           {#each navItems as item}
             <button 
-              class="mobile-nav-item {item.active ? 'active' : ''}" 
-              onclick={() => { goto(item.path); closeMobileMenu(); }}
+              class="mobile-nav-item {activeNav === item.name ? 'active' : ''}" 
+              onclick={() => handleNavigation(item.path, item.name)}
             >
-              <item.icon size={20} />
+              <item.icon size={18} />
               <span>{item.label}</span>
             </button>
           {/each}
         </nav>
         
         <div class="mobile-sidebar-footer">
-          <button class="mobile-report-btn" onclick={() => { goto('/auth/report'); closeMobileMenu(); }}>
-            <FlagTriangleRight size={18} />
+          <button class="mobile-report-btn" onclick={() => handleNavigation('/auth/report', 'report')}>
+            <FlagTriangleRight size={16} />
             Report Incident
           </button>
-          <button class="mobile-logout-btn" onclick={() => { goto('/auth/signin'); closeMobileMenu(); }}>
-            <LogOut size={18} />
+          <button class="mobile-logout-btn" onclick={() => handleNavigation('/auth/signin', 'logout')}>
+            <LogOut size={16} />
             Sign Out
           </button>
         </div>
@@ -332,7 +319,7 @@
     <!-- Desktop Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="logo" onclick={() => goto('/dashboard')}>
+        <div class="logo" onclick={() => handleNavigation('/dashboard', 'dashboard')}>
           <div class="logo-mark">
             <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
               <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
@@ -345,16 +332,16 @@
 
       <nav class="sidebar-nav">
         {#each navItems as item}
-          <button class="nav-item {item.active ? 'active' : ''}" onclick={() => goto(item.path)}>
-            <item.icon size={20} />
+          <button class="nav-item {activeNav === item.name ? 'active' : ''}" onclick={() => handleNavigation(item.path, item.name)}>
+            <item.icon size={18} />
             <span>{item.label}</span>
           </button>
         {/each}
       </nav>
 
       <div class="sidebar-footer">
-        <button class="report-btn" onclick={() => goto('/auth/report')}>
-          <FlagTriangleRight size={18} />
+        <button class="report-btn" onclick={() => handleNavigation('/auth/report', 'report')}>
+          <FlagTriangleRight size={16} />
           Report Incident
         </button>
       </div>
@@ -364,41 +351,33 @@
     <main class="main-content">
       {#if isLoading}
         <div class="loading-state">
-          <Loader2 size={40} class="spinning" />
+          <Loader2 size={36} class="spinning" />
           <p>Loading your dashboard...</p>
         </div>
       {:else}
-        <!-- Welcome Header -->
+        <!-- Welcome Header - Compact -->
         <div class="welcome-header">
           <div>
-            <h1>Welcome back, {user?.name.split(' ')[0]}</h1>
-            <p>Here's what's happening in your community</p>
-          </div>
-          <div class="header-actions">
-            <button class="icon-btn desktop-only" onclick={() => goto('/alerts')}>
-              <BellRing size={20} />
-              {#if getUnreadCount() > 0}
-                <span class="notification-badge">{getUnreadCount()}</span>
-              {/if}
-            </button>
+            <h1>Hi, {user?.name.split(' ')[0]}</h1>
+            <p>Your community safety summary</p>
           </div>
         </div>
 
-        <!-- Stats Grid -->
+        <!-- Stats Grid - Compact for Mobile -->
         <div class="stats-grid">
-          <div class="stat-card" onclick={() => goto('/statistics')}>
+          <div class="stat-card" onclick={() => handleNavigation('/statistics', 'statistics')}>
             <div class="stat-icon purple">
-              <FlagTriangleRight size={22} />
+              <FlagTriangleRight size={18} />
             </div>
             <div class="stat-info">
               <span class="stat-value">{stats.totalReports}</span>
-              <span class="stat-label">Total Reports</span>
+              <span class="stat-label">Reports</span>
             </div>
           </div>
 
-          <div class="stat-card" onclick={() => goto('/statistics')}>
+          <div class="stat-card" onclick={() => handleNavigation('/statistics', 'statistics')}>
             <div class="stat-icon green">
-              <CheckCircle size={22} />
+              <CheckCircle size={18} />
             </div>
             <div class="stat-info">
               <span class="stat-value">{stats.verifiedReports}</span>
@@ -406,187 +385,147 @@
             </div>
           </div>
 
-          <div class="stat-card" onclick={() => goto('/alerts')}>
+          <div class="stat-card" onclick={() => handleNavigation('/alerts', 'alerts')}>
             <div class="stat-icon orange">
-              <Bell size={22} />
+              <Bell size={18} />
             </div>
             <div class="stat-info">
               <span class="stat-value">{stats.activeAlerts}</span>
-              <span class="stat-label">Active Alerts</span>
+              <span class="stat-label">Alerts</span>
             </div>
           </div>
 
-          <div class="stat-card" onclick={() => goto('/statistics')}>
+          <div class="stat-card" onclick={() => handleNavigation('/statistics', 'statistics')}>
             <div class="stat-icon blue">
-              <Shield size={22} />
+              <Shield size={18} />
             </div>
             <div class="stat-info">
               <span class="stat-value">{stats.safetyScore}%</span>
-              <span class="stat-label">Safety Score</span>
+              <span class="stat-label">Safety</span>
             </div>
           </div>
         </div>
 
-        <!-- Quick Navigation Cards -->
+        <!-- Quick Navigation - Compact -->
         <div class="quick-nav-section">
-          <h2>Quick Navigation</h2>
-          <div class="quick-nav-grid">
-            <button class="quick-nav-card" onclick={() => goto('/map')}>
+          <div class="quick-nav-scroll">
+            <button class="quick-nav-card" onclick={() => handleNavigation('/map', 'map')}>
               <div class="quick-nav-icon map-bg">
-                <MapPin size={24} />
+                <MapPin size={18} />
               </div>
-              <div class="quick-nav-text">
-                <h4>Live Map</h4>
-                <p>View incidents in real-time</p>
-              </div>
-              <ChevronRight size={16} class="arrow" />
+              <span>Live Map</span>
             </button>
-            <button class="quick-nav-card" onclick={() => goto('/alerts')}>
+            <button class="quick-nav-card" onclick={() => handleNavigation('/alerts', 'alerts')}>
               <div class="quick-nav-icon alert-bg">
-                <Bell size={24} />
+                <Bell size={18} />
               </div>
-              <div class="quick-nav-text">
-                <h4>Alert Zones</h4>
-                <p>Manage your notifications</p>
-              </div>
-              <ChevronRight size={16} class="arrow" />
+              <span>Alerts</span>
             </button>
-            <button class="quick-nav-card" onclick={() => goto('/reports-history')}>
+            <button class="quick-nav-card" onclick={() => handleNavigation('/reports-history', 'reports')}>
               <div class="quick-nav-icon report-bg">
-                <FileText size={24} />
+                <FileText size={18} />
               </div>
-              <div class="quick-nav-text">
-                <h4>My Reports</h4>
-                <p>View your incident history</p>
-              </div>
-              <ChevronRight size={16} class="arrow" />
+              <span>My Reports</span>
             </button>
-            <button class="quick-nav-card" onclick={() => goto('/community')}>
+            <button class="quick-nav-card" onclick={() => handleNavigation('/community', 'community')}>
               <div class="quick-nav-icon community-bg">
-                <Users size={24} />
+                <Users size={18} />
               </div>
-              <div class="quick-nav-text">
-                <h4>Community</h4>
-                <p>Connect with neighbors</p>
-              </div>
-              <ChevronRight size={16} class="arrow" />
+              <span>Community</span>
             </button>
           </div>
         </div>
 
-        <!-- Two Column Layout -->
-        <div class="two-columns">
-          <!-- Left Column -->
-          <div class="left-column">
-            <!-- Recent Incidents -->
-            <div class="section">
-              <div class="section-header">
-                <h2>Recent Incidents</h2>
-                <button class="section-link" onclick={() => goto('/map')}>
-                  View all
-                  <ChevronRight size={16} />
-                </button>
-              </div>
+        <!-- Content Grid -->
+        <div class="content-grid">
+          <!-- Recent Incidents -->
+          <div class="section">
+            <div class="section-header">
+              <h2>Recent Incidents</h2>
+              <button class="section-link" onclick={() => handleNavigation('/map', 'map')}>
+                View all
+                <ChevronRight size={14} />
+              </button>
+            </div>
 
-              <div class="incidents-list">
-                {#each recentIncidents.slice(0, 3) as incident}
-                  {@const IconComponent = getCategoryIcon(incident.category)}
-                  <button class="incident-card" onclick={() => goto(`/incident/${incident.id}`)}>
-                    <div class="incident-header">
-                      <div class="incident-title">
-                        <div class="incident-icon" style="background: {getSeverityColor(incident.severity)}15;">
-                          <IconComponent size={14} style="color: {getSeverityColor(incident.severity)};" />
-                        </div>
-                        <div>
-                          <h3>{incident.title}</h3>
-                          <div class="incident-meta">
-                            <span class="meta-item">
-                              <MapPin size={10} />
-                              {incident.location.split(' ').slice(0, 2).join(' ')}
-                            </span>
-                            <span class="meta-item">
-                              <Clock size={10} />
-                              {formatTime(incident.time)}
-                            </span>
-                          </div>
+            <div class="incidents-list">
+              {#each recentIncidents as incident}
+                {@const IconComponent = getCategoryIcon(incident.category)}
+                <button class="incident-card" onclick={() => goto(`/incident/${incident.id}`)}>
+                  <div class="incident-row">
+                    <div class="incident-icon" style="background: {getSeverityColor(incident.severity)}15;">
+                      <IconComponent size={12} style="color: {getSeverityColor(incident.severity)};" />
+                    </div>
+                    <div class="incident-info">
+                      <div class="incident-title-row">
+                        <h3>{incident.title}</h3>
+                        <div class="incident-status" style="color: {getStatusColor(incident.status)}">
+                          <span class="status-dot" style="background: {getStatusColor(incident.status)}"></span>
+                          <span>{incident.status}</span>
                         </div>
                       </div>
-                      <div class="incident-status" style="color: {getStatusColor(incident.status)}">
-                        <span class="status-dot" style="background: {getStatusColor(incident.status)}"></span>
-                        <span>{incident.status}</span>
+                      <div class="incident-meta">
+                        <span><MapPin size={10} /> {incident.location.split(' ').slice(0, 2).join(' ')}</span>
+                        <span><Clock size={10} /> {formatTime(incident.time)}</span>
                       </div>
                     </div>
-                    <p class="incident-description">{incident.description}</p>
-                    <div class="incident-stats">
-                      <span class="stat-badge">
-                        <ThumbsUp size={10} />
-                        {incident.verificationCount}
-                      </span>
-                      <span class="stat-badge">
-                        <MessageCircle size={10} />
-                        {incident.commentCount}
-                      </span>
-                    </div>
-                  </button>
-                {/each}
-              </div>
+                  </div>
+                </button>
+              {/each}
             </div>
           </div>
 
-          <!-- Right Column -->
-          <div class="right-column">
+          <!-- Notifications & Tips -->
+          <div class="right-panel">
             <!-- Notifications -->
             <div class="section">
               <div class="section-header">
                 <h2>Notifications</h2>
                 {#if getUnreadCount() > 0}
-                  <span class="unread-badge">{getUnreadCount()} new</span>
+                  <span class="unread-badge">{getUnreadCount()}</span>
                 {/if}
               </div>
 
               <div class="notifications-list">
-                {#each notifications.slice(0, 3) as notification}
-                  <button class="notification-card {!notification.read ? 'unread' : ''}">
+                {#each notifications as notification}
+                  <div class="notification-item {!notification.read ? 'unread' : ''}">
                     <div class="notification-icon">
                       {#if notification.type === 'critical'}
-                        <AlertTriangle size={16} style="color: #EF4444;" />
+                        <AlertTriangle size={14} style="color: #EF4444;" />
                       {:else if notification.type === 'success'}
-                        <CheckCircle size={16} style="color: #10B981;" />
+                        <CheckCircle size={14} style="color: #10B981;" />
                       {:else}
-                        <BellRing size={16} style="color: var(--primary-color);" />
+                        <BellRing size={14} style="color: var(--primary-color);" />
                       {/if}
                     </div>
-                    <div class="notification-content">
-                      <div class="notification-header">
-                        <h4>{notification.title}</h4>
-                        <span class="notification-time">{formatTime(notification.time)}</span>
-                      </div>
-                      <p>{notification.message.length > 50 ? notification.message.slice(0, 50) + '...' : notification.message}</p>
+                    <div class="notification-info">
+                      <p>{notification.message}</p>
+                      <span>{formatTime(notification.time)}</span>
                     </div>
-                  </button>
+                  </div>
                 {/each}
               </div>
 
-              <button class="view-all-btn" onclick={() => goto('/alerts')}>
-                View all notifications
-                <ChevronRight size={14} />
+              <button class="view-all-btn" onclick={() => handleNavigation('/alerts', 'alerts')}>
+                View all
+                <ChevronRight size={12} />
               </button>
             </div>
 
             <!-- Safety Score -->
-            <div class="section safety-score" onclick={() => goto('/statistics')}>
-              <div class="score-circle">
-                <svg viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="45" fill="none" stroke="#E5E7EB" stroke-width="8"/>
-                  <circle cx="50" cy="50" r="45" fill="none" stroke="var(--primary-color)" stroke-width="8" 
-                          stroke-dasharray="283" stroke-dashoffset={283 - (283 * stats.safetyScore / 100)}
-                          transform="rotate(-90 50 50)"/>
+            <div class="safety-score-card" onclick={() => handleNavigation('/statistics', 'statistics')}>
+              <div class="score-ring">
+                <svg viewBox="0 0 60 60">
+                  <circle cx="30" cy="30" r="26" fill="none" stroke="#E5E7EB" stroke-width="5"/>
+                  <circle cx="30" cy="30" r="26" fill="none" stroke="var(--primary-color)" stroke-width="5" 
+                          stroke-dasharray="163" stroke-dashoffset={163 - (163 * stats.safetyScore / 100)}
+                          transform="rotate(-90 30 30)"/>
                 </svg>
                 <div class="score-value">{stats.safetyScore}%</div>
               </div>
-              <div class="score-text">
-                <h4>Community Safety Score</h4>
-                <p>Based on recent incidents and community reports</p>
+              <div class="score-info">
+                <h4>Safety Score</h4>
+                <p>{stats.safetyScore >= 80 ? 'Good' : stats.safetyScore >= 60 ? 'Fair' : 'Needs improvement'}</p>
               </div>
             </div>
 
@@ -594,10 +533,10 @@
             <div class="section safety-section">
               <div class="section-header">
                 <h2>Safety Tips</h2>
-                <Award size={18} style="color: var(--primary-color);" />
+                <Shield size={16} style="color: var(--primary-color);" />
               </div>
               <ul class="safety-tips-list">
-                {#each safetyTips.slice(0, 4) as tip}
+                {#each safetyTips as tip}
                   <li>
                     <span class="tip-dot"></span>
                     <span>{tip}</span>
@@ -625,7 +564,7 @@
     top: 0;
     z-index: 20;
     background: white;
-    padding: 0.75rem 1rem;
+    padding: 0.625rem 1rem;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #E5E7EB;
@@ -636,16 +575,16 @@
     align-items: center;
     gap: 0.5rem;
     font-weight: 700;
-    font-size: 1.125rem;
+    font-size: 1rem;
     color: var(--primary-dark);
     cursor: pointer;
   }
   
   .logo-mark {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     background: var(--primary-color);
-    border-radius: 8px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -655,25 +594,21 @@
     background: none;
     border: none;
     cursor: pointer;
-    padding: 0.5rem;
+    padding: 0.375rem;
     border-radius: 0.5rem;
     color: #64748B;
     position: relative;
   }
   
-  .mobile-menu-btn:active, .mobile-notif-btn:active {
-    background: #F1F5F9;
-  }
-  
   .notif-badge {
     position: absolute;
-    top: 2px;
-    right: 2px;
+    top: 0px;
+    right: 0px;
     background: #EF4444;
     color: white;
-    font-size: 0.625rem;
-    padding: 0.125rem 0.375rem;
-    border-radius: 0.75rem;
+    font-size: 0.5rem;
+    padding: 0.125rem 0.3125rem;
+    border-radius: 0.625rem;
     font-weight: 600;
   }
   
@@ -690,13 +625,13 @@
   }
   
   .mobile-sidebar {
-    width: 85%;
-    max-width: 320px;
+    width: 75%;
+    max-width: 280px;
     height: 100%;
     background: white;
     display: flex;
     flex-direction: column;
-    animation: slideIn 0.3s ease;
+    animation: slideIn 0.25s ease;
   }
   
   @keyframes slideIn {
@@ -708,7 +643,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.25rem;
+    padding: 1rem;
     border-bottom: 1px solid #F1F5F9;
   }
   
@@ -717,7 +652,7 @@
     align-items: center;
     gap: 0.5rem;
     font-weight: 700;
-    font-size: 1.125rem;
+    font-size: 1rem;
     color: var(--primary-dark);
     cursor: pointer;
   }
@@ -726,23 +661,23 @@
     background: none;
     border: none;
     cursor: pointer;
-    padding: 0.5rem;
+    padding: 0.375rem;
     color: #64748B;
   }
   
   .mobile-user-info {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 1.25rem;
+    gap: 0.625rem;
+    padding: 0.875rem;
     background: #F8FAFC;
-    margin: 1rem;
-    border-radius: 1rem;
+    margin: 0.75rem;
+    border-radius: 0.75rem;
   }
   
   .mobile-avatar {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     background: #E2E8F0;
     border-radius: 50%;
     display: flex;
@@ -752,14 +687,14 @@
   }
   
   .mobile-user-info h4 {
-    font-size: 0.875rem;
+    font-size: 0.813rem;
     font-weight: 600;
     color: #0F172A;
     margin-bottom: 0.125rem;
   }
   
   .mobile-user-info p {
-    font-size: 0.688rem;
+    font-size: 0.625rem;
     color: #64748B;
   }
   
@@ -767,20 +702,20 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 0 1rem;
-    gap: 0.25rem;
+    padding: 0 0.75rem;
+    gap: 0.125rem;
     overflow-y: auto;
   }
   
   .mobile-nav-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
+    gap: 0.625rem;
+    padding: 0.625rem 0.75rem;
     background: none;
     border: none;
-    border-radius: 0.75rem;
-    font-size: 0.875rem;
+    border-radius: 0.625rem;
+    font-size: 0.813rem;
     font-weight: 500;
     color: #64748B;
     cursor: pointer;
@@ -793,49 +728,41 @@
     color: var(--primary-color);
   }
   
-  .mobile-nav-item:active {
-    background: #F1F5F9;
-  }
-  
   .mobile-sidebar-footer {
-    padding: 1rem;
+    padding: 0.75rem;
     border-top: 1px solid #F1F5F9;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
   }
   
-  .mobile-report-btn {
+  .mobile-report-btn, .mobile-logout-btn {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    padding: 0.75rem;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 0.75rem;
-    font-weight: 600;
+    padding: 0.625rem;
+    border-radius: 0.625rem;
+    font-weight: 500;
+    font-size: 0.75rem;
     cursor: pointer;
   }
   
+  .mobile-report-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+  }
+  
   .mobile-logout-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.75rem;
     background: none;
     border: 1px solid #E5E7EB;
-    border-radius: 0.75rem;
     color: #EF4444;
-    font-weight: 500;
-    cursor: pointer;
   }
   
   /* Desktop Sidebar */
   .sidebar {
-    width: 280px;
+    width: 260px;
     background: white;
     border-right: 1px solid #E5E7EB;
     display: flex;
@@ -848,15 +775,15 @@
   }
   
   .sidebar-header {
-    padding: 1.5rem;
+    padding: 1.25rem;
     border-bottom: 1px solid #F1F5F9;
   }
   
   .logo {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    font-size: 1.25rem;
+    gap: 0.625rem;
+    font-size: 1.125rem;
     font-weight: 700;
     color: var(--primary-dark);
     cursor: pointer;
@@ -864,26 +791,25 @@
   
   .sidebar-nav {
     flex: 1;
-    padding: 1.5rem;
+    padding: 1.25rem;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    overflow-y: auto;
+    gap: 0.25rem;
   }
   
   .nav-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
+    gap: 0.625rem;
+    padding: 0.625rem 0.875rem;
     color: #64748B;
     background: none;
     border: none;
-    border-radius: 0.75rem;
+    border-radius: 0.625rem;
     cursor: pointer;
     width: 100%;
     text-align: left;
-    font-size: 0.875rem;
+    font-size: 0.813rem;
     font-weight: 500;
     transition: all 0.2s;
   }
@@ -899,7 +825,7 @@
   }
   
   .sidebar-footer {
-    padding: 1.5rem;
+    padding: 1.25rem;
     border-top: 1px solid #F1F5F9;
   }
   
@@ -909,26 +835,21 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    padding: 0.75rem;
+    padding: 0.625rem;
     background: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 0.75rem;
+    border-radius: 0.625rem;
     font-weight: 600;
+    font-size: 0.813rem;
     cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .report-btn:hover {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
   }
   
   /* Main Content */
   .main-content {
     flex: 1;
-    margin-left: 280px;
-    padding: 2rem;
+    margin-left: 260px;
+    padding: 1.25rem;
   }
   
   .loading-state {
@@ -937,7 +858,7 @@
     align-items: center;
     justify-content: center;
     height: 50vh;
-    gap: 1rem;
+    gap: 0.75rem;
     color: #64748B;
   }
   
@@ -951,81 +872,49 @@
   
   /* Welcome Header */
   .welcome-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.25rem;
   }
   
   .welcome-header h1 {
-    font-size: 1.875rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: #0F172A;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.125rem;
   }
   
   .welcome-header p {
     color: #64748B;
-    font-size: 0.875rem;
-  }
-  
-  .icon-btn {
-    position: relative;
-    background: none;
-    border: none;
-    padding: 0.5rem;
-    cursor: pointer;
-    color: #64748B;
-    border-radius: 0.5rem;
-    transition: all 0.2s;
-  }
-  
-  .icon-btn:hover {
-    background: #F8FAFC;
-    color: var(--primary-color);
-  }
-  
-  .notification-badge {
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    background: #EF4444;
-    color: white;
-    font-size: 0.625rem;
-    padding: 0.125rem 0.375rem;
-    border-radius: 0.75rem;
-    font-weight: 600;
+    font-size: 0.75rem;
   }
   
   /* Stats Grid */
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
   }
   
   .stat-card {
     background: white;
-    padding: 1.25rem;
-    border-radius: 1rem;
+    padding: 0.875rem;
+    border-radius: 0.875rem;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
     border: 1px solid #E5E7EB;
-    transition: all 0.2s;
     cursor: pointer;
+    transition: all 0.2s;
   }
   
-  .stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  .stat-card:active {
+    transform: scale(0.98);
   }
   
   .stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 1rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1036,63 +925,57 @@
   .stat-icon.orange { background: #FEF3C7; color: #F59E0B; }
   .stat-icon.blue { background: #DBEAFE; color: #3B82F6; }
   
-  .stat-info {
-    flex: 1;
-  }
-  
   .stat-value {
     display: block;
-    font-size: 1.5rem;
+    font-size: 1.125rem;
     font-weight: 700;
     color: #0F172A;
   }
   
   .stat-label {
-    font-size: 0.75rem;
+    font-size: 0.625rem;
     color: #64748B;
   }
   
   /* Quick Navigation */
   .quick-nav-section {
-    margin-bottom: 2rem;
+    margin-bottom: 1.25rem;
   }
   
-  .quick-nav-section h2 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #0F172A;
-    margin-bottom: 1rem;
+  .quick-nav-scroll {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
   }
   
-  .quick-nav-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
+  .quick-nav-scroll::-webkit-scrollbar {
+    display: none;
   }
   
   .quick-nav-card {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
+    gap: 0.375rem;
+    padding: 0.625rem 1rem;
     background: white;
     border: 1px solid #E5E7EB;
-    border-radius: 1rem;
+    border-radius: 0.75rem;
     cursor: pointer;
-    transition: all 0.2s;
-    text-align: left;
+    min-width: 70px;
   }
   
-  .quick-nav-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    border-color: var(--primary-color);
+  .quick-nav-card span {
+    font-size: 0.688rem;
+    font-weight: 500;
+    color: #475569;
   }
   
   .quick-nav-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 1rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 0.625rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1103,39 +986,19 @@
   .quick-nav-icon.report-bg { background: #F5F3FF; color: var(--primary-color); }
   .quick-nav-icon.community-bg { background: #D1FAE5; color: #10B981; }
   
-  .quick-nav-text {
-    flex: 1;
-  }
-  
-  .quick-nav-text h4 {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #0F172A;
-    margin-bottom: 0.125rem;
-  }
-  
-  .quick-nav-text p {
-    font-size: 0.688rem;
-    color: #64748B;
-  }
-  
-  .arrow {
-    color: #94A3B8;
-  }
-  
-  /* Two Column Layout */
-  .two-columns {
+  /* Content Grid */
+  .content-grid {
     display: grid;
-    grid-template-columns: 1fr 360px;
-    gap: 1.5rem;
+    grid-template-columns: 1fr 300px;
+    gap: 1rem;
   }
   
   /* Sections */
   .section {
     background: white;
-    border-radius: 1rem;
-    padding: 1.25rem;
-    margin-bottom: 1.5rem;
+    border-radius: 0.875rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
     border: 1px solid #E5E7EB;
   }
   
@@ -1143,13 +1006,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
     border-bottom: 1px solid #F1F5F9;
   }
   
   .section-header h2 {
-    font-size: 0.938rem;
+    font-size: 0.813rem;
     font-weight: 600;
     color: #0F172A;
   }
@@ -1157,12 +1020,11 @@
   .section-link {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.125rem;
     color: var(--primary-color);
     background: none;
     border: none;
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: 0.688rem;
     cursor: pointer;
   }
   
@@ -1170,36 +1032,22 @@
   .incidents-list {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.625rem;
   }
   
   .incident-card {
     width: 100%;
-    padding: 0.875rem;
+    padding: 0.625rem;
     border: 1px solid #E5E7EB;
-    border-radius: 0.75rem;
+    border-radius: 0.625rem;
     cursor: pointer;
     background: white;
     text-align: left;
-    transition: all 0.2s;
   }
   
-  .incident-card:hover {
-    border-color: var(--primary-color);
-    background: #F8FAFC;
-  }
-  
-  .incident-header {
+  .incident-row {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 0.5rem;
-  }
-  
-  .incident-title {
-    display: flex;
-    gap: 0.5rem;
-    flex: 1;
+    gap: 0.625rem;
   }
   
   .incident-icon {
@@ -1212,135 +1060,104 @@
     flex-shrink: 0;
   }
   
-  .incident-title h3 {
-    font-size: 0.813rem;
-    font-weight: 600;
-    color: #0F172A;
-    margin-bottom: 0.25rem;
-  }
-  
-  .incident-meta {
-    display: flex;
-    gap: 0.5rem;
-  }
-  
-  .meta-item {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.625rem;
-    color: #64748B;
-  }
-  
-  .incident-status {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.625rem;
-    font-weight: 500;
-    text-transform: capitalize;
-  }
-  
-  .status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-  }
-  
-  .incident-description {
-    font-size: 0.688rem;
-    color: #64748B;
-    margin-bottom: 0.5rem;
-    line-height: 1.4;
-  }
-  
-  .incident-stats {
-    display: flex;
-    gap: 0.75rem;
-  }
-  
-  .stat-badge {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.625rem;
-    color: #64748B;
-  }
-  
-  /* Notifications */
-  .unread-badge {
-    font-size: 0.625rem;
-    padding: 0.125rem 0.5rem;
-    background: #EF4444;
-    color: white;
-    border-radius: 0.75rem;
-  }
-  
-  .notifications-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  
-  .notification-card {
-    display: flex;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    border-radius: 0.75rem;
-    cursor: pointer;
-    width: 100%;
-    background: none;
-    border: none;
-    text-align: left;
-  }
-  
-  .notification-card.unread {
-    background: #F5F3FF;
-  }
-  
-  .notification-card:active {
-    background: #F1F5F9;
-  }
-  
-  .notification-icon {
-    flex-shrink: 0;
-  }
-  
-  .notification-content {
+  .incident-info {
     flex: 1;
   }
   
-  .notification-header {
+  .incident-title-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 0.25rem;
   }
   
-  .notification-header h4 {
+  .incident-title-row h3 {
     font-size: 0.75rem;
     font-weight: 600;
     color: #0F172A;
   }
   
-  .notification-time {
-    font-size: 0.625rem;
+  .incident-status {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.563rem;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+  
+  .status-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+  }
+  
+  .incident-meta {
+    display: flex;
+    gap: 0.625rem;
+    font-size: 0.563rem;
     color: #64748B;
   }
   
-  .notification-content p {
+  .incident-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.188rem;
+  }
+  
+  /* Notifications */
+  .unread-badge {
+    font-size: 0.563rem;
+    padding: 0.125rem 0.375rem;
+    background: #EF4444;
+    color: white;
+    border-radius: 0.625rem;
+  }
+  
+  .notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+  
+  .notification-item {
+    display: flex;
+    gap: 0.625rem;
+    padding: 0.5rem;
+    border-radius: 0.625rem;
+  }
+  
+  .notification-item.unread {
+    background: #F5F3FF;
+  }
+  
+  .notification-icon {
+    flex-shrink: 0;
+  }
+  
+  .notification-info {
+    flex: 1;
+  }
+  
+  .notification-info p {
     font-size: 0.688rem;
-    color: #64748B;
+    color: #475569;
+    margin-bottom: 0.188rem;
+  }
+  
+  .notification-info span {
+    font-size: 0.563rem;
+    color: #94A3B8;
   }
   
   .view-all-btn {
     width: 100%;
-    margin-top: 0.75rem;
-    padding: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.375rem;
     background: none;
     border: 1px solid #E5E7EB;
-    border-radius: 0.75rem;
-    font-size: 0.688rem;
+    border-radius: 0.625rem;
+    font-size: 0.625rem;
     color: var(--primary-color);
     cursor: pointer;
     display: flex;
@@ -1349,23 +1166,27 @@
     gap: 0.25rem;
   }
   
-  /* Safety Score */
-  .safety-score {
-    text-align: center;
+  /* Safety Score Card */
+  .safety-score-card {
+    background: white;
+    border-radius: 0.875rem;
+    padding: 0.875rem;
+    margin-bottom: 1rem;
+    border: 1px solid #E5E7EB;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
     cursor: pointer;
   }
   
-  .score-circle {
+  .score-ring {
     position: relative;
-    width: 80px;
-    height: 80px;
+    width: 60px;
+    height: 60px;
     flex-shrink: 0;
   }
   
-  .score-circle svg {
+  .score-ring svg {
     width: 100%;
     height: 100%;
     transform: rotate(-90deg);
@@ -1376,24 +1197,20 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 1rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--primary-color);
   }
   
-  .score-text {
-    text-align: left;
-  }
-  
-  .score-text h4 {
-    font-size: 0.813rem;
+  .score-info h4 {
+    font-size: 0.75rem;
     font-weight: 600;
     color: #0F172A;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.125rem;
   }
   
-  .score-text p {
-    font-size: 0.688rem;
+  .score-info p {
+    font-size: 0.625rem;
     color: #64748B;
   }
   
@@ -1412,8 +1229,8 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 0;
-    font-size: 0.75rem;
+    padding: 0.375rem 0;
+    font-size: 0.688rem;
     color: #475569;
   }
   
@@ -1426,16 +1243,18 @@
   
   /* Responsive */
   @media (max-width: 1024px) {
-    .stats-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .quick-nav-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .two-columns {
+    .content-grid {
       grid-template-columns: 1fr;
+    }
+    
+    .right-panel {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    
+    .safety-score-card, .safety-section {
+      margin-bottom: 0;
     }
   }
   
@@ -1450,65 +1269,45 @@
     
     .main-content {
       margin-left: 0;
-      padding: 1rem;
-    }
-    
-    .welcome-header h1 {
-      font-size: 1.25rem;
-    }
-    
-    .desktop-only {
-      display: none;
+      padding: 0.875rem;
     }
     
     .stats-grid {
-      grid-template-columns: repeat(2, 1fr);
       gap: 0.75rem;
     }
     
     .stat-card {
-      padding: 0.875rem;
+      padding: 0.625rem;
     }
     
     .stat-icon {
-      width: 40px;
-      height: 40px;
+      width: 32px;
+      height: 32px;
     }
     
     .stat-value {
-      font-size: 1.125rem;
+      font-size: 0.875rem;
     }
     
-    .quick-nav-grid {
+    .right-panel {
       grid-template-columns: 1fr;
+      gap: 0.75rem;
     }
     
-    .section {
-      padding: 1rem;
-    }
-    
-    .safety-score {
-      flex-direction: column;
-      text-align: center;
-    }
-    
-    .score-text {
-      text-align: center;
+    .safety-score-card, .safety-section {
+      margin-bottom: 0.75rem;
     }
   }
   
   @media (max-width: 480px) {
     .stats-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, 1fr);
     }
     
-    .incident-header {
+    .incident-title-row {
       flex-direction: column;
-      gap: 0.5rem;
-    }
-    
-    .incident-status {
-      align-self: flex-start;
+      align-items: flex-start;
+      gap: 0.25rem;
     }
   }
 </style>
