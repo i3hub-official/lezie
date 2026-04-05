@@ -172,7 +172,7 @@
   <aside class="rp-panel">
     <div class="rp-panel-inner">
       <a href="/" class="rp-logo-link">
-        <img src="/icons/lz_ico.png" alt="Lezie" class="rp-logo-img" />
+        <img src="/icons/lz_logo_t.png" alt="Lezie" class="rp-logo-img" />
       </a>
 
       <div class="rp-panel-hero">
