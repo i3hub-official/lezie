@@ -1,8 +1,6 @@
-
-
 <script lang="ts">
   import { onMount } from 'svelte';
-//import { authStore } from '$lib/stores/auth';
+
   import { 
     ShieldCheck, 
     ArrowRight, 
@@ -24,36 +22,25 @@
     PhoneCall,
     MessageCircle,
     X,
-    Menu,
-    Clock,
-    Upload,
-    CheckCircle,
-    Siren,
+    Menu
   } from 'lucide-svelte';
 
-  // Fix: Use $state() for reactive variable
   let isMenuOpen = $state(false);
 
   onMount(() => {
-
-// Check authentication
-  //  const unsubscribe = authStore.subscribe((state) => {
-   //   if (state.user) {
-        // Authenticated user → redirect to dashboard
-     //   goto('/dashboard');
-     // } else {
-        // Not authenticated → show landing page
-     //   isLoading = false;
-   //   }
-  //  });
-
     const observer = new IntersectionObserver(
-      (entries) => entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')),
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      },
       { threshold: 0.1 }
     );
-    document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
-    
-    // Cleanup
+
+    document.querySelectorAll('.animate-on-scroll').forEach((el) => observer.observe(el));
+
     return () => observer.disconnect();
   });
 
@@ -69,21 +56,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </svelte:head>
 
-<!-- ── FLOATING ACTION BUTTON (REPORT INCIDENT) ── -->
+<!-- FLOATING ACTION BUTTON -->
 <a href="/report" class="lz-fab" aria-label="Report an incident">
   <FlagTriangleRight size={20} />
   <span>Report incident</span>
 </a>
 
-<!-- ── NAV ─────────────────────────────────────────────────── -->
+<!-- NAV -->
 <nav class="lz-nav">
   <div class="lz-nav-inner">
-    <button type="button" class="lz-logo" onclick={() => scrollTo('home')}>
-      <img src="/icons/lz_ico.png" alt="Lezie" class="lz-logo-img" width="32" height="32"/>
+    <button type="button" class="lz-logo" onclick={() => scrollToSection('home')}>
+      <img src="/icons/lz_ico.png" alt="Lezie" class="lz-logo-img" width="32" height="32" />
       <span class="lz-logo-text">Lezie</span>
     </button>
 
-    <button class="lz-hamburger" onclick={() => isMenuOpen = !isMenuOpen} aria-label="Toggle menu">
+    <button 
+      type="button" 
+      class="lz-hamburger" 
+      onclick={() => isMenuOpen = !isMenuOpen} 
+      aria-label="Toggle menu"
+    >
       {#if isMenuOpen}
         <X size={22} />
       {:else}
@@ -100,7 +92,7 @@
   </div>
 </nav>
 
-<!-- ── HERO ────────────────────────────────────────────────── -->
+<!-- HERO -->
 <section id="home" class="lz-hero">
   <div class="lz-hero-content">
     <div class="lz-badge animate-on-scroll">
@@ -123,7 +115,11 @@
         Get started free
         <ArrowRight size={16} />
       </a>
-      <button type="button" class="lz-btn-secondary" onclick={() => scrollToSection('how-it-works')}>
+      <button 
+        type="button" 
+        class="lz-btn-secondary" 
+        onclick={() => scrollToSection('how-it-works')}
+      >
         <PlayCircle size={16} />
         See how it works
       </button>
@@ -153,7 +149,7 @@
         <MapPin size={14} style="color:var(--primary-color)" />
         <span>Live incident map</span>
         <span class="lz-live-dot"></span>
-        <span style="font-size:.75rem;color:var(--primary-color);font-weight:600">Live</span>
+        <span style="font-size:0.75rem;color:var(--primary-color);font-weight:600">Live</span>
       </div>
       <div class="lz-map-grid">
         {#each Array(54) as _, i}
@@ -180,7 +176,7 @@
   </div>
 </section>
 
-<!-- ── FEATURES ───────────────────────────────────────────── -->
+<!-- FEATURES -->
 <section id="features" class="lz-section lz-section-alt">
   <div class="lz-container">
     <div class="lz-sec-head animate-on-scroll">
@@ -226,7 +222,7 @@
   </div>
 </section>
 
-<!-- ── HOW IT WORKS ───────────────────────────────────────── -->
+<!-- HOW IT WORKS -->
 <section id="how-it-works" class="lz-section">
   <div class="lz-container">
     <div class="lz-sec-head animate-on-scroll">
@@ -269,7 +265,7 @@
   </div>
 </section>
 
-<!-- ── SAFETY TIPS ────────────────────────────────────────── -->
+<!-- SAFETY TIPS -->
 <section id="safety-tips" class="lz-section lz-section-alt">
   <div class="lz-container">
     <div class="lz-sec-head animate-on-scroll">
@@ -314,7 +310,7 @@
   </div>
 </section>
 
-<!-- ── CTA ─────────────────────────────────────────────────── -->
+<!-- CTA -->
 <section class="lz-section">
   <div class="lz-container">
     <div class="lz-cta animate-on-scroll">
@@ -334,7 +330,7 @@
   </div>
 </section>
 
-<!-- ── FOOTER ─────────────────────────────────────────────── -->
+<!-- FOOTER -->
 <footer class="lz-footer">
   <div class="lz-container">
     <div class="lz-foot-grid">
