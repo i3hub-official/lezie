@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { Mail, AlertCircle, ArrowRight, CheckCircle, ArrowLeft, Shield, MapPin, Users, Bell } from 'lucide-svelte';
+  import { Mail, AlertCircle, ArrowRight, CheckCircle, ArrowLeft, Shield, MapPin, Users, Bell, ChevronLeft, Home, Sparkles, ShieldCheck, Smartphone } from 'lucide-svelte';
+  import { goto } from '$app/navigation';
   
   let email = $state('');
   let errors = $state<Record<string, string>>({});
@@ -37,6 +38,10 @@
       isLoading = false;
     }
   };
+
+  const goBackToHome = () => {
+    goto('/');
+  };
 </script>
 
 <svelte:head>
@@ -50,13 +55,15 @@
   <!-- ── LEFT PANEL (desktop only) ── -->
   <aside class="fp-panel">
     <div class="fp-panel-inner">
-
       <a href="/" class="fp-logo-link">
         <img src="/icons/lz_logo_t.png" alt="Lezie" class="fp-logo-img fp-logo-img--desktop" />
       </a>
 
       <div class="fp-panel-hero">
-        <p class="fp-panel-eyebrow">Account Recovery</p>
+        <div class="fp-panel-badge">
+          <Sparkles size={14} />
+          <span>Account Recovery</span>
+        </div>
         <h2 class="fp-panel-headline">
           We've got<br/>
           <em>your back.</em>
@@ -66,39 +73,31 @@
         </p>
       </div>
 
-      <ul class="fp-features">
-        <li class="fp-feature">
-          <div class="fp-feature-icon"><Shield size={16} /></div>
-          <div>
-            <strong>Secure Reset Link</strong>
-            <span>Expires in 15 minutes for your safety</span>
-          </div>
-        </li>
-        <li class="fp-feature">
-          <div class="fp-feature-icon"><Mail size={16} /></div>
-          <div>
-            <strong>Check Your Inbox</strong>
-            <span>Link sent instantly to your registered email</span>
-          </div>
-        </li>
-        <li class="fp-feature">
-          <div class="fp-feature-icon"><Users size={16} /></div>
-          <div>
-            <strong>Still Need Help?</strong>
-            <span>Contact support if you no longer have access</span>
-          </div>
-        </li>
-      </ul>
-
-      <div class="fp-social-proof">
-        <div class="fp-avatars">
-          {#each ['var(--secondary-color)','#a78bfa','#8b5cf6','var(--primary-color)'] as color}
-            <div class="fp-avatar" style="background:{color}"></div>
-          {/each}
+      <div class="fp-features">
+        <div class="fp-feature-card">
+          <div class="fp-feature-icon"><Shield size={18} /></div>
+          <div><strong>Secure Reset Link</strong><span>Expires in 15 minutes for your safety</span></div>
         </div>
-        <p><strong>12,400+</strong> members keeping communities safe</p>
+        <div class="fp-feature-card">
+          <div class="fp-feature-icon"><Mail size={18} /></div>
+          <div><strong>Check Your Inbox</strong><span>Link sent instantly to your registered email</span></div>
+        </div>
+        <div class="fp-feature-card">
+          <div class="fp-feature-icon"><Users size={18} /></div>
+          <div><strong>Still Need Help?</strong><span>Contact support if you no longer have access</span></div>
+        </div>
       </div>
 
+      <div class="fp-panel-footer">
+        <div class="fp-avatars">
+          <div class="fp-avatar" style="background: var(--secondary-color)"></div>
+          <div class="fp-avatar" style="background: #a78bfa"></div>
+          <div class="fp-avatar" style="background: #8b5cf6"></div>
+          <div class="fp-avatar" style="background: var(--primary-color)"></div>
+          <div class="fp-avatar-count">+12k</div>
+        </div>
+        <p>Trusted by communities worldwide</p>
+      </div>
     </div>
     <div class="fp-panel-glow"></div>
   </aside>
@@ -106,6 +105,13 @@
   <!-- ── RIGHT / FORM ── -->
   <main class="fp-main">
     <div class="fp-form-shell">
+
+      <!-- Back button to home -->
+      <button class="fp-back-home" onclick={goBackToHome}>
+        <ChevronLeft size={18} />
+        <Home size={14} />
+        <span>Back to Home</span>
+      </button>
 
       <!-- Mobile logo -->
       <div class="fp-mobile-logo">
@@ -175,7 +181,7 @@
                   Email Address <span class="fp-req">*</span>
                 </label>
                 <div class="fp-input-wrap">
-                  <Mail size={16} class="fp-input-icon" />
+                  <span class="fp-input-icon"><Mail size={16} /></span>
                   <input
                     type="email"
                     id="email"
@@ -224,22 +230,23 @@
 <style>
   :global(.fp-page *) {
     font-family: 'DM Sans', system-ui, sans-serif;
+    box-sizing: border-box;
   }
 
   /* ── Layout ── */
   .fp-page {
     display: flex;
     min-height: 100vh;
-    background: var(--light-color);
+    background: linear-gradient(135deg, #faf9ff 0%, #f3f0ff 100%);
   }
 
   /* ── LEFT PANEL ── */
   .fp-panel {
     display: none;
     position: relative;
-    width: 420px;
+    width: 440px;
     flex-shrink: 0;
-    background: linear-gradient(160deg, var(--primary-color) 0%, var(--primary-dark) 40%, var(--primary-dark) 100%);
+    background: linear-gradient(160deg, #1a0b2e 0%, #2d1b4e 50%, #1a0b2e 100%);
     overflow: hidden;
   }
 
@@ -260,9 +267,7 @@
     position: absolute;
     inset: 0;
     z-index: 1;
-    background:
-      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(167,139,250,0.25) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 60% at 20% 80%, rgba(109,40,217,0.4) 0%, transparent 60%);
+    background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(139,92,246,0.15) 0%, transparent 70%);
     pointer-events: none;
   }
 
@@ -271,10 +276,10 @@
     display: inline-block;
     line-height: 0;
     margin-bottom: 2.5rem;
-    transition: opacity 0.2s;
+    transition: transform 0.2s, opacity 0.2s;
   }
 
-  .fp-logo-link:hover { opacity: 0.85; }
+  .fp-logo-link:hover { opacity: 0.85; transform: scale(1.02); }
 
   .fp-logo-img--desktop {
     width: 80px;
@@ -291,108 +296,130 @@
   }
 
   /* ── Panel copy ── */
-  .fp-panel-eyebrow {
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: rgba(196,181,253,0.9);
-    margin-bottom: 0.875rem;
+  .fp-panel-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.875rem;
+    background: rgba(139,92,246,0.2);
+    border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 100px;
+    font-size: 0.75rem;
+    color: #c4b5fd;
+    margin-bottom: 1.5rem;
   }
 
   .fp-panel-headline {
     font-family: 'DM Serif Display', Georgia, serif;
     font-size: 2.5rem;
-    line-height: 1.15;
+    line-height: 1.2;
     color: white;
     margin-bottom: 1rem;
   }
 
   .fp-panel-headline em {
-    color: var(--secondary-color);
+    color: #c4b5fd;
     font-style: italic;
   }
 
   .fp-panel-desc {
     font-size: 0.875rem;
-    line-height: 1.7;
-    color: rgba(221,214,254,0.85);
-    margin-bottom: 2.5rem;
+    line-height: 1.6;
+    color: rgba(196,181,253,0.85);
+    margin-bottom: 2rem;
   }
 
-  /* Features */
+  /* Feature cards */
   .fp-features {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 1.125rem;
+    gap: 1rem;
+    margin-bottom: auto;
   }
 
-  .fp-feature {
+  .fp-feature-card {
     display: flex;
     align-items: flex-start;
     gap: 0.875rem;
+    padding: 0.875rem;
+    background: rgba(255,255,255,0.05);
+    border-radius: 1rem;
+    backdrop-filter: blur(10px);
+    transition: background 0.2s;
+  }
+
+  .fp-feature-card:hover {
+    background: rgba(255,255,255,0.08);
   }
 
   .fp-feature-icon {
-    width: 32px;
-    height: 32px;
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.18);
-    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    background: rgba(139,92,246,0.2);
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #ddd6fe;
+    color: #c4b5fd;
     flex-shrink: 0;
-    margin-top: 1px;
   }
 
-  .fp-feature strong {
+  .fp-feature-card strong {
     display: block;
     font-size: 0.813rem;
     font-weight: 600;
     color: white;
-    margin-bottom: 0.125rem;
+    margin-bottom: 0.25rem;
   }
 
-  .fp-feature span {
+  .fp-feature-card span {
     font-size: 0.75rem;
     color: rgba(196,181,253,0.8);
-    line-height: 1.5;
+    line-height: 1.4;
   }
 
-  /* Social proof */
-  .fp-social-proof {
+  /* Panel footer */
+  .fp-panel-footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .fp-avatars {
     display: flex;
     align-items: center;
-    gap: 0.875rem;
-    margin-top: 2.5rem;
-    padding-top: 2rem;
-    border-top: 1px solid rgba(255,255,255,0.12);
+    margin-bottom: 0.75rem;
   }
 
-  .fp-avatars { display: flex; }
-
   .fp-avatar {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    border: 2px solid var(--primary-dark);
+    border: 2px solid #2d1b4e;
     margin-left: -8px;
   }
 
   .fp-avatar:first-child { margin-left: 0; }
 
-  .fp-social-proof p {
-    font-size: 0.75rem;
-    color: rgba(221,214,254,0.9);
-    line-height: 1.4;
+  .fp-avatar-count {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(139,92,246,0.3);
+    border: 2px solid #2d1b4e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.688rem;
+    font-weight: 600;
+    color: white;
+    margin-left: -8px;
   }
 
-  .fp-social-proof strong { color: white; font-weight: 600; }
+  .fp-panel-footer p {
+    font-size: 0.688rem;
+    color: rgba(196,181,253,0.7);
+  }
 
   /* ── RIGHT / MAIN ── */
   .fp-main {
@@ -410,6 +437,32 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+  }
+
+  /* Back button */
+  .fp-back-home {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 100px;
+    padding: 0.5rem 1rem;
+    font-size: 0.813rem;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    width: fit-content;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+
+  .fp-back-home:hover {
+    border-color: #6a2c91;
+    color: #6a2c91;
+    background: #f3e8ff;
+    transform: translateX(-2px);
   }
 
   /* Mobile logo */
@@ -430,14 +483,14 @@
   .fp-form-title {
     font-family: 'DM Serif Display', Georgia, serif;
     font-size: clamp(1.625rem, 4vw, 2rem);
-    color: var(--dark-color);
+    color: #1e1b4b;
     margin-bottom: 0.25rem;
     letter-spacing: -0.02em;
   }
 
   .fp-form-subtitle {
     font-size: 0.875rem;
-    color: var(--gray-color);
+    color: #64748b;
   }
 
   /* Card */
@@ -446,10 +499,7 @@
     border-radius: 1.5rem;
     border: 1px solid #e2e8f0;
     padding: clamp(1.25rem, 5vw, 2rem);
-    box-shadow:
-      0 1px 2px rgba(0,0,0,0.04),
-      0 4px 16px rgba(0,0,0,0.06),
-      0 16px 48px rgba(0,0,0,0.04);
+    box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1);
   }
 
   /* Alert */
@@ -461,7 +511,7 @@
     background: #fef2f2;
     border: 1px solid #fecaca;
     border-radius: 0.75rem;
-    color: var(--danger-color);
+    color: #dc2626;
     font-size: 0.813rem;
     margin-bottom: 1.25rem;
   }
@@ -481,16 +531,19 @@
     letter-spacing: 0.01em;
   }
 
-  .fp-req { color: var(--primary-color); }
+  .fp-req { color: #6a2c91; }
 
   .fp-input-wrap { position: relative; }
 
-  :global(.fp-input-icon) {
+  .fp-input-icon {
     position: absolute;
     left: 0.875rem;
     top: 50%;
     transform: translateY(-50%);
     color: #9ca3af;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     pointer-events: none;
   }
 
@@ -501,24 +554,24 @@
     border-radius: 0.75rem;
     font-size: 0.875rem;
     font-family: 'DM Sans', sans-serif;
-    color: var(--dark-color);
-    background: var(--light-color);
-    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    color: #1e1b4b;
+    background: white;
+    transition: all 0.2s;
     outline: none;
     -webkit-appearance: none;
   }
 
-  .fp-input:hover { border-color: var(--primary-border); background: white; }
+  .fp-input:hover { border-color: #c4b5fd; }
   .fp-input:focus {
-    border-color: var(--primary-color);
+    border-color: #6a2c91;
     background: white;
     box-shadow: 0 0 0 3px rgba(106,44,145,0.1);
   }
   .fp-input--err { border-color: #f87171; background: #fff5f5; }
 
-  .fp-err { font-size: 0.75rem; color: var(--danger-color); }
+  .fp-err { font-size: 0.75rem; color: #dc2626; }
 
-  .fp-hint { font-size: 0.75rem; color: var(--gray-color); }
+  .fp-hint { font-size: 0.75rem; color: #64748b; }
 
   /* Buttons */
   .fp-btn-primary {
@@ -528,7 +581,7 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.8125rem 1.25rem;
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    background: linear-gradient(135deg, #6a2c91 0%, #4a1d6e 100%);
     color: white;
     border: none;
     border-radius: 0.75rem;
@@ -542,7 +595,7 @@
   }
 
   .fp-btn-primary:hover:not(:disabled) {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(106,44,145,0.4);
   }
 
@@ -562,16 +615,16 @@
     font-size: 0.875rem;
     font-weight: 500;
     font-family: 'DM Sans', sans-serif;
-    color: var(--gray-color);
+    color: #64748b;
     cursor: pointer;
     text-decoration: none;
     transition: all 0.2s;
   }
 
   .fp-btn-back:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-    background: var(--primary-bg);
+    border-color: #6a2c91;
+    color: #6a2c91;
+    background: #f3e8ff;
   }
 
   /* Divider */
@@ -596,7 +649,7 @@
     background: white;
     padding: 0 0.875rem;
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: #94a3b8;
     font-weight: 500;
   }
 
@@ -618,21 +671,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--success-color);
+    color: #10b981;
     margin-bottom: 0.25rem;
   }
 
   .fp-success-title {
     font-family: 'DM Serif Display', Georgia, serif;
     font-size: 1.375rem;
-    color: var(--dark-color);
+    color: #1e1b4b;
     letter-spacing: -0.01em;
     margin: 0;
   }
 
   .fp-success-body {
     font-size: 0.875rem;
-    color: var(--gray-color);
+    color: #64748b;
     margin: 0;
   }
 
@@ -640,18 +693,18 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: var(--primary-bg);
-    border: 1px solid var(--primary-border);
+    background: #f3e8ff;
+    border: 1px solid #e0d4f5;
     border-radius: 0.625rem;
     padding: 0.5rem 0.875rem;
     font-size: 0.813rem;
     font-weight: 600;
-    color: var(--primary-dark);
+    color: #4a1d6e;
   }
 
   .fp-success-note {
     font-size: 0.75rem;
-    color: var(--gray-color);
+    color: #64748b;
     line-height: 1.6;
     max-width: 300px;
     margin: 0.25rem 0 0.75rem;
@@ -663,7 +716,7 @@
     background: none;
     border: none;
     font-size: 0.813rem;
-    color: var(--gray-color);
+    color: #64748b;
     cursor: pointer;
     font-family: 'DM Sans', sans-serif;
     text-decoration: underline;
@@ -671,11 +724,11 @@
     transition: color 0.2s;
   }
 
-  .fp-btn-resend:hover { color: var(--primary-color); }
+  .fp-btn-resend:hover { color: #6a2c91; }
 
   /* Link */
   .fp-link {
-    color: var(--primary-color);
+    color: #6a2c91;
     font-weight: 500;
     text-decoration: none;
   }
@@ -686,7 +739,7 @@
   .fp-footer-text {
     text-align: center;
     font-size: 0.875rem;
-    color: var(--gray-color);
+    color: #64748b;
   }
 
   /* Spinner */
@@ -712,5 +765,6 @@
     .fp-main { padding: 1.5rem 1rem; align-items: flex-start; }
     .fp-form-shell { gap: 1.25rem; }
     .fp-card { border-radius: 1.25rem; }
+    .fp-back-home { font-size: 0.75rem; padding: 0.375rem 0.875rem; }
   }
 </style>
