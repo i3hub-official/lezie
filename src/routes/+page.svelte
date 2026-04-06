@@ -1,242 +1,822 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { 
-    ShieldCheck, ArrowRight, PlayCircle, MapPin, Radio, Cpu, BadgeCheck, 
-    Map, EyeOff, BellRing, Smartphone, BrainCircuit, Megaphone, ScanEye, 
-    Users, LockKeyhole, FlagTriangleRight, PhoneCall, MessageCircle, X, Menu,
-    Trophy, Award, Target
+  import {
+    ShieldCheck, ArrowRight, MapPin, BrainCircuit, BellRing, EyeOff,
+    Users, Trophy, Award, Target, FlagTriangleRight, Menu, X,
+    CheckCircle, Zap, Lock
   } from 'lucide-svelte';
 
   let isMenuOpen = $state(false);
 
   onMount(() => {
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-          }
-        });
-      },
-      { threshold: 0.1 }
+      (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); }),
+      { threshold: 0.08 }
     );
-
-    document.querySelectorAll('.animate-on-scroll').forEach((el) => observer.observe(el));
-
+    document.querySelectorAll('.aos').forEach(el => observer.observe(el));
     return () => observer.disconnect();
   });
 
-  const scrollToSection = (id: string) => {
+  const scroll = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
     isMenuOpen = false;
   };
+
+  const features = [
+    { icon: MapPin,       title: 'Live Incident Map',      desc: 'Watch incidents appear in real-time on an interactive map. Pinpoint alerts the moment they are reported.' },
+    { icon: BellRing,     title: 'Instant Alerts',          desc: 'Push notifications delivered in seconds. Never miss a critical event in your neighbourhood.' },
+    { icon: BrainCircuit, title: 'AI Threat Detection',     desc: 'Pattern analysis across all reports to detect emerging threats before they escalate.' },
+    { icon: Users,        title: 'Community Network',       desc: 'Connect with verified neighbours and local responders. Build a genuine safety net.' },
+    { icon: EyeOff,       title: 'Anonymous Reporting',     desc: 'Report incidents without fear. Your identity stays protected while your community stays informed.' },
+    { icon: Lock,         title: 'Privacy First',           desc: 'End-to-end encryption and zero data selling. Your safety data belongs to you.' },
+  ];
+
+  const steps = [
+    { n: '01', title: 'Spot & Report',       desc: 'See something? Tap report. Add photos, location, and details in under 60 seconds.' },
+    { n: '02', title: 'AI Analyses',          desc: 'Instant classification by severity, cross-referencing patterns across your area.' },
+    { n: '03', title: 'Community Responds',   desc: 'Verified neighbours and responders receive targeted alerts and coordinate in real time.' },
+  ];
 </script>
 
 <svelte:head>
   <title>Lezie — Real-Time Community Safety</title>
-  <meta name="description" content="Real-time incident reporting, AI-powered alerts, and fun safety games to keep your community safe." />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Real-time incident reporting, AI-powered alerts, and fun safety games." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
 </svelte:head>
 
-<!-- FLOATING ACTION BUTTON -->
-<a href="/report" class="lz-fab" aria-label="Report an incident">
-  <FlagTriangleRight size={20} />
-  <span>Report Incident</span>
+<!-- FAB -->
+<a href="/report" class="fab">
+  <FlagTriangleRight size={16} />
+  Report Incident
 </a>
 
 <!-- NAV -->
-<nav class="lz-nav">
-  <div class="lz-nav-inner">
-    <button type="button" class="lz-logo" onclick={() => scrollToSection('home')}>
-      <img src="/icons/lz_ico.png" alt="Lezie" class="lz-logo-img" width="32" height="32" />
-      <span class="lz-logo-text">Lezie</span>
+<nav class="nav">
+  <div class="nav-inner">
+    <button class="nav-logo" onclick={() => scroll('home')} type="button">
+      <img src="/icons/lz_ico.png" alt="Lezie" width="32" height="32" />
+      <span>Lezie</span>
     </button>
 
-    <button 
-      type="button" 
-      class="lz-hamburger" 
-      onclick={() => isMenuOpen = !isMenuOpen}
-    >
-      {#if isMenuOpen}
-        <X size={22} />
-      {:else}
-        <Menu size={22} />
-      {/if}
+    <button class="hamburger" onclick={() => isMenuOpen = !isMenuOpen} type="button" aria-label="Toggle menu">
+      {#if isMenuOpen}<X size={22} />{:else}<Menu size={22} />{/if}
     </button>
 
-    <div class="lz-nav-links" class:open={isMenuOpen}>
-      <button type="button" class="lz-nav-link" onclick={() => scrollToSection('features')}>Features</button>
-      <button type="button" class="lz-nav-link" onclick={() => scrollToSection('how-it-works')}>How it Works</button>
-      <button type="button" class="lz-nav-link" onclick={() => scrollToSection('safety-quest')}>Safety Games</button>
-      <a href="/dashboard" class="lz-nav-cta">Dashboard</a>
+    <div class="nav-links" class:open={isMenuOpen}>
+      <button class="nav-link" onclick={() => scroll('features')}   type="button">Features</button>
+      <button class="nav-link" onclick={() => scroll('how')}        type="button">How it Works</button>
+      <button class="nav-link" onclick={() => scroll('quest')}      type="button">Safety Games</button>
+      <a href="/dashboard" class="nav-cta">Dashboard <ArrowRight size={13} /></a>
     </div>
   </div>
 </nav>
 
-<!-- HERO -->
-<section id="home" class="lz-hero">
-  <div class="lz-hero-content">
-    <div class="lz-badge animate-on-scroll">
-      <ShieldCheck size={14} />
+<!-- ═══════════════════════════════════ HERO ═══════════════════════════════════ -->
+<section id="home" class="hero">
+  <div class="hero-left">
+    <div class="hero-orb"></div>
+
+    <div class="eyebrow aos">
+      <ShieldCheck size={13} />
       Community safety platform
     </div>
 
-    <h1 class="lz-hero-title animate-on-scroll">
-      Keep your community<br>
-      <span class="lz-violet-text">safe & connected</span>
+    <h1 class="hero-title aos" style="transition-delay:.1s">
+      Keep your<br>community<br><em>safe &amp; connected</em>
     </h1>
 
-    <p class="lz-hero-desc animate-on-scroll">
-      Real-time incident reporting • AI threat detection • Instant alerts • 
-      Fun safety games that teach real skills.
+    <p class="hero-desc aos" style="transition-delay:.2s">
+      Real-time incident reporting, AI-powered threat detection, and instant community alerts —
+      with safety games that actually build skills.
     </p>
 
-    <div class="lz-hero-btns animate-on-scroll">
-      <a href="/signup" class="lz-btn-primary">
-        Get started free
-        <ArrowRight size={16} />
+    <div class="hero-btns aos" style="transition-delay:.3s">
+      <a href="/signup" class="btn-primary">
+        Get started free <ArrowRight size={15} />
       </a>
-      <button onclick={() => scrollToSection('safety-quest')} class="lz-btn-secondary">
-        <Trophy size={16} />
-        Play Safety Quest
+      <button onclick={() => scroll('quest')} class="btn-ghost" type="button">
+        <Trophy size={15} /> Play Safety Quest
       </button>
     </div>
 
-    <div class="lz-stats animate-on-scroll">
-      <div class="lz-stat">
-        <span class="lz-stat-n">12K+</span>
-        <span class="lz-stat-l">Active users</span>
-      </div>
-      <div class="lz-stat-sep"></div>
-      <div class="lz-stat">
-        <span class="lz-stat-n">500+</span>
-        <span class="lz-stat-l">Communities</span>
-      </div>
-      <div class="lz-stat-sep"></div>
-      <div class="lz-stat">
-        <span class="lz-stat-n">98.4%</span>
-        <span class="lz-stat-l">Response rate</span>
-      </div>
+    <div class="hero-stats aos" style="transition-delay:.4s">
+      <div class="stat"><span class="stat-n">12K+</span><span class="stat-l">Active users</span></div>
+      <div class="stat-sep"></div>
+      <div class="stat"><span class="stat-n">500+</span><span class="stat-l">Communities</span></div>
+      <div class="stat-sep"></div>
+      <div class="stat"><span class="stat-n">98.4%</span><span class="stat-l">Response rate</span></div>
     </div>
   </div>
 
-  <div class="lz-hero-visual animate-on-scroll">
-    <div class="lz-map-card">
-      <div class="lz-map-topbar">
-        <MapPin size={14} style="color:var(--primary-color)" />
+  <div class="hero-right">
+    <div class="alert-card ac1 aos" style="transition-delay:.5s">
+      <div class="ac-dot" style="background:#ef4444"></div>
+      <div><strong>New incident reported</strong><span>2 min ago · Elm Street</span></div>
+    </div>
+
+    <div class="map-card aos" style="transition-delay:.35s">
+      <div class="map-topbar">
+        <MapPin size={13} style="color:var(--violet)" />
         <span>Live incident map</span>
-        <span class="lz-live-dot"></span>
-        <span style="font-size:0.75rem;color:var(--primary-color);font-weight:600">LIVE</span>
+        <span class="live-badge"><span class="live-dot"></span>LIVE</span>
       </div>
-      <div class="lz-map-grid">
-        {#each Array(54) as _, i}
-          <div class="lz-mc {i % 7 === 0 ? 'h' : (i % 5 === 0 ? 'w' : '')}"></div>
+      <div class="map-grid">
+        {#each Array(63) as _, i}
+          <div class="mc {i % 7 === 0 ? 'mh' : (i % 5 === 0 ? 'mw' : '')}"></div>
         {/each}
       </div>
-      <div class="lz-map-pins">
-        <div class="lz-pin p1"></div>
-        <div class="lz-pin p2"></div>
-        <div class="lz-pin p3"></div>
+      <div class="map-pins">
+        <div class="pin p1"></div>
+        <div class="pin p2"></div>
+        <div class="pin p3"></div>
       </div>
-      <div class="lz-map-legend">
-        <div class="lz-leg-item"><span class="lz-leg-dot" style="background:var(--primary-color)"></span>Active</div>
-        <div class="lz-leg-item"><span class="lz-leg-dot" style="background:var(--primary-light)"></span>Recent</div>
+      <div class="map-legend">
+        <span class="leg"><span class="leg-dot" style="background:var(--violet)"></span>Active</span>
+        <span class="leg"><span class="leg-dot" style="background:#ef4444"></span>Critical</span>
+        <span class="leg"><span class="leg-dot" style="background:#f59e0b"></span>Recent</span>
       </div>
+    </div>
+
+    <div class="alert-card ac2 aos" style="transition-delay:.6s">
+      <div class="ac-dot" style="background:#22c55e"></div>
+      <div><strong>Responder en route</strong><span>3 min ETA · Unit 7</span></div>
     </div>
   </div>
 </section>
 
-<!-- SAFETY QUEST -->
-<section id="safety-quest" class="lz-section" style="background: linear-gradient(135deg, #f3e8ff 0%, #f0f9ff 100%);">
-  <div class="lz-container">
-    <div class="lz-sec-head animate-on-scroll">
-      <span class="lz-tag">Learn by Playing</span>
-      <h2>Play Safety Quest</h2>
-      <p>Fun interactive games that teach real safety skills. Earn badges and compete with friends.</p>
-    </div>
-
-    <div class="lz-feat-grid">
-      <div class="lz-feat-card animate-on-scroll">
-        <div class="lz-feat-icon"><Trophy size={28} style="color:#eab308" /></div>
-        <h3>Real-Life Scenarios</h3>
-        <p>Face realistic emergencies and make critical decisions.</p>
-        <a href="/safety-quest" class="lz-btn-outline">Start Playing →</a>
-      </div>
-      <div class="lz-feat-card animate-on-scroll">
-        <div class="lz-feat-icon"><Target size={28} style="color:#22c55e" /></div>
-        <h3>Daily Quests</h3>
-        <p>Quick missions to sharpen your safety instincts.</p>
-      </div>
-      <div class="lz-feat-card animate-on-scroll">
-        <div class="lz-feat-icon"><Award size={28} style="color:#a855f7" /></div>
-        <h3>Leaderboards & Badges</h3>
-        <p>Compete and show off your safety achievements.</p>
-      </div>
-    </div>
+<!-- ══════════════════════════════ MARQUEE BAND ══════════════════════════════ -->
+<div class="marquee-band">
+  <div class="marquee-inner">
+    {#each [0,1] as _}
+      <span class="mq-item"><BellRing size={13} /> Real-time alerts</span>
+      <span class="mq-item"><BrainCircuit size={13} /> AI threat detection</span>
+      <span class="mq-item"><MapPin size={13} /> Live incident mapping</span>
+      <span class="mq-item"><Trophy size={13} /> Safety Quest games</span>
+      <span class="mq-item"><Users size={13} /> Community network</span>
+      <span class="mq-item"><Lock size={13} /> Privacy first</span>
+      <span class="mq-item"><Zap size={13} /> Instant alerts</span>
+      <span class="mq-item"><CheckCircle size={13} /> Verified reports</span>
+    {/each}
   </div>
-</section>
+</div>
 
-<!-- FEATURES -->
-<section id="features" class="lz-section lz-section-alt">
-  <div class="lz-container">
-    <div class="lz-sec-head animate-on-scroll">
-      <span class="lz-tag">Features</span>
+<!-- ══════════════════════════════ FEATURES ══════════════════════════════════ -->
+<section id="features" class="section section-white">
+  <div class="container">
+    <div class="sec-head aos">
+      <span class="sec-tag">Features</span>
       <h2>Powerful tools for safer communities</h2>
+      <p>Everything your neighbourhood needs to stay informed, connected, and protected.</p>
     </div>
-    <!-- Your existing features grid remains here -->
-    <div class="lz-feat-grid">
-      <!-- ... All your feature cards ... -->
+
+    <div class="feat-grid">
+      {#each features as f, i}
+        <div class="feat-card aos" style="transition-delay:{i * 0.08}s">
+          <div class="feat-icon"><svelte:component this={f.icon} size={22} /></div>
+          <h3>{f.title}</h3>
+          <p>{f.desc}</p>
+        </div>
+      {/each}
     </div>
   </div>
 </section>
 
-<!-- HOW IT WORKS, SAFETY TIPS sections remain as in your original -->
+<!-- ═══════════════════════════ SAFETY QUEST ═════════════════════════════════ -->
+<section id="quest" class="section quest-section">
+  <div class="container">
+    <div class="quest-grid">
 
-<!-- CTA -->
-<section class="lz-section">
-  <div class="lz-container">
-    <div class="lz-cta animate-on-scroll">
-      <h2>Ready to protect your community?</h2>
-      <p>Join thousands already making their neighbourhoods safer.</p>
-      <div class="lz-cta-btns">
-        <a href="/signup" class="lz-btn-primary lz-btn-lg">Get Started Free</a>
-        <a href="/report" class="lz-btn-outline-lg">Report an Incident</a>
+      <div class="quest-left aos">
+        <span class="sec-tag sec-tag-light">Learn by Playing</span>
+        <h2 class="white-heading">Safety skills that<br><em>stick with you</em></h2>
+        <p class="white-desc">
+          Safety Quest turns real emergency scenarios into engaging games. Make critical decisions,
+          earn badges, and compete — while building skills that genuinely matter.
+        </p>
+        <a href="/safety-quest" class="btn-primary btn-lilac">
+          Start Playing <ArrowRight size={15} />
+        </a>
+
+        <div class="quest-cards">
+          <div class="quest-card">
+            <div class="qc-icon" style="background:rgba(234,179,8,.15)">
+              <Trophy size={20} style="color:#eab308" />
+            </div>
+            <div>
+              <h4>Real-Life Scenarios</h4>
+              <p>Face realistic emergencies and practice your response under pressure.</p>
+            </div>
+          </div>
+          <div class="quest-card">
+            <div class="qc-icon" style="background:rgba(34,197,94,.15)">
+              <Target size={20} style="color:#22c55e" />
+            </div>
+            <div>
+              <h4>Daily Quests</h4>
+              <p>Quick 3-minute missions to sharpen your safety instincts every day.</p>
+            </div>
+          </div>
+          <div class="quest-card">
+            <div class="qc-icon" style="background:rgba(168,85,247,.15)">
+              <Award size={20} style="color:#a855f7" />
+            </div>
+            <div>
+              <h4>Leaderboards &amp; Badges</h4>
+              <p>Compete with neighbours and show off your safety achievements.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Score panel -->
+      <div class="score-panel aos" style="transition-delay:.2s">
+        <div class="score-header">
+          <span class="score-label">Your Safety Score</span>
+          <span>🏆</span>
+        </div>
+        <div class="score-user">
+          <div class="score-avatar">A</div>
+          <div>
+            <div class="score-name">Alex M.</div>
+            <div class="score-pts"><strong>2,840 pts</strong> · Rank #12 in your area</div>
+          </div>
+        </div>
+        <div class="score-bars">
+          {#each [['Emergency Response', 92], ['First Aid Knowledge', 78], ['Situational Awareness', 85]] as [label, pct]}
+            <div class="score-bar">
+              <div class="sb-label"><span>{label}</span><span>{pct}%</span></div>
+              <div class="sb-track"><div class="sb-fill" style="width:{pct}%"></div></div>
+            </div>
+          {/each}
+        </div>
+        <div class="score-chips">
+          <span class="chip">🔥 7-day streak</span>
+          <span class="chip">🛡 First Responder</span>
+          <span class="chip">⚡ Quick Thinker</span>
+          <span class="chip">🌟 Community Hero</span>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- FOOTER -->
-<footer class="lz-footer">
-  <div class="lz-container">
-    <div class="lz-foot-grid">
-      <div>
+<!-- ══════════════════════════ HOW IT WORKS ══════════════════════════════════ -->
+<section id="how" class="section section-fog">
+  <div class="container">
+    <div class="sec-head aos">
+      <span class="sec-tag">How it Works</span>
+      <h2>Safety in three simple steps</h2>
+      <p>From spotting an incident to community response — Lezie makes it effortless.</p>
+    </div>
 
-      <div class="lz-foot-col">
+    <div class="steps">
+      {#each steps as s, i}
+        <div class="step aos" style="transition-delay:{i * 0.12}s">
+          <div class="step-num">{s.n}</div>
+          <h3>{s.title}</h3>
+          <p>{s.desc}</p>
+        </div>
+      {/each}
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ CTA ══════════════════════════════════════ -->
+<section class="cta-section">
+  <div class="cta-inner aos">
+    <span class="sec-tag sec-tag-light">Get Started Today</span>
+    <h2>Ready to protect<br><em>your community?</em></h2>
+    <p>Join thousands already making their neighbourhoods safer. Free to get started, no credit card needed.</p>
+    <div class="cta-btns">
+      <a href="/signup"  class="btn-cta-white">Get started free <ArrowRight size={16} /></a>
+      <a href="/report"  class="btn-cta-ghost"><FlagTriangleRight size={16} /> Report an Incident</a>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════ FOOTER ══════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <div class="foot-logo">
+          <img src="/icons/lz_ico.png" alt="Lezie" width="28" height="28" />
+          <span>Lezie</span>
+        </div>
+        <p>Real-time incident reporting, AI threat detection, and safety games for safer communities.</p>
+      </div>
+      <div class="foot-col">
         <h4>Company</h4>
-        <a href="/about" class="lz-foot-link">About Us</a>
-        <a href="/contact" class="lz-foot-link">Contact</a>
+        <a href="/about"      class="foot-link">About Us</a>
+        <a href="/contact"    class="foot-link">Contact</a>
+        <a href="/dashboard"  class="foot-link">Dashboard</a>
       </div>
-
-      <div class="lz-foot-col">
+      <div class="foot-col">
         <h4>Resources</h4>
-        <a href="/faq" class="lz-foot-link">FAQ</a>
-        <a href="/safety-guidelines" class="lz-foot-link">Safety Guidelines</a>
+        <a href="/faq"               class="foot-link">FAQ</a>
+        <a href="/safety-guidelines" class="foot-link">Safety Guidelines</a>
+        <a href="/safety-quest"      class="foot-link">Safety Quest</a>
       </div>
-
-      <div class="lz-foot-col">
+      <div class="foot-col">
         <h4>Legal</h4>
-        <a href="/privacy" class="lz-foot-link">Privacy Policy</a>
-        <a href="/terms" class="lz-foot-link">Terms of Service</a>
+        <a href="/privacy" class="foot-link">Privacy Policy</a>
+        <a href="/terms"   class="foot-link">Terms of Service</a>
       </div>
     </div>
-
-    <div class="lz-foot-bottom">
+    <div class="foot-divider"></div>
+    <div class="foot-bottom">
       <p>&copy; 2026 Lezie. All rights reserved.</p>
+      <div class="foot-badge"><ShieldCheck size={14} style="color:#22c55e" /> Keeping communities safe</div>
     </div>
   </div>
 </footer>
 
 <style>
-  
+  /* ─── RESET & TOKENS ─────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :global(body) {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: #faf9ff;
+    color: #1a0b2e;
+    overflow-x: hidden;
+  }
+
+  :global(html) { scroll-behavior: smooth; }
+
+  :global(::-webkit-scrollbar)       { width: 5px; }
+  :global(::-webkit-scrollbar-track) { background: #f3f0ff; }
+  :global(::-webkit-scrollbar-thumb) { background: #6a2c91; border-radius: 99px; }
+
+  /* tokens */
+  :global(:root) {
+    --ink:    #1a0b2e;
+    --ink-m:  #2d1b4e;
+    --violet: #6a2c91;
+    --viol-l: #8b5cf6;
+    --lilac:  #c4b5fd;
+    --cream:  #faf9ff;
+    --fog:    #f3f0ff;
+    --mist:   #e9e4f9;
+    --serif:  'DM Serif Display', Georgia, serif;
+  }
+
+  /* ─── ANIMATIONS ────────────────────────────────────────────────────── */
+  @keyframes pulse   { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.3);opacity:.6} }
+  @keyframes drift   { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-20px) rotate(3deg)} }
+  @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+  @keyframes ringOut { 0%{transform:translate(-50%,-50%) scale(.7);opacity:.6} 100%{transform:translate(-50%,-50%) scale(2);opacity:0} }
+  @keyframes fadeUp  { from{opacity:0;transform:translateY(26px)} to{opacity:1;transform:translateY(0)} }
+
+  :global(.aos)     { opacity:0; transform:translateY(24px); transition: opacity .75s ease, transform .75s ease; }
+  :global(.aos.vis) { opacity:1; transform:translateY(0); }
+
+  /* ─── NAV ───────────────────────────────────────────────────────────── */
+  .nav {
+    position: fixed; top:0; left:0; right:0; z-index:100;
+    background: rgba(250,249,255,.88);
+    backdrop-filter: blur(20px) saturate(160%);
+    border-bottom: 1px solid rgba(106,44,145,.08);
+  }
+  .nav-inner {
+    max-width: 1220px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 2.5rem;
+  }
+  .nav-logo {
+    display:flex; align-items:center; gap:.625rem;
+    background:none; border:none; cursor:pointer;
+    font-family: var(--serif); font-size:1.375rem; color:var(--ink);
+    letter-spacing:-.02em; text-decoration:none;
+  }
+  .nav-logo img { border-radius:8px; }
+
+  .hamburger {
+    display:none; background:none; border:none;
+    cursor:pointer; color:var(--ink); padding:.25rem;
+  }
+
+  .nav-links { display:flex; align-items:center; gap:.25rem; }
+  .nav-link {
+    background:none; border:none; font-family:'DM Sans',sans-serif;
+    font-size:.875rem; font-weight:500; color:#64748b;
+    padding:.5rem .875rem; border-radius:99px; cursor:pointer;
+    transition: color .2s, background .2s;
+  }
+  .nav-link:hover { color:var(--violet); background:rgba(106,44,145,.07); }
+  .nav-cta {
+    display:inline-flex; align-items:center; gap:.375rem;
+    background: linear-gradient(135deg,#6a2c91,#4a1d6e);
+    color:white; font-size:.8125rem; font-weight:600;
+    padding:.5rem 1.125rem; border-radius:99px; text-decoration:none;
+    box-shadow:0 2px 12px rgba(106,44,145,.35);
+    transition: transform .2s, box-shadow .2s;
+  }
+  .nav-cta:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(106,44,145,.45); }
+
+  /* ─── FAB ────────────────────────────────────────────────────────────── */
+  .fab {
+    position:fixed; bottom:2rem; right:2rem; z-index:200;
+    display:flex; align-items:center; gap:.5rem;
+    background: linear-gradient(135deg,#6a2c91,#4a1d6e);
+    color:white; font-size:.8rem; font-weight:700;
+    padding:.75rem 1.25rem; border-radius:99px; text-decoration:none;
+    box-shadow:0 6px 24px rgba(106,44,145,.45);
+    transition: transform .25s, box-shadow .25s;
+    font-family:'DM Sans',sans-serif;
+  }
+  .fab:hover { transform:translateY(-3px); box-shadow:0 10px 32px rgba(106,44,145,.6); }
+
+  /* ─── HERO ───────────────────────────────────────────────────────────── */
+  .hero {
+    display:grid; grid-template-columns:1fr 1fr;
+    min-height:100vh; position:relative;
+  }
+
+  /* — left dark panel — */
+  .hero-left {
+    background: linear-gradient(160deg,#1a0b2e 0%,#2d1b4e 60%,#3d2060 100%);
+    display:flex; flex-direction:column; justify-content:center;
+    padding: 9rem 5rem 7rem 6rem;
+    position:relative; overflow:hidden;
+  }
+  .hero-left::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse 80% 70% at 20% 60%, rgba(139,92,246,.18), transparent 70%);
+    pointer-events:none;
+  }
+  .hero-orb {
+    position:absolute; bottom:-100px; right:-100px;
+    width:360px; height:360px;
+    background: radial-gradient(circle, rgba(106,44,145,.4), transparent 70%);
+    border-radius:50%; animation: drift 9s ease-in-out infinite;
+  }
+
+  .eyebrow {
+    display:inline-flex; align-items:center; gap:.5rem;
+    background:rgba(196,181,253,.15); border:1px solid rgba(196,181,253,.25);
+    border-radius:99px; padding:.375rem .875rem;
+    font-size:.75rem; font-weight:600; color:#c4b5fd;
+    letter-spacing:.06em; text-transform:uppercase;
+    margin-bottom:2rem; width:fit-content; position:relative; z-index:1;
+  }
+
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(2.75rem,4.5vw,4.25rem);
+    line-height:1.07; color:white;
+    margin-bottom:1.75rem; position:relative; z-index:1;
+  }
+  .hero-title em { color:#c4b5fd; font-style:italic; }
+
+  .hero-desc {
+    font-size:.9375rem; line-height:1.8;
+    color:rgba(196,181,253,.85);
+    max-width:420px; margin-bottom:2.75rem;
+    position:relative; z-index:1;
+  }
+
+  .hero-btns {
+    display:flex; gap:.875rem; flex-wrap:wrap;
+    margin-bottom:3.5rem; position:relative; z-index:1;
+  }
+
+  .hero-stats { display:flex; gap:2.25rem; position:relative; z-index:1; }
+  .stat { display:flex; flex-direction:column; gap:.25rem; }
+  .stat-n { font-family:var(--serif); font-size:1.875rem; color:white; }
+  .stat-l { font-size:.75rem; color:rgba(196,181,253,.7); font-weight:500; letter-spacing:.04em; }
+  .stat-sep { width:1px; background:rgba(255,255,255,.12); align-self:stretch; }
+
+  /* — right light panel — */
+  .hero-right {
+    background:#f3f0ff;
+    display:flex; align-items:center; justify-content:center;
+    padding:8rem 4rem 6rem; position:relative; overflow:hidden;
+  }
+  .hero-right::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse 60% 55% at 65% 40%, rgba(196,181,253,.35), transparent 70%);
+    pointer-events:none;
+  }
+
+  /* floating alert cards */
+  .alert-card {
+    position:absolute; background:white;
+    border:1px solid rgba(106,44,145,.1); border-radius:1rem;
+    box-shadow:0 8px 28px rgba(106,44,145,.12);
+    padding:.875rem 1.125rem;
+    display:flex; align-items:center; gap:.75rem;
+    font-size:.8rem; z-index:3;
+  }
+  .alert-card strong { display:block; font-weight:700; color:var(--ink); }
+  .alert-card span   { color:#94a3b8; font-size:.75rem; }
+  .ac-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .ac1 { top:7rem; left:1.5rem; }
+  .ac2 { bottom:6rem; right:1.5rem; }
+
+  /* map card */
+  .map-card {
+    background:white; border-radius:1.5rem;
+    border:1px solid rgba(106,44,145,.1);
+    box-shadow:0 28px 64px rgba(106,44,145,.18), 0 4px 12px rgba(0,0,0,.05);
+    width:100%; max-width:370px;
+    overflow:hidden; position:relative; z-index:2;
+  }
+  .map-topbar {
+    display:flex; align-items:center; gap:.5rem;
+    padding:.875rem 1rem; font-size:.8125rem; font-weight:600; color:var(--ink);
+    border-bottom:1px solid rgba(106,44,145,.07);
+  }
+  .live-badge {
+    margin-left:auto; display:flex; align-items:center; gap:.375rem;
+    font-size:.7rem; font-weight:700; color:var(--violet);
+    letter-spacing:.06em; text-transform:uppercase;
+  }
+  .live-dot { width:7px; height:7px; border-radius:50%; background:#22c55e; animation:pulse 2s ease-in-out infinite; }
+
+  .map-grid { display:grid; grid-template-columns:repeat(9,1fr); gap:3px; padding:1rem; }
+  .mc  { height:20px; border-radius:3px; background:#ede8f7; }
+  .mh { background:rgba(106,44,145,.32); }
+  .mw { background:rgba(196,181,253,.55); }
+
+  .map-pins { position:relative; height:56px; margin:0 1rem; }
+  .pin {
+    position:absolute; width:20px; height:20px; border-radius:50%;
+    border:2px solid white; box-shadow:0 2px 8px rgba(0,0,0,.18);
+  }
+  .pin::after {
+    content:''; position:absolute; top:50%; left:50%;
+    width:30px; height:30px; border-radius:50%;
+    background:inherit; opacity:.22;
+    animation:ringOut 2.2s ease-out infinite;
+  }
+  .p1 { background:#6a2c91; top:10px; left:18%; }
+  .p2 { background:#ef4444; top:20px; left:52%; animation-delay:.8s; }
+  .p3 { background:#f59e0b; top:6px; left:74%; animation-delay:1.6s; }
+
+  .map-legend {
+    display:flex; gap:1rem; padding:.75rem 1rem;
+    border-top:1px solid rgba(106,44,145,.07);
+  }
+  .leg { display:flex; align-items:center; gap:.375rem; font-size:.75rem; color:#64748b; font-weight:500; }
+  .leg-dot { width:8px; height:8px; border-radius:50%; }
+
+  /* ─── MARQUEE ────────────────────────────────────────────────────────── */
+  .marquee-band {
+    background: linear-gradient(135deg,#6a2c91,#4a1d6e);
+    overflow:hidden; padding:1rem 0;
+  }
+  .marquee-inner { display:flex; width:max-content; animation:marquee 30s linear infinite; }
+  .mq-item {
+    display:inline-flex; align-items:center; gap:.5rem;
+    padding:0 2.5rem; font-size:.8rem; font-weight:600;
+    color:rgba(255,255,255,.85); white-space:nowrap;
+    border-right:1px solid rgba(255,255,255,.15);
+  }
+
+  /* ─── SECTIONS ───────────────────────────────────────────────────────── */
+  .section      { padding:8rem 0; }
+  .section-white{ background:white; }
+  .section-fog  { background:var(--fog); }
+
+  .container { max-width:1180px; margin:0 auto; padding:0 2.5rem; }
+
+  .sec-head { text-align:center; margin-bottom:5rem; }
+  .sec-tag {
+    display:inline-flex; align-items:center; gap:.375rem;
+    background:rgba(106,44,145,.08); border:1px solid rgba(106,44,145,.15);
+    border-radius:99px; padding:.3rem .875rem;
+    font-size:.7rem; font-weight:700; color:var(--violet);
+    letter-spacing:.07em; text-transform:uppercase; margin-bottom:1.25rem;
+  }
+  .sec-tag-light {
+    background:rgba(196,181,253,.15); border-color:rgba(196,181,253,.3); color:#c4b5fd;
+  }
+  .sec-head h2 {
+    font-family:var(--serif); font-size:clamp(2rem,4vw,3rem);
+    color:var(--ink); margin-bottom:1rem; line-height:1.15;
+  }
+  .sec-head p { font-size:1rem; color:#64748b; max-width:500px; margin:0 auto; line-height:1.75; }
+
+  /* ─── FEATURES ───────────────────────────────────────────────────────── */
+  .feat-grid {
+    display:grid; grid-template-columns:repeat(3,1fr); gap:1.75rem;
+  }
+  .feat-card {
+    border-radius:1.25rem; padding:2.25rem 2rem;
+    border:1px solid var(--mist); background:var(--cream);
+    transition: transform .3s, box-shadow .3s, border-color .3s;
+    position:relative; overflow:hidden;
+  }
+  .feat-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg,var(--violet),var(--viol-l));
+    opacity:0; transition:opacity .3s;
+  }
+  .feat-card:hover { transform:translateY(-5px); box-shadow:0 16px 40px rgba(106,44,145,.12); border-color:rgba(106,44,145,.2); }
+  .feat-card:hover::before { opacity:1; }
+  .feat-icon {
+    width:52px; height:52px; border-radius:14px; margin-bottom:1.5rem;
+    background:linear-gradient(135deg,rgba(106,44,145,.1),rgba(139,92,246,.07));
+    display:flex; align-items:center; justify-content:center; color:var(--violet);
+  }
+  .feat-card h3 { font-family:var(--serif); font-size:1.125rem; color:var(--ink); margin-bottom:.625rem; }
+  .feat-card p  { font-size:.875rem; color:#64748b; line-height:1.7; }
+
+  /* ─── SAFETY QUEST ───────────────────────────────────────────────────── */
+  .quest-section {
+    background:linear-gradient(160deg,#1a0b2e 0%,#2d1b4e 55%,#1a0b2e 100%);
+    position:relative; overflow:hidden;
+  }
+  .quest-section::before {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse 70% 60% at 50% 50%, rgba(139,92,246,.2), transparent 70%);
+    pointer-events:none;
+  }
+  .quest-grid {
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:6rem; align-items:center; position:relative; z-index:1;
+  }
+
+  .white-heading {
+    font-family:var(--serif); font-size:clamp(2rem,3.5vw,3rem);
+    color:white; line-height:1.12; margin:1rem 0 1.25rem;
+  }
+  .white-heading em { color:#c4b5fd; font-style:italic; }
+  .white-desc { font-size:.9375rem; line-height:1.8; color:rgba(196,181,253,.85); margin-bottom:2rem; }
+
+  .btn-lilac {
+    background:linear-gradient(135deg,#c4b5fd,#a78bfa);
+    color:#1a0b2e !important; box-shadow:0 4px 20px rgba(196,181,253,.3);
+  }
+  .btn-lilac:hover { box-shadow:0 8px 28px rgba(196,181,253,.45); }
+
+  .quest-cards { display:flex; flex-direction:column; gap:1rem; margin-top:2rem; }
+  .quest-card {
+    display:flex; align-items:flex-start; gap:1rem;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+    border-radius:1rem; padding:1.25rem;
+    backdrop-filter:blur(10px);
+    transition: background .25s, border-color .25s;
+  }
+  .quest-card:hover { background:rgba(255,255,255,.09); border-color:rgba(196,181,253,.3); }
+  .qc-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .quest-card h4 { font-size:.9375rem; font-weight:700; color:white; margin-bottom:.25rem; }
+  .quest-card p  { font-size:.8125rem; color:rgba(196,181,253,.8); line-height:1.55; }
+
+  /* score panel */
+  .score-panel {
+    background:rgba(255,255,255,.06); border:1px solid rgba(196,181,253,.2);
+    border-radius:1.5rem; padding:2.25rem;
+    backdrop-filter:blur(14px);
+  }
+  .score-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem; }
+  .score-label  { font-size:.7rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:rgba(196,181,253,.7); }
+  .score-user {
+    display:flex; align-items:center; gap:1rem; margin-bottom:1.75rem;
+    padding:1.125rem; background:rgba(255,255,255,.07); border-radius:1rem;
+  }
+  .score-avatar {
+    width:48px; height:48px; border-radius:50%;
+    background:linear-gradient(135deg,#c4b5fd,#8b5cf6);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--serif); font-size:1.25rem; color:white; flex-shrink:0;
+  }
+  .score-name { font-weight:700; color:white; font-size:.9375rem; }
+  .score-pts  { font-size:.8125rem; color:rgba(196,181,253,.8); }
+  .score-pts strong { color:#c4b5fd; }
+  .score-bars { display:flex; flex-direction:column; gap:1rem; }
+  .score-bar  { }
+  .sb-label   { display:flex; justify-content:space-between; font-size:.75rem; font-weight:600; color:rgba(196,181,253,.8); margin-bottom:.4rem; }
+  .sb-track   { height:7px; background:rgba(255,255,255,.1); border-radius:99px; overflow:hidden; }
+  .sb-fill    { height:100%; border-radius:99px; background:linear-gradient(90deg,#c4b5fd,#8b5cf6); }
+  .score-chips{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:1.5rem; }
+  .chip {
+    display:inline-flex; align-items:center; gap:.375rem;
+    background:rgba(196,181,253,.15); border:1px solid rgba(196,181,253,.25);
+    border-radius:99px; padding:.3rem .75rem;
+    font-size:.75rem; font-weight:600; color:#c4b5fd;
+  }
+
+  /* ─── HOW IT WORKS ───────────────────────────────────────────────────── */
+  .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:3rem; position:relative; }
+  .steps::before {
+    content:''; position:absolute; top:44px; left:16%; right:16%;
+    height:1px; background:linear-gradient(90deg,transparent,rgba(106,44,145,.3),transparent);
+  }
+  .step { text-align:center; padding:1rem; }
+  .step-num {
+    width:60px; height:60px; border-radius:50%;
+    background:linear-gradient(135deg,#6a2c91,#8b5cf6);
+    color:white; font-family:var(--serif); font-size:1.25rem;
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 2rem; box-shadow:0 4px 18px rgba(106,44,145,.3);
+  }
+  .step h3 { font-family:var(--serif); font-size:1.25rem; color:var(--ink); margin-bottom:.75rem; }
+  .step p  { font-size:.9rem; color:#64748b; line-height:1.7; }
+
+  /* ─── CTA ────────────────────────────────────────────────────────────── */
+  .cta-section {
+    background:linear-gradient(135deg,#1a0b2e 0%,#3d2060 50%,#1a0b2e 100%);
+    text-align:center; padding:9rem 2rem;
+    position:relative; overflow:hidden;
+  }
+  .cta-section::before {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse 60% 60% at 50% 50%, rgba(196,181,253,.15), transparent 70%);
+    pointer-events:none;
+  }
+  .cta-inner { position:relative; z-index:1; }
+  .cta-inner h2 {
+    font-family:var(--serif); font-size:clamp(2rem,5vw,3.75rem);
+    color:white; margin:1rem 0 1.25rem; line-height:1.12;
+  }
+  .cta-inner h2 em { color:#c4b5fd; font-style:italic; }
+  .cta-inner p { font-size:1rem; color:rgba(196,181,253,.85); max-width:480px; margin:0 auto 2.75rem; line-height:1.75; }
+  .cta-btns { display:flex; justify-content:center; gap:1rem; flex-wrap:wrap; }
+  .btn-cta-white {
+    display:inline-flex; align-items:center; gap:.5rem;
+    background:white; color:var(--ink); font-size:.9375rem; font-weight:700;
+    padding:.9375rem 2.125rem; border-radius:99px; text-decoration:none;
+    box-shadow:0 4px 20px rgba(0,0,0,.2);
+    transition:all .25s; font-family:'DM Sans',sans-serif;
+  }
+  .btn-cta-white:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,0,0,.3); }
+  .btn-cta-ghost {
+    display:inline-flex; align-items:center; gap:.5rem;
+    background:transparent; border:1.5px solid rgba(196,181,253,.4);
+    color:white; font-size:.9375rem; font-weight:600;
+    padding:.9375rem 2.125rem; border-radius:99px; text-decoration:none;
+    transition:all .25s; font-family:'DM Sans',sans-serif;
+  }
+  .btn-cta-ghost:hover { border-color:rgba(196,181,253,.8); background:rgba(196,181,253,.08); }
+
+  /* ─── BUTTONS (shared) ───────────────────────────────────────────────── */
+  .btn-primary {
+    display:inline-flex; align-items:center; gap:.5rem;
+    background:linear-gradient(135deg,#c4b5fd,#a78bfa);
+    color:#1a0b2e; font-size:.9rem; font-weight:700;
+    padding:.875rem 1.75rem; border-radius:99px; text-decoration:none;
+    box-shadow:0 4px 20px rgba(196,181,253,.35);
+    transition:all .25s; border:none; cursor:pointer; font-family:'DM Sans',sans-serif;
+  }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(196,181,253,.5); }
+  .btn-ghost {
+    display:inline-flex; align-items:center; gap:.5rem;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2);
+    color:white; font-size:.9rem; font-weight:600;
+    padding:.875rem 1.75rem; border-radius:99px;
+    transition:all .25s; cursor:pointer; font-family:'DM Sans',sans-serif;
+    backdrop-filter:blur(8px);
+  }
+  .btn-ghost:hover { background:rgba(255,255,255,.15); border-color:rgba(255,255,255,.35); }
+
+  /* ─── FOOTER ─────────────────────────────────────────────────────────── */
+  .footer { background:#120820; padding:5rem 0 2.5rem; }
+  .foot-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:3rem; margin-bottom:3.5rem; }
+  .foot-brand { display:flex; flex-direction:column; }
+  .foot-logo  { display:flex; align-items:center; gap:.5rem; margin-bottom:1.125rem; }
+  .foot-logo span { font-family:var(--serif); font-size:1.25rem; color:white; }
+  .foot-logo img  { border-radius:7px; }
+  .foot-brand p { font-size:.8rem; color:rgba(196,181,253,.55); line-height:1.75; max-width:230px; }
+  .foot-col h4  { font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:rgba(196,181,253,.55); margin-bottom:1.25rem; }
+  .foot-link    { display:block; font-size:.875rem; color:rgba(255,255,255,.55); text-decoration:none; margin-bottom:.75rem; transition:color .2s; }
+  .foot-link:hover { color:white; }
+  .foot-divider { height:1px; background:rgba(255,255,255,.06); margin-bottom:2rem; }
+  .foot-bottom  { display:flex; justify-content:space-between; align-items:center; }
+  .foot-bottom p { font-size:.8rem; color:rgba(255,255,255,.3); }
+  .foot-badge   { display:flex; align-items:center; gap:.5rem; font-size:.75rem; color:rgba(196,181,253,.45); }
+
+  /* ─── RESPONSIVE ─────────────────────────────────────────────────────── */
+  @media (max-width:1024px) {
+    .hero { grid-template-columns:1fr; min-height:auto; }
+    .hero-left { padding:9rem 2.5rem 5rem; }
+    .hero-right { padding:4rem 2.5rem 5rem; }
+    .feat-grid  { grid-template-columns:1fr 1fr; }
+    .quest-grid { grid-template-columns:1fr; gap:4rem; }
+    .foot-grid  { grid-template-columns:1fr 1fr; gap:2.5rem; }
+    .nav-inner  { padding:1rem 1.5rem; }
+    .hamburger  { display:block; }
+    .nav-links  { display:none; }
+    .nav-links.open {
+      display:flex; flex-direction:column; align-items:flex-start;
+      position:absolute; top:100%; left:0; right:0;
+      background:rgba(250,249,255,.97); backdrop-filter:blur(20px);
+      padding:1.25rem 1.5rem; gap:.25rem;
+      border-bottom:1px solid rgba(106,44,145,.1);
+    }
+    .ac1, .ac2 { display:none; }
+  }
+  @media (max-width:640px) {
+    .hero-left  { padding:8rem 1.5rem 4rem; }
+    .hero-right { padding:3rem 1.5rem 4rem; }
+    .feat-grid  { grid-template-columns:1fr; }
+    .steps      { grid-template-columns:1fr; gap:2rem; }
+    .steps::before { display:none; }
+    .foot-grid  { grid-template-columns:1fr; gap:2rem; }
+    .foot-bottom { flex-direction:column; gap:1rem; text-align:center; }
+    .section    { padding:5rem 0; }
+    .cta-section { padding:6rem 1.5rem; }
+  }
 </style>
