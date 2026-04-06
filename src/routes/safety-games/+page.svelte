@@ -38,6 +38,9 @@
   let gameCompleted = $derived(currentIndex >= totalQuestions);
   let accuracy = $derived(answersHistory.length > 0 ? Math.round((answersHistory.filter(Boolean).length / answersHistory.length) * 100) : 0);
 
+  // Performance level for results screen
+  let performance = $derived(getPerformanceLevel());
+
   function startNewGame() {
     questions = getRandomQuestions(8);
     currentIndex = 0;
@@ -281,8 +284,6 @@
     {:else}
       <!-- Results Screen -->
       <div class="results-container">
-        {@const performance = getPerformanceLevel()}
-        
         <div class="results-card">
           <div class="results-icon" style="color: {performance.color}">
             <svelte:component this={performance.icon} size={64} strokeWidth={1.5} />
