@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import { 
     Cookie, Shield, BarChart2, Target, Settings, ChevronRight, 
-    ArrowLeft, ExternalLink, Lock, Zap, MapPin, TrendingUp 
+    ArrowLeft, ExternalLink, Lock, Zap, MapPin, Users, ChevronLeft, TrendingUp 
   } from 'lucide-svelte';
 
   let activeSection = $state('what-are-cookies');
