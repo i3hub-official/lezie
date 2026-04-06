@@ -1,3 +1,4 @@
+
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -11,7 +12,6 @@
     PanelLeftClose, PanelLeftOpen
   } from 'lucide-svelte';
 
-  // Import all page components
   import MapPage        from './MapPage.svelte';
   import AlertsPage     from './AlertsPage.svelte';
   import StatisticsPage from './StatisticsPage.svelte';
@@ -31,16 +31,10 @@
   let isSidebarCollapsed = $state(false);
   let isMobile         = $state(false);
 
-  // Page components mapping
   const pages: Record<string, any> = {
-    dashboard: null,
-    map: MapPage,
-    alerts: AlertsPage,
-    statistics: StatisticsPage,
-    reports: ReportsPage,
-    community: CommunityPage,
-    profile: ProfilePage,
-    settings: SettingsPage
+    dashboard: null, map: MapPage, alerts: AlertsPage,
+    statistics: StatisticsPage, reports: ReportsPage,
+    community: CommunityPage, profile: ProfilePage, settings: SettingsPage
   };
 
   let CurrentPageComponent = $derived(pages[activePage]);
@@ -49,24 +43,7 @@
     checkMobile();
     window.addEventListener('resize', checkMobile);
     loadData();
-    
-    // Use hash-based routing to hide URLs from address bar
-    const handleHashChange = () => {
-      const hash = window.location.hash.slice(1);
-      if (hash && pages[hash]) {
-        activePage = hash;
-      } else if (!hash) {
-        activePage = 'dashboard';
-      }
-    };
-    
-    window.addEventListener('hashchange', handleHashChange);
-    handleHashChange();
-    
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-      window.removeEventListener('hashchange', handleHashChange);
-    };
+    return () => window.removeEventListener('resize', checkMobile);
   });
 
   function checkMobile() {
@@ -126,12 +103,12 @@
 
   const unreadCount = $derived(notifications.filter(n => !n.read).length);
 
-  // Navigate using hash - URLs stay hidden from browser history bar
   function navigate(page: string) {
     activePage = page;
     isMobileMenuOpen = false;
-    // Use hash to store state without changing the actual URL path
-    window.location.hash = page === 'dashboard' ? '' : page;
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', page);
+    window.history.pushState({}, '', url);
   }
 
   async function handleLogout() {
@@ -413,6 +390,8 @@
 
   <!-- ══ MOBILE DRAWER ══ -->
   {#if isMobileMenuOpen}
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="db-drawer-overlay" onclick={() => isMobileMenuOpen = false}>
       <aside class="db-drawer" onclick={(e) => e.stopPropagation()}>
 
