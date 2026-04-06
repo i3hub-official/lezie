@@ -42,27 +42,26 @@
     Hand,
     Footprints,
     Vest,
-    Mask,
-    Flame as FireIcon
+    Mask
   } from 'lucide-svelte';
 
-  let isMenuOpen = $state(false);
-  let activeGame = $state<string | null>(null);
-  let gameScore = $state(0);
-  let gameTimer = $state(0);
+  let isMenuOpen = false;
+  let activeGame: string | null = null;
+  let gameScore = 0;
+  let gameTimer = 0;
   let gameInterval: ReturnType<typeof setInterval> | null = null;
 
-  // Game 1: Spot the Hazard - using Lucide icons only
-  let hazardItems = $state([
+  // Game 1: Spot the Hazard
+  let hazardItems = [
     { id: 1, x: 20, y: 30, type: 'spill', found: false, icon: Droplets, color: '#06b6d4' },
     { id: 2, x: 70, y: 20, type: 'wire', found: false, icon: Zap, color: '#f59e0b' },
     { id: 3, x: 45, y: 60, type: 'box', found: false, icon: Package, color: '#8b5cf6' },
-    { id: 4, x: 80, y: 70, type: 'fire', found: false, icon: FireIcon, color: '#ef4444' },
+    { id: 4, x: 80, y: 70, type: 'fire', found: false, icon: Flame, color: '#ef4444' },
     { id: 5, x: 15, y: 80, type: 'wet', found: false, icon: AlertOctagon, color: '#f97316' }
-  ]);
+  ];
 
   // Game 2: Emergency Response
-  let emergencyScenario = $state({
+  let emergencyScenario = {
     situation: 'Fire in the kitchen',
     options: [
       { id: 1, text: 'Use water to put out grease fire', correct: false },
@@ -72,21 +71,21 @@
     ],
     selected: [] as number[],
     submitted: false
-  });
+  };
 
   // Game 3: Safety Crossword
-  let crosswordWords = $state([
+  let crosswordWords = [
     { word: 'HELMET', found: false, hint: 'Head protection gear' },
     { word: 'EXIT', found: false, hint: 'Way out during emergency' },
     { word: 'ALERT', found: false, hint: 'Stay aware and watchful' },
     { word: 'FIRSTAID', found: false, hint: 'Emergency medical kit' }
-  ]);
-  let currentGuess = $state('');
-  let foundWords = $state<string[]>([]);
+  ];
+  let currentGuess = '';
+  let foundWords: string[] = [];
 
   // Game 4: Traffic Safety Challenge
-  let trafficQuestion = $state(0);
-  let trafficScore = $state(0);
+  let trafficQuestion = 0;
+  let trafficScore = 0;
   let trafficQuestions = [
     {
       question: 'What does a flashing yellow light mean?',
@@ -105,17 +104,17 @@
     }
   ];
 
-  // Game 5: PPE Matching - using Lucide icons only
-  let ppeItems = $state([
+  // Game 5: PPE Matching
+  let ppeItems = [
     { id: 1, name: 'Hard Hat', icon: HardHat, color: '#f59e0b', matched: false },
     { id: 2, name: 'Safety Glasses', icon: Glasses, color: '#06b6d4', matched: false },
     { id: 3, name: 'Gloves', icon: Hand, color: '#8b5cf6', matched: false },
     { id: 4, name: 'Boots', icon: Footprints, color: '#ef4444', matched: false },
     { id: 5, name: 'Vest', icon: Vest, color: '#f97316', matched: false },
     { id: 6, name: 'Mask', icon: Mask, color: '#10b981', matched: false }
-  ]);
-  let selectedPPE: number | null = $state(null);
-  let ppeMatches = $state(0);
+  ];
+  let selectedPPE: number | null = null;
+  let ppeMatches = 0;
 
   onMount(() => {
     const observer = new IntersectionObserver(
@@ -204,6 +203,7 @@
     } else {
       emergencyScenario.selected = [...emergencyScenario.selected, id];
     }
+    emergencyScenario = { ...emergencyScenario };
   }
 
   function submitEmergencyResponse() {
@@ -216,6 +216,7 @@
     
     const wrong = emergencyScenario.selected.length - correct;
     gameScore = Math.max(0, correct * 100 - wrong * 50);
+    emergencyScenario = { ...emergencyScenario };
   }
 
   function resetEmergencyGame() {
@@ -348,7 +349,7 @@
 <!-- NAV -->
 <nav class="lz-nav">
   <div class="lz-nav-inner">
-    <button type="button" class="lz-logo" onclick={() => scrollToSection('home')}>
+    <button type="button" class="lz-logo" on:click={() => scrollToSection('home')}>
       <img src="/icons/lz_ico.png" alt="Lezie" class="lz-logo-img" width="32" height="32" />
       <span class="lz-logo-text">Lezie</span>
     </button>
@@ -356,7 +357,7 @@
     <button 
       type="button" 
       class="lz-hamburger" 
-      onclick={() => isMenuOpen = !isMenuOpen} 
+      on:click={() => isMenuOpen = !isMenuOpen} 
       aria-label="Toggle menu"
     >
       {#if isMenuOpen}
@@ -367,9 +368,9 @@
     </button>
 
     <div class="lz-nav-links" class:open={isMenuOpen}>
-      <button type="button" class="lz-nav-link" onclick={() => scrollToSection('games')}>Safety Games</button>
-      <button type="button" class="lz-nav-link" onclick={() => scrollToSection('features')}>Features</button>
-      <button type="button" class="lz-nav-link" onclick={() => scrollToSection('how-it-works')}>How it works</button>
+      <button type="button" class="lz-nav-link" on:click={() => scrollToSection('games')}>Safety Games</button>
+      <button type="button" class="lz-nav-link" on:click={() => scrollToSection('features')}>Features</button>
+      <button type="button" class="lz-nav-link" on:click={() => scrollToSection('how-it-works')}>How it works</button>
       <a href="/dashboard" class="lz-nav-cta">Dashboard</a>
     </div>
   </div>
@@ -394,14 +395,14 @@
     </p>
 
     <div class="lz-hero-btns animate-on-scroll">
-      <button type="button" class="lz-btn-primary" onclick={() => scrollToSection('games')}>
+      <button type="button" class="lz-btn-primary" on:click={() => scrollToSection('games')}>
         Play Now
         <ArrowRight size={16} />
       </button>
       <button 
         type="button" 
         class="lz-btn-secondary" 
-        onclick={() => scrollToSection('how-it-works')}
+        on:click={() => scrollToSection('how-it-works')}
       >
         <PlayCircle size={16} />
         How it works
@@ -474,7 +475,7 @@
               <span>{Math.floor(gameTimer / 60)}:{(gameTimer % 60).toString().padStart(2, '0')}</span>
             </div>
           </div>
-          <button class="lz-btn-secondary" onclick={endGame}>
+          <button class="lz-btn-secondary" on:click={endGame}>
             <X size={16} />
             Exit Game
           </button>
@@ -495,7 +496,7 @@
                   <button
                     class="hazard-item"
                     style="left: {hazard.x}%; top: {hazard.y}%;"
-                    onclick={() => findHazard(hazard.id)}
+                    on:click={() => findHazard(hazard.id)}
                     aria-label="Potential hazard"
                   >
                     <span class="hazard-pulse"></span>
@@ -533,7 +534,7 @@
                   class:correct={emergencyScenario.submitted && option.correct}
                   class:wrong={emergencyScenario.submitted && !option.correct && emergencyScenario.selected.includes(option.id)}
                   disabled={emergencyScenario.submitted}
-                  onclick={() => selectEmergencyOption(option.id)}
+                  on:click={() => selectEmergencyOption(option.id)}
                 >
                   <span class="option-check">
                     {#if emergencyScenario.selected.includes(option.id)}
@@ -549,14 +550,14 @@
               <button 
                 class="lz-btn-primary"
                 disabled={emergencyScenario.selected.length === 0}
-                onclick={submitEmergencyResponse}
+                on:click={submitEmergencyResponse}
               >
                 Submit Response
               </button>
             {:else}
               <div class="result-box">
                 <p>Score: {gameScore} points</p>
-                <button class="lz-btn-secondary" onclick={resetEmergencyGame}>
+                <button class="lz-btn-secondary" on:click={resetEmergencyGame}>
                   Try Again
                 </button>
               </div>
@@ -588,9 +589,9 @@
                 bind:value={currentGuess}
                 placeholder="Enter word..."
                 maxlength="10"
-                onkeydown={(e) => e.key === 'Enter' && submitWordGuess()}
+                on:keydown={(e) => e.key === 'Enter' && submitWordGuess()}
               />
-              <button class="lz-btn-primary" onclick={submitWordGuess}>
+              <button class="lz-btn-primary" on:click={submitWordGuess}>
                 Submit
               </button>
             </div>
@@ -620,7 +621,7 @@
             
             <div class="traffic-options">
               {#each trafficQuestions[trafficQuestion].options as option, i}
-                <button class="traffic-btn" onclick={() => answerTrafficQuestion(i)}>
+                <button class="traffic-btn" on:click={() => answerTrafficQuestion(i)}>
                   <span class="option-letter">{String.fromCharCode(65 + i)}</span>
                   {option}
                 </button>
@@ -644,7 +645,7 @@
                   class:selected={selectedPPE === item.id}
                   class:matched={item.matched}
                   disabled={item.matched}
-                  onclick={() => selectPPE(item.id)}
+                  on:click={() => selectPPE(item.id)}
                 >
                   <span class="ppe-icon" style="color: {item.color};">
                     <svelte:component this={item.icon} size={32} />
@@ -672,7 +673,7 @@
               <Home size={64} color="#8b5cf6" />
               <Shield size={48} color="#10b981" style="position: absolute; bottom: 0; right: 0;" />
             </div>
-            <button class="lz-btn-primary" onclick={() => startGame('hazard-hunt')}>
+            <button class="lz-btn-primary" on:click={() => startGame('hazard-hunt')}>
               Play Hazard Hunter Instead
             </button>
           </div>
@@ -690,7 +691,7 @@
             </div>
             <h3>{game.title}</h3>
             <p>{game.description}</p>
-            <button class="lz-btn-primary game-start-btn" onclick={() => startGame(game.id)}>
+            <button class="lz-btn-primary game-start-btn" on:click={() => startGame(game.id)}>
               <PlayCircle size={16} />
               Play Now
             </button>
@@ -784,7 +785,7 @@
       <h2>Ready to become a safety expert?</h2>
       <p>Join thousands training with Lezie's interactive safety platform.</p>
       <div class="lz-cta-btns">
-        <button type="button" class="lz-btn-primary lz-btn-lg" onclick={() => scrollToSection('games')}>
+        <button type="button" class="lz-btn-primary lz-btn-lg" on:click={() => scrollToSection('games')}>
           <Gamepad2 size={16} />
           Start Training
         </button>
@@ -824,7 +825,7 @@
 
       <div class="lz-foot-col">
         <h4>Training</h4>
-        <button type="button" class="lz-foot-link" onclick={() => scrollToSection('games')}>Safety Games</button>
+        <button type="button" class="lz-foot-link" on:click={() => scrollToSection('games')}>Safety Games</button>
         <button type="button" class="lz-foot-link">Certifications</button>
         <button type="button" class="lz-foot-link">For Business</button>
         <button type="button" class="lz-foot-link">Leaderboard</button>
@@ -832,8 +833,8 @@
 
       <div class="lz-foot-col">
         <h4>Product</h4>
-        <button type="button" class="lz-foot-link" onclick={() => scrollToSection('features')}>Features</button>
-        <button type="button" class="lz-foot-link" onclick={() => scrollToSection('how-it-works')}>How it works</button>
+        <button type="button" class="lz-foot-link" on:click={() => scrollToSection('features')}>Features</button>
+        <button type="button" class="lz-foot-link" on:click={() => scrollToSection('how-it-works')}>How it works</button>
         <a href="/dashboard" class="lz-foot-link">Dashboard</a>
         <a href="/report" class="lz-foot-link">Report incident</a>
       </div>
@@ -971,7 +972,6 @@
     color: var(--text-primary);
   }
 
-  /* Hazard Game */
   .hazard-game .scene-container {
     position: relative;
     width: 100%;
@@ -1077,7 +1077,6 @@
     font-size: 0.9rem;
   }
 
-  /* Emergency Game */
   .emergency-alert {
     text-align: center;
     margin-bottom: 2rem;
@@ -1149,7 +1148,6 @@
     margin-top: 1rem;
   }
 
-  /* Word Game */
   .word-grid {
     display: grid;
     gap: 1rem;
@@ -1232,7 +1230,6 @@
     font-weight: 600;
   }
 
-  /* Traffic Game */
   .progress-bar {
     width: 100%;
     height: 6px;
@@ -1302,7 +1299,6 @@
     font-weight: 600;
   }
 
-  /* PPE Game */
   .ppe-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1360,7 +1356,6 @@
     font-size: 1rem;
   }
 
-  /* Home Game */
   .home-game {
     text-align: center;
   }
