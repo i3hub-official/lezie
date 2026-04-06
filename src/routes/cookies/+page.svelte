@@ -132,7 +132,7 @@
   <main class="cp-main">
     <div class="cp-content-shell">
 
-      <button class="cp-back-home" onclick={() => goto(-1 as any)}>
+      <button class="cp-back-home" onclick={() => goto("/")}>
         <ChevronLeft size={18} />
         <ArrowLeft size={14} />
         <span>Back</span>
