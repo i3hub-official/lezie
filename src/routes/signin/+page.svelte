@@ -15,21 +15,20 @@
     User,
     Phone,
     Fingerprint,
-    Key
+    Key,
+    ChevronLeft
   } from 'lucide-svelte';
   
-  let step = $state<'identifier' | 'password' | 'pin' | 'passkey'>('identifier');
+  let step = $state<'identifier' | 'password'>('identifier');
   let formData = $state({
     identifier: '',
     password: '',
-    pin: '',
     rememberMe: false
   });
   
   let errors = $state<Record<string, string>>({});
   let isLoading = $state(false);
   let showPassword = $state(false);
-  let authMethod = $state<'password' | 'pin' | 'passkey'>('password');
   
   // Detect identifier type (email, username, or phone)
   const getIdentifierType = (identifier: string): 'email' | 'username' | 'phone' => {
@@ -58,88 +57,28 @@
       return; 
     }
     errors = {};
-    isLoading = true;
-    
-    // Check which auth methods are available for this identifier
-    try {
-      // Simulate API call to get available auth methods
-      await new Promise(r => setTimeout(r, 500));
-      const type = getIdentifierType(formData.identifier);
-      
-      // For demo: all methods available, but in real app this would come from backend
-      // You can modify this based on your backend response
-      const availableMethods = ['password', 'pin', 'passkey'];
-      
-      if (availableMethods.includes('passkey') && window.PublicKeyCredential) {
-        authMethod = 'passkey';
-        step = 'passkey';
-      } else if (availableMethods.includes('pin')) {
-        authMethod = 'pin';
-        step = 'pin';
-      } else {
-        authMethod = 'password';
-        step = 'password';
-      }
-    } catch (error) {
-      errors.submit = 'Unable to verify account. Please try again.';
-    } finally {
-      isLoading = false;
-    }
+    step = 'password';
   };
   
   const handlePasswordSubmit = async (e: Event) => {
     e.preventDefault();
     if (!formData.password) { 
-      errors = { password: 'Password is required' }; 
+      errors = { password: 'Password or PIN is required' }; 
       return; 
     }
     isLoading = true;
     errors = {};
     try {
-      await authStore.login(formData.identifier, formData.password, formData.rememberMe);
-      goto('/dashboard');
-    } catch (error: unknown) {
-      errors.submit = error instanceof Error ? error.message : 'Invalid email or password';
-    } finally {
-      isLoading = false;
-    }
-  };
-  
-  const handlePinSubmit = async (e: Event) => {
-    e.preventDefault();
-    if (!formData.pin || formData.pin.length < 4) { 
-      errors = { pin: 'PIN must be at least 4 digits' }; 
-      return; 
-    }
-    isLoading = true;
-    errors = {};
-    try {
-      await authStore.loginWithPin(formData.identifier, formData.pin, formData.rememberMe);
-      goto('/dashboard');
-    } catch (error: unknown) {
-      errors.submit = error instanceof Error ? error.message : 'Invalid PIN';
-    } finally {
-      isLoading = false;
-    }
-  };
-  
-  const handlePasskeySubmit = async (e: Event) => {
-    e.preventDefault();
-    isLoading = true;
-    errors = {};
-    try {
-      // Check if WebAuthn is supported
-      if (!window.PublicKeyCredential) {
-        throw new Error('Passkeys are not supported on this browser');
+      // Auto-detect if input is PIN (digits only, 4-6 chars) or password
+      const isPin = /^\d{4,6}$/.test(formData.password);
+      if (isPin) {
+        await authStore.loginWithPin(formData.identifier, formData.password, formData.rememberMe);
+      } else {
+        await authStore.login(formData.identifier, formData.password, formData.rememberMe);
       }
-      
-      await authStore.loginWithPasskey(formData.identifier, formData.rememberMe);
       goto('/dashboard');
     } catch (error: unknown) {
-      errors.submit = error instanceof Error ? error.message : 'Passkey authentication failed';
-      // Fallback to password
-      authMethod = 'password';
-      step = 'password';
+      errors.submit = error instanceof Error ? error.message : 'Invalid credentials';
     } finally {
       isLoading = false;
     }
@@ -148,19 +87,10 @@
   const goBackToIdentifier = () => { 
     step = 'identifier'; 
     errors = {}; 
-    authMethod = 'password';
   };
-  
-  const switchAuthMethod = (method: 'password' | 'pin' | 'passkey') => {
-    authMethod = method;
-    errors = {};
-    if (method === 'passkey') {
-      step = 'passkey';
-    } else if (method === 'pin') {
-      step = 'pin';
-    } else {
-      step = 'password';
-    }
+
+  const goBackToLanding = () => {
+    goto('/');
   };
   
   const getIdentifierIcon = () => {
@@ -246,6 +176,12 @@
   <main class="si-main">
     <div class="si-form-shell">
 
+      <!-- Back button to landing -->
+      <button class="si-back-landing" onclick={goBackToLanding}>
+        <ChevronLeft size={18} />
+        <span>Back to Home</span>
+      </button>
+
       <!-- Mobile logo -->
       <div class="si-mobile-logo">
         <a href="/" class="si-logo-link">
@@ -298,22 +234,18 @@
               </div>
 
               <div class="si-actions">
-                <button type="submit" disabled={isLoading} class="si-btn-next">
-                  {#if isLoading}
-                    <span class="si-spinner"></span> Verifying…
-                  {:else}
-                    Continue <ArrowRight size={15} />
-                  {/if}
+                <button type="submit" class="si-btn-next">
+                  Continue <ArrowRight size={15} />
                 </button>
               </div>
             </form>
           </div>
         {/if}
 
-        <!-- PASSWORD STEP -->
+        <!-- PASSWORD / PIN STEP (Unified field) -->
         {#if step === 'password'}
           <div class="si-step-body" style="animation: stepIn .3s ease both">
-            <p class="si-step-label">Step 2 of 2 — Enter your password</p>
+            <p class="si-step-label">Step 2 of 2 — Enter your password or PIN</p>
 
             <!-- Identifier badge -->
             <div class="si-email-badge">
@@ -322,40 +254,10 @@
               <button type="button" class="si-badge-edit" onclick={goBackToIdentifier}>Edit</button>
             </div>
 
-            <!-- Auth method switcher -->
-            <div class="si-auth-switch">
-              <button 
-                type="button" 
-                class="si-auth-method {authMethod === 'password' ? 'active' : ''}"
-                onclick={() => switchAuthMethod('password')}
-              >
-                <Lock size={14} />
-                <span>Password</span>
-              </button>
-              <button 
-                type="button" 
-                class="si-auth-method {authMethod === 'pin' ? 'active' : ''}"
-                onclick={() => switchAuthMethod('pin')}
-              >
-                <Key size={14} />
-                <span>PIN</span>
-              </button>
-              {#if window.PublicKeyCredential}
-                <button 
-                  type="button" 
-                  class="si-auth-method {authMethod === 'passkey' ? 'active' : ''}"
-                  onclick={() => switchAuthMethod('passkey')}
-                >
-                  <Fingerprint size={14} />
-                  <span>Passkey</span>
-                </button>
-              {/if}
-            </div>
-
             <form onsubmit={handlePasswordSubmit}>
               <div class="si-field">
                 <div class="si-label-row">
-                  <label class="si-label" for="password">Password <span class="si-req">*</span></label>
+                  <label class="si-label" for="password">Password or PIN <span class="si-req">*</span></label>
                   <a href="/forgot-password" class="si-link si-forgot">Forgot password?</a>
                 </div>
                 <div class="si-input-wrap">
@@ -363,16 +265,17 @@
                   <input
                     type={showPassword ? 'text' : 'password'}
                     id="password"
-                    placeholder="Enter your password"
+                    placeholder="Enter your password or 4-6 digit PIN"
                     bind:value={formData.password}
                     class="si-input si-input--toggle {errors.password ? 'si-input--err' : ''}"
                     autocomplete="current-password"
                   />
-                  <button type="button" class="si-eye-btn" onclick={() => showPassword = !showPassword} aria-label="Toggle password">
+                  <button type="button" class="si-eye-btn" onclick={() => showPassword = !showPassword} aria-label="Toggle visibility">
                     {#if showPassword}<EyeOff size={16} />{:else}<Eye size={16} />{/if}
                   </button>
                 </div>
                 {#if errors.password}<p class="si-err">{errors.password}</p>{/if}
+                <p class="si-hint">You can sign in with either your password or 4-6 digit PIN</p>
               </div>
 
               <label class="si-remember">
@@ -393,168 +296,31 @@
                 </button>
               </div>
             </form>
-          </div>
-        {/if}
 
-        <!-- PIN STEP -->
-        {#if step === 'pin'}
-          <div class="si-step-body" style="animation: stepIn .3s ease both">
-            <p class="si-step-label">Step 2 of 2 — Enter your PIN</p>
-
-            <!-- Identifier badge -->
-            <div class="si-email-badge">
-              <svelte:component this={getIdentifierIcon()} size={14} class="si-badge-icon" />
-              <span class="si-badge-email">{formData.identifier}</span>
-              <button type="button" class="si-badge-edit" onclick={goBackToIdentifier}>Edit</button>
-            </div>
-
-            <!-- Auth method switcher -->
-            <div class="si-auth-switch">
+            <!-- Passkey option -->
+            {#if window.PublicKeyCredential}
+              <div class="si-passkey-divider">
+                <span>or</span>
+              </div>
               <button 
                 type="button" 
-                class="si-auth-method {authMethod === 'password' ? 'active' : ''}"
-                onclick={() => switchAuthMethod('password')}
+                class="si-passkey-btn"
+                onclick={async () => {
+                  isLoading = true;
+                  try {
+                    await authStore.loginWithPasskey(formData.identifier, formData.rememberMe);
+                    goto('/dashboard');
+                  } catch (error) {
+                    errors.submit = error instanceof Error ? error.message : 'Passkey authentication failed';
+                  } finally {
+                    isLoading = false;
+                  }
+                }}
               >
-                <Lock size={14} />
-                <span>Password</span>
+                <Fingerprint size={18} />
+                <span>Sign in with Passkey</span>
               </button>
-              <button 
-                type="button" 
-                class="si-auth-method {authMethod === 'pin' ? 'active' : ''}"
-                onclick={() => switchAuthMethod('pin')}
-              >
-                <Key size={14} />
-                <span>PIN</span>
-              </button>
-              {#if window.PublicKeyCredential}
-                <button 
-                  type="button" 
-                  class="si-auth-method {authMethod === 'passkey' ? 'active' : ''}"
-                  onclick={() => switchAuthMethod('passkey')}
-                >
-                  <Fingerprint size={14} />
-                  <span>Passkey</span>
-                </button>
-              {/if}
-            </div>
-
-            <form onsubmit={handlePinSubmit}>
-              <div class="si-field">
-                <div class="si-label-row">
-                  <label class="si-label" for="pin">PIN <span class="si-req">*</span></label>
-                  <a href="/forgot-pin" class="si-link si-forgot">Forgot PIN?</a>
-                </div>
-                <div class="si-input-wrap">
-                  <Key size={16} class="si-input-icon" />
-                  <input
-                    type="password"
-                    id="pin"
-                    placeholder="Enter your 4-6 digit PIN"
-                    bind:value={formData.pin}
-                    maxlength="6"
-                    pattern="\d*"
-                    inputmode="numeric"
-                    class="si-input {errors.pin ? 'si-input--err' : ''}"
-                    autocomplete="off"
-                  />
-                </div>
-                {#if errors.pin}<p class="si-err">{errors.pin}</p>{/if}
-              </div>
-
-              <label class="si-remember">
-                <input type="checkbox" bind:checked={formData.rememberMe} class="si-checkbox" />
-                <span>Remember me for 30 days</span>
-              </label>
-
-              <div class="si-actions">
-                <button type="button" class="si-btn-back" onclick={goBackToIdentifier}>
-                  <ArrowLeft size={15} /> Back
-                </button>
-                <button type="submit" disabled={isLoading} class="si-btn-next">
-                  {#if isLoading}
-                    <span class="si-spinner"></span> Verifying PIN…
-                  {:else}
-                    Sign In with PIN <ArrowRight size={15} />
-                  {/if}
-                </button>
-              </div>
-            </form>
-          </div>
-        {/if}
-
-        <!-- PASSKEY STEP -->
-        {#if step === 'passkey'}
-          <div class="si-step-body" style="animation: stepIn .3s ease both">
-            <p class="si-step-label">Step 2 of 2 — Authenticate with passkey</p>
-
-            <!-- Identifier badge -->
-            <div class="si-email-badge">
-              <svelte:component this={getIdentifierIcon()} size={14} class="si-badge-icon" />
-              <span class="si-badge-email">{formData.identifier}</span>
-              <button type="button" class="si-badge-edit" onclick={goBackToIdentifier}>Edit</button>
-            </div>
-
-            <!-- Auth method switcher -->
-            <div class="si-auth-switch">
-              <button 
-                type="button" 
-                class="si-auth-method {authMethod === 'password' ? 'active' : ''}"
-                onclick={() => switchAuthMethod('password')}
-              >
-                <Lock size={14} />
-                <span>Password</span>
-              </button>
-              <button 
-                type="button" 
-                class="si-auth-method {authMethod === 'pin' ? 'active' : ''}"
-                onclick={() => switchAuthMethod('pin')}
-              >
-                <Key size={14} />
-                <span>PIN</span>
-              </button>
-              {#if window.PublicKeyCredential}
-                <button 
-                  type="button" 
-                  class="si-auth-method {authMethod === 'passkey' ? 'active' : ''}"
-                  onclick={() => switchAuthMethod('passkey')}
-                >
-                  <Fingerprint size={14} />
-                  <span>Passkey</span>
-                </button>
-              {/if}
-            </div>
-
-            <form onsubmit={handlePasskeySubmit}>
-              <div class="si-passkey-prompt">
-                <div class="si-passkey-icon">
-                  <Fingerprint size={48} />
-                </div>
-                <p class="si-passkey-text">
-                  Use your device's fingerprint, face recognition, or screen lock to sign in
-                </p>
-                <p class="si-passkey-hint">
-                  Your passkey is stored securely on this device
-                </p>
-              </div>
-
-              <label class="si-remember">
-                <input type="checkbox" bind:checked={formData.rememberMe} class="si-checkbox" />
-                <span>Remember me for 30 days</span>
-              </label>
-
-              <div class="si-actions">
-                <button type="button" class="si-btn-back" onclick={goBackToIdentifier}>
-                  <ArrowLeft size={15} /> Back
-                </button>
-                <button type="submit" disabled={isLoading} class="si-btn-next si-btn-passkey">
-                  {#if isLoading}
-                    <span class="si-spinner"></span> Authenticating…
-                  {:else}
-                    <Fingerprint size={16} /> Use Passkey
-                  {/if}
-                </button>
-              </div>
-            </form>
+            {/if}
           </div>
         {/if}
 
@@ -760,6 +526,27 @@
     gap: 1.5rem;
   }
 
+  /* Back button to landing */
+  .si-back-landing {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    color: var(--gray-color);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.5rem 0;
+    font-family: 'DM Sans', sans-serif;
+    transition: color 0.2s;
+    width: fit-content;
+  }
+
+  .si-back-landing:hover {
+    color: var(--primary-color);
+  }
+
   /* Mobile logo */
   .si-mobile-logo {
     display: flex;
@@ -900,43 +687,6 @@
 
   .si-badge-edit:hover { background: rgba(106,44,145,0.08); }
 
-  /* Auth method switcher */
-  .si-auth-switch {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1.25rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #e5e7eb;
-  }
-
-  .si-auth-method {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    background: transparent;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--gray-color);
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    transition: all 0.2s;
-  }
-
-  .si-auth-method:hover {
-    background: var(--primary-bg);
-    color: var(--primary-color);
-  }
-
-  .si-auth-method.active {
-    background: var(--primary-color);
-    color: white;
-  }
-
   /* Fields */
   .si-step-body {
     display: flex;
@@ -967,6 +717,12 @@
 
   .si-forgot {
     font-size: 0.75rem;
+  }
+
+  .si-hint {
+    font-size: 0.688rem;
+    color: var(--gray-color);
+    margin-top: 0.25rem;
   }
 
   .si-input-wrap { position: relative; }
@@ -1022,40 +778,6 @@
   .si-err {
     font-size: 0.75rem;
     color: var(--danger-color);
-  }
-
-  /* Passkey prompt */
-  .si-passkey-prompt {
-    text-align: center;
-    padding: 1.5rem 1rem;
-    margin-bottom: 1.125rem;
-    background: var(--primary-bg);
-    border-radius: 1rem;
-    border: 1px solid var(--primary-border);
-  }
-
-  .si-passkey-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 1rem;
-    background: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--primary-color);
-  }
-
-  .si-passkey-text {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--dark-color);
-    margin-bottom: 0.5rem;
-  }
-
-  .si-passkey-hint {
-    font-size: 0.688rem;
-    color: var(--gray-color);
   }
 
   /* Remember me */
@@ -1136,8 +858,53 @@
   .si-btn-next:active:not(:disabled) { transform: translateY(0); }
   .si-btn-next:disabled { opacity: 0.65; cursor: not-allowed; }
 
-  .si-btn-passkey {
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  /* Passkey divider and button */
+  .si-passkey-divider {
+    position: relative;
+    text-align: center;
+    margin: 1.25rem 0 1rem;
+  }
+
+  .si-passkey-divider::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+    background: #e5e7eb;
+  }
+
+  .si-passkey-divider span {
+    position: relative;
+    background: white;
+    padding: 0 0.75rem;
+    font-size: 0.75rem;
+    color: var(--gray-color);
+  }
+
+  .si-passkey-btn {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    padding: 0.8125rem 1.25rem;
+    background: white;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1e1b4b;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .si-passkey-btn:hover {
+    border-color: var(--primary-color);
+    background: var(--primary-bg);
+    color: var(--primary-color);
   }
 
   /* Link */
@@ -1182,7 +949,5 @@
     .si-actions { flex-direction: column-reverse; }
     .si-btn-back { width: 100%; justify-content: center; }
     .si-btn-next { width: 100%; }
-    .si-auth-switch { flex-wrap: wrap; }
-    .si-auth-method { flex: none; width: calc(33.33% - 0.34rem); }
   }
 </style>
