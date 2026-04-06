@@ -185,34 +185,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Score panel -->
-      <div class="score-panel aos" style="transition-delay:.2s">
-        <div class="score-header">
-          <span class="score-label">Your Safety Score</span>
-        </div>
-        <div class="score-user">
-          <div class="score-avatar">A</div>
-          <div>
-            <div class="score-name">Alex M.</div>
-            <div class="score-pts"><strong>2,840 pts</strong> · Rank #12 in your area</div>
-          </div>
-        </div>
-        <div class="score-bars">
-          {#each [['Emergency Response', 92], ['First Aid Knowledge', 78], ['Situational Awareness', 85]] as [label, pct]}
-            <div class="score-bar">
-              <div class="sb-label"><span>{label}</span><span>{pct}%</span></div>
-              <div class="sb-track"><div class="sb-fill" style="width:{pct}%"></div></div>
-            </div>
-          {/each}
-        </div>
-        <div class="score-chips">
-          <span class="chip">7-day streak</span>
-          <span class="chip">First Responder</span>
-          <span class="chip">Quick Thinker</span>
-          <span class="chip">Community Hero</span>
-        </div>
-      </div>
     </div>
   </div>
 </section>
