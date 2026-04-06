@@ -1,16 +1,23 @@
 import { json } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
+// ... your auth logic (e.g., database insert, password hashing)
 
-export const POST: RequestHandler = async ({ request }) => {
+export async function POST({ request }) {
   try {
-    const body = await request.json();
-    const { firstName, lastName, dateOfBirth, phone, email, password } = body;
-    
-    // Add your actual signup logic here
-    // For now, return success for testing
-    
-    return json({ success: true, message: 'User created successfully' });
-  } catch (error) {
-    return json({ error: 'Signup failed' }, { status: 500 });
+    const data = await request.json();
+    // Perform signup logic here...
+    // Example: validate, hash password, save user, etc.
+
+    return json({ success: true, message: 'Account created' }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    });
+  } catch (error: any) {
+    console.error('Signup error:', error);
+    return json(
+      { error: error.message || 'Signup failed' },
+      { status: 400, headers: { 'Cache-Control': 'no-store' } }
+    );
   }
-};
+}
