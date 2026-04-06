@@ -675,6 +675,7 @@ export const safetyQuestions: SafetyQuestion[] = [
     ],
     difficulty: "medium",
     tags: ["piracy", "malware", "software"]
+},
 
   // ====================== STREET SAFETY (10 questions) ======================
   {
@@ -806,6 +807,7 @@ export const safetyQuestions: SafetyQuestion[] = [
     ],
     difficulty: "medium",
     tags: ["harassment", "public-transport"]
+},
 
   // ====================== HOME SAFETY (10 questions) ======================
   {
@@ -937,6 +939,7 @@ export const safetyQuestions: SafetyQuestion[] = [
     ],
     difficulty: "medium",
     tags: ["pests", "home-safety"]
+}, 
 
   // ====================== TRAVEL SAFETY (10 questions) ======================
   {
