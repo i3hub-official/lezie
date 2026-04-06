@@ -1,4 +1,3 @@
-
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -9,9 +8,11 @@
     Loader2, Home, BarChart3, User, Settings, BellRing,
     Flame, Car, Building, Volume2, AlertOctagon,
     Menu as MenuIcon, X, LogOut, FileText,
-    PanelLeftClose, PanelLeftOpen
+    PanelLeftClose, PanelLeftOpen, Smile, ThumbsUp,
+    Award, Activity, Eye, EyeOff
   } from 'lucide-svelte';
 
+  // Import all page components
   import MapPage        from './MapPage.svelte';
   import AlertsPage     from './AlertsPage.svelte';
   import StatisticsPage from './StatisticsPage.svelte';
@@ -31,10 +32,16 @@
   let isSidebarCollapsed = $state(false);
   let isMobile         = $state(false);
 
+  // Page components mapping
   const pages: Record<string, any> = {
-    dashboard: null, map: MapPage, alerts: AlertsPage,
-    statistics: StatisticsPage, reports: ReportsPage,
-    community: CommunityPage, profile: ProfilePage, settings: SettingsPage
+    dashboard: null,
+    map: MapPage,
+    alerts: AlertsPage,
+    statistics: StatisticsPage,
+    reports: ReportsPage,
+    community: CommunityPage,
+    profile: ProfilePage,
+    settings: SettingsPage
   };
 
   let CurrentPageComponent = $derived(pages[activePage]);
@@ -43,7 +50,24 @@
     checkMobile();
     window.addEventListener('resize', checkMobile);
     loadData();
-    return () => window.removeEventListener('resize', checkMobile);
+    
+    // Use hash-based routing to hide URLs from address bar
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1);
+      if (hash && pages[hash]) {
+        activePage = hash;
+      } else if (!hash) {
+        activePage = 'dashboard';
+      }
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    handleHashChange();
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   });
 
   function checkMobile() {
@@ -103,12 +127,12 @@
 
   const unreadCount = $derived(notifications.filter(n => !n.read).length);
 
+  // Navigate using hash - URLs stay hidden from browser history bar
   function navigate(page: string) {
     activePage = page;
     isMobileMenuOpen = false;
-    const url = new URL(window.location.href);
-    url.searchParams.set('page', page);
-    window.history.pushState({}, '', url);
+    // Use hash to store state without changing the actual URL path
+    window.location.hash = page === 'dashboard' ? '' : page;
   }
 
   async function handleLogout() {
@@ -210,7 +234,10 @@
       <!-- Page title -->
       <div class="db-topbar-title">
         {#if activePage === 'dashboard'}
-          <span>Hi, <strong>{user?.name?.split(' ')[0] ?? ''}</strong> 👋</span>
+          <span class="db-greeting">
+            <Smile size={16} class="db-greeting-icon" />
+            <span>Hi, <strong>{user?.name?.split(' ')[0] ?? ''}</strong></span>
+          </span>
         {:else}
           <strong>{navItems.find(n => n.path === activePage)?.label ?? ''}</strong>
         {/if}
@@ -356,7 +383,15 @@
                 </div>
                 <div>
                   <h4>Safety Score</h4>
-                  <p>{stats.safetyScore >= 80 ? '🟢 Good standing' : stats.safetyScore >= 60 ? '🟡 Fair' : '🔴 Needs attention'}</p>
+                  <p class="db-score-status">
+                    {#if stats.safetyScore >= 80}
+                      <Award size={12} /> Good standing
+                    {:else if stats.safetyScore >= 60}
+                      <Activity size={12} /> Fair
+                    {:else}
+                      <AlertTriangle size={12} /> Needs attention
+                    {/if}
+                  </p>
                 </div>
               </div>
 
@@ -390,8 +425,6 @@
 
   <!-- ══ MOBILE DRAWER ══ -->
   {#if isMobileMenuOpen}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="db-drawer-overlay" onclick={() => isMobileMenuOpen = false}>
       <aside class="db-drawer" onclick={(e) => e.stopPropagation()}>
 
@@ -633,6 +666,15 @@
     padding: 0 1.25rem; height: 60px;
   }
 
+  /* Greeting */
+  .db-greeting {
+    display: flex; align-items: center; gap: .5rem;
+  }
+
+  .db-greeting-icon {
+    color: var(--primary-color);
+  }
+
   /* Hamburger — ONLY mobile */
   .db-hamburger {
     display: none;
@@ -860,6 +902,11 @@
   }
 
   .db-score-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.06); }
+
+  .db-score-status {
+    display: flex; align-items: center; gap: .375rem;
+    font-size: .688rem;
+  }
 
   .db-donut { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
   .db-donut svg { width: 100%; height: 100%; }
