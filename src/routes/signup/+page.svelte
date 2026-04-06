@@ -117,39 +117,47 @@
   };
   
   const handleSubmit = async (e: Event) => {
-    e.preventDefault();
-    const validationErrors = validateStep3();
-    if (Object.keys(validationErrors).length > 0) { 
-      errors = validationErrors;
-      Object.keys(validationErrors).forEach(key => { touched[key] = true; });
-      return; 
-    }
-    isLoading = true;
-    errors = {};
-    try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          dateOfBirth: formData.dateOfBirth,
-          phone: formData.phone,
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Signup failed');
-      await authStore.login(formData.email, formData.password);
-      goto('/dashboard');
-    } catch (error: unknown) {
-      errors.submit = error instanceof Error ? error.message : 'An error occurred';
-    } finally {
-      isLoading = false;
-    }
-  };
+  e.preventDefault();
+  const validationErrors = validateStep3();
+  if (Object.keys(validationErrors).length > 0) {
+    errors = validationErrors;
+    Object.keys(validationErrors).forEach(key => { touched[key] = true; });
+    return;
+  }
 
+  isLoading = true;
+  errors = {};
+
+  try {
+    const response = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        dateOfBirth: formData.dateOfBirth,
+        phone: formData.phone,
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || `Server error: ${response.status}`);
+    }
+
+    // Success path
+    await authStore.login(formData.email, formData.password);
+    goto('/dashboard');
+  } catch (error: unknown) {
+    console.error('Signup submission error:', error);
+    errors.submit = error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.';
+  } finally {
+    isLoading = false;
+  }
+};
   const goBackToHome = () => {
     goto('/');
   };
