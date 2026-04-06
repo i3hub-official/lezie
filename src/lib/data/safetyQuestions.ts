@@ -1531,7 +1531,341 @@ export const safetyQuestions: SafetyQuestion[] = [
     ],
     difficulty: "easy",
     tags: ["evacuation", "fire-safety", "buildings"]
-  }
+  },
+  // ====================== HOME SAFETY ======================
+  {
+    id: "q116",
+    category: "home",
+    question: "Someone comes to your door claiming to be from a utility company, but you were not expecting a visit. What should you do?",
+    answers: [
+      { text: "Let them in so they can check quickly", correct: false },
+      { text: "Ask for ID and verify with the company through an official number before opening the door", correct: true, explanation: "Unexpected visitors can be scammers. Verify identity through official channels before letting anyone in." },
+      { text: "Give them your account details through the door", correct: false },
+      { text: "Leave the door wide open while you look for paperwork", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["door-safety", "scams", "home-security"]
+  },
+  {
+    id: "q117",
+    category: "home",
+    question: "What is the safest place to keep spare house keys?",
+    answers: [
+      { text: "Under the doormat", correct: false },
+      { text: "Inside a fake rock next to the door", correct: false },
+      { text: "With a trusted person or in a secure lockbox", correct: true, explanation: "Common hiding spots are easy for burglars to check. A trusted person or secure lockbox is safer." },
+      { text: "On top of the door frame", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["keys", "burglary-prevention", "home-security"]
+  },
+  {
+    id: "q118",
+    category: "home",
+    question: "You notice your smoke alarm chirping occasionally. What should you do?",
+    answers: [
+      { text: "Ignore it until it stops", correct: false },
+      { text: "Remove the battery and deal with it later", correct: false },
+      { text: "Replace the battery or fix the alarm as soon as possible", correct: true, explanation: "A chirping smoke alarm often means low battery or a fault. It should be fixed immediately so it works in an emergency." },
+      { text: "Cover it with cloth so you can't hear it", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["smoke-alarm", "fire-safety", "maintenance"]
+  },
+  {
+    id: "q119",
+    category: "home",
+    question: "A child finds a bottle of cleaning liquid under the sink. How should hazardous products be stored?",
+    answers: [
+      { text: "In any easy-to-reach cabinet", correct: false },
+      { text: "In locked or high cabinets, out of reach of children", correct: true, explanation: "Cleaning chemicals should always be stored securely to prevent poisoning or injury." },
+      { text: "In drink bottles so they take less space", correct: false },
+      { text: "Open on the counter for quick use", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["children", "chemicals", "storage"]
+  },
+  {
+    id: "q120",
+    category: "home",
+    question: "You hear your carbon monoxide alarm sounding. What should you do?",
+    answers: [
+      { text: "Open a window and go back to sleep", correct: false },
+      { text: "Leave the building immediately and call emergency help or the gas provider", correct: true, explanation: "Carbon monoxide is dangerous and can be fatal. Get outside immediately and seek professional help." },
+      { text: "Turn the alarm off because it's probably faulty", correct: false },
+      { text: "Look for the smell of smoke first", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["carbon-monoxide", "emergency", "home-safety"]
+  },
+
+  // ====================== STREET SAFETY ======================
+  {
+    id: "q121",
+    category: "street",
+    question: "Someone on the street asks to borrow your phone to make an urgent call. What is the safer option?",
+    answers: [
+      { text: "Hand over your unlocked phone", correct: false },
+      { text: "Offer to make the call for them or direct them to official help", correct: true, explanation: "Giving a stranger your phone can lead to theft or misuse. If you choose to help, keep control of the phone." },
+      { text: "Give them your phone and wallet together", correct: false },
+      { text: "Follow them to a quieter place to help", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["phone-safety", "strangers", "theft"]
+  },
+  {
+    id: "q122",
+    category: "street",
+    question: "What is the safest way to use headphones while walking alone at night?",
+    answers: [
+      { text: "Use noise-canceling mode at full volume", correct: false },
+      { text: "Keep awareness of your surroundings by lowering volume or using only one earbud", correct: true, explanation: "Being able to hear what is happening around you improves awareness and reaction time." },
+      { text: "Close your eyes and follow the music", correct: false },
+      { text: "Hold your phone out so you can change songs faster", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["awareness", "night-safety", "headphones"]
+  },
+  {
+    id: "q123",
+    category: "street",
+    question: "A stranger starts an argument and tries to provoke you in public. What is usually the safest response?",
+    answers: [
+      { text: "Escalate so they back down", correct: false },
+      { text: "Create distance and move toward a safer, more public area", correct: true, explanation: "Avoiding escalation and moving toward safety reduces risk of violence." },
+      { text: "Follow them if they walk away", correct: false },
+      { text: "Show them your valuables to prove confidence", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["conflict", "de-escalation", "public-safety"]
+  },
+  {
+    id: "q124",
+    category: "street",
+    question: "You think someone may have pickpocketed you in a crowded area. What should you do first?",
+    answers: [
+      { text: "Panic and run in random directions", correct: false },
+      { text: "Move to a safe spot and check your valuables immediately", correct: true, explanation: "Go somewhere safer, confirm what is missing, and then take action like freezing cards or reporting theft." },
+      { text: "Accuse the nearest person without evidence", correct: false },
+      { text: "Ignore it until later", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["pickpocketing", "crowds", "theft"]
+  },
+  {
+    id: "q125",
+    category: "street",
+    question: "If you need directions in an unfamiliar area, who is usually the safest person to approach?",
+    answers: [
+      { text: "Someone sitting alone in a parked car", correct: false },
+      { text: "A shop employee, transit worker, or police officer", correct: true, explanation: "Approaching identifiable staff or officials is generally safer than relying on random strangers." },
+      { text: "The person following you", correct: false },
+      { text: "Anyone asking you personal questions", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["directions", "public-places", "strangers"]
+  },
+
+  // ====================== ONLINE SAFETY ======================
+  {
+    id: "q126",
+    category: "online",
+    question: "A website asks you to download software to 'fix' a virus it says it found on your device. What should you do?",
+    answers: [
+      { text: "Download it immediately to protect your device", correct: false },
+      { text: "Close the page and use trusted security tools or official support instead", correct: true, explanation: "Fake virus alerts often try to trick people into installing malware or giving remote access." },
+      { text: "Pay the fee first so the virus doesn't spread", correct: false },
+      { text: "Share the warning on social media before checking", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["malware", "popups", "cybersecurity"]
+  },
+  {
+    id: "q127",
+    category: "online",
+    question: "Someone sends you a link saying, 'Is this you in this video?' What is the safest response?",
+    answers: [
+      { text: "Click immediately because it sounds urgent", correct: false },
+      { text: "Do not click the link unless you verify it is legitimate", correct: true, explanation: "Scammers use curiosity and panic to get people to click malicious links." },
+      { text: "Forward it to friends first", correct: false },
+      { text: "Reply with your password to confirm your identity", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["links", "phishing", "social-engineering"]
+  },
+  {
+    id: "q128",
+    category: "online",
+    question: "What is a strong sign that an online shop might be fraudulent?",
+    answers: [
+      { text: "It has secure payment methods and clear contact info", correct: false },
+      { text: "Prices are unbelievably low and the site has little trustworthy information", correct: true, explanation: "Scam stores often use huge discounts to lure people while hiding real business details." },
+      { text: "It shows realistic delivery times", correct: false },
+      { text: "It has a clear returns policy from a known company", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["shopping", "fraud", "websites"]
+  },
+  {
+    id: "q129",
+    category: "online",
+    question: "Why should you use different passwords for important accounts?",
+    answers: [
+      { text: "Because it makes logging in more confusing", correct: false },
+      { text: "Because if one password is stolen, attackers cannot automatically access all your accounts", correct: true, explanation: "Using unique passwords limits damage from a single data breach." },
+      { text: "Because websites dislike repeated passwords for no reason", correct: false },
+      { text: "Because passwords only matter for email", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["passwords", "accounts", "cybersecurity"]
+  },
+  {
+    id: "q130",
+    category: "online",
+    question: "A person you met online asks you to move the conversation to a more private app right away. What should you keep in mind?",
+    answers: [
+      { text: "It always means they are trustworthy", correct: false },
+      { text: "It can be a tactic to avoid moderation and make manipulation easier", correct: true, explanation: "Scammers and abusers may try to move chats off-platform to avoid detection and reports." },
+      { text: "You should send personal photos first", correct: false },
+      { text: "You should give them your full address to build trust", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["dating-apps", "privacy", "manipulation"]
+  },
+
+  // ====================== TRAVEL SAFETY ======================
+  {
+    id: "q131",
+    category: "travel",
+    question: "Before traveling internationally, what is a smart safety step regarding your documents?",
+    answers: [
+      { text: "Carry only the originals and no backups", correct: false },
+      { text: "Make secure copies of important documents and store them separately", correct: true, explanation: "Backup copies can help if your passport or other important documents are lost or stolen." },
+      { text: "Post photos of them publicly online", correct: false },
+      { text: "Give the originals to strangers for safekeeping", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["documents", "preparation", "passport"]
+  },
+  {
+    id: "q132",
+    category: "travel",
+    question: "You are checking into a hotel alone. What room-sharing detail should you avoid saying loudly in public?",
+    answers: [
+      { text: "Your room number", correct: true, explanation: "Saying your room number aloud can allow others nearby to target or track you." },
+      { text: "The city you flew from", correct: false },
+      { text: "Whether you prefer stairs or elevators", correct: false },
+      { text: "Whether you'd like extra towels", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["hotel", "privacy", "solo-travel"]
+  },
+  {
+    id: "q133",
+    category: "travel",
+    question: "A ride-share car arrives, but the license plate does not match the app. What should you do?",
+    answers: [
+      { text: "Get in quickly so the driver doesn't leave", correct: false },
+      { text: "Do not enter the car and report the mismatch through the app", correct: true, explanation: "Always confirm the plate, driver, and ride details before getting in. A mismatch is a serious warning sign." },
+      { text: "Ask the driver if it's close enough", correct: false },
+      { text: "Sit in the front seat to be polite", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["ride-share", "transport", "verification"]
+  },
+  {
+    id: "q134",
+    category: "travel",
+    question: "What is the safest approach if a local stranger insists on guiding you somewhere you did not ask to go?",
+    answers: [
+      { text: "Follow them to avoid seeming rude", correct: false },
+      { text: "Politely decline and continue using your own verified directions", correct: true, explanation: "Unwanted guidance can sometimes be linked to scams, pressure, or theft. Keep control of your route." },
+      { text: "Give them your phone to lead the way", correct: false },
+      { text: "Hand over your bag while you walk", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["scams", "navigation", "strangers"]
+  },
+  {
+    id: "q135",
+    category: "travel",
+    question: "Why is it smart to share your travel itinerary with someone you trust?",
+    answers: [
+      { text: "So they can post it online for you", correct: false },
+      { text: "So someone knows where you are expected to be in case of emergency", correct: true, explanation: "A trusted person can help faster if they know your plans, location, and timing." },
+      { text: "So they can make changes without telling you", correct: false },
+      { text: "So strangers can find you more easily", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["planning", "emergency-contact", "solo-travel"]
+  },
+
+  // ====================== GENERAL SAFETY ======================
+  {
+    id: "q136",
+    category: "general",
+    question: "You slip and hit your head but feel mostly okay afterward. What is the safest response?",
+    answers: [
+      { text: "Ignore it completely because you're still awake", correct: false },
+      { text: "Tell someone, monitor symptoms, and seek medical advice if symptoms appear or worsen", correct: true, explanation: "Head injuries can become serious even if symptoms seem mild at first." },
+      { text: "Drive immediately to prove you're fine", correct: false },
+      { text: "Take random medicine without guidance", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["injury", "medical", "head-injury"]
+  },
+  {
+    id: "q137",
+    category: "general",
+    question: "What is one of the best reasons to keep your phone locked with a passcode or biometric security?",
+    answers: [
+      { text: "So friends cannot borrow it", correct: false },
+      { text: "To protect personal information if the phone is lost or stolen", correct: true, explanation: "A locked phone makes it harder for others to access your accounts, contacts, and personal data." },
+      { text: "To make charging faster", correct: false },
+      { text: "To stop all spam calls automatically", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["phone-security", "privacy", "personal-data"]
+  },
+  {
+    id: "q138",
+    category: "general",
+    question: "During severe weather, which source is usually safest to rely on for updates?",
+    answers: [
+      { text: "Random social media rumors", correct: false },
+      { text: "Official weather alerts and emergency authorities", correct: true, explanation: "Official sources provide the most reliable and current safety guidance during dangerous weather." },
+      { text: "A stranger's guess in a comment section", correct: false },
+      { text: "Old forecasts from several days ago", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["weather", "emergency", "information"]
+  },
+  {
+    id: "q139",
+    category: "general",
+    question: "If you are in a building during an earthquake, what is a common safety recommendation?",
+    answers: [
+      { text: "Run to the elevator immediately", correct: false },
+      { text: "Drop, cover, and hold on until the shaking stops", correct: true, explanation: "This helps reduce injury from falling objects and loss of balance during shaking." },
+      { text: "Stand next to heavy shelves", correct: false },
+      { text: "Rush down the stairs while the floor is moving", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["earthquake", "emergency", "disaster-safety"]
+  },
+  {
+    id: "q140",
+    category: "general",
+    question: "What is the safest general rule if a situation feels wrong or unsafe?",
+    answers: [
+      { text: "Stay quiet and ignore your instincts", correct: false },
+      { text: "Take the warning seriously and move toward safety or get help", correct: true, explanation: "If something feels unsafe, creating distance and seeking help is often the safest choice." },
+      { text: "Wait for someone else to decide for you", correct: false },
+      { text: "Take a bigger risk to prove confidence", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["intuition", "decision-making", "personal-safety"]
+  },
 ];
 
 export const getQuestionsByCategory = (category: SafetyQuestion['category']) => {
