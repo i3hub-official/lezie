@@ -17,7 +17,7 @@
 
   let formData = $state({
     firstName: '', lastName: '', dateOfBirth: '',
-    phone: '', email: '', password: '', confirmPassword: ''
+    dialCode: '+234', phone: '', email: '', password: '', confirmPassword: ''
   });
 
   const steps = [
@@ -44,9 +44,10 @@
 
   function validateStep2() {
     const e: Record<string,string> = {};
+    const digits = formData.phone.replace(/\D/g,'');
     if (!formData.phone.trim()) e.phone = 'Phone number is required';
-    else if (!/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(formData.phone.replace(/\s/g,'')))
-      e.phone = 'Please enter a valid phone number';
+    else if (digits.length < 5 || digits.length > 15)
+      e.phone = 'Enter a valid local number (5–15 digits)';
     if (!formData.email.trim()) e.email = 'Email is required';
     else if (!/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(formData.email))
       e.email = 'Please enter a valid email address';
@@ -72,14 +73,121 @@
     return age;
   }
 
-  // ── Phone formatter ────────────────────────────────────
-  function handlePhoneInput(e: Event) {
-    const raw = (e.target as HTMLInputElement).value.replace(/\D/g,'');
-    let formatted = raw;
-    if (raw.length > 6)      formatted = `(${raw.slice(0,3)}) ${raw.slice(3,6)}-${raw.slice(6,10)}`;
-    else if (raw.length > 3) formatted = `(${raw.slice(0,3)}) ${raw.slice(3)}`;
-    formData.phone = formatted;
+  // ── Country list (Nigeria first, then alphabetical) ──────
+  const countries = [
+    { code:'NG', name:'Nigeria',              dial:'+234' },
+    { code:'US', name:'United States',        dial:'+1'   },
+    { code:'GB', name:'United Kingdom',       dial:'+44'  },
+    { code:'GH', name:'Ghana',                dial:'+233' },
+    { code:'KE', name:'Kenya',                dial:'+254' },
+    { code:'ZA', name:'South Africa',         dial:'+27'  },
+    { code:'EG', name:'Egypt',                dial:'+20'  },
+    { code:'ET', name:'Ethiopia',             dial:'+251' },
+    { code:'TZ', name:'Tanzania',             dial:'+255' },
+    { code:'UG', name:'Uganda',               dial:'+256' },
+    { code:'RW', name:'Rwanda',               dial:'+250' },
+    { code:'SN', name:'Senegal',              dial:'+221' },
+    { code:'CI', name:'Côte d\'Ivoire',      dial:'+225' },
+    { code:'CM', name:'Cameroon',             dial:'+237' },
+    { code:'AO', name:'Angola',               dial:'+244' },
+    { code:'MZ', name:'Mozambique',           dial:'+258' },
+    { code:'ZM', name:'Zambia',               dial:'+260' },
+    { code:'ZW', name:'Zimbabwe',             dial:'+263' },
+    { code:'BJ', name:'Benin',                dial:'+229' },
+    { code:'TG', name:'Togo',                 dial:'+228' },
+    { code:'NE', name:'Niger',                dial:'+227' },
+    { code:'ML', name:'Mali',                 dial:'+223' },
+    { code:'BF', name:'Burkina Faso',         dial:'+226' },
+    { code:'GN', name:'Guinea',               dial:'+224' },
+    { code:'SL', name:'Sierra Leone',         dial:'+232' },
+    { code:'LR', name:'Liberia',              dial:'+231' },
+    { code:'GM', name:'Gambia',               dial:'+220' },
+    { code:'MR', name:'Mauritania',           dial:'+222' },
+    { code:'MA', name:'Morocco',              dial:'+212' },
+    { code:'DZ', name:'Algeria',              dial:'+213' },
+    { code:'TN', name:'Tunisia',              dial:'+216' },
+    { code:'LY', name:'Libya',                dial:'+218' },
+    { code:'SD', name:'Sudan',                dial:'+249' },
+    { code:'SO', name:'Somalia',              dial:'+252' },
+    { code:'DJ', name:'Djibouti',             dial:'+253' },
+    { code:'ER', name:'Eritrea',              dial:'+291' },
+    { code:'IN', name:'India',                dial:'+91'  },
+    { code:'PK', name:'Pakistan',             dial:'+92'  },
+    { code:'BD', name:'Bangladesh',           dial:'+880' },
+    { code:'CN', name:'China',                dial:'+86'  },
+    { code:'JP', name:'Japan',                dial:'+81'  },
+    { code:'KR', name:'South Korea',          dial:'+82'  },
+    { code:'PH', name:'Philippines',          dial:'+63'  },
+    { code:'ID', name:'Indonesia',            dial:'+62'  },
+    { code:'MY', name:'Malaysia',             dial:'+60'  },
+    { code:'SG', name:'Singapore',            dial:'+65'  },
+    { code:'TH', name:'Thailand',             dial:'+66'  },
+    { code:'VN', name:'Vietnam',              dial:'+84'  },
+    { code:'AU', name:'Australia',            dial:'+61'  },
+    { code:'NZ', name:'New Zealand',          dial:'+64'  },
+    { code:'CA', name:'Canada',               dial:'+1'   },
+    { code:'MX', name:'Mexico',               dial:'+52'  },
+    { code:'BR', name:'Brazil',               dial:'+55'  },
+    { code:'AR', name:'Argentina',            dial:'+54'  },
+    { code:'CO', name:'Colombia',             dial:'+57'  },
+    { code:'DE', name:'Germany',              dial:'+49'  },
+    { code:'FR', name:'France',               dial:'+33'  },
+    { code:'IT', name:'Italy',                dial:'+39'  },
+    { code:'ES', name:'Spain',                dial:'+34'  },
+    { code:'PT', name:'Portugal',             dial:'+351' },
+    { code:'NL', name:'Netherlands',          dial:'+31'  },
+    { code:'BE', name:'Belgium',              dial:'+32'  },
+    { code:'SE', name:'Sweden',               dial:'+46'  },
+    { code:'NO', name:'Norway',               dial:'+47'  },
+    { code:'DK', name:'Denmark',              dial:'+45'  },
+    { code:'FI', name:'Finland',              dial:'+358' },
+    { code:'PL', name:'Poland',               dial:'+48'  },
+    { code:'UA', name:'Ukraine',              dial:'+380' },
+    { code:'RU', name:'Russia',               dial:'+7'   },
+    { code:'TR', name:'Turkey',               dial:'+90'  },
+    { code:'SA', name:'Saudi Arabia',         dial:'+966' },
+    { code:'AE', name:'UAE',                  dial:'+971' },
+    { code:'QA', name:'Qatar',                dial:'+974' },
+    { code:'KW', name:'Kuwait',               dial:'+965' },
+    { code:'IL', name:'Israel',               dial:'+972' },
+    { code:'JO', name:'Jordan',               dial:'+962' },
+    { code:'LB', name:'Lebanon',              dial:'+961' },
+    { code:'IQ', name:'Iraq',                 dial:'+964' },
+    { code:'IR', name:'Iran',                 dial:'+98'  },
+  ];
+
+  let showCountryDrop = $state(false);
+  let countrySearch   = $state('');
+
+  const filteredCountries = $derived(
+    countrySearch.trim()
+      ? countries.filter(c =>
+          c.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
+          c.dial.includes(countrySearch)
+        )
+      : countries
+  );
+
+  function selectCountry(dial: string) {
+    formData.dialCode = dial;
+    showCountryDrop = false;
+    countrySearch = '';
   }
+
+  function handlePhoneInput(e: Event) {
+    // Strip everything except digits, spaces, hyphens, parentheses
+    const raw = (e.target as HTMLInputElement).value.replace(/[^\d\s\-\(\)]/g, '');
+    formData.phone = raw;
+  }
+
+  function getFlag(code: string) {
+    // Unicode regional indicator letters: A=0x1F1E6 … Z=0x1F1FF
+    return [...code].map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)).join('');
+  }
+
+  const selectedCountry = $derived(
+    countries.find(c => c.dial === formData.dialCode) ?? countries[0]
+  );
 
   // ── Navigation ─────────────────────────────────────────
   function handleNextStep(e: Event) {
@@ -121,7 +229,7 @@
           firstName: formData.firstName.trim(),
           lastName:  formData.lastName.trim(),
           dateOfBirth: formData.dateOfBirth,
-          phone:     formData.phone,
+          phone:     `${formData.dialCode}${formData.phone}`,
           email:     formData.email.trim().toLowerCase(),
           password:  formData.password,
         }),
@@ -340,18 +448,71 @@
 
               <div class="su-field">
                 <label class="su-label" for="phone">Phone Number <span class="su-req">*</span></label>
-                <div class="su-input-wrap">
-                  <span class="su-ico"><Phone size={15} /></span>
-                  <input id="phone" type="tel" placeholder="(555) 123-4567"
-                    bind:value={formData.phone}
-                    oninput={handlePhoneInput}
-                    onblur={() => blurField('phone', validateStep2)}
-                    class="su-input {errors.phone && touched.phone ? 'su-input--err' : ''}" />
+                <div class="su-phone-row">
+
+                  <!-- Country code picker -->
+                  <div class="su-dial-wrap">
+                    <button type="button" class="su-dial-btn" onclick={() => showCountryDrop = !showCountryDrop}>
+                      <span class="su-flag">{getFlag(selectedCountry.code)}</span>
+                      <span class="su-dial-code">{formData.dialCode}</span>
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" class={showCountryDrop ? 'su-chevron-open' : ''}>
+                        <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+
+                    {#if showCountryDrop}
+                      <!-- svelte-ignore a11y-click-events-have-key-events -->
+                      <!-- svelte-ignore a11y-no-static-element-interactions -->
+                      <div class="su-country-drop-overlay" onclick={() => showCountryDrop = false}></div>
+                      <div class="su-country-drop">
+                        <div class="su-country-search-wrap">
+                          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" class="su-csearch-ico"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                          <input
+                            type="text"
+                            placeholder="Search country or code…"
+                            bind:value={countrySearch}
+                            class="su-country-search"
+                            autofocus
+                          />
+                        </div>
+                        <ul class="su-country-list">
+                          {#each filteredCountries as c}
+                            <li>
+                              <button type="button"
+                                class="su-country-opt {formData.dialCode === c.dial && selectedCountry.code === c.code ? 'su-country-opt--active' : ''}"
+                                onclick={() => selectCountry(c.dial)}
+                              >
+                                <span class="su-flag">{getFlag(c.code)}</span>
+                                <span class="su-country-name">{c.name}</span>
+                                <span class="su-country-dial">{c.dial}</span>
+                              </button>
+                            </li>
+                          {/each}
+                          {#if filteredCountries.length === 0}
+                            <li class="su-country-empty">No countries found</li>
+                          {/if}
+                        </ul>
+                      </div>
+                    {/if}
+                  </div>
+
+                  <!-- Phone number field -->
+                  <div class="su-input-wrap su-phone-input-wrap">
+                    <input id="phone" type="tel" placeholder="0 801 234 5678"
+                      bind:value={formData.phone}
+                      oninput={handlePhoneInput}
+                      onblur={() => blurField('phone', validateStep2)}
+                      class="su-input su-phone-input {errors.phone && touched.phone ? 'su-input--err' : ''}" />
+                  </div>
                 </div>
+
                 {#if errors.phone && touched.phone}
                   <p class="su-err">{errors.phone}</p>
                 {:else}
-                  <p class="su-hint">Used for critical safety alerts in your area</p>
+                  <p class="su-hint">
+                    Full number: <strong>{formData.dialCode} {formData.phone}</strong>
+                    &nbsp;·&nbsp;Used for critical safety alerts
+                  </p>
                 {/if}
               </div>
 
@@ -745,6 +906,107 @@
   .su-input--err   { border-color: #f87171; background: #fff5f5; }
   .su-input--toggle{ padding-right: 2.75rem; }
   .su-input--date  { color: #374151; }
+
+  /* ── Phone row ── */
+  .su-phone-row {
+    display: flex; gap: .5rem; align-items: stretch;
+  }
+
+  /* Dial code button */
+  .su-dial-wrap { position: relative; flex-shrink: 0; }
+
+  .su-dial-btn {
+    display: flex; align-items: center; gap: .375rem;
+    height: 100%; padding: 0 .75rem;
+    background: var(--light-color,#f9fafb); border: 1.5px solid #e5e7eb;
+    border-radius: .75rem; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    font-size: .8125rem; font-weight: 600; color: var(--dark-color,#111827);
+    white-space: nowrap; transition: all .2s; min-height: 44px;
+  }
+
+  .su-dial-btn:hover { border-color: var(--primary-color,#6a2c91); background: var(--primary-bg,#f5f3ff); }
+
+  .su-flag { font-size: 1.125rem; line-height: 1; }
+  .su-dial-code { font-size: .8rem; }
+
+  .su-dial-btn svg { color: var(--gray-color,#6b7280); transition: transform .2s; }
+  :global(.su-chevron-open) { transform: rotate(180deg); }
+
+  /* Country dropdown */
+  .su-country-drop-overlay {
+    position: fixed; inset: 0; z-index: 40;
+  }
+
+  .su-country-drop {
+    position: absolute; top: calc(100% + .375rem); left: 0;
+    width: 280px; background: white;
+    border: 1.5px solid #e5e7eb; border-radius: 1rem;
+    box-shadow: 0 12px 32px rgba(0,0,0,.12);
+    z-index: 50; overflow: hidden;
+  }
+
+  .su-country-search-wrap {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .625rem .875rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .su-csearch-ico { color: #94a3b8; flex-shrink: 0; }
+
+  .su-country-search {
+    flex: 1; border: none; outline: none; background: none;
+    font-size: .8125rem; font-family: 'DM Sans', sans-serif;
+    color: var(--dark-color,#111827);
+  }
+
+  .su-country-search::placeholder { color: #94a3b8; }
+
+  .su-country-list {
+    list-style: none; max-height: 220px; overflow-y: auto; padding: .375rem;
+  }
+
+  .su-country-list::-webkit-scrollbar { width: 4px; }
+  .su-country-list::-webkit-scrollbar-track { background: transparent; }
+  .su-country-list::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 2px; }
+
+  .su-country-opt {
+    display: flex; align-items: center; gap: .625rem;
+    width: 100%; padding: .5rem .625rem; background: none; border: none;
+    border-radius: .625rem; cursor: pointer; text-align: left;
+    font-family: 'DM Sans', sans-serif; transition: background .15s;
+  }
+
+  .su-country-opt:hover { background: var(--primary-bg,#f5f3ff); }
+
+  .su-country-opt--active {
+    background: var(--primary-bg,#f5f3ff);
+    color: var(--primary-color,#6a2c91);
+  }
+
+  .su-country-name {
+    flex: 1; font-size: .8rem; color: var(--dark-color,#111827); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .su-country-dial {
+    font-size: .75rem; font-weight: 700; color: var(--primary-color,#6a2c91);
+    flex-shrink: 0;
+  }
+
+  .su-country-opt--active .su-country-name { color: var(--primary-color,#6a2c91); }
+
+  .su-country-empty {
+    padding: .75rem; font-size: .8rem; color: var(--gray-color,#6b7280);
+    text-align: center;
+  }
+
+  /* Phone input — no left icon padding */
+  .su-phone-input-wrap { flex: 1; }
+
+  .su-phone-input {
+    padding-left: .875rem !important;
+    border-radius: .75rem;
+  }
 
   .su-eye {
     position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
