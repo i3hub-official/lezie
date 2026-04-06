@@ -8,20 +8,21 @@
     TrendingUp, MessageSquare, Eye, MoreHorizontal,
     Send, Image as ImageIcon, Link, Smile,
     ChevronRight, Calendar, Bell, CheckCircle,
-    AlertCircle, HelpCircle, BookOpen, Target
+    AlertCircle, HelpCircle, BookOpen, Target,
+    LayoutGrid, List
   } from 'lucide-svelte';
 
   let isLoading = $state(true);
-  let activeTab = $state('feed');
   let showCreatePost = $state(false);
   let searchQuery = $state('');
   let selectedPost = $state<any>(null);
-  let expandedSections = $state({
-    feed: true,
-    discussions: true,
-    members: true,
-    events: true
-  });
+  
+  // Toggle states for each section
+  let showFeed = $state(true);
+  let showDiscussions = $state(true);
+  let showMembers = $state(true);
+  let showEvents = $state(true);
+  
   let newPost = $state({
     content: '',
     category: 'general',
@@ -297,9 +298,13 @@
   function getCategoryLabel(categoryId: string) {
     return categories.find(c => c.id === categoryId)?.label || categoryId;
   }
-
-  function toggleSection(section: keyof typeof expandedSections) {
-    expandedSections[section] = !expandedSections[section];
+  
+  function toggleAllSections() {
+    const allVisible = showFeed && showDiscussions && showMembers && showEvents;
+    showFeed = !allVisible;
+    showDiscussions = !allVisible;
+    showMembers = !allVisible;
+    showEvents = !allVisible;
   }
 </script>
 
@@ -370,7 +375,7 @@
       </div>
     </div>
 
-    <!-- Search Bar - Fixed alignment -->
+    <!-- Search Bar -->
     <div class="search-bar-wrapper">
       <div class="search-bar">
         <div class="search-icon-wrapper">
@@ -390,26 +395,69 @@
       </div>
     </div>
 
+    <!-- Filter Toggle Buttons -->
+    <div class="filter-bar">
+      <div class="filter-label">
+        <Filter size={14} />
+        <span>Show sections:</span>
+      </div>
+      <div class="filter-buttons">
+        <button 
+          class="filter-btn {showFeed ? 'active' : ''}" 
+          onclick={() => showFeed = !showFeed}
+        >
+          <TrendingUp size={14} />
+          <span>Community Feed</span>
+          <span class="filter-count">{getFilteredPosts().length}</span>
+        </button>
+        <button 
+          class="filter-btn {showDiscussions ? 'active' : ''}" 
+          onclick={() => showDiscussions = !showDiscussions}
+        >
+          <MessageSquare size={14} />
+          <span>Discussions</span>
+          <span class="filter-count">{getFilteredDiscussions().length}</span>
+        </button>
+        <button 
+          class="filter-btn {showMembers ? 'active' : ''}" 
+          onclick={() => showMembers = !showMembers}
+        >
+          <Users size={14} />
+          <span>Members</span>
+          <span class="filter-count">{getFilteredMembers().length}</span>
+        </button>
+        <button 
+          class="filter-btn {showEvents ? 'active' : ''}" 
+          onclick={() => showEvents = !showEvents}
+        >
+          <Calendar size={14} />
+          <span>Events</span>
+          <span class="filter-count">{getFilteredEvents().length}</span>
+        </button>
+      </div>
+      <button class="toggle-all-btn" onclick={toggleAllSections}>
+        <LayoutGrid size={14} />
+        <span>{showFeed && showDiscussions && showMembers && showEvents ? 'Hide All' : 'Show All'}</span>
+      </button>
+    </div>
+
     {#if isLoading}
       <div class="loading-container">
         <div class="loading-spinner"></div>
         <p>Loading community content...</p>
       </div>
     {:else}
-      <!-- Expandable Sections -->
-      
       <!-- Community Feed Section -->
-      <div class="expandable-section">
-        <button class="section-header" onclick={() => toggleSection('feed')}>
-          <div class="section-title">
-            <TrendingUp size={18} class="section-icon" />
-            <h2>Community Feed</h2>
-            <span class="section-count">{getFilteredPosts().length} posts</span>
+      {#if showFeed}
+        <div class="section-container">
+          <div class="section-header">
+            <div class="section-title">
+              <TrendingUp size={18} class="section-icon" />
+              <h2>Community Feed</h2>
+              <span class="section-count">{getFilteredPosts().length} posts</span>
+            </div>
           </div>
-          <ChevronRight size={18} class={`section-chevron ${expandedSections.feed ? 'expanded' : ''}`} />
-        </button>
-        
-        {#if expandedSections.feed}
+          
           <div class="section-content">
             {#if getFilteredPosts().length === 0}
               <div class="empty-state">
@@ -474,21 +522,20 @@
               </div>
             {/if}
           </div>
-        {/if}
-      </div>
+        </div>
+      {/if}
 
       <!-- Discussions Section -->
-      <div class="expandable-section">
-        <button class="section-header" onclick={() => toggleSection('discussions')}>
-          <div class="section-title">
-            <MessageSquare size={18} class="section-icon" />
-            <h2>Discussions</h2>
-            <span class="section-count">{getFilteredDiscussions().length} discussions</span>
+      {#if showDiscussions}
+        <div class="section-container">
+          <div class="section-header">
+            <div class="section-title">
+              <MessageSquare size={18} class="section-icon" />
+              <h2>Discussions</h2>
+              <span class="section-count">{getFilteredDiscussions().length} discussions</span>
+            </div>
           </div>
-          <ChevronRight size={18} class={`section-chevron ${expandedSections.discussions ? 'expanded' : ''}`} />
-        </button>
-        
-        {#if expandedSections.discussions}
+          
           <div class="section-content">
             {#if getFilteredDiscussions().length === 0}
               <div class="empty-state">
@@ -529,21 +576,20 @@
               </div>
             {/if}
           </div>
-        {/if}
-      </div>
+        </div>
+      {/if}
 
       <!-- Members Section -->
-      <div class="expandable-section">
-        <button class="section-header" onclick={() => toggleSection('members')}>
-          <div class="section-title">
-            <Users size={18} class="section-icon" />
-            <h2>Members</h2>
-            <span class="section-count">{getFilteredMembers().length} members</span>
+      {#if showMembers}
+        <div class="section-container">
+          <div class="section-header">
+            <div class="section-title">
+              <Users size={18} class="section-icon" />
+              <h2>Members</h2>
+              <span class="section-count">{getFilteredMembers().length} members</span>
+            </div>
           </div>
-          <ChevronRight size={18} class={`section-chevron ${expandedSections.members ? 'expanded' : ''}`} />
-        </button>
-        
-        {#if expandedSections.members}
+          
           <div class="section-content">
             {#if getFilteredMembers().length === 0}
               <div class="empty-state">
@@ -586,21 +632,20 @@
               </div>
             {/if}
           </div>
-        {/if}
-      </div>
+        </div>
+      {/if}
 
       <!-- Events Section -->
-      <div class="expandable-section">
-        <button class="section-header" onclick={() => toggleSection('events')}>
-          <div class="section-title">
-            <Calendar size={18} class="section-icon" />
-            <h2>Upcoming Events</h2>
-            <span class="section-count">{getFilteredEvents().length} events</span>
+      {#if showEvents}
+        <div class="section-container">
+          <div class="section-header">
+            <div class="section-title">
+              <Calendar size={18} class="section-icon" />
+              <h2>Upcoming Events</h2>
+              <span class="section-count">{getFilteredEvents().length} events</span>
+            </div>
           </div>
-          <ChevronRight size={18} class={`section-chevron ${expandedSections.events ? 'expanded' : ''}`} />
-        </button>
-        
-        {#if expandedSections.events}
+          
           <div class="section-content">
             {#if getFilteredEvents().length === 0}
               <div class="empty-state">
@@ -634,8 +679,20 @@
               </div>
             {/if}
           </div>
-        {/if}
-      </div>
+        </div>
+      {/if}
+      
+      <!-- Empty state when no sections are visible -->
+      {#if !showFeed && !showDiscussions && !showMembers && !showEvents}
+        <div class="empty-state-all">
+          <Filter size={64} />
+          <h3>No sections visible</h3>
+          <p>Use the filter buttons above to show community content</p>
+          <button class="reset-btn" onclick={toggleAllSections}>
+            Show All Sections
+          </button>
+        </div>
+      {/if}
     {/if}
   </div>
 
@@ -870,7 +927,7 @@
   .stat-value { display: block; font-size: 1.5rem; font-weight: 700; color: #0f172a; }
   .stat-label { font-size: 0.688rem; color: #64748b; }
 
-  /* Search Bar - Fixed Alignment */
+  /* Search Bar */
   .search-bar-wrapper {
     margin-bottom: 1.5rem;
   }
@@ -933,31 +990,113 @@
     color: #475569;
   }
 
-  /* Expandable Sections */
-  .expandable-section {
+  /* Filter Bar */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: white;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.813rem;
+    font-weight: 500;
+    color: #64748b;
+  }
+
+  .filter-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.75rem;
+    font-size: 0.813rem;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .filter-btn:hover {
+    background: #f1f5f9;
+    border-color: var(--primary-border);
+  }
+
+  .filter-btn.active {
+    background: var(--primary-bg);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+
+  .filter-count {
+    background: #e2e8f0;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.5rem;
+    font-size: 0.688rem;
+    font-weight: 600;
+  }
+
+  .filter-btn.active .filter-count {
+    background: var(--primary-color);
+    color: white;
+  }
+
+  .toggle-all-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: none;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.75rem;
+    font-size: 0.813rem;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .toggle-all-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: var(--primary-bg);
+  }
+
+  /* Section Containers */
+  .section-container {
     background: white;
     border-radius: 1rem;
     border: 1px solid #e2e8f0;
     margin-bottom: 1rem;
     overflow: hidden;
-    transition: all 0.2s;
   }
 
   .section-header {
-    width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 1rem 1.25rem;
-    background: white;
-    border: none;
-    cursor: pointer;
-    transition: background 0.2s;
-    font-family: 'DM Sans', sans-serif;
-  }
-
-  .section-header:hover {
-    background: #f8fafc;
+    background: #fafafa;
+    border-bottom: 1px solid #f1f5f9;
   }
 
   .section-title {
@@ -985,33 +1124,11 @@
     border-radius: 0.5rem;
   }
 
-  .section-chevron {
-    color: #94a3b8;
-    transition: transform 0.3s ease;
-  }
-
-  .section-chevron.expanded {
-    transform: rotate(90deg);
-  }
-
   .section-content {
-    padding: 0 1.25rem 1.25rem 1.25rem;
-    border-top: 1px solid #f1f5f9;
-    animation: slideDown 0.3s ease;
+    padding: 1.25rem;
   }
 
-  @keyframes slideDown {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* Empty State */
+  /* Empty States */
   .empty-state {
     text-align: center;
     padding: 3rem;
@@ -1025,6 +1142,49 @@
 
   .empty-state p {
     font-size: 0.875rem;
+  }
+
+  .empty-state-all {
+    text-align: center;
+    padding: 4rem;
+    background: white;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  .empty-state-all svg {
+    margin-bottom: 1rem;
+    opacity: 0.5;
+    color: #94a3b8;
+  }
+
+  .empty-state-all h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-state-all p {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 1.5rem;
+  }
+
+  .reset-btn {
+    padding: 0.625rem 1.25rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .reset-btn:hover {
+    background: var(--primary-dark);
   }
 
   /* Loading State */
@@ -1634,16 +1794,17 @@
     .stats-row { grid-template-columns: 1fr; }
     .members-grid, .events-grid { grid-template-columns: 1fr; }
     
-    .section-header {
-      padding: 0.875rem 1rem;
+    .filter-bar {
+      flex-direction: column;
+      align-items: stretch;
     }
     
-    .section-title h2 {
-      font-size: 0.875rem;
+    .filter-buttons {
+      justify-content: center;
     }
     
-    .section-content {
-      padding: 0 1rem 1rem 1rem;
+    .toggle-all-btn {
+      justify-content: center;
     }
   }
 </style>
