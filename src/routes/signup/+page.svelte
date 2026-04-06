@@ -175,13 +175,11 @@
   }
 
   function handlePhoneInput(e: Event) {
-    // Strip everything except digits, spaces, hyphens, parentheses
     const raw = (e.target as HTMLInputElement).value.replace(/[^\d\s\-\(\)]/g, '');
     formData.phone = raw;
   }
 
   function getFlag(code: string) {
-    // Unicode regional indicator letters: A=0x1F1E6 … Z=0x1F1FF
     return [...code].map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)).join('');
   }
 
@@ -261,8 +259,8 @@
     const s = passwordStrength();
     if (s <= 1) return { text:'Weak',   color:'#dc2626', width:'20%'  };
     if (s <= 2) return { text:'Fair',   color:'#f59e0b', width:'45%'  };
-    if (s <= 3) return { text:'Good',   color:'#3b82f6', width:'70%'  };
-    return            { text:'Strong', color:'#10b981', width:'100%' };
+    if (s <= 3) return { text:'Good',   color:'var(--primary-color)', width:'70%'  };
+    return            { text:'Strong', color:'var(--primary-dark)', width:'100%' };
   });
 
   // Inline blur validators
@@ -461,8 +459,6 @@
                     </button>
 
                     {#if showCountryDrop}
-                      <!-- svelte-ignore a11y-click-events-have-key-events -->
-                      <!-- svelte-ignore a11y-no-static-element-interactions -->
                       <div class="su-country-drop-overlay" onclick={() => showCountryDrop = false}></div>
                       <div class="su-country-drop">
                         <div class="su-country-search-wrap">
@@ -567,7 +563,7 @@
                   </div>
                   <div class="su-hints">
                     {#each [
-                      [formData.password.length >= 8,              '8+ chars'   ],
+                      [formData.password.length >= 8,              '8+ characters'   ],
                       [/(?=.*[A-Z])/.test(formData.password),      'Uppercase'  ],
                       [/(?=.*[a-z])/.test(formData.password),      'Lowercase'  ],
                       [/(?=.*\d)/.test(formData.password),         'Number'     ],
@@ -638,6 +634,21 @@
 </div>
 
 <style>
+  :root {
+    --primary-color: #6a2c91;
+    --primary-dark: #4b1d68;
+    --primary-light: #9b4fcc;
+    --primary-bg: #f5f3ff;
+    --primary-border: #ddd6fe;
+    --secondary-color: #c4b5fd;
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --danger-color: #EF4444;
+    --dark-color: #111827;
+    --light-color: #F9FAFB;
+    --gray-color: #6B7280;
+  }
+
   :global(.su-page *) {
     font-family: 'DM Sans', system-ui, sans-serif;
     box-sizing: border-box;
@@ -1018,7 +1029,7 @@
 
   .su-err  { font-size: .75rem; color: var(--danger-color,#ef4444); display: flex; align-items: center; gap: .2rem; }
   .su-hint { font-size: .6875rem; color: #94a3b8; }
-  .su-hint--ok { color: var(--success-color,#10b981); display: flex; align-items: center; gap: .25rem; }
+  .su-hint--ok { color: var(--primary-color,#6a2c91); display: flex; align-items: center; gap: .25rem; font-weight: 500; }
 
   /* Strength meter */
   .su-strength { display: flex; align-items: center; gap: .625rem; margin-top: .375rem; }
@@ -1031,17 +1042,26 @@
     height: 100%; border-radius: 2px; transition: width .3s ease, background .3s ease;
   }
 
-  .su-hints { display: flex; flex-wrap: wrap; gap: .375rem; margin-top: .375rem; }
+  .su-hints { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem; }
 
   .su-hint-ok,
   .su-hint-no {
-    display: inline-flex; align-items: center; gap: .2rem;
-    font-size: .6875rem; font-weight: 500; padding: .2rem .5625rem;
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .7rem; font-weight: 500; padding: .25rem .7rem;
     border-radius: 9999px; transition: all .2s;
   }
 
-  .su-hint-ok { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-  .su-hint-no { background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; }
+  .su-hint-ok {
+    background: var(--primary-bg,#f5f3ff);
+    color: var(--primary-dark,#4b1d68);
+    border: 1px solid var(--primary-border,#ddd6fe);
+  }
+
+  .su-hint-no {
+    background: #f8fafc;
+    color: #94a3b8;
+    border: 1px solid #e2e8f0;
+  }
 
   /* Terms */
   .su-terms {
