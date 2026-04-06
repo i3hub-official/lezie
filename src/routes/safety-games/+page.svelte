@@ -161,7 +161,7 @@
       
       if (hazardItems.every(h => h.found)) {
         setTimeout(() => {
-          alert(`🎉 You found all hazards! Score: ${gameScore}`);
+          alert(`You found all hazards! Score: ${gameScore}`);
           endGame();
         }, 500);
       }
@@ -226,7 +226,7 @@
       trafficQuestion++;
     } else {
       setTimeout(() => {
-        alert(`🚗 Traffic Safety Complete! Score: ${trafficScore}`);
+        alert(`Traffic Safety Complete! Score: ${trafficScore}`);
         trafficQuestion = 0;
         trafficScore = 0;
         endGame();
@@ -252,7 +252,7 @@
         
         if (ppeMatches >= 3) {
           setTimeout(() => {
-            alert(`🦺 PPE Master! Score: ${gameScore}`);
+            alert(`PPE Master! Score: ${gameScore}`);
             endGame();
           }, 500);
         }
@@ -463,7 +463,7 @@
         <!-- Hazard Hunter Game -->
         {#if activeGame === 'hazard-hunt'}
           <div class="game-canvas hazard-game">
-            <h3>🔍 Find all 5 hazards in the scene!</h3>
+            <h3>Find all 5 hazards in the scene!</h3>
             <div class="scene-container">
               <!-- Floor -->
               <div class="floor"></div>
@@ -504,7 +504,7 @@
           <div class="game-canvas emergency-game">
             <div class="emergency-alert">
               <Siren size={32} color="#ef4444" />
-              <h3>🚨 {emergencyScenario.situation}</h3>
+              <h3>{emergencyScenario.situation}</h3>
               <p>Select ALL correct actions (multiple answers may be correct):</p>
             </div>
             
@@ -550,7 +550,7 @@
         <!-- Safety Word Find -->
         {#if activeGame === 'safety-words'}
           <div class="game-canvas word-game">
-            <h3>📝 Find the Safety Words</h3>
+            <h3>Find the Safety Words</h3>
             <div class="word-grid">
               {#each crosswordWords as word}
                 <div class="word-item" class:found={word.found}>
@@ -599,7 +599,7 @@
             </div>
             <span class="question-counter">Question {trafficQuestion + 1} of {trafficQuestions.length}</span>
             
-            <h3>🚦 {trafficQuestions[trafficQuestion].question}</h3>
+            <h3>{trafficQuestions[trafficQuestion].question}</h3>
             
             <div class="traffic-options">
               {#each trafficQuestions[trafficQuestion].options as option, i}
@@ -617,7 +617,7 @@
         <!-- PPE Matching -->
         {#if activeGame === 'ppe-match'}
           <div class="game-canvas ppe-game">
-            <h3>🦺 Match the PPE Items</h3>
+            <h3>Match the PPE Items</h3>
             <p>Click two items to match them</p>
             
             <div class="ppe-grid">
@@ -647,7 +647,7 @@
         <!-- Home Safety (Placeholder for expansion) -->
         {#if activeGame === 'home-safety'}
           <div class="game-canvas home-game">
-            <h3>🏠 Home Safety Scanner</h3>
+            <h3>Home Safety Scanner</h3>
             <p>Coming soon: Explore a 3D home environment and identify safety risks!</p>
             <div class="coming-soon-illustration">
               <Home size={64} color="#8b5cf6" />
