@@ -557,13 +557,13 @@
   }
 
   .cp-info-box { 
-   background: linear-gradient(135deg, #fbbf24, #4b1d68);
+   background: #9b4fcc
     border: 1.5px solid #bae6fd; 
     color: #0369a1; 
   }
 
   .cp-warning-box { 
-    background: linear-gradient(135deg, #fbbf24, #4b1d68);
+    background: #9b4fcc
     border: 1.5px solid #fde68a; 
     color: #92400e; 
   }
