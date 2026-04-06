@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import { authStore } from '$lib/stores/auth';
   import {
-    Bell, MapPin, AlertTriangle, Shield, Clock,
+    Bell, MapPin, AlertTriangle, TrendingUp, Shield, Clock,
     ChevronRight, FlagTriangleRight, Users, CheckCircle,
     Loader2, Home, BarChart3, User, Settings, BellRing,
     Flame, Car, Building, Volume2, AlertOctagon,
@@ -10,6 +11,7 @@
     PanelLeftClose, PanelLeftOpen
   } from 'lucide-svelte';
 
+  // Import all page components
   import MapPage        from './MapPage.svelte';
   import AlertsPage     from './AlertsPage.svelte';
   import StatisticsPage from './StatisticsPage.svelte';
@@ -17,7 +19,6 @@
   import CommunityPage  from './CommunityPage.svelte';
   import ProfilePage    from './ProfilePage.svelte';
   import SettingsPage   from './SettingsPage.svelte';
-  import ReportPage     from './ReportPage.svelte';   // Ensure this file exists
 
   let isLoading        = $state(false);
   let user             = $state<{ name: string; email: string } | null>(null);
@@ -30,6 +31,7 @@
   let isSidebarCollapsed = $state(false);
   let isMobile         = $state(false);
 
+  // Page components mapping
   const pages: Record<string, any> = {
     dashboard: null,
     map: MapPage,
@@ -38,8 +40,7 @@
     reports: ReportsPage,
     community: CommunityPage,
     profile: ProfilePage,
-    settings: SettingsPage,
-    report: ReportPage
+    settings: SettingsPage
   };
 
   let CurrentPageComponent = $derived(pages[activePage]);
@@ -48,15 +49,29 @@
     checkMobile();
     window.addEventListener('resize', checkMobile);
     loadData();
-    return () => window.removeEventListener('resize', checkMobile);
+    
+    // Use hash-based routing to hide URLs from address bar
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1);
+      if (hash && pages[hash]) {
+        activePage = hash;
+      } else if (!hash) {
+        activePage = 'dashboard';
+      }
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    handleHashChange();
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   });
 
   function checkMobile() {
     isMobile = window.innerWidth < 768;
-    if (isMobile) { 
-      isMobileMenuOpen = false; 
-      isSidebarCollapsed = true; 
-    }
+    if (isMobile) { isMobileMenuOpen = false; isSidebarCollapsed = true; }
   }
 
   async function loadData() {
@@ -111,10 +126,12 @@
 
   const unreadCount = $derived(notifications.filter(n => !n.read).length);
 
+  // Navigate using hash - URLs stay hidden from browser history bar
   function navigate(page: string) {
     activePage = page;
     isMobileMenuOpen = false;
-    // No address bar changes - all pages stay inside the dashboard container
+    // Use hash to store state without changing the actual URL path
+    window.location.hash = page === 'dashboard' ? '' : page;
   }
 
   async function handleLogout() {
@@ -130,7 +147,7 @@
     { path:'reports',   icon:FileText,      label:'My Reports' },
     { path:'community', icon:Users,         label:'Community' },
     { path:'profile',   icon:User,          label:'Profile' },
-    { path:'settings',  icon:Settings,      label:'Settings' }
+    { path:'settings',  icon:Settings,      label:'Settings' },
   ];
 </script>
 
@@ -143,9 +160,10 @@
 
 <div class="db-root">
 
-  <!-- SIDEBAR -->
+  <!-- ══ SIDEBAR (desktop) ══ -->
   <aside class="db-sidebar {isSidebarCollapsed ? 'db-sidebar--slim' : ''}">
 
+    <!-- Logo + collapse toggle -->
     <div class="db-sidebar-top">
       <button class="db-logo-btn" onclick={() => navigate('dashboard')}>
         <img src="/icons/lz_ico.png" alt="Lezie" class="db-logo-img" />
@@ -157,6 +175,7 @@
       </button>
     </div>
 
+    <!-- User card -->
     {#if !isSidebarCollapsed}
       <div class="db-user-card">
         <div class="db-user-avatar"><User size={18} /></div>
@@ -169,6 +188,7 @@
       <div class="db-user-avatar-slim"><User size={16} /></div>
     {/if}
 
+    <!-- Nav -->
     <nav class="db-nav">
       {#each navItems as item}
         <button
@@ -185,8 +205,9 @@
       {/each}
     </nav>
 
+    <!-- Footer actions -->
     <div class="db-sidebar-foot">
-      <button class="db-report-btn" onclick={() => navigate('report')}
+      <button class="db-report-btn" onclick={() => goto('/report')}
               title={isSidebarCollapsed ? 'Report Incident' : ''}>
         <FlagTriangleRight size={15} />
         {#if !isSidebarCollapsed}<span>Report Incident</span>{/if}
@@ -199,29 +220,32 @@
     </div>
   </aside>
 
-  <!-- MAIN AREA -->
+  <!-- ══ MAIN AREA ══ -->
   <div class="db-body {isSidebarCollapsed ? 'db-body--wide' : ''}">
 
+    <!-- ── TOPBAR (mobile hamburger + always-visible header) ── -->
     <header class="db-topbar">
+      <!-- Hamburger — visible ONLY on mobile -->
       <button class="db-hamburger" onclick={() => isMobileMenuOpen = true} aria-label="Open menu">
         <MenuIcon size={20} />
       </button>
 
+      <!-- Page title -->
       <div class="db-topbar-title">
         {#if activePage === 'dashboard'}
-          <span>Welcome, <strong>{user?.name?.split(' ')[0] ?? ''}</strong></span>
+          <span>Hi, <strong>{user?.name?.split(' ')[0] ?? ''}</strong> 👋</span>
         {:else}
-          <strong>
-            {navItems.find(n => n.path === activePage)?.label ?? (activePage === 'report' ? 'Report Incident' : activePage)}
-          </strong>
+          <strong>{navItems.find(n => n.path === activePage)?.label ?? ''}</strong>
         {/if}
       </div>
 
+      <!-- Right actions -->
       <div class="db-topbar-actions">
         <button class="db-topbar-icon" onclick={() => navigate('alerts')} aria-label="Alerts">
           <Bell size={18} />
           {#if unreadCount > 0}<span class="db-topbar-badge">{unreadCount}</span>{/if}
         </button>
+        <!-- Logout — visible on desktop topbar too -->
         <button class="db-topbar-logout" onclick={handleLogout}>
           <LogOut size={16} />
           <span>Sign out</span>
@@ -229,17 +253,18 @@
       </div>
     </header>
 
-    <!-- DASHBOARD VIEWING CONTAINER -->
+    <!-- ── PAGE CONTENT ── -->
     <div class="db-page-wrap">
       {#if activePage === 'dashboard'}
 
         {#if isLoading}
           <div class="db-loading">
             <Loader2 size={32} class="db-spin" />
-            <p>Loading dashboard...</p>
+            <p>Loading dashboard…</p>
           </div>
         {:else}
 
+          <!-- Stats row -->
           <div class="db-stats">
             {#each [
               { icon:FlagTriangleRight, value:stats.totalReports,   label:'Reports',   color:'purple' },
@@ -257,13 +282,13 @@
             {/each}
           </div>
 
+          <!-- Quick access pills -->
           <div class="db-quick">
             {#each [
               { page:'map',       icon:MapPin,   label:'Live Map',  cls:'blue' },
               { page:'alerts',    icon:Bell,     label:'Alerts',    cls:'amber' },
               { page:'reports',   icon:FileText, label:'My Reports',cls:'purple' },
               { page:'community', icon:Users,    label:'Community', cls:'green' },
-              { page:'report',    icon:FlagTriangleRight, label:'Report Incident', cls:'purple' }
             ] as q}
               <button class="db-quick-pill" onclick={() => navigate(q.page)}>
                 <span class="db-quick-ico db-quick-ico--{q.cls}"><q.icon size={16} /></span>
@@ -272,10 +297,106 @@
             {/each}
           </div>
 
-          <!-- Rest of your dashboard content remains unchanged -->
+          <!-- Two-column content -->
           <div class="db-content-grid">
-            <!-- ... (your recent incidents, notifications, safety score, and tips sections) ... -->
-            <!-- Paste the full content grid from your original file here if needed -->
+
+            <!-- LEFT: recent incidents -->
+            <div class="db-card">
+              <div class="db-card-head">
+                <h2>Recent Incidents</h2>
+                <button class="db-card-link" onclick={() => navigate('map')}>
+                  View all <ChevronRight size={13} />
+                </button>
+              </div>
+              <div class="db-incidents">
+                {#each recentIncidents as inc}
+                  {@const Icon = getCategoryIcon(inc.category)}
+                  <button class="db-incident" onclick={() => goto(`/incident/${inc.id}`)}>
+                    <span class="db-inc-ico" style="background:{getSeverityColor(inc.severity)}18">
+                      <Icon size={13} style="color:{getSeverityColor(inc.severity)}" />
+                    </span>
+                    <div class="db-inc-body">
+                      <div class="db-inc-top">
+                        <span class="db-inc-title">{inc.title}</span>
+                        <span class="db-inc-status" style="color:{getStatusColor(inc.status)}">
+                          <span class="db-inc-dot" style="background:{getStatusColor(inc.status)}"></span>
+                          {inc.status}
+                        </span>
+                      </div>
+                      <div class="db-inc-meta">
+                        <span><MapPin size={9} /> {inc.location.split(' ').slice(0,2).join(' ')}</span>
+                        <span><Clock size={9} /> {formatTime(inc.time)}</span>
+                      </div>
+                    </div>
+                  </button>
+                {/each}
+              </div>
+            </div>
+
+            <!-- RIGHT column -->
+            <div class="db-right">
+
+              <!-- Notifications -->
+              <div class="db-card">
+                <div class="db-card-head">
+                  <h2>Notifications</h2>
+                  {#if unreadCount > 0}
+                    <span class="db-notif-badge">{unreadCount} new</span>
+                  {/if}
+                </div>
+                <div class="db-notifs">
+                  {#each notifications as n}
+                    <div class="db-notif {!n.read ? 'db-notif--unread' : ''}">
+                      <span class="db-notif-ico">
+                        {#if n.type === 'success'}<CheckCircle size={13} style="color:#10B981" />
+                        {:else if n.type === 'alert'}<AlertTriangle size={13} style="color:#EF4444" />
+                        {:else}<BellRing size={13} style="color:var(--primary-color)" />
+                        {/if}
+                      </span>
+                      <div>
+                        <p>{n.message}</p>
+                        <span>{formatTime(n.time)}</span>
+                      </div>
+                    </div>
+                  {/each}
+                </div>
+                <button class="db-view-all" onclick={() => navigate('alerts')}>
+                  View all <ChevronRight size={12} />
+                </button>
+              </div>
+
+              <!-- Safety score donut -->
+              <div class="db-card db-score-card" onclick={() => navigate('statistics')}>
+                <div class="db-donut">
+                  <svg viewBox="0 0 64 64">
+                    <circle cx="32" cy="32" r="27" fill="none" stroke="#E5E7EB" stroke-width="5.5"/>
+                    <circle cx="32" cy="32" r="27" fill="none" stroke="var(--primary-color)" stroke-width="5.5"
+                      stroke-dasharray="169.6"
+                      stroke-dashoffset={169.6 - (169.6 * stats.safetyScore / 100)}
+                      transform="rotate(-90 32 32)" stroke-linecap="round"/>
+                  </svg>
+                  <span>{stats.safetyScore}%</span>
+                </div>
+                <div>
+                  <h4>Safety Score</h4>
+                  <p>{stats.safetyScore >= 80 ? '🟢 Good standing' : stats.safetyScore >= 60 ? '🟡 Fair' : '🔴 Needs attention'}</p>
+                </div>
+              </div>
+
+              <!-- Safety tips -->
+              <div class="db-card db-tips-card">
+                <div class="db-card-head">
+                  <h2>Safety Tips</h2>
+                  <Shield size={14} style="color:var(--primary-color)" />
+                </div>
+                <ul>
+                  {#each safetyTips as tip}
+                    <li><span></span>{tip}</li>
+                  {/each}
+                </ul>
+              </div>
+
+            </div>
           </div>
 
         {/if}
@@ -284,13 +405,13 @@
         <svelte:component this={CurrentPageComponent} />
       {:else}
         <div class="db-loading">
-          <Loader2 size={28} class="db-spin" /><p>Loading...</p>
+          <Loader2 size={28} class="db-spin" /><p>Loading…</p>
         </div>
       {/if}
     </div>
   </div>
 
-  <!-- MOBILE DRAWER (with Report Incident) -->
+  <!-- ══ MOBILE DRAWER ══ -->
   {#if isMobileMenuOpen}
     <div class="db-drawer-overlay" onclick={() => isMobileMenuOpen = false}>
       <aside class="db-drawer" onclick={(e) => e.stopPropagation()}>
@@ -300,6 +421,7 @@
           <button class="db-drawer-close" onclick={() => isMobileMenuOpen = false}><X size={20} /></button>
         </div>
 
+        <!-- User -->
         <div class="db-drawer-user">
           <div class="db-drawer-avatar"><User size={20} /></div>
           <div>
@@ -308,9 +430,13 @@
           </div>
         </div>
 
+        <!-- Nav -->
         <nav class="db-drawer-nav">
           {#each navItems as item}
-            <button class="db-drawer-item {activePage === item.path ? 'active' : ''}" onclick={() => navigate(item.path)}>
+            <button
+              class="db-drawer-item {activePage === item.path ? 'active' : ''}"
+              onclick={() => navigate(item.path)}
+            >
               <item.icon size={17} />
               <span>{item.label}</span>
               {#if item.path === 'alerts' && unreadCount > 0}
@@ -318,13 +444,12 @@
               {/if}
             </button>
           {/each}
-          <button class="db-drawer-item" onclick={() => navigate('report')}>
-            <FlagTriangleRight size={17} />
-            <span>Report Incident</span>
-          </button>
         </nav>
 
         <div class="db-drawer-foot">
+          <button class="db-drawer-report" onclick={() => { goto('/report'); isMobileMenuOpen = false; }}>
+            <FlagTriangleRight size={15} /> Report Incident
+          </button>
           <button class="db-drawer-logout" onclick={handleLogout}>
             <LogOut size={15} /> Sign out
           </button>
