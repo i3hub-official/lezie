@@ -117,47 +117,39 @@
   };
   
   const handleSubmit = async (e: Event) => {
-  e.preventDefault();
-  const validationErrors = validateStep3();
-  if (Object.keys(validationErrors).length > 0) {
-    errors = validationErrors;
-    Object.keys(validationErrors).forEach(key => { touched[key] = true; });
-    return;
-  }
-
-  isLoading = true;
-  errors = {};
-
-  try {
-    const response = await fetch('/api/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        dateOfBirth: formData.dateOfBirth,
-        phone: formData.phone,
-        email: formData.email.trim().toLowerCase(),
-        password: formData.password,
-      }),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.error || `Server error: ${response.status}`);
+    e.preventDefault();
+    const validationErrors = validateStep3();
+    if (Object.keys(validationErrors).length > 0) { 
+      errors = validationErrors;
+      Object.keys(validationErrors).forEach(key => { touched[key] = true; });
+      return; 
     }
+    isLoading = true;
+    errors = {};
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          dateOfBirth: formData.dateOfBirth,
+          phone: formData.phone,
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Signup failed');
+      await authStore.login(formData.email, formData.password);
+      goto('/dashboard');
+    } catch (error: unknown) {
+      errors.submit = error instanceof Error ? error.message : 'An error occurred';
+    } finally {
+      isLoading = false;
+    }
+  };
 
-    // Success path
-    await authStore.login(formData.email, formData.password);
-    goto('/dashboard');
-  } catch (error: unknown) {
-    console.error('Signup submission error:', error);
-    errors.submit = error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.';
-  } finally {
-    isLoading = false;
-  }
-};
   const goBackToHome = () => {
     goto('/');
   };
@@ -185,7 +177,7 @@
     const cleaned = value.replace(/\D/g, '');
     if (cleaned.length <= 3) return cleaned;
     if (cleaned.length <= 6) return `(${cleaned.slice(0,3)}) ${cleaned.slice(3)}`;
-    return `(${cleaned.slice(0,3)}) ${cleaned.slice(3,6)}-${cleaned.slice(6,10)}`;
+    return `(${cleaned.slice(0,3)}) \( {cleaned.slice(3,6)}- \){cleaned.slice(6,10)}`;
   };
 
   const handlePhoneInput = (e: Event) => {
@@ -194,18 +186,9 @@
   };
 </script>
 
-<svelte:head>
-  <title>Sign Up - Lezie</title>
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
-</svelte:head>
-
 <div class="su-page">
 
-  <!-- ── LEFT PANEL (desktop only) ── -->
+  <!-- LEFT PANEL (desktop only) -->
   <aside class="su-panel">
     <div class="su-panel-inner">
       <a href="/" class="su-logo-link">
@@ -255,12 +238,12 @@
     <div class="su-panel-glow"></div>
   </aside>
 
-  <!-- ── RIGHT PANEL / FORM ── -->
+  <!-- RIGHT PANEL / FORM -->
   <main class="su-main">
     <div class="su-form-shell">
 
       <!-- Back button to home -->
-      <button class="su-back-home" onclick={goBackToHome}>
+      <button class="su-back-home" on:click={goBackToHome}>
         <ChevronLeft size={18} />
         <Home size={14} />
         <span>Back to Home</span>
@@ -309,7 +292,7 @@
           </div>
         {/if}
 
-        <form onsubmit={currentStep === 3 ? handleSubmit : handleNextStep}>
+        <form on:submit={currentStep === 3 ? handleSubmit : handleNextStep}>
 
           <!-- STEP 1 - Personal Info -->
           {#if currentStep === 1}
@@ -329,7 +312,7 @@
                       id="firstName"
                       placeholder="John"
                       bind:value={formData.firstName}
-                      onblur={() => { touched.firstName = true; errors.firstName = validateStep1().firstName; }}
+                      on:blur={() => { touched.firstName = true; errors.firstName = validateStep1().firstName || ''; }}
                       class="su-input {errors.firstName && touched.firstName ? 'su-input--err' : ''}"
                     />
                   </div>
@@ -346,7 +329,7 @@
                       id="lastName"
                       placeholder="Doe"
                       bind:value={formData.lastName}
-                      onblur={() => { touched.lastName = true; errors.lastName = validateStep1().lastName; }}
+                      on:blur={() => { touched.lastName = true; errors.lastName = validateStep1().lastName || ''; }}
                       class="su-input {errors.lastName && touched.lastName ? 'su-input--err' : ''}"
                     />
                   </div>
@@ -364,7 +347,7 @@
                     type="date"
                     id="dateOfBirth"
                     bind:value={formData.dateOfBirth}
-                    onblur={() => { touched.dateOfBirth = true; errors.dateOfBirth = validateStep1().dateOfBirth; }}
+                    on:blur={() => { touched.dateOfBirth = true; errors.dateOfBirth = validateStep1().dateOfBirth || ''; }}
                     class="su-input su-input--date {errors.dateOfBirth && touched.dateOfBirth ? 'su-input--err' : ''}"
                     max={new Date().toISOString().split('T')[0]}
                   />
@@ -395,8 +378,8 @@
                     id="phone"
                     placeholder="(555) 123-4567"
                     bind:value={formData.phone}
-                    oninput={handlePhoneInput}
-                    onblur={() => { touched.phone = true; errors.phone = validateStep2().phone; }}
+                    on:input={handlePhoneInput}
+                    on:blur={() => { touched.phone = true; errors.phone = validateStep2().phone || ''; }}
                     class="su-input {errors.phone && touched.phone ? 'su-input--err' : ''}"
                   />
                 </div>
@@ -416,7 +399,7 @@
                     id="email"
                     placeholder="you@example.com"
                     bind:value={formData.email}
-                    onblur={() => { touched.email = true; errors.email = validateStep2().email; }}
+                    on:blur={() => { touched.email = true; errors.email = validateStep2().email || ''; }}
                     class="su-input {errors.email && touched.email ? 'su-input--err' : ''}"
                   />
                 </div>
@@ -446,10 +429,10 @@
                     id="password"
                     placeholder="Create a strong password"
                     bind:value={formData.password}
-                    onblur={() => { touched.password = true; errors.password = validateStep3().password; }}
+                    on:blur={() => { touched.password = true; errors.password = validateStep3().password || ''; }}
                     class="su-input su-input--toggle {errors.password && touched.password ? 'su-input--err' : ''}"
                   />
-                  <button type="button" class="su-eye-btn" onclick={() => showPassword = !showPassword}>
+                  <button type="button" class="su-eye-btn" on:click={() => showPassword = !showPassword}>
                     {#if showPassword}<EyeOff size={16} />{:else}<Eye size={16} />{/if}
                   </button>
                 </div>
@@ -488,10 +471,10 @@
                     id="confirmPassword"
                     placeholder="Repeat your password"
                     bind:value={formData.confirmPassword}
-                    onblur={() => { touched.confirmPassword = true; errors.confirmPassword = validateStep3().confirmPassword; }}
+                    on:blur={() => { touched.confirmPassword = true; errors.confirmPassword = validateStep3().confirmPassword || ''; }}
                     class="su-input su-input--toggle {errors.confirmPassword && touched.confirmPassword ? 'su-input--err' : ''}"
                   />
-                  <button type="button" class="su-eye-btn" onclick={() => showConfirmPassword = !showConfirmPassword}>
+                  <button type="button" class="su-eye-btn" on:click={() => showConfirmPassword = !showConfirmPassword}>
                     {#if showConfirmPassword}<EyeOff size={16} />{:else}<Eye size={16} />{/if}
                   </button>
                 </div>
@@ -514,7 +497,7 @@
           <!-- Actions -->
           <div class="su-actions">
             {#if currentStep > 1}
-              <button type="button" class="su-btn-back" onclick={handlePreviousStep}>
+              <button type="button" class="su-btn-back" on:click={handlePreviousStep}>
                 <ArrowLeft size={15} /> Back
               </button>
             {/if}
