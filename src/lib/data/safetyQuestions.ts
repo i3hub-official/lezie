@@ -2665,6 +2665,340 @@ export const safetyQuestions: SafetyQuestion[] = [
     difficulty: "easy",
     tags: ["planning", "preparedness", "essentials"]
   },
+// ====================== ONLINE SAFETY ======================
+{
+  "id": "q201",
+  "category": "online",
+  "question": "You receive an email claiming to be from your bank, asking you to click a link to 'verify your account' or risk closure. What should you do?",
+  "answers": [
+    { "text": "Click the link immediately to avoid account suspension", "correct": false },
+    { "text": "Log in to your bank's official website or app directly to check for any alerts", "correct": true, "explanation": "Phishing emails often mimic legitimate sources. Always verify through official channels." },
+    { "text": "Forward the email to friends for their opinion", "correct": false },
+    { "text": "Reply with your account details to confirm your identity", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["phishing", "email-scams", "banking"]
+},
+{
+  "id": "q202",
+  "category": "online",
+  "question": "A social media friend you don’t know well asks for your home address to 'send you a surprise gift.' What should you do?",
+  "answers": [
+    { "text": "Share your address and thank them", "correct": false },
+    { "text": "Politely decline and avoid sharing personal details with strangers online", "correct": true, "explanation": "Sharing your address with unknown individuals can compromise your safety and privacy." },
+    { "text": "Ask for their address first to exchange gifts", "correct": false },
+    { "text": "Post your address publicly so everyone can send gifts", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["privacy", "social-media", "strangers"]
+},
+{
+  "id": "q203",
+  "category": "online",
+  "question": "You notice an unfamiliar device connected to your home Wi-Fi network. What should you do?",
+  "answers": [
+    { "text": "Ignore it, as it might belong to a neighbor", "correct": false },
+    { "text": "Change your Wi-Fi password immediately and investigate further", "correct": true, "explanation": "Unauthorized devices on your network can indicate a security breach or unauthorized access." },
+    { "text": "Unplug your router to disconnect all devices", "correct": false },
+    { "text": "Share your Wi-Fi password with more people to confuse intruders", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["wi-fi-security", "networks", "intrusion"]
+},
+{
+  "id": "q204",
+  "category": "online",
+  "question": "A pop-up appears on your screen claiming your device is infected and you must call a number for help. What should you do?",
+  "answers": [
+    { "text": "Call the number immediately to fix the issue", "correct": false },
+    { "text": "Close the pop-up and run a scan using trusted antivirus software", "correct": true, "explanation": "Fake virus alerts are often scams to trick you into paying for unnecessary services or installing malware." },
+    { "text": "Click the pop-up to learn more about the infection", "correct": false },
+    { "text": "Restart your device and hope the issue resolves itself", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["scams", "malware", "pop-ups"]
+},
+{
+  "id": "q205",
+  "category": "online",
+  "question": "You are asked to share your location continuously with a new online friend. What should you do?",
+  "answers": [
+    { "text": "Enable continuous location sharing to build trust", "correct": false },
+    { "text": "Decline and only share your location with trusted individuals", "correct": true, "explanation": "Continuous location sharing can expose you to stalking or other risks." },
+    { "text": "Share your location but turn it off after a few hours", "correct": false },
+    { "text": "Post your location publicly so everyone knows where you are", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["location-sharing", "privacy", "online-friends"]
+},
+
+// ====================== STREET SAFETY ======================
+{
+  "id": "q206",
+  "category": "street",
+  "question": "You are walking alone at night and notice someone following you. What should you do?",
+  "answers": [
+    { "text": "Stop and confront the person to ask why they are following you", "correct": false },
+    { "text": "Move to a well-lit, populated area and call for help if necessary", "correct": true, "explanation": "Avoiding isolation and seeking help can deter potential threats." },
+    { "text": "Ignore the person and continue walking normally", "correct": false },
+    { "text": "Take a shortcut through a dark alley to lose them", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["night-safety", "awareness", "followers"]
+},
+{
+  "id": "q207",
+  "category": "street",
+  "question": "A stranger offers you a ride home late at night. What should you do?",
+  "answers": [
+    { "text": "Accept the ride to save time and money", "correct": false },
+    { "text": "Politely decline and use a trusted transportation method", "correct": true, "explanation": "Accepting rides from strangers can put you at risk of theft, assault, or other dangers." },
+    { "text": "Ask the stranger for identification before accepting", "correct": false },
+    { "text": "Get in the car but keep your phone ready", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["rides", "strangers", "night-safety"]
+},
+{
+  "id": "q208",
+  "category": "street",
+  "question": "You witness a fight breaking out in a public place. What should you do?",
+  "answers": [
+    { "text": "Join the fight to support the person you think is right", "correct": false },
+    { "text": "Stay at a safe distance and call emergency services if needed", "correct": true, "explanation": "Intervening in a fight can escalate the situation and put you at risk." },
+    { "text": "Record the fight and post it online immediately", "correct": false },
+    { "text": "Walk away and pretend you didn’t see anything", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["public-safety", "conflict", "emergency"]
+},
+{
+  "id": "q209",
+  "category": "street",
+  "question": "You are approached by a group of people demanding money. What should you do?",
+  "answers": [
+    { "text": "Hand over your wallet immediately to avoid confrontation", "correct": false },
+    { "text": "Stay calm, assess the situation, and prioritize your safety", "correct": true, "explanation": "Your safety is the priority. Avoid escalating the situation if possible." },
+    { "text": "Start shouting and resist physically", "correct": false },
+    { "text": "Run away without looking back", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["robbery", "confrontation", "safety"]
+},
+{
+  "id": "q210",
+  "category": "street",
+  "question": "You are in a crowded area and suddenly feel someone bump into you. What should you check immediately?",
+  "answers": [
+    { "text": "Your phone and wallet to ensure nothing was stolen", "correct": true, "explanation": "Crowded areas are common places for pickpocketing and theft." },
+    { "text": "The person’s face to confront them", "correct": false },
+    { "text": "Your shoes to make sure they are still tied", "correct": false },
+    { "text": "The time to see if you are running late", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["pickpocketing", "crowds", "theft"]
+},
+
+// ====================== HOME SAFETY ======================
+{
+  "id": "q211",
+  "category": "home",
+  "question": "You smell gas in your home. What should you do first?",
+  "answers": [
+    { "text": "Turn on the lights to see better", "correct": false },
+    { "text": "Open windows to ventilate the area and avoid creating sparks", "correct": true, "explanation": "Gas leaks can cause explosions. Ventilate the area and avoid any potential ignition sources." },
+    { "text": "Light a match to check where the smell is coming from", "correct": false },
+    { "text": "Ignore it if the smell is faint", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["gas-leak", "fire-safety", "emergency"]
+},
+{
+  "id": "q212",
+  "category": "home",
+  "question": "A stranger knocks on your door claiming to be from a utility company and asks to enter your home. What should you do?",
+  "answers": [
+    { "text": "Let them in immediately to avoid causing a scene", "correct": false },
+    { "text": "Ask for official identification and verify their credentials before allowing entry", "correct": true, "explanation": "Impersonating utility workers is a common tactic for burglary or scams." },
+    { "text": "Close the door and pretend no one is home", "correct": false },
+    { "text": "Invite them in but watch them closely", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["home-security", "scams", "verification"]
+},
+{
+  "id": "q213",
+  "category": "home",
+  "question": "You notice a small fire in your kitchen. What should you do first?",
+  "answers": [
+    { "text": "Pour water on it to put it out quickly", "correct": false },
+    { "text": "Use a fire extinguisher or smother the flames with a lid if it is safe to do so", "correct": true, "explanation": "Water can spread grease fires. Use appropriate methods to extinguish small fires safely." },
+    { "text": "Open all the windows to let the smoke out", "correct": false },
+    { "text": "Leave the house immediately without attempting to put it out", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["fire-safety", "kitchen", "emergency"]
+},
+{
+  "id": "q214",
+  "category": "home",
+  "question": "You receive a package at your doorstep that you weren’t expecting. What should you do?",
+  "answers": [
+    { "text": "Open it immediately to see what’s inside", "correct": false },
+    { "text": "Inspect the package for suspicious signs and verify the sender before opening", "correct": true, "explanation": "Unexpected packages can sometimes contain dangerous or illegal items." },
+    { "text": "Leave it outside for someone else to take", "correct": false },
+    { "text": "Throw it away without checking", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["packages", "home-security", "suspicious-items"]
+},
+{
+  "id": "q215",
+  "category": "home",
+  "question": "You hear an unusual noise outside your home at night. What should you do?",
+  "answers": [
+    { "text": "Go outside immediately to investigate", "correct": false },
+    { "text": "Stay inside, lock your doors, and call for help if you feel threatened", "correct": true, "explanation": "Investigating unusual noises alone can put you at risk. Prioritize your safety." },
+    { "text": "Turn on all the lights to scare away intruders", "correct": false },
+    { "text": "Ignore the noise and go back to sleep", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["home-security", "night-safety", "noise"]
+},
+
+// ====================== TRAVEL SAFETY ======================
+{
+  "id": "q216",
+  "category": "travel",
+  "question": "You arrive at your hotel room and notice the door is slightly ajar. What should you do?",
+  "answers": [
+    { "text": "Enter the room to check if anything is missing", "correct": false },
+    { "text": "Do not enter and notify hotel staff immediately", "correct": true, "explanation": "An ajar door could indicate a security breach or unauthorized access." },
+    { "text": "Close the door and pretend nothing happened", "correct": false },
+    { "text": "Leave your luggage outside and come back later", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["hotel-safety", "security", "travel"]
+},
+{
+  "id": "q217",
+  "category": "travel",
+  "question": "You are in a foreign country and need to use public Wi-Fi. What should you avoid doing?",
+  "answers": [
+    { "text": "Accessing sensitive accounts like banking or email", "correct": true, "explanation": "Public Wi-Fi networks are often unsecured and can expose your data to hackers." },
+    { "text": "Browsing social media", "correct": false },
+    { "text": "Checking the weather forecast", "correct": false },
+    { "text": "Downloading large files to save mobile data", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["wi-fi-security", "travel", "privacy"]
+},
+{
+  "id": "q218",
+  "category": "travel",
+  "question": "You are offered a local delicacy by a street vendor, but it looks undercooked. What should you do?",
+  "answers": [
+    { "text": "Eat it to avoid offending the vendor", "correct": false },
+    { "text": "Politely decline if you have concerns about food safety", "correct": true, "explanation": "Undercooked food can cause food poisoning or other health issues." },
+    { "text": "Ask the vendor to cook it more and wait", "correct": false },
+    { "text": "Buy it but throw it away later", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["food-safety", "travel", "health"]
+},
+{
+  "id": "q219",
+  "category": "travel",
+  "question": "You are traveling and realize you’ve lost your passport. What should you do first?",
+  "answers": [
+    { "text": "Panicking and searching everywhere frantically", "correct": false },
+    { "text": "Contact your country’s embassy or consulate for assistance", "correct": true, "explanation": "Embassies can provide guidance and help you replace your passport." },
+    { "text": "Borrow a friend’s passport to continue your trip", "correct": false },
+    { "text": "Ignore it and hope it turns up later", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["passport", "travel", "emergency"]
+},
+{
+  "id": "q220",
+  "category": "travel",
+  "question": "You are in a taxi and suspect the driver is taking a longer route than necessary. What should you do?",
+  "answers": [
+    { "text": "Confront the driver aggressively", "correct": false },
+    { "text": "Politely ask the driver to follow the agreed route or use a map to confirm", "correct": true, "explanation": "Clear communication can resolve misunderstandings and prevent overcharging." },
+    { "text": "Jump out of the taxi immediately", "correct": false },
+    { "text": "Pay extra to avoid conflict", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["taxi-safety", "navigation", "travel"]
+},
+
+// ====================== GENERAL SAFETY ======================
+{
+  "id": "q221",
+  "category": "general",
+  "question": "You are in a building when a fire alarm goes off. What should you do?",
+  "answers": [
+    { "text": "Ignore it if you don’t see smoke or flames", "correct": false },
+    { "text": "Evacuate the building immediately using the nearest safe exit", "correct": true, "explanation": "Fire alarms are designed to alert you early. Always evacuate and follow safety procedures." },
+    { "text": "Wait for someone to confirm it’s a real fire", "correct": false },
+    { "text": "Go back to your room to gather belongings", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["fire-safety", "evacuation", "emergency"]
+},
+{
+  "id": "q222",
+  "category": "general",
+  "question": "You see someone collapse in a public place. What should you do first?",
+  "answers": [
+    { "text": "Walk away to avoid getting involved", "correct": false },
+    { "text": "Call emergency services and check if the person is responsive", "correct": true, "explanation": "Quick action can save lives. Always call for help and assess the situation." },
+    { "text": "Start performing CPR immediately without checking", "correct": false },
+    { "text": "Take a photo to post on social media", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["first-aid", "emergency", "public-safety"]
+},
+{
+  "id": "q223",
+  "category": "general",
+  "question": "You are hiking and encounter a wild animal blocking the trail. What should you do?",
+  "answers": [
+    { "text": "Approach the animal slowly to scare it away", "correct": false },
+    { "text": "Stay calm, give the animal space, and back away slowly", "correct": true, "explanation": "Wild animals can be unpredictable. Maintain distance to avoid provoking them." },
+    { "text": "Run as fast as you can", "correct": false },
+    { "text": "Throw rocks at the animal to make it leave", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["wildlife", "outdoors", "safety"]
+},
+{
+  "id": "q224",
+  "category": "general",
+  "question": "You are in a crowded event and hear a loud noise that sounds like gunfire. What should you do?",
+  "answers": [
+    { "text": "Stay where you are to see what happens", "correct": false },
+    { "text": "Drop to the ground, seek cover, and follow instructions from authorities", "correct": true, "explanation": "In potential active shooter situations, seek cover and follow safety protocols." },
+    { "text": "Run toward the noise to help", "correct": false },
+    { "text": "Start recording the event on your phone", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["emergency", "public-safety", "active-shooter"]
+},
+{
+  "id": "q225",
+  "category": "general",
+  "question": "You are driving and your car starts to overheat. What should you do?",
+  "answers": [
+    { "text": "Keep driving to reach your destination faster", "correct": false },
+    { "text": "Pull over safely, turn off the engine, and let it cool before checking", "correct": true, "explanation": "Continuing to drive an overheating car can cause severe damage or even a fire." },
+    { "text": "Pour water on the engine immediately", "correct": false },
+    { "text": "Speed up to cool the engine with airflow", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["car-safety", "maintenance", "emergency"]
+},
 
 ];
 
