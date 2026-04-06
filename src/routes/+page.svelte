@@ -211,9 +211,6 @@
   <div class="lz-container">
     <div class="lz-foot-grid">
       <div>
-        <div class="lz-foot-logo">Lezie</div>
-        <p class="lz-foot-desc">Making communities safer through technology and collective action.</p>
-      </div>
 
       <div class="lz-foot-col">
         <h4>Company</h4>
