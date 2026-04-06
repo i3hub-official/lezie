@@ -1071,6 +1071,7 @@ export const safetyQuestions: SafetyQuestion[] = [
     ],
     difficulty: "easy",
     tags: ["airports", "hotels", "travel-tips"]
+},
 
   // ====================== GENERAL SAFETY (10 questions) ======================
   {
