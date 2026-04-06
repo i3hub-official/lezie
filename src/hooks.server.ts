@@ -13,6 +13,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     '/report',
     '/profile',
     '/settings',
+  '/contact', '/safety-guidelines', '/faq',
     // Add any other dynamic or private pages here
   ];
 
