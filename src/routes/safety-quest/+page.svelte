@@ -211,11 +211,6 @@
         <span>Back to Dashboard</span>
       </button>
 
-      <div class="nav-brand">
-        <Shield size={28} />
-        <span class="logo-text">Safety Quest</span>
-      </div>
-
       <div class="nav-stats">
         <div class="stat-pill">
           <Flame size={16} />
