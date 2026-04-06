@@ -16,6 +16,12 @@
   let showCreatePost = $state(false);
   let searchQuery = $state('');
   let selectedPost = $state<any>(null);
+  let expandedSections = $state({
+    feed: true,
+    discussions: true,
+    members: true,
+    events: true
+  });
   let newPost = $state({
     content: '',
     category: 'general',
@@ -166,6 +172,33 @@
         reputation: 890,
         badges: ['Newcomer'],
         isOnline: false
+      },
+      {
+        id: 4,
+        name: 'David Kim',
+        avatar: 'https://ui-avatars.com/api/?name=David+Kim&background=3B82F6&color=fff',
+        role: 'Community Organizer',
+        reputation: 3100,
+        badges: ['Leader', 'Expert', 'Helper', 'Vigilant'],
+        isOnline: true
+      },
+      {
+        id: 5,
+        name: 'Maria Garcia',
+        avatar: 'https://ui-avatars.com/api/?name=Maria+Garcia&background=EF4444&color=fff',
+        role: 'Safety Monitor',
+        reputation: 1560,
+        badges: ['Vigilant', 'Helper'],
+        isOnline: false
+      },
+      {
+        id: 6,
+        name: 'James Wilson',
+        avatar: 'https://ui-avatars.com/api/?name=James+Wilson&background=8B5CF6&color=fff',
+        role: 'Active Member',
+        reputation: 720,
+        badges: ['Newcomer'],
+        isOnline: true
       }
     ];
 
@@ -177,7 +210,8 @@
         location: 'Community Center',
         attendees: 45,
         maxAttendees: 100,
-        category: 'workshop'
+        category: 'workshop',
+        description: 'Learn essential safety tips and emergency response techniques'
       },
       {
         id: 2,
@@ -186,7 +220,18 @@
         location: 'Maple Street School',
         attendees: 32,
         maxAttendees: 50,
-        category: 'meeting'
+        category: 'meeting',
+        description: 'Monthly meeting to discuss community safety initiatives'
+      },
+      {
+        id: 3,
+        title: 'First Aid Certification Course',
+        date: new Date(Date.now() + 19 * 86400000).toISOString(),
+        location: 'Red Cross Building',
+        attendees: 18,
+        maxAttendees: 25,
+        category: 'training',
+        description: 'Get certified in first aid and CPR'
       }
     ];
   }
@@ -241,8 +286,20 @@
     );
   }
 
+  function getFilteredEvents() {
+    if (!searchQuery) return events;
+    return events.filter(e => 
+      e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      e.location.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
+
   function getCategoryLabel(categoryId: string) {
     return categories.find(c => c.id === categoryId)?.label || categoryId;
+  }
+
+  function toggleSection(section: keyof typeof expandedSections) {
+    expandedSections[section] = !expandedSections[section];
   }
 </script>
 
@@ -251,6 +308,10 @@
     <!-- Header -->
     <div class="page-header">
       <div class="header-left">
+        <button class="back-btn" onclick={() => goto('/dashboard')}>
+          <ChevronLeft size={18} />
+          <span>Dashboard</span>
+        </button>
       </div>
       <div class="header-center">
         <div class="logo-badge">
@@ -309,40 +370,24 @@
       </div>
     </div>
 
-    <!-- Search Bar -->
-    <div class="search-bar">
-      <Search size={18} class="search-icon" />
-      <input 
-        type="text" 
-        placeholder="Search discussions, posts, or members..." 
-        bind:value={searchQuery}
-        class="search-input"
-      />
-      {#if searchQuery}
-        <button class="clear-search" onclick={() => searchQuery = ''}>
-          <X size={16} />
-        </button>
-      {/if}
-    </div>
-
-    <!-- Tab Navigation -->
-    <div class="tabs-container">
-      <button class="tab-btn {activeTab === 'feed' ? 'active' : ''}" onclick={() => activeTab = 'feed'}>
-        <TrendingUp size={16} />
-        Community Feed
-      </button>
-      <button class="tab-btn {activeTab === 'discussions' ? 'active' : ''}" onclick={() => activeTab = 'discussions'}>
-        <MessageSquare size={16} />
-        Discussions
-      </button>
-      <button class="tab-btn {activeTab === 'members' ? 'active' : ''}" onclick={() => activeTab = 'members'}>
-        <Users size={16} />
-        Members
-      </button>
-      <button class="tab-btn {activeTab === 'events' ? 'active' : ''}" onclick={() => activeTab = 'events'}>
-        <Calendar size={16} />
-        Events
-      </button>
+    <!-- Search Bar - Fixed alignment -->
+    <div class="search-bar-wrapper">
+      <div class="search-bar">
+        <div class="search-icon-wrapper">
+          <Search size={18} class="search-icon" />
+        </div>
+        <input 
+          type="text" 
+          placeholder="Search discussions, posts, or members..." 
+          bind:value={searchQuery}
+          class="search-input"
+        />
+        {#if searchQuery}
+          <button class="clear-search" onclick={() => searchQuery = ''}>
+            <X size={16} />
+          </button>
+        {/if}
+      </div>
     </div>
 
     {#if isLoading}
@@ -351,164 +396,246 @@
         <p>Loading community content...</p>
       </div>
     {:else}
-      <!-- Community Feed -->
-      {#if activeTab === 'feed'}
-        <div class="posts-grid">
-          {#each getFilteredPosts() as post}
-            {@const CategoryIcon = getCategoryIcon(post.category)}
-            <div class="post-card">
-              {#if post.isPinned}
-                <div class="post-pinned">
-                  <Star size={12} />
-                  <span>Pinned</span>
-                </div>
-              {/if}
-              
-              <div class="post-header">
-                <img src={post.author.avatar} alt={post.author.name} class="post-avatar" />
-                <div class="post-author">
-                  <div class="author-name">
-                    {post.author.name}
-                    {#if post.isVerified}
-                      <CheckCircle size={14} class="verified-badge" />
+      <!-- Expandable Sections -->
+      
+      <!-- Community Feed Section -->
+      <div class="expandable-section">
+        <button class="section-header" onclick={() => toggleSection('feed')}>
+          <div class="section-title">
+            <TrendingUp size={18} class="section-icon" />
+            <h2>Community Feed</h2>
+            <span class="section-count">{getFilteredPosts().length} posts</span>
+          </div>
+          <ChevronRight size={18} class={`section-chevron ${expandedSections.feed ? 'expanded' : ''}`} />
+        </button>
+        
+        {#if expandedSections.feed}
+          <div class="section-content">
+            {#if getFilteredPosts().length === 0}
+              <div class="empty-state">
+                <MessageCircle size={48} />
+                <p>No posts found matching your search</p>
+              </div>
+            {:else}
+              <div class="posts-grid">
+                {#each getFilteredPosts() as post}
+                  {@const CategoryIcon = getCategoryIcon(post.category)}
+                  <div class="post-card">
+                    {#if post.isPinned}
+                      <div class="post-pinned">
+                        <Star size={12} />
+                        <span>Pinned</span>
+                      </div>
                     {/if}
+
+                    <div class="post-header">
+                      <img src={post.author.avatar} alt={post.author.name} class="post-avatar" />
+                      <div class="post-author">
+                        <div class="author-name">
+                          {post.author.name}
+                          {#if post.isVerified}
+                            <CheckCircle size={14} class="verified-badge" />
+                          {/if}
+                        </div>
+                        <div class="author-role">{post.author.role}</div>
+                      </div>
+                      <div class="post-category" style="background: {getCategoryColor(post.category)}10; color: {getCategoryColor(post.category)}">
+                        <CategoryIcon size={12} />
+                        <span>{getCategoryLabel(post.category)}</span>
+                      </div>
+                    </div>
+
+                    <div class="post-content">
+                      <p>{post.content}</p>
+                    </div>
+
+                    <div class="post-footer">
+                      <div class="post-stats">
+                        <button class="stat-btn">
+                          <ThumbsUp size={14} />
+                          <span>{post.likes}</span>
+                        </button>
+                        <button class="stat-btn">
+                          <MessageCircle size={14} />
+                          <span>{post.comments}</span>
+                        </button>
+                        <button class="stat-btn">
+                          <Share2 size={14} />
+                          <span>{post.shares}</span>
+                        </button>
+                      </div>
+                      <div class="post-time">
+                        <Clock size={12} />
+                        <span>{formatDate(post.timestamp)}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div class="author-role">{post.author.role}</div>
-                </div>
-                <div class="post-category" style="background: {getCategoryColor(post.category)}10; color: {getCategoryColor(post.category)}">
-                  <CategoryIcon size={12} />
-                  <span>{getCategoryLabel(post.category)}</span>
-                </div>
-              </div>
-
-              <div class="post-content">
-                <p>{post.content}</p>
-              </div>
-
-              <div class="post-footer">
-                <div class="post-stats">
-                  <button class="stat-btn">
-                    <ThumbsUp size={14} />
-                    <span>{post.likes}</span>
-                  </button>
-                  <button class="stat-btn">
-                    <MessageCircle size={14} />
-                    <span>{post.comments}</span>
-                  </button>
-                  <button class="stat-btn">
-                    <Share2 size={14} />
-                    <span>{post.shares}</span>
-                  </button>
-                </div>
-                <div class="post-time">
-                  <Clock size={12} />
-                  <span>{formatDate(post.timestamp)}</span>
-                </div>
-              </div>
-            </div>
-          {/each}
-        </div>
-      {/if}
-
-      <!-- Discussions -->
-      {#if activeTab === 'discussions'}
-        <div class="discussions-list">
-          {#each getFilteredDiscussions() as discussion}
-            {@const CategoryIcon = getCategoryIcon(discussion.category)}
-            <div class="discussion-card">
-              {#if discussion.isSticky}
-                <div class="discussion-sticky">
-                  <Star size={12} />
-                  <span>Sticky</span>
-                </div>
-              {/if}
-              
-              <div class="discussion-header">
-                <div class="discussion-category" style="background: {getCategoryColor(discussion.category)}10; color: {getCategoryColor(discussion.category)}">
-                  <CategoryIcon size={12} />
-                  <span>{getCategoryLabel(discussion.category)}</span>
-                </div>
-                <div class="discussion-stats">
-                  <span><MessageCircle size={12} /> {discussion.replies} replies</span>
-                  <span><Eye size={12} /> {discussion.views} views</span>
-                </div>
-              </div>
-
-              <h3 class="discussion-title">{discussion.title}</h3>
-              
-              <div class="discussion-footer">
-                <span class="discussion-author">by {discussion.author}</span>
-                <span class="discussion-time">Last activity {formatDate(discussion.lastActivity)}</span>
-              </div>
-            </div>
-          {/each}
-        </div>
-      {/if}
-
-      <!-- Members -->
-      {#if activeTab === 'members'}
-        <div class="members-grid">
-          {#each getFilteredMembers() as member}
-            <div class="member-card">
-              <div class="member-avatar-wrapper">
-                <img src={member.avatar} alt={member.name} class="member-avatar" />
-                {#if member.isOnline}
-                  <span class="online-dot"></span>
-                {/if}
-              </div>
-              
-              <h4 class="member-name">{member.name}</h4>
-              <div class="member-role">{member.role}</div>
-              
-              <div class="member-badges">
-                {#each member.badges as badge}
-                  <span class="badge">{badge}</span>
                 {/each}
               </div>
-              
-              <div class="member-stats">
-                <div class="member-stat">
-                  <Award size={14} />
-                  <span>{member.reputation}</span>
-                </div>
-              </div>
-              
-              <button class="follow-btn">
-                <UserPlus size={14} />
-                Follow
-              </button>
-            </div>
-          {/each}
-        </div>
-      {/if}
+            {/if}
+          </div>
+        {/if}
+      </div>
 
-      <!-- Events -->
-      {#if activeTab === 'events'}
-        <div class="events-grid">
-          {#each events as event}
-            <div class="event-card">
-              <div class="event-date-badge">
-                <span class="event-month">{formatEventDate(event.date).split(' ')[0]}</span>
-                <span class="event-day">{formatEventDate(event.date).split(' ')[1]}</span>
+      <!-- Discussions Section -->
+      <div class="expandable-section">
+        <button class="section-header" onclick={() => toggleSection('discussions')}>
+          <div class="section-title">
+            <MessageSquare size={18} class="section-icon" />
+            <h2>Discussions</h2>
+            <span class="section-count">{getFilteredDiscussions().length} discussions</span>
+          </div>
+          <ChevronRight size={18} class={`section-chevron ${expandedSections.discussions ? 'expanded' : ''}`} />
+        </button>
+        
+        {#if expandedSections.discussions}
+          <div class="section-content">
+            {#if getFilteredDiscussions().length === 0}
+              <div class="empty-state">
+                <MessageSquare size={48} />
+                <p>No discussions found matching your search</p>
               </div>
-              
-              <div class="event-details">
-                <h4 class="event-title">{event.title}</h4>
-                <div class="event-info">
-                  <span><MapPin size={12} /> {event.location}</span>
-                  <span><Users size={12} /> {event.attendees}/{event.maxAttendees} attending</span>
-                </div>
-                <div class="event-progress">
-                  <div class="progress-bar" style="width: {(event.attendees / event.maxAttendees) * 100}%"></div>
-                </div>
-                <button class="rsvp-btn">
-                  RSVP Now
-                </button>
+            {:else}
+              <div class="discussions-list">
+                {#each getFilteredDiscussions() as discussion}
+                  {@const CategoryIcon = getCategoryIcon(discussion.category)}
+                  <div class="discussion-card">
+                    {#if discussion.isSticky}
+                      <div class="discussion-sticky">
+                        <Star size={12} />
+                        <span>Sticky</span>
+                      </div>
+                    {/if}
+
+                    <div class="discussion-header">
+                      <div class="discussion-category" style="background: {getCategoryColor(discussion.category)}10; color: {getCategoryColor(discussion.category)}">
+                        <CategoryIcon size={12} />
+                        <span>{getCategoryLabel(discussion.category)}</span>
+                      </div>
+                      <div class="discussion-stats">
+                        <span><MessageCircle size={12} /> {discussion.replies} replies</span>
+                        <span><Eye size={12} /> {discussion.views} views</span>
+                      </div>
+                    </div>
+
+                    <h3 class="discussion-title">{discussion.title}</h3>
+
+                    <div class="discussion-footer">
+                      <span class="discussion-author">by {discussion.author}</span>
+                      <span class="discussion-time">Last activity {formatDate(discussion.lastActivity)}</span>
+                    </div>
+                  </div>
+                {/each}
               </div>
-            </div>
-          {/each}
-        </div>
-      {/if}
+            {/if}
+          </div>
+        {/if}
+      </div>
+
+      <!-- Members Section -->
+      <div class="expandable-section">
+        <button class="section-header" onclick={() => toggleSection('members')}>
+          <div class="section-title">
+            <Users size={18} class="section-icon" />
+            <h2>Members</h2>
+            <span class="section-count">{getFilteredMembers().length} members</span>
+          </div>
+          <ChevronRight size={18} class={`section-chevron ${expandedSections.members ? 'expanded' : ''}`} />
+        </button>
+        
+        {#if expandedSections.members}
+          <div class="section-content">
+            {#if getFilteredMembers().length === 0}
+              <div class="empty-state">
+                <Users size={48} />
+                <p>No members found matching your search</p>
+              </div>
+            {:else}
+              <div class="members-grid">
+                {#each getFilteredMembers() as member}
+                  <div class="member-card">
+                    <div class="member-avatar-wrapper">
+                      <img src={member.avatar} alt={member.name} class="member-avatar" />
+                      {#if member.isOnline}
+                        <span class="online-dot"></span>
+                      {/if}
+                    </div>
+
+                    <h4 class="member-name">{member.name}</h4>
+                    <div class="member-role">{member.role}</div>
+
+                    <div class="member-badges">
+                      {#each member.badges as badge}
+                        <span class="badge">{badge}</span>
+                      {/each}
+                    </div>
+
+                    <div class="member-stats">
+                      <div class="member-stat">
+                        <Award size={14} />
+                        <span>{member.reputation}</span>
+                      </div>
+                    </div>
+
+                    <button class="follow-btn">
+                      <UserPlus size={14} />
+                      Follow
+                    </button>
+                  </div>
+                {/each}
+              </div>
+            {/if}
+          </div>
+        {/if}
+      </div>
+
+      <!-- Events Section -->
+      <div class="expandable-section">
+        <button class="section-header" onclick={() => toggleSection('events')}>
+          <div class="section-title">
+            <Calendar size={18} class="section-icon" />
+            <h2>Upcoming Events</h2>
+            <span class="section-count">{getFilteredEvents().length} events</span>
+          </div>
+          <ChevronRight size={18} class={`section-chevron ${expandedSections.events ? 'expanded' : ''}`} />
+        </button>
+        
+        {#if expandedSections.events}
+          <div class="section-content">
+            {#if getFilteredEvents().length === 0}
+              <div class="empty-state">
+                <Calendar size={48} />
+                <p>No events found matching your search</p>
+              </div>
+            {:else}
+              <div class="events-grid">
+                {#each getFilteredEvents() as event}
+                  <div class="event-card">
+                    <div class="event-date-badge">
+                      <span class="event-month">{formatEventDate(event.date).split(' ')[0]}</span>
+                      <span class="event-day">{formatEventDate(event.date).split(' ')[1]}</span>
+                    </div>
+
+                    <div class="event-details">
+                      <h4 class="event-title">{event.title}</h4>
+                      <div class="event-info">
+                        <span><MapPin size={12} /> {event.location}</span>
+                        <span><Users size={12} /> {event.attendees}/{event.maxAttendees} attending</span>
+                      </div>
+                      <div class="event-progress">
+                        <div class="progress-bar" style="width: {(event.attendees / event.maxAttendees) * 100}%"></div>
+                      </div>
+                      <button class="rsvp-btn">
+                        RSVP Now
+                      </button>
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            {/if}
+          </div>
+        {/if}
+      </div>
     {/if}
   </div>
 
@@ -609,6 +736,7 @@
     margin: 0 auto;
   }
 
+  /* Header Styles */
   .page-header {
     display: flex;
     justify-content: space-between;
@@ -682,7 +810,7 @@
   .create-btn {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.5rem;
     padding: 0.625rem 1.25rem;
     background: var(--primary-color);
     color: white;
@@ -700,6 +828,7 @@
     transform: translateY(-1px);
   }
 
+  /* Stats Cards */
   .stats-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -741,46 +870,62 @@
   .stat-value { display: block; font-size: 1.5rem; font-weight: 700; color: #0f172a; }
   .stat-label { font-size: 0.688rem; color: #64748b; }
 
-  .search-bar {
-    position: relative;
+  /* Search Bar - Fixed Alignment */
+  .search-bar-wrapper {
     margin-bottom: 1.5rem;
   }
 
-  .search-icon {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #94a3b8;
-  }
-
-  .search-input {
-    width: 100%;
-    padding: 0.75rem 2.5rem;
+  .search-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: white;
     border: 1.5px solid #e2e8f0;
     border-radius: 1rem;
-    font-size: 0.875rem;
-    background: white;
     transition: all 0.2s;
   }
 
-  .search-input:focus {
-    outline: none;
+  .search-bar:focus-within {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(106, 44, 145, 0.1);
   }
 
+  .search-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 1rem;
+  }
+
+  .search-icon {
+    color: #94a3b8;
+  }
+
+  .search-input {
+    flex: 1;
+    padding: 0.75rem 0.75rem;
+    border: none;
+    font-size: 0.875rem;
+    background: transparent;
+    outline: none;
+  }
+
+  .search-input::placeholder {
+    color: #94a3b8;
+  }
+
   .clear-search {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: none;
     border: none;
     cursor: pointer;
     color: #94a3b8;
-    padding: 0.25rem;
-    border-radius: 0.375rem;
+    padding: 0.5rem;
+    margin-right: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
   }
 
   .clear-search:hover {
@@ -788,37 +933,101 @@
     color: #475569;
   }
 
-  .tabs-container {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
+  /* Expandable Sections */
+  .expandable-section {
     background: white;
-    padding: 0.25rem;
     border-radius: 1rem;
-    width: fit-content;
     border: 1px solid #e2e8f0;
-  }
-
-  .tab-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: none;
-    border: none;
-    border-radius: 0.75rem;
-    font-size: 0.813rem;
-    font-weight: 500;
-    color: #64748b;
-    cursor: pointer;
+    margin-bottom: 1rem;
+    overflow: hidden;
     transition: all 0.2s;
   }
 
-  .tab-btn.active {
-    background: var(--primary-color);
-    color: white;
+  .section-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: white;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: 'DM Sans', sans-serif;
   }
 
+  .section-header:hover {
+    background: #f8fafc;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-icon {
+    color: var(--primary-color);
+  }
+
+  .section-title h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+  }
+
+  .section-count {
+    font-size: 0.75rem;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.5rem;
+  }
+
+  .section-chevron {
+    color: #94a3b8;
+    transition: transform 0.3s ease;
+  }
+
+  .section-chevron.expanded {
+    transform: rotate(90deg);
+  }
+
+  .section-content {
+    padding: 0 1.25rem 1.25rem 1.25rem;
+    border-top: 1px solid #f1f5f9;
+    animation: slideDown 0.3s ease;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #94a3b8;
+  }
+
+  .empty-state svg {
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  .empty-state p {
+    font-size: 0.875rem;
+  }
+
+  /* Loading State */
   .loading-container {
     text-align: center;
     padding: 4rem;
@@ -840,6 +1049,7 @@
     to { transform: rotate(360deg); }
   }
 
+  /* Posts Grid */
   .posts-grid {
     display: flex;
     flex-direction: column;
@@ -942,6 +1152,7 @@
     color: #94a3b8;
   }
 
+  /* Discussions List */
   .discussions-list {
     display: flex;
     flex-direction: column;
@@ -1021,6 +1232,7 @@
     color: #64748b;
   }
 
+  /* Members Grid */
   .members-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -1132,6 +1344,7 @@
     transform: translateY(-1px);
   }
 
+  /* Events Grid */
   .events-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
@@ -1220,6 +1433,7 @@
     color: white;
   }
 
+  /* Modal Styles */
   .modal-overlay {
     position: fixed;
     top: 0;
@@ -1399,6 +1613,7 @@
     color: var(--primary-color);
   }
 
+  /* Responsive */
   @media (max-width: 1024px) {
     .stats-row { grid-template-columns: repeat(2, 1fr); }
   }
@@ -1417,13 +1632,18 @@
 
     .header-center { flex-direction: column; }
     .stats-row { grid-template-columns: 1fr; }
-
-    .tabs-container {
-      width: 100%;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
     .members-grid, .events-grid { grid-template-columns: 1fr; }
+    
+    .section-header {
+      padding: 0.875rem 1rem;
+    }
+    
+    .section-title h2 {
+      font-size: 0.875rem;
+    }
+    
+    .section-content {
+      padding: 0 1rem 1rem 1rem;
+    }
   }
 </style>
