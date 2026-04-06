@@ -1203,6 +1203,334 @@ export const safetyQuestions: SafetyQuestion[] = [
     ],
     difficulty: "easy",
     tags: ["driving", "medication", "safety"]
+  },
+// ====================== TRAVEL SAFETY ======================
+  {
+    id: "q91",
+    category: "travel",
+    question: "A taxi driver says the card machine is broken and asks you to pay cash at an ATM. What should you do?",
+    answers: [
+      { text: "Go to the ATM with them", correct: false },
+      { text: "Refuse and ask to stop in a safe public place", correct: true, explanation: "If a driver pressures you to withdraw cash, get out in a busy, safe area and seek help if needed." },
+      { text: "Hand over your bank card so they can do it", correct: false },
+      { text: "Ignore it and continue the ride", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["transport", "scams", "money"]
+  },
+  {
+    id: "q92",
+    category: "travel",
+    question: "You're traveling alone and a stranger offers to watch your luggage while you go to the bathroom. You should:",
+    answers: [
+      { text: "Accept because they seem friendly", correct: false },
+      { text: "Leave your bag and go quickly", correct: false },
+      { text: "Take your valuables and ask official staff for help if needed", correct: true, explanation: "Do not rely on strangers to protect your belongings. Use official assistance when possible." },
+      { text: "Give them your passport too for safekeeping", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["luggage", "strangers", "solo-travel"]
+  },
+  {
+    id: "q93",
+    category: "travel",
+    question: "You arrive at your hotel and notice your room door does not fully lock. What is the safest action?",
+    answers: [
+      { text: "Sleep there anyway and put a chair by the door", correct: false },
+      { text: "Ask the hotel to repair it or move you to another secure room", correct: true, explanation: "A working lock is essential. If the room cannot be secured, request a different room immediately." },
+      { text: "Leave your valuables hidden under the bed", correct: false },
+      { text: "Keep the door slightly open so you can hear movement", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["hotel", "accommodation", "security"]
+  },
+  {
+    id: "q94",
+    category: "travel",
+    question: "Someone at the airport asks you to carry a package through security because their bag is too full. You should:",
+    answers: [
+      { text: "Help them if the package looks harmless", correct: false },
+      { text: "Only do it if they show you what's inside", correct: false },
+      { text: "Refuse and notify airport staff if needed", correct: true, explanation: "Never carry items for strangers through airport security. It could contain prohibited or dangerous items." },
+      { text: "Put it in checked luggage instead", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["airport", "security", "strangers"]
+  },
+  {
+    id: "q95",
+    category: "travel",
+    question: "Your phone battery is almost dead in an unfamiliar city late at night. What should you prioritize?",
+    answers: [
+      { text: "Use the last battery to scroll social media", correct: false },
+      { text: "Save battery for maps, emergency contact, and transport", correct: true, explanation: "Preserve power for essential safety functions like navigation, calls, and ride booking." },
+      { text: "Turn brightness to maximum so you can see better", correct: false },
+      { text: "Ignore it — you'll figure it out", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["phone", "navigation", "night-safety"]
+  },
+  {
+    id: "q96",
+    category: "travel",
+    question: "A person says your hotel is closed and offers to take you to a 'better' one. What should you do?",
+    answers: [
+      { text: "Go with them to save time", correct: false },
+      { text: "Check directly with your hotel using official contact details", correct: true, explanation: "This can be a scam. Verify independently before changing plans." },
+      { text: "Give them your booking confirmation", correct: false },
+      { text: "Ask them to hold your luggage while you decide", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["scams", "hotel", "verification"]
+  },
+  {
+    id: "q97",
+    category: "travel",
+    question: "You're using public Wi-Fi abroad to access your bank account. What is safest?",
+    answers: [
+      { text: "Use it normally if the signal is strong", correct: false },
+      { text: "Avoid banking on public Wi-Fi unless using secure protection like a trusted VPN", correct: true, explanation: "Public Wi-Fi can expose sensitive information. Avoid financial logins on unsecured networks." },
+      { text: "Log in faster before anyone notices", correct: false },
+      { text: "Share the hotspot password with others first", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["wifi", "banking", "cybersecurity"]
+  },
+  {
+    id: "q98",
+    category: "travel",
+    question: "Your drink tastes strange while you're out traveling. What should you do?",
+    answers: [
+      { text: "Finish it quickly so it doesn't go to waste", correct: false },
+      { text: "Stop drinking it immediately and seek help from trusted staff or friends", correct: true, explanation: "A strange taste could indicate contamination or tampering. Stop immediately and get help." },
+      { text: "Offer it to someone else to test it", correct: false },
+      { text: "Add more ice to dilute it", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["drink-safety", "nightlife", "tampering"]
+  },
+  {
+    id: "q99",
+    category: "travel",
+    question: "You get lost while hiking in an unfamiliar area with limited daylight left. What is the best next step?",
+    answers: [
+      { text: "Keep moving randomly until you find a road", correct: false },
+      { text: "Stay calm, use your map/location tools, and contact emergency help if necessary", correct: true, explanation: "Panic increases risk. Stop, assess your position, and use navigation or emergency services." },
+      { text: "Split up from your group to search faster", correct: false },
+      { text: "Turn off your phone to save battery and guess the way back", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["hiking", "outdoors", "emergency"]
+  },
+  {
+    id: "q100",
+    category: "travel",
+    question: "What's the safest way to store important travel documents?",
+    answers: [
+      { text: "Keep passport, cash, and cards all in one back pocket", correct: false },
+      { text: "Split valuables and keep copies of important documents separately", correct: true, explanation: "Separating documents, money, and backup copies reduces risk if something is lost or stolen." },
+      { text: "Leave everything loose in your day bag", correct: false },
+      { text: "Hand your passport to new travel friends for safekeeping", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["passport", "documents", "preparation"]
+  },
+
+  // ====================== GENERAL SAFETY ======================
+  {
+    id: "q101",
+    category: "general",
+    question: "You hear someone trying to force your front door open at night. What should you do first?",
+    answers: [
+      { text: "Open the door to see who it is", correct: false },
+      { text: "Move to a safe place, lock yourself in if possible, and call emergency services", correct: true, explanation: "Your priority is personal safety, not confrontation. Create distance and call for help immediately." },
+      { text: "Shout your bank details to distract them", correct: false },
+      { text: "Go outside through the front door and investigate", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["home-intrusion", "emergency", "night-safety"]
+  },
+  {
+    id: "q102",
+    category: "general",
+    question: "A fire starts in a pan on the stove. What's the safest response?",
+    answers: [
+      { text: "Throw water on it", correct: false },
+      { text: "Turn off the heat if safe and smother the flames with a lid", correct: true, explanation: "Water can make grease fires worse. Smothering cuts off oxygen." },
+      { text: "Carry the burning pan outside", correct: false },
+      { text: "Wave a towel at it", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["fire", "kitchen", "emergency"]
+  },
+  {
+    id: "q103",
+    category: "general",
+    question: "A child is lost in a crowded place. What is the best immediate action?",
+    answers: [
+      { text: "Wait quietly in case they come back", correct: false },
+      { text: "Alert venue staff/security immediately and stay in one visible location", correct: true, explanation: "Getting trained staff involved quickly improves the chances of a safe reunion." },
+      { text: "Post about it online first", correct: false },
+      { text: "Leave the area to search alone without telling anyone", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["children", "crowds", "missing-person"]
+  },
+  {
+    id: "q104",
+    category: "general",
+    question: "Someone collapses in front of you and is unresponsive. What should you do?",
+    answers: [
+      { text: "Shake them hard until they wake up", correct: false },
+      { text: "Call emergency services and follow dispatcher instructions", correct: true, explanation: "Professional emergency guidance is critical in medical emergencies." },
+      { text: "Give them food or water immediately", correct: false },
+      { text: "Leave because you might get involved", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["medical", "emergency", "first-response"]
+  },
+  {
+    id: "q105",
+    category: "general",
+    question: "You smell gas inside a building. What is safest?",
+    answers: [
+      { text: "Turn lights on to inspect the area", correct: false },
+      { text: "Leave immediately and alert emergency services or the gas provider", correct: true, explanation: "Gas leaks can ignite easily. Avoid switches, flames, and electrical sparks." },
+      { text: "Light a candle to find the source", correct: false },
+      { text: "Ignore it if the smell fades", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["gas-leak", "building-safety", "emergency"]
+  },
+  {
+    id: "q106",
+    category: "general",
+    question: "A stranger is following you on foot and matching your turns. What should you do?",
+    answers: [
+      { text: "Go straight home so you feel safer", correct: false },
+      { text: "Head to a busy public place or business and seek help", correct: true, explanation: "Do not lead a possible follower to your home. Move toward people and safety." },
+      { text: "Hide in a dark alley", correct: false },
+      { text: "Pretend not to notice and keep walking alone", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["street-safety", "following", "public-safety"]
+  },
+  {
+    id: "q107",
+    category: "general",
+    question: "Why is it important to have an emergency contact easily available?",
+    answers: [
+      { text: "So you can memorize more phone numbers", correct: false },
+      { text: "So responders or trusted people can be contacted quickly if something happens", correct: true, explanation: "Emergency contacts help others support you fast in urgent situations." },
+      { text: "So strangers can learn more about you", correct: false },
+      { text: "Because phones never fail", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["preparedness", "contacts", "emergency"]
+  },
+  {
+    id: "q108",
+    category: "general",
+    question: "You see a downed power line on the ground. What should you do?",
+    answers: [
+      { text: "Step over it carefully", correct: false },
+      { text: "Stay far away and report it to emergency services or the utility company", correct: true, explanation: "Downed lines may still be live and can be deadly even without direct contact." },
+      { text: "Move it with a stick", correct: false },
+      { text: "Touch it only if you're wearing sneakers", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["electricity", "hazards", "outdoors"]
+  },
+  {
+    id: "q109",
+    category: "general",
+    question: "What is the safest habit when meeting someone new in person for the first time?",
+    answers: [
+      { text: "Meet them alone at their home", correct: false },
+      { text: "Meet in a public place and let someone know where you'll be", correct: true, explanation: "Public locations and informing a trusted person improve safety during first meetings." },
+      { text: "Turn off your phone to avoid distractions", correct: false },
+      { text: "Accept a ride from them immediately", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["meeting-people", "personal-safety", "planning"]
+  },
+  {
+    id: "q110",
+    category: "general",
+    question: "A website or caller pressures you to act 'right now' or you'll lose access or money. This is often a sign of:",
+    answers: [
+      { text: "A trustworthy urgent opportunity", correct: false },
+      { text: "A scam using pressure tactics", correct: true, explanation: "Scammers often create false urgency to stop people from thinking clearly." },
+      { text: "Excellent customer service", correct: false },
+      { text: "A legal emergency every time", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["scams", "pressure", "awareness"]
+  },
+  {
+    id: "q111",
+    category: "general",
+    question: "If a friend seems dangerously intoxicated and wants to leave with a stranger, what should you do?",
+    answers: [
+      { text: "Let them go — it's their choice", correct: false },
+      { text: "Stay with them, get trusted help, and make sure they get home safely", correct: true, explanation: "An intoxicated person may not be able to make safe decisions. Support and intervention can prevent harm." },
+      { text: "Give the stranger their phone too", correct: false },
+      { text: "Record it for social media", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["friends", "alcohol", "intervention"]
+  },
+  {
+    id: "q112",
+    category: "general",
+    question: "What is the best reason to trust your instincts in an uncomfortable situation?",
+    answers: [
+      { text: "Because instincts are always dramatic and wrong", correct: false },
+      { text: "Because discomfort can be an early warning sign that something is unsafe", correct: true, explanation: "If something feels off, taking precautions is often the safer choice." },
+      { text: "Because it means you should confront everyone", correct: false },
+      { text: "Because fear should always replace judgment", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["intuition", "awareness", "decision-making"]
+  },
+  {
+    id: "q113",
+    category: "general",
+    question: "You receive a call claiming a family member is in trouble and needs money immediately. What should you do?",
+    answers: [
+      { text: "Send the money before checking", correct: false },
+      { text: "Verify the story by contacting the family member or another trusted person directly", correct: true, explanation: "Emergency-family scams rely on panic. Independent verification is essential." },
+      { text: "Share your banking details to speed things up", correct: false },
+      { text: "Stay on the phone and follow every instruction", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["phone-scams", "family", "verification"]
+  },
+  {
+    id: "q114",
+    category: "general",
+    question: "What is the safest way to respond to a suspicious package or bag left unattended in a public place?",
+    answers: [
+      { text: "Open it to identify the owner", correct: false },
+      { text: "Leave it alone and notify staff or emergency services", correct: true, explanation: "Unattended items should be handled by trained personnel, not members of the public." },
+      { text: "Move it somewhere less busy", correct: false },
+      { text: "Take it home if no one claims it", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["public-safety", "suspicious-items", "reporting"]
+  },
+  {
+    id: "q115",
+    category: "general",
+    question: "During an emergency evacuation, what should you usually avoid?",
+    answers: [
+      { text: "Following official exit routes", correct: false },
+      { text: "Using elevators unless specifically directed it is safe", correct: true, explanation: "Elevators can fail or open into danger during emergencies like fires." },
+      { text: "Helping others if you can do so safely", correct: false },
+      { text: "Listening to emergency instructions", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["evacuation", "fire-safety", "buildings"]
   }
 ];
 
