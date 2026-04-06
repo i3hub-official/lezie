@@ -222,7 +222,6 @@
       <div class="menu-container">
         <!-- All Stats Together Strategically on Top -->
         <div class="unified-stats-bar">
-          <!-- Left side: Level + Streak -->
           <div class="stats-group">
             <div class="stat-item">
               <Medal size={22} />
@@ -241,7 +240,6 @@
             </div>
           </div>
 
-          <!-- Center: XP with progress bar -->
           <div class="xp-group">
             <div class="stat-item xp-item">
               <Zap size={22} />
@@ -258,7 +256,6 @@
             </div>
           </div>
 
-          <!-- Right side: Quests + Accuracy + Best Streak -->
           <div class="stats-group">
             <div class="stat-item">
               <Shield size={22} />
@@ -450,27 +447,51 @@
       </div>
 
     {:else if currentGame === 'achievements'}
-      <div class="achievements-container">
-        <h1>Achievements</h1>
-        <div class="achievements-grid">
+      <div class="achievements-full-container">
+        <div class="achievements-header">
+          <div class="achievements-title-section">
+            <Award size={32} />
+            <h1>Achievements</h1>
+            <span class="achievements-progress-badge">{unlockedCount} / {totalAchievements} Unlocked</span>
+          </div>
+          <p class="achievements-subtitle">Complete challenges to earn XP and unlock badges</p>
+        </div>
+
+        <!-- Compact grid - all achievements visible without scrolling -->
+        <div class="achievements-compact-grid">
           {#each achievements as ach}
             {@const unlocked = unlockedAchievements.includes(ach.id)}
-            <div class="achievement-card" class:unlocked={unlocked}>
-              <div class="achievement-icon">
-                <svelte:component this={ach.icon} size={48} />
+            <div class="achievement-compact-card" class:unlocked={unlocked}>
+              <div class="achievement-status-icon">
+                {#if unlocked}
+                  <CheckCircle2 size={20} class="status-unlocked" />
+                {:else}
+                  <Lock size={18} class="status-locked" />
+                {/if}
               </div>
-              <div class="achievement-info">
-                <strong>{ach.name}</strong>
-                <p>{ach.desc}</p>
-                <small>+{ach.xp} XP</small>
+              <div class="achievement-compact-icon">
+                <svelte:component this={ach.icon} size={32} />
               </div>
-              {#if !unlocked}
-                <Lock size={24} class="lock" />
-              {/if}
+              <div class="achievement-compact-info">
+                <div class="achievement-compact-name">
+                  {ach.name}
+                  {#if unlocked}
+                    <span class="unlocked-badge">Unlocked</span>
+                  {/if}
+                </div>
+                <div class="achievement-compact-desc">{ach.desc}</div>
+                <div class="achievement-compact-xp">+{ach.xp} XP</div>
+              </div>
             </div>
           {/each}
         </div>
-        <button class="btn-secondary" onclick={resetGame}>Back to Menu</button>
+
+        <div class="achievements-footer">
+          <button class="btn-secondary" onclick={resetGame}>
+            <ArrowRight size={18} />
+            Back to Menu
+          </button>
+        </div>
       </div>
     {/if}
   </main>
@@ -530,7 +551,7 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* Unified Stats Bar - All stats together on top */
+  /* Unified Stats Bar */
   .unified-stats-bar {
     background: white;
     border-radius: 1.25rem;
@@ -588,7 +609,6 @@
     background: #e2e8f0;
   }
 
-  /* XP Group - takes more space */
   .xp-group {
     flex: 2;
     min-width: 200px;
@@ -1139,46 +1159,146 @@
     background: #f8fafc;
   }
 
-  /* Achievements page */
-  .achievements-container {
+  /* ==================== IMPROVED ACHIEVEMENTS FULL VIEW ==================== */
+  .achievements-full-container {
     width: 100%;
     max-width: 1000px;
+    animation: fadeIn 0.4s ease;
   }
 
-  .achievements-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
-    margin: 2rem 0;
+  .achievements-header {
+    text-align: center;
+    margin-bottom: 2rem;
   }
 
-  .achievement-card {
-    background: white;
-    border-radius: 1rem;
-    padding: 1.25rem;
+  .achievements-title-section {
     display: flex;
-    gap: 1rem;
     align-items: center;
-    border: 1px solid #e2e8f0;
-    opacity: 0.6;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
   }
 
-  .achievement-card.unlocked {
-    opacity: 1;
-    border-color: #10b981;
-    background: #f0fdf4;
+  .achievements-title-section h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
   }
 
-  .achievement-icon {
+  .achievements-title-section svg {
     color: #6a2c91;
   }
 
-  .achievement-info {
+  .achievements-progress-badge {
+    background: linear-gradient(135deg, #6a2c91, #8b5cf6);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .achievements-subtitle {
+    color: #64748b;
+    font-size: 0.9rem;
+  }
+
+  /* Compact Grid - All achievements visible without scrolling */
+  .achievements-compact-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .achievement-compact-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 2px solid #e2e8f0;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+
+  .achievement-compact-card.unlocked {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #ffffff, #f0fdf4);
+  }
+
+  .achievement-status-icon {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+
+  .status-unlocked {
+    color: #10b981;
+  }
+
+  .status-locked {
+    color: #94a3b8;
+  }
+
+  .achievement-compact-icon {
+    width: 56px;
+    height: 56px;
+    background: #f8fafc;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6a2c91;
+    flex-shrink: 0;
+  }
+
+  .achievement-compact-card.unlocked .achievement-compact-icon {
+    background: #e8f5e9;
+  }
+
+  .achievement-compact-info {
     flex: 1;
   }
 
-  .lock {
-    color: #94a3b8;
+  .achievement-compact-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.25rem;
+  }
+
+  .unlocked-badge {
+    background: #10b981;
+    color: white;
+    padding: 0.125rem 0.5rem;
+    border-radius: 2rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+  }
+
+  .achievement-compact-desc {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+  }
+
+  .achievement-compact-xp {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #6a2c91;
+  }
+
+  .achievements-footer {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
   }
 
   @media (max-width: 900px) {
@@ -1195,6 +1315,9 @@
     .xp-group {
       width: 100%;
     }
+    .achievements-compact-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   @media (max-width: 768px) {
@@ -1209,6 +1332,12 @@
     }
     .stat-number {
       font-size: 1.2rem;
+    }
+    .achievements-title-section {
+      flex-wrap: wrap;
+    }
+    .achievements-title-section h1 {
+      font-size: 1.5rem;
     }
   }
 </style>
