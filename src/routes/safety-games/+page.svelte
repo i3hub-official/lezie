@@ -17,7 +17,11 @@
     Award,
     Flame,
     AlertCircle,
-    TrendingUp
+    TrendingUp,
+    Gamepad2,
+    Shield,
+    Clock,
+    Star
   } from 'lucide-svelte';
   import { goto } from '$app/navigation';
 
@@ -85,22 +89,29 @@
 
   function getPerformanceLevel() {
     const percent = score / totalQuestions;
-    if (percent === 1) return { level: 'master', color: '#10b981', icon: Award, title: 'Safety Master', desc: 'Perfect score! You are a true safety champion.' };
-    if (percent >= 0.8) return { level: 'expert', color: '#8b5cf6', icon: Trophy, title: 'Safety Expert', desc: 'Outstanding knowledge! You are well-prepared for any situation.' };
-    if (percent >= 0.6) return { level: 'proficient', color: '#06b6d4', icon: Target, title: 'Safety Proficient', desc: 'Good work! Keep practicing to reach expert level.' };
-    return { level: 'learner', color: '#f59e0b', icon: Brain, title: 'Safety Learner', desc: 'Keep going! Every question helps you stay safer.' };
+    if (percent === 1) return { level: 'master', color: '#10B981', bg: '#D1FAE5', icon: Award, title: 'Safety Master', desc: 'Perfect score! You are a true safety champion.' };
+    if (percent >= 0.8) return { level: 'expert', color: '#8B5CF6', bg: '#EDE9FE', icon: Trophy, title: 'Safety Expert', desc: 'Outstanding knowledge! You are well-prepared for any situation.' };
+    if (percent >= 0.6) return { level: 'proficient', color: '#06B6D4', bg: '#CFFAFE', icon: Target, title: 'Safety Proficient', desc: 'Good work! Keep practicing to reach expert level.' };
+    return { level: 'learner', color: '#F59E0B', bg: '#FEF3C7', icon: Brain, title: 'Safety Learner', desc: 'Keep going! Every question helps you stay safer.' };
   }
 
   const features = [
-    { icon: Brain, title: 'Learn', desc: 'Real-world scenarios', color: '#8b5cf6' },
-    { icon: Target, title: 'Practice', desc: 'Test your knowledge', color: '#06b6d4' },
-    { icon: Zap, title: 'Master', desc: 'Build safety habits', color: '#f59e0b' }
+    { icon: Brain, title: 'Learn', desc: 'Real-world scenarios', color: '#8B5CF6', bg: '#EDE9FE' },
+    { icon: Target, title: 'Practice', desc: 'Test your knowledge', color: '#06B6D4', bg: '#CFFAFE' },
+    { icon: Zap, title: 'Master', desc: 'Build safety habits', color: '#F59E0B', bg: '#FEF3C7' }
+  ];
+
+  const stats = [
+    { value: '50+', label: 'Scenarios', icon: Shield, color: '#8B5CF6', bg: '#EDE9FE' },
+    { value: '8', label: 'Questions', icon: Target, color: '#06B6D4', bg: '#CFFAFE' },
+    { value: '3', label: 'Minutes', icon: Clock, color: '#F59E0B', bg: '#FEF3C7' }
   ];
 </script>
 
 <svelte:head>
   <title>Safety Quest — Lezie</title>
   <meta name="description" content="Master safety skills through interactive challenges" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
 </svelte:head>
 
 <div class="page">
@@ -109,7 +120,7 @@
     <div class="nav-content">
       <button class="nav-back" onclick={() => goto('/')}>
         <Home size={18} />
-        <span>Home</span>
+        <span>Back to Dashboard</span>
       </button>
       
       <div class="nav-brand">
@@ -133,32 +144,44 @@
     {#if currentGame === 'menu'}
       <!-- Menu Screen -->
       <div class="menu-container">
-        <div class="menu-hero">
-          <div class="badge">
-            <Sparkles size={14} />
-            Interactive Training
+        <div class="page-header-card">
+          <div class="header-content">
+            <div class="badge">
+              <Sparkles size={14} />
+              Interactive Training
+            </div>
+            
+            <h1 class="title">Master Safety Through Play</h1>
+            
+            <p class="subtitle">
+              Test your knowledge with real-world scenarios. Learn essential skills that keep you and your community safe.
+            </p>
+            
+            <button class="btn-primary" onclick={startNewGame}>
+              <Gamepad2 size={18} />
+              <span>Start Safety Quest</span>
+              <ArrowRight size={18} />
+            </button>
           </div>
           
-          <h1 class="title">
-            Master Safety
-            <span class="gradient">Through Play</span>
-          </h1>
-          
-          <p class="subtitle">
-            Test your knowledge with real-world scenarios. 
-            Learn essential skills that keep you and your community safe.
-          </p>
-          
-          <button class="btn-primary" onclick={startNewGame}>
-            <span>Start Safety Quest</span>
-            <ArrowRight size={20} />
-          </button>
+          <div class="header-visual">
+            <div class="floating-icon icon-1">
+              <Shield size={32} color="#8B5CF6" />
+            </div>
+            <div class="floating-icon icon-2">
+              <Star size={24} color="#F59E0B" />
+            </div>
+            <div class="floating-icon icon-3">
+              <CheckCircle2 size={28} color="#10B981" />
+            </div>
+          </div>
         </div>
 
+        <!-- Features Grid -->
         <div class="features-grid">
           {#each features as feature}
-            <div class="feature-card" style="--feature-color: {feature.color}">
-              <div class="feature-icon">
+            <div class="feature-card">
+              <div class="feature-icon" style="background: {feature.bg}; color: {feature.color};">
                 <svelte:component this={feature.icon} size={24} />
               </div>
               <h3>{feature.title}</h3>
@@ -167,28 +190,26 @@
           {/each}
         </div>
 
-        <div class="stats-preview">
-          <div class="stat-item">
-            <span class="stat-number">50+</span>
-            <span class="stat-label">Scenarios</span>
-          </div>
-          <div class="stat-divider" />
-          <div class="stat-item">
-            <span class="stat-number">8</span>
-            <span class="stat-label">Questions</span>
-          </div>
-          <div class="stat-divider" />
-          <div class="stat-item">
-            <span class="stat-number">3</span>
-            <span class="stat-label">Minutes</span>
-          </div>
+        <!-- Stats Row -->
+        <div class="stats-row">
+          {#each stats as stat}
+            <div class="stat-card">
+              <div class="stat-icon" style="background: {stat.bg}; color: {stat.color};">
+                <svelte:component this={stat.icon} size={22} />
+              </div>
+              <div class="stat-content">
+                <span class="stat-value">{stat.value}</span>
+                <span class="stat-label">{stat.label}</span>
+              </div>
+            </div>
+          {/each}
         </div>
       </div>
 
     {:else if currentGame === 'quiz'}
       <!-- Quiz Screen -->
       <div class="quiz-container">
-        <!-- Progress -->
+        <!-- Progress Section -->
         <div class="progress-section">
           <div class="progress-header">
             <span class="progress-text">Question {Math.min(currentIndex + 1, totalQuestions)} of {totalQuestions}</span>
@@ -235,9 +256,13 @@
               >
                 <div class="answer-indicator">
                   {#if showResult && isCorrect}
-                    <CheckCircle2 size={20} color="#10b981" />
+                    <div class="result-icon correct-icon">
+                      <CheckCircle2 size={20} />
+                    </div>
                   {:else if showResult && isSelected && !isCorrect}
-                    <XCircle size={20} color="#ef4444" />
+                    <div class="result-icon incorrect-icon">
+                      <XCircle size={20} />
+                    </div>
                   {:else}
                     <span class="option-letter">{String.fromCharCode(65 + i)}</span>
                   {/if}
@@ -246,21 +271,27 @@
                 <span class="answer-text">{answer.text}</span>
                 
                 {#if showResult && isCorrect && !isSelected}
-                  <CheckCircle2 size={18} color="#10b981" opacity={0.5} />
+                  <div class="correct-badge">
+                    <CheckCircle2 size={16} />
+                  </div>
                 {/if}
               </button>
             {/each}
           </div>
 
-          <!-- Explanation -->
+          <!-- Explanation Panel -->
           {#if showExplanation && questions[currentIndex]?.answers[selectedAnswer]?.explanation}
             <div class="explanation-panel" class:correct={questions[currentIndex].answers[selectedAnswer].correct}>
               <div class="explanation-header">
                 {#if questions[currentIndex].answers[selectedAnswer].correct}
-                  <CheckCircle2 size={20} />
+                  <div class="explanation-icon correct">
+                    <CheckCircle2 size={20} />
+                  </div>
                   <span>Correct!</span>
                 {:else}
-                  <AlertCircle size={20} />
+                  <div class="explanation-icon incorrect">
+                    <AlertCircle size={20} />
+                  </div>
                   <span>Not quite right</span>
                 {/if}
               </div>
@@ -268,7 +299,7 @@
             </div>
           {/if}
 
-          <!-- Action -->
+          <!-- Next Button -->
           <button 
             class="btn-next"
             class:visible={selectedAnswer !== null}
@@ -285,25 +316,27 @@
       <!-- Results Screen -->
       <div class="results-container">
         <div class="results-card">
-          <div class="results-icon" style="color: {performance.color}">
-            <svelte:component this={performance.icon} size={64} strokeWidth={1.5} />
+          <div class="results-icon-wrapper" style="background: {performance.bg}; color: {performance.color};">
+            <svelte:component this={performance.icon} size={48} />
           </div>
           
           <h2 class="results-title">{performance.title}</h2>
           <p class="results-desc">{performance.desc}</p>
           
           <div class="score-display">
-            <div class="score-main">
-              <span class="score-number" style="color: {performance.color}">{score}</span>
-              <span class="score-total">/{totalQuestions}</span>
+            <div class="score-circle" style="border-color: {performance.bg};">
+              <div class="score-main">
+                <span class="score-number" style="color: {performance.color};">{score}</span>
+                <span class="score-total">/{totalQuestions}</span>
+              </div>
+              <div class="score-percent">{Math.round((score / totalQuestions) * 100)}%</div>
             </div>
-            <div class="score-percent">{Math.round((score / totalQuestions) * 100)}%</div>
           </div>
 
           <div class="results-stats">
             <div class="result-stat">
               <span class="stat-label-sm">Accuracy</span>
-              <span class="stat-value" style="color: {performance.color}">{accuracy}%</span>
+              <span class="stat-value" style="color: {performance.color};">{accuracy}%</span>
             </div>
             <div class="result-stat">
               <span class="stat-label-sm">Best Streak</span>
@@ -329,6 +362,14 @@
       </div>
     {/if}
   </main>
+
+  <!-- Safety Banner -->
+  <div class="safety-banner">
+    <ShieldCheck size={20} />
+    <div>
+      <strong>Proactive Protection</strong> — Regular safety training helps you respond confidently in emergency situations.
+    </div>
+  </div>
 </div>
 
 <style>
@@ -338,10 +379,24 @@
     padding: 0;
   }
 
+  :global(:root) {
+    --primary-color: #6a2c91;
+    --primary-dark: #4a1d6e;
+    --primary-bg: rgba(106, 44, 145, 0.1);
+    --success-color: #10B981;
+    --success-bg: #D1FAE5;
+    --warning-color: #F59E0B;
+    --warning-bg: #FEF3C7;
+    --error-color: #EF4444;
+    --error-bg: #FEE2E2;
+    --info-color: #06B6D4;
+    --info-bg: #CFFAFE;
+  }
+
   :global(body) {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background: #0f0f23;
-    color: #fafafa;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    color: #0f172a;
     min-height: 100vh;
   }
 
@@ -349,49 +404,46 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: 
-      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.3), transparent),
-      radial-gradient(ellipse 60% 40% at 50% 100%, rgba(139, 92, 246, 0.15), transparent),
-      #0f0f23;
+    padding: 1.5rem;
   }
 
   /* Navigation */
   .nav {
-    padding: 1.25rem 2rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(12px);
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    margin-bottom: 2rem;
   }
 
   .nav-content {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    background: white;
+    border-radius: 1rem;
+    padding: 0.75rem 1.25rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   }
 
   .nav-back {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 0.75rem;
-    color: #a1a1aa;
+    background: none;
+    border: none;
+    color: #64748b;
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
     transition: all 0.2s;
   }
 
   .nav-back:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fafafa;
-    border-color: rgba(255, 255, 255, 0.2);
+    background: #f1f5f9;
+    color: var(--primary-color);
   }
 
   .nav-brand {
@@ -406,21 +458,19 @@
   .logo-icon {
     width: 36px;
     height: 36px;
-    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     border-radius: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+    box-shadow: 0 4px 12px rgba(106, 44, 145, 0.3);
   }
 
   .logo-text {
     font-size: 1.25rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #fafafa, #a1a1aa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #0f172a;
   }
 
   .nav-stats {
@@ -439,10 +489,10 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    background: rgba(139, 92, 246, 0.15);
-    border: 1px solid rgba(139, 92, 246, 0.3);
+    background: var(--primary-bg);
+    border: 1px solid rgba(106, 44, 145, 0.2);
     border-radius: 2rem;
-    color: #c4b5fd;
+    color: var(--primary-color);
     font-size: 0.875rem;
     font-weight: 600;
   }
@@ -450,7 +500,9 @@
   /* Content */
   .content {
     flex: 1;
-    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -459,14 +511,31 @@
 
   /* Menu Screen */
   .menu-container {
-    max-width: 800px;
     width: 100%;
-    text-align: center;
+    max-width: 1000px;
     animation: fadeIn 0.6s ease;
   }
 
-  .menu-hero {
-    margin-bottom: 3rem;
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .page-header-card {
+    background: white;
+    border-radius: 1.5rem;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  .header-content {
+    text-align: left;
   }
 
   .badge {
@@ -474,154 +543,177 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    background: rgba(139, 92, 246, 0.15);
-    border: 1px solid rgba(139, 92, 246, 0.3);
+    background: var(--primary-bg);
+    border: 1px solid rgba(106, 44, 145, 0.2);
     border-radius: 2rem;
-    color: #c4b5fd;
+    color: var(--primary-color);
     font-size: 0.875rem;
     font-weight: 500;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
   }
 
   .title {
-    font-size: 3.5rem;
-    font-weight: 800;
-    line-height: 1.1;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
     margin-bottom: 1rem;
-    letter-spacing: -0.02em;
-  }
-
-  .title .gradient {
-    display: block;
-    background: linear-gradient(135deg, #8b5cf6, #06b6d4, #10b981);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-size: 200% 200%;
-    animation: gradient 8s ease infinite;
-  }
-
-  @keyframes gradient {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
   }
 
   .subtitle {
-    font-size: 1.25rem;
-    color: #a1a1aa;
+    font-size: 1.125rem;
+    color: #64748b;
     line-height: 1.6;
+    margin-bottom: 1.5rem;
     max-width: 500px;
-    margin: 0 auto 2rem;
   }
 
   .btn-primary {
     display: inline-flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 1rem 2rem;
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    padding: 0.875rem 1.75rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     border: none;
-    border-radius: 1rem;
+    border-radius: 0.75rem;
     color: white;
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+    transition: all 0.2s;
+    box-shadow: 0 4px 14px rgba(106, 44, 145, 0.35);
   }
 
   .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(139, 92, 246, 0.5);
+    box-shadow: 0 6px 20px rgba(106, 44, 145, 0.4);
   }
 
-  .btn-primary:active {
-    transform: translateY(0);
+  .header-visual {
+    position: relative;
+    width: 200px;
+    height: 150px;
   }
 
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    margin-bottom: 3rem;
-  }
-
-  .feature-card {
-    padding: 2rem 1.5rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 1.25rem;
-    transition: all 0.3s;
-  }
-
-  .feature-card:hover {
-    transform: translateY(-4px);
-    background: rgba(255, 255, 255, 0.05);
-    border-color: var(--feature-color);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  }
-
-  .feature-icon {
-    width: 48px;
-    height: 48px;
-    background: var(--feature-color);
+  .floating-icon {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    background: white;
     border-radius: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+  }
+
+  .icon-1 { top: 20%; left: 10%; animation: float 3s ease-in-out infinite; }
+  .icon-2 { top: 50%; right: 20%; animation: float 3s ease-in-out infinite 0.5s; }
+  .icon-3 { bottom: 10%; left: 30%; animation: float 3s ease-in-out infinite 1s; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* Features Grid */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .feature-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
+    border-color: #cbd5e1;
+  }
+
+  .feature-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin: 0 auto 1rem;
-    opacity: 0.9;
   }
 
   .feature-card h3 {
     font-size: 1.125rem;
     font-weight: 600;
+    color: #0f172a;
     margin-bottom: 0.5rem;
-    color: #fafafa;
   }
 
   .feature-card p {
     font-size: 0.875rem;
-    color: #71717a;
+    color: #64748b;
   }
 
-  .stats-preview {
+  /* Stats Row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .stat-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 2rem;
-    padding: 1.5rem;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 1rem;
   }
 
-  .stat-item {
-    text-align: center;
+  .stat-content {
+    flex: 1;
   }
 
-  .stat-number {
+  .stat-value {
     display: block;
     font-size: 1.5rem;
     font-weight: 700;
-    color: #fafafa;
+    color: #0f172a;
   }
 
   .stat-label {
     font-size: 0.875rem;
-    color: #71717a;
-  }
-
-  .stat-divider {
-    width: 1px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.1);
+    color: #64748b;
   }
 
   /* Quiz Screen */
   .quiz-container {
-    max-width: 720px;
     width: 100%;
+    max-width: 720px;
     animation: slideUp 0.4s ease;
   }
 
@@ -630,13 +722,12 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
   .progress-section {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.25rem;
     margin-bottom: 1.5rem;
+    border: 1px solid #e2e8f0;
   }
 
   .progress-header {
@@ -648,7 +739,7 @@
 
   .progress-text {
     font-size: 0.875rem;
-    color: #a1a1aa;
+    color: #64748b;
     font-weight: 500;
   }
 
@@ -662,18 +753,12 @@
     align-items: center;
     gap: 0.375rem;
     padding: 0.375rem 0.875rem;
-    background: rgba(245, 158, 11, 0.15);
+    background: var(--warning-bg);
     border: 1px solid rgba(245, 158, 11, 0.3);
     border-radius: 2rem;
-    color: #fbbf24;
+    color: var(--warning-color);
     font-size: 0.875rem;
     font-weight: 600;
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.8; }
   }
 
   .accuracy-pill {
@@ -681,34 +766,34 @@
     align-items: center;
     gap: 0.375rem;
     padding: 0.375rem 0.875rem;
-    background: rgba(16, 185, 129, 0.15);
+    background: var(--success-bg);
     border: 1px solid rgba(16, 185, 129, 0.3);
     border-radius: 2rem;
-    color: #34d399;
+    color: var(--success-color);
     font-size: 0.875rem;
     font-weight: 600;
   }
 
   .progress-track {
-    height: 6px;
-    background: rgba(255, 255, 255, 0.06);
-    border-radius: 3px;
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 4px;
     overflow: hidden;
   }
 
   .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #8b5cf6, #06b6d4);
-    border-radius: 3px;
+    background: linear-gradient(90deg, var(--primary-color), #8b5cf6);
+    border-radius: 4px;
     transition: width 0.4s ease;
   }
 
   .question-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: white;
     border-radius: 1.5rem;
     padding: 2rem;
-    backdrop-filter: blur(10px);
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
   }
 
   .question-header {
@@ -718,10 +803,10 @@
   .category-badge {
     display: inline-block;
     padding: 0.375rem 1rem;
-    background: rgba(139, 92, 246, 0.15);
-    border: 1px solid rgba(139, 92, 246, 0.3);
+    background: var(--primary-bg);
+    border: 1px solid rgba(106, 44, 145, 0.2);
     border-radius: 2rem;
-    color: #c4b5fd;
+    color: var(--primary-color);
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -730,10 +815,10 @@
   }
 
   .question-text {
-    font-size: 1.5rem;
+    font-size: 1.375rem;
     font-weight: 600;
     line-height: 1.4;
-    color: #fafafa;
+    color: #0f172a;
   }
 
   .answers-list {
@@ -748,10 +833,10 @@
     align-items: center;
     gap: 1rem;
     padding: 1.25rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 2px solid rgba(255, 255, 255, 0.06);
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
     border-radius: 1rem;
-    color: #e4e4e7;
+    color: #334155;
     font-size: 1rem;
     text-align: left;
     cursor: pointer;
@@ -760,24 +845,24 @@
   }
 
   .answer-option:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(139, 92, 246, 0.4);
+    background: white;
+    border-color: #cbd5e1;
     transform: translateX(4px);
   }
 
   .answer-option.selected {
-    border-color: #8b5cf6;
-    background: rgba(139, 92, 246, 0.1);
+    border-color: var(--primary-color);
+    background: var(--primary-bg);
   }
 
   .answer-option.correct {
-    border-color: #10b981;
-    background: rgba(16, 185, 129, 0.15);
+    border-color: var(--success-color);
+    background: var(--success-bg);
   }
 
   .answer-option.incorrect {
-    border-color: #ef4444;
-    background: rgba(239, 68, 68, 0.15);
+    border-color: var(--error-color);
+    background: var(--error-bg);
   }
 
   .answer-option:disabled {
@@ -796,31 +881,56 @@
   .option-letter {
     width: 28px;
     height: 28px;
-    background: rgba(255, 255, 255, 0.06);
+    background: #e2e8f0;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.875rem;
     font-weight: 600;
-    color: #a1a1aa;
+    color: #64748b;
+  }
+
+  .result-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .correct-icon {
+    background: var(--success-color);
+    color: white;
+  }
+
+  .incorrect-icon {
+    background: var(--error-color);
+    color: white;
   }
 
   .answer-text {
     flex: 1;
     line-height: 1.5;
+    font-weight: 500;
+  }
+
+  .correct-badge {
+    color: var(--success-color);
+    opacity: 0.7;
   }
 
   .explanation-panel {
     margin-bottom: 1.5rem;
     padding: 1.25rem;
-    background: rgba(239, 68, 68, 0.1);
+    background: var(--error-bg);
     border: 1px solid rgba(239, 68, 68, 0.2);
     border-radius: 1rem;
   }
 
   .explanation-panel.correct {
-    background: rgba(16, 185, 129, 0.1);
+    background: var(--success-bg);
     border-color: rgba(16, 185, 129, 0.2);
   }
 
@@ -830,15 +940,34 @@
     gap: 0.5rem;
     margin-bottom: 0.75rem;
     font-weight: 600;
-    color: #ef4444;
+    color: var(--error-color);
   }
 
   .explanation-panel.correct .explanation-header {
-    color: #10b981;
+    color: var(--success-color);
+  }
+
+  .explanation-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .explanation-icon.correct {
+    background: var(--success-color);
+    color: white;
+  }
+
+  .explanation-icon.incorrect {
+    background: var(--error-color);
+    color: white;
   }
 
   .explanation-panel p {
-    color: #a1a1aa;
+    color: #475569;
     line-height: 1.6;
     font-size: 0.9375rem;
   }
@@ -850,7 +979,7 @@
     gap: 0.5rem;
     width: 100%;
     padding: 1rem;
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     border: none;
     border-radius: 1rem;
     color: white;
@@ -870,68 +999,86 @@
   }
 
   .btn-next:hover {
-    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+    box-shadow: 0 4px 14px rgba(106, 44, 145, 0.35);
   }
 
   /* Results Screen */
   .results-container {
-    max-width: 600px;
     width: 100%;
+    max-width: 600px;
     animation: fadeIn 0.6s ease;
   }
 
   .results-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 2rem;
-    padding: 3rem 2rem;
+    background: white;
+    border-radius: 1.5rem;
+    padding: 2.5rem;
     text-align: center;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
   }
 
-  .results-icon {
-    margin-bottom: 1.5rem;
-    filter: drop-shadow(0 4px 20px currentColor);
+  .results-icon-wrapper {
+    width: 96px;
+    height: 96px;
+    border-radius: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
   }
 
   .results-title {
-    font-size: 2rem;
+    font-size: 1.875rem;
     font-weight: 700;
+    color: #0f172a;
     margin-bottom: 0.5rem;
   }
 
   .results-desc {
-    color: #a1a1aa;
+    color: #64748b;
     margin-bottom: 2rem;
-    font-size: 1.125rem;
+    font-size: 1rem;
   }
 
   .score-display {
     margin-bottom: 2rem;
   }
 
+  .score-circle {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    border: 8px solid;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
   .score-main {
     display: flex;
     align-items: baseline;
-    justify-content: center;
     gap: 0.25rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
   }
 
   .score-number {
-    font-size: 5rem;
+    font-size: 4rem;
     font-weight: 800;
     line-height: 1;
   }
 
   .score-total {
-    font-size: 2rem;
-    color: #71717a;
+    font-size: 1.5rem;
+    color: #94a3b8;
     font-weight: 600;
   }
 
   .score-percent {
-    font-size: 1.5rem;
-    color: #a1a1aa;
+    font-size: 1.25rem;
+    color: #64748b;
     font-weight: 600;
   }
 
@@ -941,7 +1088,7 @@
     gap: 1rem;
     margin-bottom: 2rem;
     padding: 1.5rem;
-    background: rgba(0, 0, 0, 0.2);
+    background: #f8fafc;
     border-radius: 1rem;
   }
 
@@ -953,15 +1100,16 @@
 
   .stat-label-sm {
     font-size: 0.75rem;
-    color: #71717a;
+    color: #64748b;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    font-weight: 500;
   }
 
   .stat-value {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #fafafa;
+    color: #0f172a;
   }
 
   .results-actions {
@@ -979,11 +1127,11 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 1rem 1.5rem;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 1rem;
-    color: #fafafa;
+    padding: 0.875rem 1.5rem;
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.75rem;
+    color: #64748b;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
@@ -991,13 +1139,62 @@
   }
 
   .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #0f172a;
+  }
+
+  /* Safety Banner */
+  .safety-banner {
+    max-width: 1400px;
+    margin: 2rem auto 0;
+    width: 100%;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+  }
+
+  .safety-banner strong {
+    font-weight: 600;
   }
 
   /* Responsive */
+  @media (max-width: 1024px) {
+    .page-header-card {
+      grid-template-columns: 1fr;
+      text-align: center;
+    }
+
+    .header-content {
+      text-align: center;
+    }
+
+    .subtitle {
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .header-visual {
+      display: none;
+    }
+
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .stats-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
   @media (max-width: 768px) {
-    .nav {
+    .page {
       padding: 1rem;
     }
 
@@ -1006,26 +1203,8 @@
       transform: none;
     }
 
-    .content {
-      padding: 1.5rem;
-    }
-
     .title {
-      font-size: 2.5rem;
-    }
-
-    .features-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .stats-preview {
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .stat-divider {
-      width: 100%;
-      height: 1px;
+      font-size: 1.875rem;
     }
 
     .question-card {
@@ -1033,7 +1212,7 @@
     }
 
     .question-text {
-      font-size: 1.25rem;
+      font-size: 1.125rem;
     }
 
     .results-stats {
@@ -1042,6 +1221,11 @@
 
     .results-actions {
       flex-direction: column;
+    }
+
+    .safety-banner {
+      flex-direction: column;
+      text-align: center;
     }
   }
 </style>
