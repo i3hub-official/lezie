@@ -21,7 +21,7 @@
   const cookieTypes = [
     {
       icon:    Shield,
-      bg:      'linear-gradient(135deg,#1a0b2e,#2d1b4e)',
+      bg:      '6a2c91',
       label:   'Strictly Necessary',
       tag:     'Always active',
       tagColor: '#ffffff',
@@ -32,7 +32,7 @@
     },
     {
       icon:    BarChart2,
-      bg:      'linear-gradient(135deg,#0369a1,#0284c7)',
+      bg:      '6a2c91',
       label:   'Analytics',
       tag:     'Optional',
       tagColor: '#ffffff',
@@ -43,7 +43,7 @@
     },
     {
       icon:    Settings,
-      bg:      'linear-gradient(135deg,#059669,#10b981)',
+      bg:      '6a2c91',
       label:   'Functional',
       tag:     'Optional',
       tagColor: '#ffffff',
@@ -54,7 +54,7 @@
     },
     {
       icon:    Target,
-      bg:      'linear-gradient(135deg,#b45309,#d97706)',
+      bg:      '6a2c91',
       label:   'Marketing',
       tag:     'Optional',
       tagColor: '#ffffff',
@@ -168,7 +168,7 @@
           <h2 class="cp-section-title">Small files, big purpose</h2>
           <p>Cookies are small text files placed on your device when you visit a website or use a web application. They allow Lezie to remember information between page loads — things like whether you're signed in, your map preferences, or how you've customised your alerts.</p>
           <p>Cookies are not programs and cannot run code or carry viruses. They simply store small pieces of text that help Lezie work correctly and personalise your experience.</p>
-          
+
           <div class="cp-info-box">
             Lezie uses both <strong>first-party cookies</strong> (set by us) and <strong>third-party cookies</strong> (set by trusted partners). We do not use cookies for invasive advertising profiling.
           </div>
