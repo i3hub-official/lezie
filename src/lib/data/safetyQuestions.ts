@@ -544,6 +544,661 @@ export const safetyQuestions: SafetyQuestion[] = [
     ],
     difficulty: "hard",
     tags: ["weather", "tornado", "emergency"]
+  },
+  // ====================== ONLINE SAFETY (continued) ======================
+  {
+    id: "q41",
+    category: "online",
+    question: "Someone you've been gaming with for months asks for your real name and city. You should:",
+    answers: [
+      { text: "Tell them — you're basically friends now", correct: false },
+      { text: "Use a gaming alias and keep personal details private", correct: true, explanation: "Online friends should earn trust over time. Protect your identity until you're certain." },
+      { text: "Give them a fake name and real city", correct: false },
+      { text: "Ask for their info first as a trade", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["gaming", "privacy"]
+  },
+  {
+    id: "q42",
+    category: "online",
+    question: "You see a post claiming a celebrity died. The source is an unknown website. You should:",
+    answers: [
+      { text: "Share it immediately to inform others", correct: false },
+      { text: "Check major news outlets for confirmation before believing or sharing", correct: true, explanation: "Death hoaxes are common clickbait. Verify through trusted sources before sharing." },
+      { text: "Comment 'RIP' to show respect", correct: false },
+      { text: "Ignore it completely — it's probably false", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["misinformation", "social-media"]
+  },
+  {
+    id: "q43",
+    category: "online",
+    question: "Your child wants to use a new social media app that collects location data. You should:",
+    answers: [
+      { text: "Allow it — all apps do that", correct: false },
+      { text: "Review privacy settings and disable location sharing before allowing use", correct: true, explanation: "Location data can be exploited. Always audit privacy settings for minors." },
+      { text: "Monitor their usage constantly", correct: false },
+      { text: "Ban all social media completely", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["parenting", "privacy", "location"]
+  },
+  {
+    id: "q44",
+    category: "online",
+    question: "You receive a 'confirmation' email for a purchase you didn't make. The email has a 'Cancel Order' button. You should:",
+    answers: [
+      { text: "Click Cancel Order immediately", correct: false },
+      { text: "Do not click anything — check your bank account directly and contact the company", correct: true, explanation: "This phishing scam uses urgency to make you click. Verify through official channels only." },
+      { text: "Forward the email to friends to warn them", correct: false },
+      { text: "Reply asking to stop the emails", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["phishing", "scams"]
+  },
+  {
+    id: "q45",
+    category: "online",
+    question: "You're setting up a smart home device. Best security practice for the default password:",
+    answers: [
+      { text: "Keep it — the manufacturer knows best", correct: false },
+      { text: "Change it immediately to a strong, unique password", correct: true, explanation: "Default passwords are publicly known and easily exploited. Always change them." },
+      { text: "Write it on the device so you don't forget", correct: false },
+      { text: "Share it with trusted friends for backup access", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["iot", "passwords", "smart-home"]
+  },
+  {
+    id: "q46",
+    category: "online",
+    question: "A coworker shares a USB drive they found in the parking lot. You should:",
+    answers: [
+      { text: "Plug it in to see who it belongs to", correct: false },
+      { text: "Do not use it — it could contain malware or tracking software", correct: true, explanation: "USB drops are a common social engineering tactic to install malware." },
+      { text: "Scan it with antivirus first", correct: false },
+      { text: "Format it before using", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["malware", "social-engineering", "workplace"]
+  },
+  {
+    id: "q47",
+    category: "online",
+    question: "Your social media account gets hacked and the password is changed. First step:",
+    answers: [
+      { text: "Create a new account with the same name", correct: false },
+      { text: "Use 'Forgot Password' and follow account recovery process immediately", correct: true, explanation: "Most platforms have recovery options. Act quickly before the hacker locks you out further." },
+      { text: "Message the hacker asking for it back", correct: false },
+      { text: "Delete your email account to stop them", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["hacking", "account-recovery"]
+  },
+  {
+    id: "q48",
+    category: "online",
+    question: "You're asked to enter your password on a page that doesn't have 'https://' or a padlock icon. You should:",
+    answers: [
+      { text: "Enter it — the page probably works anyway", correct: false },
+      { text: "Never enter personal information on unencrypted connections", correct: true, explanation: "HTTPS encryption protects your data in transit. Without it, anyone can intercept your password." },
+      { text: "Check if the page looks professional first", correct: false },
+      { text: "Use a weaker password just in case", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["encryption", "security"]
+  },
+  {
+    id: "q49",
+    category: "online",
+    question: "A 'tech support' popup appears saying your computer is infected and to call a number. You should:",
+    answers: [
+      { text: "Call the number for help", correct: false },
+      { text: "Close the browser/tab and run a trusted antivirus scan", correct: true, explanation: "Tech support scams are fake. Real companies don't use urgent popups to contact you." },
+      { text: "Pay the fee to unlock your computer", correct: false },
+      { text: "Restart your computer immediately", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["tech-support", "scams", "malware"]
+  },
+  {
+    id: "q50",
+    category: "online",
+    question: "You want to download free software from a torrent site. The safest approach is:",
+    answers: [
+      { text: "Download it — free is free", correct: false },
+      { text: "Only download from official developer websites", correct: true, explanation: "Torrent and crack sites frequently bundle malware. Pay for software or use legitimate free alternatives." },
+      { text: "Scan the download with antivirus first", correct: false },
+      { text: "Use a VPN to hide your activity", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["piracy", "malware", "software"]
+
+  // ====================== STREET SAFETY (10 questions) ======================
+  {
+    id: "q51",
+    category: "street",
+    question: "You're walking with headphones in at night. Best safety practice:",
+    answers: [
+      { text: "Keep music loud to stay motivated", correct: false },
+      { text: "Keep volume low or use one earbud to hear surroundings", correct: true, explanation: "Situational awareness is critical at night. Being unable to hear approaching danger is risky." },
+      { text: "Only use noise-cancelling headphones", correct: false },
+      { text: "Take calls instead of listening to music", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["awareness", "night-safety"]
+  },
+  {
+    id: "q52",
+    category: "street",
+    question: "Someone on the street asks to use your phone for an 'emergency call'. You should:",
+    answers: [
+      { text: "Hand it over — emergencies happen", correct: false },
+      { text: "Offer to make the call yourself while keeping your phone", correct: true, explanation: "Phone thefts often start with this request. Keep control of your device while helping." },
+      { text: "Run away from them", correct: false },
+      { text: "Tell them to find a payphone", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["theft", "strangers"]
+  },
+  {
+    id: "q53",
+    category: "street",
+    question: "You're out of town and your GPS takes you down an unlit, unpaved road. You should:",
+    answers: [
+      { text: "Trust the GPS — it's probably a shortcut", correct: false },
+      { text: "Stop, reverse to the last known safe area, and find an alternate route", correct: true, explanation: "GPS errors can lead to dangerous areas. Trust your instincts and stick to well-traveled roads." },
+      { text: "Continue but drive very slowly", correct: false },
+      { text: "Turn off your headlights to be discreet", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["driving", "gps", "navigation"]
+  },
+  {
+    id: "q54",
+    category: "street",
+    question: "You see a child who looks lost and scared. You should:",
+    answers: [
+      { text: "Take them to find their parents yourself", correct: false },
+      { text: "Stay nearby, call police, and don't leave the child alone until help arrives", correct: true, explanation: "Police can properly handle lost children. Never take a child somewhere without authorities involved." },
+      { text: "Ask them to follow you to a safe place", correct: false },
+      { text: "Give them money for a taxi", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["children", "bystander"]
+  },
+  {
+    id: "q55",
+    category: "street",
+    question: "You're at an ATM late at night and someone is standing too close behind you. You should:",
+    answers: [
+      { text: "Finish your transaction quickly", correct: false },
+      { text: "Cancel the transaction, take your card, and leave immediately", correct: true, explanation: "ATM skimmers and thieves target isolated users. Your safety matters more than cash." },
+      { text: "Turn around and ask them to back up", correct: false },
+      { text: "Cover the keypad with your other hand", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["atm", "theft", "night-safety"]
+  },
+  {
+    id: "q56",
+    category: "street",
+    question: "You park in a parking garage and notice a van parked next to your driver's side. Best action:",
+    answers: [
+      { text: "Get in through the passenger side instead", correct: false },
+      { text: "Enter through passenger side, lock doors immediately, and drive away", correct: true, explanation: "Vans can hide attackers. Avoiding the obstructed side reduces vulnerability." },
+      { text: "Wait for the van owner to return", correct: false },
+      { text: "Call someone while you get in", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["parking", "awareness"]
+  },
+  {
+    id: "q57",
+    category: "street",
+    question: "You're jogging and a car slows down beside you. The driver asks for directions. You should:",
+    answers: [
+      { text: "Stop and walk toward the car to hear better", correct: false },
+      { text: "Keep jogging and shout directions without stopping or approaching", correct: true, explanation: "Maintain distance and momentum. A genuine lost driver can understand shouted directions." },
+      { text: "Pull out your phone to look up the address", correct: false },
+      { text: "Run away as fast as you can", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["jogging", "strangers", "awareness"]
+  },
+  {
+    id: "q58",
+    category: "street",
+    question: "You witness someone being followed aggressively. Safest way to help:",
+    answers: [
+      { text: "Confront the follower directly", correct: false },
+      { text: "Create a distraction or approach the person as if you know them", correct: true, explanation: "Interrupting the follower's plan without direct confrontation can break the situation safely." },
+      { text: "Film it for evidence", correct: false },
+      { text: "Ignore it — it's not your business", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["bystander", "intervention"]
+  },
+  {
+    id: "q59",
+    category: "street",
+    question: "Your car runs out of gas on a busy highway at night. You should:",
+    answers: [
+      { text: "Walk to the nearest gas station", correct: false },
+      { text: "Stay in the car with hazard lights on and call roadside assistance", correct: true, explanation: "Highways at night are deadly for pedestrians. Wait in your locked vehicle for help." },
+      { text: "Flag down other cars for help", correct: false },
+      { text: "Push the car to the shoulder yourself", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["driving", "breakdown", "highway"]
+  },
+  {
+    id: "q60",
+    category: "street",
+    question: "You're in a crowded subway and someone is pressing against you inappropriately. You should:",
+    answers: [
+      { text: "Stay quiet to avoid causing a scene", correct: false },
+      { text: "Move away loudly saying 'Stop touching me' and alert transit police", correct: true, explanation: "Public confrontation deters offenders and alerts others to help. Silence enables the behavior." },
+      { text: "Push them away and run", correct: false },
+      { text: "Take a photo of them for evidence", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["harassment", "public-transport"]
+
+  // ====================== HOME SAFETY (10 questions) ======================
+  {
+    id: "q61",
+    category: "home",
+    question: "You're moving into a new apartment. First security step:",
+    answers: [
+      { text: "Decorate and make it feel like home", correct: false },
+      { text: "Rekey or change all locks immediately", correct: true, explanation: "Previous tenants, landlords, or their friends may still have keys. Always change locks first." },
+      { text: "Introduce yourself to all neighbors", correct: false },
+      { text: "Install a security camera", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["moving", "locks", "security"]
+  },
+  {
+    id: "q62",
+    category: "home",
+    question: "You accidentally locked yourself out of your apartment. You should:",
+    answers: [
+      { text: "Break a window to get back in", correct: false },
+      { text: "Call a licensed locksmith or landlord with proof of residence", correct: true, explanation: "Licensed locksmiths verify identity before opening doors. Avoid 'cheap' unverified services." },
+      { text: "Ask a neighbor to let you climb through their balcony", correct: false },
+      { text: "Wait outside for hours hoping someone lets you in", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["locks", "emergency"]
+  },
+  {
+    id: "q63",
+    category: "home",
+    question: "You see a small kitchen fire from cooking oil. You should NOT:",
+    answers: [
+      { text: "Use a fire extinguisher", correct: false },
+      { text: "Pour water on it", correct: true, explanation: "Water on grease fires causes explosive splatter. Smother with a lid or use baking soda." },
+      { text: "Cover with a metal lid", correct: false },
+      { text: "Use baking soda", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["fire-safety", "kitchen", "grease-fire"]
+  },
+  {
+    id: "q64",
+    category: "home",
+    question: "You find your front door slightly open when you return home. You're sure you locked it. You should:",
+    answers: [
+      { text: "Push it open and call out 'Hello?'", correct: false },
+      { text: "Do not enter — go to a neighbor and call police", correct: true, explanation: "An unlocked door could mean a burglary in progress. Never enter — let police clear the home." },
+      { text: "Quietly investigate room by room", correct: false },
+      { text: "Check for missing items from outside", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["burglary", "response"]
+  },
+  {
+    id: "q65",
+    category: "home",
+    question: "You're hosting a party at your home. A guest invites a stranger they just met. You should:",
+    answers: [
+      { text: "Be polite and let them stay", correct: false },
+      { text: "Ask your guest to vouch for them and keep them in common areas only", correct: true, explanation: "You're responsible for your home. Unknown guests should be monitored and limited." },
+      { text: "Check their ID at the door", correct: false },
+      { text: "Kick your friend out for inviting them", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["parties", "guests", "security"]
+  },
+  {
+    id: "q66",
+    category: "home",
+    question: "Your carbon monoxide alarm goes off. You feel fine. You should:",
+    answers: [
+      { text: "Turn it off — it's probably a false alarm", correct: false },
+      { text: "Evacuate immediately and call emergency services", correct: true, explanation: "Carbon monoxide is odorless and symptoms appear after damage. Always evacuate when alarms sound." },
+      { text: "Open windows to air out the house", correct: false },
+      { text: "Check if the battery is low", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["carbon-monoxide", "emergency"]
+  },
+  {
+    id: "q67",
+    category: "home",
+    question: "A package arrives that you didn't order. The return address is unfamiliar. You should:",
+    answers: [
+      { text: "Open it — free stuff is great", correct: false },
+      { text: "Do not open it — this could be a brushing scam", correct: true, explanation: "Brushing scams send unsolicited items to create fake reviews. Report to the platform." },
+      { text: "Throw it directly in the trash", correct: false },
+      { text: "Give it to a neighbor", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["scams", "packages", "online-shopping"]
+  },
+  {
+    id: "q68",
+    category: "home",
+    question: "You're selling items online and a buyer wants to pick up from your home. Best practice:",
+    answers: [
+      { text: "Give them your address — it's easiest", correct: false },
+      { text: "Arrange pickup at a police station public exchange zone", correct: true, explanation: "Many police stations offer safe exchange areas. Never invite strangers to your home." },
+      { text: "Meet in a parking lot alone", correct: false },
+      { text: "Have them come when your family is home", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["online-marketplace", "strangers", "home-security"]
+  },
+  {
+    id: "q69",
+    category: "home",
+    question: "Your power goes out during a storm. You should avoid opening the refrigerator:",
+    answers: [
+      { text: "To save energy for other devices", correct: false },
+      { text: "To keep food cold longer (food stays safe for 4 hours if unopened)", correct: true, explanation: "Each opening releases cold air. A full freezer stays frozen for 48 hours if unopened." },
+      { text: "Because it's dangerous during storms", correct: false },
+      { text: "To prevent tripping in the dark", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["power-outage", "food-safety", "storms"]
+  },
+  {
+    id: "q70",
+    category: "home",
+    question: "You hear scratching noises in your attic at night. You should:",
+    answers: [
+      { text: "Go up to investigate with a flashlight", correct: false },
+      { text: "Call pest control and check for entry points during daylight", correct: true, explanation: "Animals or intruders could be present. Daytime investigation with professionals is safest." },
+      { text: "Set traps in the attic entrance", correct: false },
+      { text: "Ignore it — it will go away", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["pests", "home-safety"]
+
+  // ====================== TRAVEL SAFETY (10 questions) ======================
+  {
+    id: "q71",
+    category: "travel",
+    question: "You're checking into a hotel. The front desk announces your room number loudly. You should:",
+    answers: [
+      { text: "Thank them and go to your room", correct: false },
+      { text: "Ask for a different room and request discretion in the future", correct: true, explanation: "Public room announcements compromise security. Strangers now know where you sleep." },
+      { text: "Ignore it — no one is paying attention", correct: false },
+      { text: "Write down the number to remember it", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["hotels", "privacy", "security"]
+  },
+  {
+    id: "q72",
+    category: "travel",
+    question: "You're traveling abroad and your wallet is stolen. First step:",
+    answers: [
+      { text: "Cancel all cards and report passport loss to embassy", correct: true, explanation: "Quick action prevents further fraud. Your embassy can help with emergency documents." },
+      { text: "File a police report immediately", correct: false },
+      { text: "Search the area where it happened", correct: false },
+      { text: "Ask your hotel to check security footage", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["theft", "abroad", "emergency"]
+  },
+  {
+    id: "q73",
+    category: "travel",
+    question: "You're at a resort and a staff member offers to store your luggage 'safely' in a back room. You should:",
+    answers: [
+      { text: "Trust them — they work here", correct: false },
+      { text: "Use the hotel's official luggage storage with receipts", correct: true, explanation: "Theft can happen anywhere. Use verifiable, receipt-based services for belongings." },
+      { text: "Keep your luggage with you always", correct: false },
+      { text: "Tip them extra for the favor", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["hotels", "theft", "luggage"]
+  },
+  {
+    id: "q74",
+    category: "travel",
+    question: "You're in a country where you don't speak the language. You need medical help. Best action:",
+    answers: [
+      { text: "Ask random locals for a doctor", correct: false },
+      { text: "Go to your embassy's consular services for medical referrals", correct: true, explanation: "Embassies maintain lists of English-speaking, vetted medical providers." },
+      { text: "Find the biggest hospital you see", correct: false },
+      { text: "Use translation apps to explain symptoms", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["medical", "abroad", "embassy"]
+  },
+  {
+    id: "q75",
+    category: "travel",
+    question: "You're on a train and someone falls asleep on your shoulder. You should:",
+    answers: [
+      { text: "Let them sleep — they're tired", correct: false },
+      { text: "Gently wake them and move if uncomfortable", correct: true, explanation: "Personal space matters. The person may be faking sleep to pickpocket or harass." },
+      { text: "Push them off aggressively", correct: false },
+      { text: "Take a selfie with them for social media", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["public-transport", "boundaries"]
+  },
+  {
+    id: "q76",
+    category: "travel",
+    question: "You book an Airbnb and the host asks to meet late at night to hand over keys. You should:",
+    answers: [
+      { text: "Agree — it's their house", correct: false },
+      { text: "Request a daytime key exchange or use a lockbox", correct: true, explanation: "Night meetings with strangers are risky. Legitimate hosts accommodate safe handoffs." },
+      { text: "Ask a friend to meet them instead", correct: false },
+      { text: "Cancel the booking and dispute the charge", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["airbnb", "strangers", "night-safety"]
+  },
+  {
+    id: "q77",
+    category: "travel",
+    question: "You're on a beach and someone asks you to watch their valuables while they swim. You should:",
+    answers: [
+      { text: "Agree to be helpful", correct: false },
+      { text: "Politely decline — you're not responsible for strangers' belongings", correct: true, explanation: "This could be a setup where you're blamed for theft or distracted while your items are taken." },
+      { text: "Watch them but keep your distance", correct: false },
+      { text: "Charge them a fee for watching", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["beach", "scams", "strangers"]
+  },
+  {
+    id: "q78",
+    category: "travel",
+    question: "You're in a foreign country and local police ask for a 'fine' paid in cash on the spot. You should:",
+    answers: [
+      { text: "Pay it to avoid trouble", correct: false },
+      { text: "Ask for a written citation and offer to pay at the police station", correct: true, explanation: "Legitimate fines have paperwork. This is a common bribe scam targeting tourists." },
+      { text: "Run away immediately", correct: false },
+      { text: "Call your embassy while standing there", correct: false }
+    ],
+    difficulty: "hard",
+    tags: ["police", "scams", "abroad"]
+  },
+  {
+    id: "q79",
+    category: "travel",
+    question: "You're planning to hike alone in a national park. You should NOT:",
+    answers: [
+      { text: "Tell someone your route and return time", correct: false },
+      { text: "Keep your phone off to save battery", correct: true, explanation: "Emergency communication is critical. Keep phone on and bring a backup battery." },
+      { text: "Check weather conditions before leaving", correct: false },
+      { text: "Bring extra water and supplies", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["hiking", "preparedness", "solo-travel"]
+  },
+  {
+    id: "q80",
+    category: "travel",
+    question: "Your flight is delayed overnight and the airline offers a hotel voucher. Before accepting:",
+    answers: [
+      { text: "Take it — the airline arranged it", correct: false },
+      { text: "Research the hotel's safety and location before accepting", correct: true, explanation: "Airlines may book cheap, unsafe hotels. Verify safety and consider paying for a better option." },
+      { text: "Ask for cash instead", correct: false },
+      { text: "Sleep in the airport to save money", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["airports", "hotels", "travel-tips"]
+
+  // ====================== GENERAL SAFETY (10 questions) ======================
+  {
+    id: "q81",
+    category: "general",
+    question: "You're at a bar and feel unusually dizzy after one drink. You should:",
+    answers: [
+      { text: "Order coffee to sober up", correct: false },
+      { text: "Tell a trusted friend immediately and don't leave with strangers", correct: true, explanation: "This could be a sign of drink spiking. Alert someone you trust and seek medical help." },
+      { text: "Go to the bathroom to splash water on your face", correct: false },
+      { text: "Finish your drink and go home", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["drink-spiking", "bars", "emergency"]
+  },
+  {
+    id: "q82",
+    category: "general",
+    question: "You're home alone and the fire alarm won't stop beeping (low battery). You should:",
+    answers: [
+      { text: "Remove the battery to stop the noise", correct: false },
+      { text: "Replace the battery immediately — never disable alarms", correct: true, explanation: "Disabling alarms removes protection. Keep spare 9V batteries for replacements." },
+      { text: "Call the fire department to fix it", correct: false },
+      { text: "Cover it with tape until morning", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["fire-safety", "home"]
+  },
+  {
+    id: "q83",
+    category: "general",
+    question: "You're giving a presentation and someone asks an aggressive, personal question. Best response:",
+    answers: [
+      { text: "Answer it to avoid conflict", correct: false },
+      { text: "Say 'I'm not comfortable answering that' and redirect to the topic", correct: true, explanation: "You have the right to set boundaries professionally. Redirecting maintains control." },
+      { text: "Get angry and end the presentation", correct: false },
+      { text: "Make a joke to deflect", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["boundaries", "professional", "communication"]
+  },
+  {
+    id: "q84",
+    category: "general",
+    question: "You find a gun in a public restroom. You should:",
+    answers: [
+      { text: "Pick it up to secure it", correct: false },
+      { text: "Do not touch it — leave and call police immediately", correct: true, explanation: "Never handle found firearms. They could be evidence or accidentally discharge." },
+      { text: "Hide it so children don't find it", correct: false },
+      { text: "Ask others if it's theirs", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["firearms", "emergency", "public-safety"]
+  },
+  {
+    id: "q85",
+    category: "general",
+    question: "You're in a relationship and your partner checks your phone without permission. You should:",
+    answers: [
+      { text: "Accept it — they love you", correct: false },
+      { text: "Set a clear boundary — privacy is healthy in relationships", correct: true, explanation: "Controlling behavior often escalates. Mutual trust includes respecting privacy." },
+      { text: "Start checking their phone too", correct: false },
+      { text: "Delete everything to avoid issues", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["relationships", "boundaries", "privacy"]
+  },
+  {
+    id: "q86",
+    category: "general",
+    question: "You're in a parking lot and see a child alone in a hot car. You should:",
+    answers: [
+      { text: "Walk away — not your problem", correct: false },
+      { text: "Stay with the car and call police immediately", correct: true, explanation: "Heatstroke kills quickly. Stay until help arrives — breaking a window may be legal if life-threatening." },
+      { text: "Break the window and take the child", correct: false },
+      { text: "Leave a note on the windshield", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["children", "heat-safety", "emergency"]
+  },
+  {
+    id: "q87",
+    category: "general",
+    question: "You're at a concert and the crowd starts surging. You should:",
+    answers: [
+      { text: "Push back against the crowd to stay upright", correct: false },
+      { text: "Move diagonally toward the edge, keep arms up to protect chest", correct: true, explanation: "Crowd crush kills by suffocation. Protect your breathing space and exit sideways." },
+      { text: "Sit down to avoid being pushed", correct: false },
+      { text: "Scream loudly for help", correct: false }
+    ],
+    difficulty: "hard",
+    tags: ["crowds", "concerts", "emergency"]
+  },
+  {
+    id: "q88",
+    category: "general",
+    question: "You're swimming in the ocean and feel a strong undertow pulling your feet. You should:",
+    answers: [
+      { text: "Swim directly to shore as hard as possible", correct: false },
+      { text: "Tread water, signal for help, and swim parallel to shore", correct: true, explanation: "Undertows are narrow. Swimming parallel escapes the current, then swim to shore." },
+      { text: "Dive under to escape the current", correct: false },
+      { text: "Float on your back and relax", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["water-safety", "ocean", "rip-current"]
+  },
+  {
+    id: "q89",
+    category: "general",
+    question: "Your friend confides they're in an abusive relationship. Best response:",
+    answers: [
+      { text: "Tell them to leave immediately", correct: false },
+      { text: "Listen without judgment and offer resources for safety planning", correct: true, explanation: "Leaving is dangerous and complex. Support their agency while providing information." },
+      { text: "Confront their partner yourself", correct: false },
+      { text: "Call police on their behalf", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["relationships", "abuse", "support"]
+  },
+  {
+    id: "q90",
+    category: "general",
+    question: "You're taking medication that causes drowsiness. Before driving, you should:",
+    answers: [
+      { text: "Drive anyway — you'll be fine", correct: false },
+      { text: "Read warnings and don't drive if drowsiness is a side effect", correct: true, explanation: "Drowsy driving equals drunk driving. Use public transit or rideshares instead." },
+      { text: "Drink coffee to stay alert", correct: false },
+      { text: "Drive slower than usual", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["driving", "medication", "safety"]
   }
 ];
 
