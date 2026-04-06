@@ -822,9 +822,9 @@
   .su-step-connector.filled { background:#1a0b2e; }
   .su-step-bubble { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(245,158,11,.12); border:2px solid #F59E0B; color:#F59E0B; transition:all .3s; }
 .su-progress-step.active .su-step-bubble { background:#6a2c91; border-color:#6a2c91; color:white; box-shadow:0 0 0 4px rgba(106,44,145,.15); }
-.su-progress-step.active .su-step-label  { color:#6a2c91; font-weight:700; }
-.su-progress-step.done .su-step-bubble   { background:#1a0b2e; border-color:#1a0b2e; color:white; box-shadow:none; }
-.su-progress-step.done .su-step-label    { color:#1a0b2e; font-weight:600; }
+.su-progress-step.active .su-step-label  { color:#6a2c91; font-weight:500; }
+.su-progress-step.done .su-step-bubble   { background:#6a2c91; border-color:#1a0b2e; color:white; box-shadow:none; }
+.su-progress-step.done .su-step-label    { color:#6a2c91; font-weight:700; }
   /* Card */
   .su-card { background:white; border-radius:1.5rem; border:1px solid #e2e8f0; padding:clamp(1.25rem,5vw,2rem); box-shadow:0 20px 35px -12px rgba(0,0,0,.1); }
   .su-alert-error { display:flex; align-items:center; gap:.625rem; padding:.75rem 1rem; background:#fef2f2; border:1px solid #fecaca; border-radius:.75rem; color:#dc2626; font-size:.813rem; margin-bottom:1.5rem; }
