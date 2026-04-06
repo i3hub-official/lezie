@@ -6,7 +6,6 @@
     ArrowLeft, ExternalLink, Lock, Zap, MapPin, TrendingUp 
   } from 'lucide-svelte';
 
-  // Active section for sticky nav highlight
   let activeSection = $state('what-are-cookies');
 
   const sections = [
@@ -77,7 +76,6 @@
     { name:'Cloudflare',  purpose:'CDN, DDoS protection, and performance optimisation', link:'https://www.cloudflare.com/privacypolicy/' },
   ];
 
-  // Intersection observer for nav highlight
   onMount(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -101,513 +99,697 @@
 
 <svelte:head>
   <title>Cookie Policy – Lezie</title>
+  <meta name="description" content="Learn how Lezie uses cookies to keep your experience secure, personalised, and private." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
 </svelte:head>
 
 <div class="cp-page">
 
-  <!-- ── HERO ── -->
-  <header class="cp-hero">
-    <div class="cp-hero-glow"></div>
-    <div class="cp-hero-inner">
-      <button class="cp-back" onclick={() => goto(-1 as any)}>
-        <ArrowLeft size={15} /> Back
-      </button>
-      <div class="cp-hero-badge">
-        <Cookie size={14} /><span>Legal</span>
+  <!-- LEFT PANEL (same as FAQ) -->
+  <aside class="cp-panel">
+    <div class="cp-panel-inner">
+      <a href="/" class="cp-logo-link">
+        <img src="/icons/lz_logo_t.png" alt="Lezie" class="cp-logo-img" />
+      </a>
+
+      <div class="cp-panel-hero">
+        <div class="cp-panel-badge">
+          <Cookie size={14} />
+          <span>Legal</span>
+        </div>
+        <h2 class="cp-panel-headline">
+          Cookie Policy
+        </h2>
+        <p class="cp-panel-desc">
+          A clear explanation of the cookies Lezie uses, why we use them, and how you can control them.
+        </p>
       </div>
-      <h1 class="cp-hero-title">Cookie Policy</h1>
-      <p class="cp-hero-subtitle">
-        A plain-English explanation of what cookies Lezie uses, why,
-        and how you can control them.
-      </p>
-      <div class="cp-hero-meta">
-        <span>Effective: <strong>1 January 2025</strong></span>
-        <span class="cp-meta-dot"></span>
-        <span>Last updated: <strong>1 April 2025</strong></span>
-        <span class="cp-meta-dot"></span>
-        <span>~5 min read</span>
+
+      <div class="cp-panel-footer">
+        <p>Effective: <strong>1 January 2025</strong></p>
+        <p>Last updated: <strong>1 April 2025</strong></p>
       </div>
     </div>
-  </header>
+    <div class="cp-panel-glow"></div>
+  </aside>
 
-  <div class="cp-body">
+  <!-- MAIN CONTENT -->
+  <main class="cp-main">
+    <div class="cp-content-shell">
 
-    <!-- ── SIDEBAR NAV ── -->
-    <aside class="cp-sidebar">
-      <div class="cp-sidebar-inner">
-        <p class="cp-sidebar-heading">On this page</p>
-        <nav class="cp-nav">
+      <button class="cp-back-home" onclick={() => goto(-1 as any)}>
+        <ChevronLeft size={18} />
+        <ArrowLeft size={14} />
+        <span>Back</span>
+      </button>
+
+      <div class="cp-form-header">
+        <h1 class="cp-form-title">Cookie Policy</h1>
+        <p class="cp-form-subtitle">\~5 minute read • Plain English</p>
+      </div>
+
+      <!-- Table of Contents -->
+      <div class="cp-toc">
+        <p class="cp-toc-label">On this page</p>
+        <nav class="cp-toc-nav">
           {#each sections as s}
             <button
-              class="cp-nav-item {activeSection === s.id ? 'cp-nav-item--active' : ''}"
-              onclick={() => scrollTo(s.id)}>
-              <ChevronRight size={12} class="cp-nav-chevron" />
+              class="cp-toc-item {activeSection === s.id ? 'active' : ''}"
+              onclick={() => scrollTo(s.id)}
+            >
+              <ChevronRight size={14} />
               {s.label}
             </button>
           {/each}
         </nav>
-        <div class="cp-sidebar-cta">
-          <p>Want to update your cookie preferences?</p>
-          <a href="/settings#privacy" class="cp-sidebar-btn">
-            <Settings size={13} /> Manage preferences
-          </a>
-        </div>
       </div>
-    </aside>
 
-    <!-- ── CONTENT ── -->
-    <main class="cp-content">
+      <!-- Sections -->
+      <div class="cp-sections">
 
-      <!-- What are cookies -->
-      <section id="what-are-cookies" class="cp-section">
-        <div class="cp-section-label"><Cookie size={14} />What Are Cookies</div>
-        <h2 class="cp-section-title">Small files, big purpose</h2>
-        <p>Cookies are small text files placed on your device when you visit a website or use a web application. They allow Lezie to remember information between page loads — things like whether you're signed in, your map preferences, or how you've customised your alerts.</p>
-        <p>Cookies are not programs and cannot run code or carry viruses. They simply store small pieces of text that help Lezie work correctly and personalise your experience.</p>
-        <div class="cp-info-box">
-          <strong>Lezie uses both first-party cookies</strong> (set by us directly) and <strong>third-party cookies</strong> (set by trusted service providers on our behalf). We do not use cookies for invasive advertising profiling.
-        </div>
-      </section>
+        <!-- What are cookies -->
+        <section id="what-are-cookies" class="cp-section">
+          <div class="cp-section-label"><Cookie size={14} />What Are Cookies</div>
+          <h2 class="cp-section-title">Small files, big purpose</h2>
+          <p>Cookies are small text files placed on your device when you visit a website or use a web application. They allow Lezie to remember information between page loads — things like whether you're signed in, your map preferences, or how you've customised your alerts.</p>
+          <p>Cookies are not programs and cannot run code or carry viruses. They simply store small pieces of text that help Lezie work correctly and personalise your experience.</p>
+          
+          <div class="cp-info-box">
+            Lezie uses both <strong>first-party cookies</strong> (set by us) and <strong>third-party cookies</strong> (set by trusted partners). We do not use cookies for invasive advertising profiling.
+          </div>
+        </section>
 
-    <!-- How we use -->
-<section id="how-we-use" class="cp-section">
-  <div class="cp-section-label"><Shield size={14} />How We Use Them</div>
-  <h2 class="cp-section-title">Keeping the platform safe and useful</h2>
-  <p>Lezie uses cookies for four broad purposes: keeping your session secure and authenticated, understanding how people use the platform so we can improve it, remembering your preferences, and — if you opt in — delivering relevant community communications.</p>
-  <p>We never sell cookie data to advertisers. Any third parties we work with are contractually bound to use data only to provide their service to us.</p>
+        <!-- How we use -->
+        <section id="how-we-use" class="cp-section">
+          <div class="cp-section-label"><Shield size={14} />How We Use Them</div>
+          <h2 class="cp-section-title">Keeping the platform safe and useful</h2>
+          <p>Lezie uses cookies for four broad purposes: keeping your session secure, understanding how people use the platform, remembering your preferences, and delivering relevant community communications (when opted in).</p>
+          <p>We never sell cookie data to advertisers.</p>
 
-  <div class="cp-use-grid">
-    {#each [
-      { icon: Lock,        title:'Security',      desc:'Protect your account from session hijacking and CSRF attacks' },
-      { icon: Zap,         title:'Performance',   desc:'Ensure the platform loads quickly and reliably for everyone' },
-      { icon: MapPin,      title:'Personalisation',desc:'Remember your default map region and notification settings'  },
-      { icon: TrendingUp,  title:'Improvement',   desc:'Understand what features matter most so we can build better tools' },
-    ] as u}
-      <div class="cp-use-card">
-        <u.icon size={28} class="cp-use-icon" />
-        <strong>{u.title}</strong>
-        <span>{u.desc}</span>
+          <div class="cp-use-grid">
+            {#each [
+              { icon: Lock, title:'Security', desc:'Protect your account from session hijacking and CSRF attacks' },
+              { icon: Zap, title:'Performance', desc:'Ensure the platform loads quickly and reliably' },
+              { icon: MapPin, title:'Personalisation', desc:'Remember your default map region and notification settings' },
+              { icon: TrendingUp, title:'Improvement', desc:'Understand what features matter most to improve Lezie' },
+            ] as u}
+              <div class="cp-use-card">
+                <u.icon size={28} class="cp-use-icon" />
+                <strong>{u.title}</strong>
+                <span>{u.desc}</span>
+              </div>
+            {/each}
+          </div>
+        </section>
+
+        <!-- Cookie Types -->
+        <section id="types" class="cp-section">
+          <div class="cp-section-label"><BarChart2 size={14} />Cookie Types</div>
+          <h2 class="cp-section-title">What we set and why</h2>
+          <p>We organise our cookies into four categories. Strictly necessary cookies are always active; the others require your consent.</p>
+
+          <div class="cp-type-list">
+            {#each cookieTypes as ct}
+              <div class="cp-type-card">
+                <div class="cp-type-card-header">
+                  <div class="cp-type-icon" style="background:{ct.bg}">
+                    <ct.icon size={20} color="white" />
+                  </div>
+                  <div class="cp-type-meta">
+                    <span class="cp-type-name">{ct.label}</span>
+                    <span class="cp-type-tag" style="color:{ct.tagColor}; background:{ct.tagBg}">{ct.tag}</span>
+                  </div>
+                  <span class="cp-type-retention">Retention: {ct.retention}</span>
+                </div>
+                <p class="cp-type-desc">{ct.desc}</p>
+                <div class="cp-type-examples">
+                  <span class="cp-examples-label">Examples</span>
+                  <div class="cp-examples-list">
+                    {#each ct.examples as ex}
+                      <span class="cp-example-chip">{ex}</span>
+                    {/each}
+                  </div>
+                </div>
+              </div>
+            {/each}
+          </div>
+        </section>
+
+        <!-- Third Parties -->
+        <section id="third-party" class="cp-section">
+          <div class="cp-section-label"><ExternalLink size={14} />Third Parties</div>
+          <h2 class="cp-section-title">Who else may set cookies</h2>
+          <p>Some features rely on trusted third-party services. These providers may set their own cookies. We only work with partners who maintain strong data protection standards.</p>
+
+          <div class="cp-third-list">
+            {#each thirdParties as tp}
+              <div class="cp-third-row">
+                <div>
+                  <strong>{tp.name}</strong>
+                  <p>{tp.purpose}</p>
+                </div>
+                <a href={tp.link} target="_blank" rel="noopener noreferrer" class="cp-third-link">
+                  Privacy policy <ExternalLink size={14} />
+                </a>
+              </div>
+            {/each}
+          </div>
+        </section>
+
+        <!-- Your Choices -->
+        <section id="your-choices" class="cp-section">
+          <div class="cp-section-label"><Settings size={14} />Your Choices</div>
+          <h2 class="cp-section-title">You're in control</h2>
+          <p>You can manage cookies in several ways:</p>
+
+          <div class="cp-choices">
+            {#each [
+              { num: '1', title: 'Cookie banner', desc: 'When you first visit, choose to accept all, necessary only, or customise per category.' },
+              { num: '2', title: 'Privacy settings', desc: 'Go to Settings → Privacy anytime to update your preferences.' },
+              { num: '3', title: 'Browser controls', desc: 'Use your browser settings to block or delete cookies (note: blocking necessary cookies may break the app).' },
+              { num: '4', title: 'Do Not Track', desc: 'Lezie respects your browser’s Do Not Track signal where possible.' }
+            ] as choice}
+              <div class="cp-choice">
+                <div class="cp-choice-num">{choice.num}</div>
+                <div>
+                  <strong>{choice.title}</strong>
+                  <p>{choice.desc}</p>
+                </div>
+              </div>
+            {/each}
+          </div>
+
+          <div class="cp-warning-box">
+            <strong>Note:</strong> Disabling functional or analytics cookies may affect some personalised features like remembering your map region.
+          </div>
+        </section>
+
+        <!-- Updates -->
+        <section id="updates" class="cp-section">
+          <div class="cp-section-label"><Cookie size={14} />Policy Updates</div>
+          <h2 class="cp-section-title">When this policy changes</h2>
+          <p>We may update this Cookie Policy to reflect changes in technology or regulation. Material changes will be notified via an in-app banner, and the "Last updated" date will be changed.</p>
+          <p>Continued use of Lezie after updates means you accept the revised policy.</p>
+        </section>
+
+        <!-- Contact -->
+        <section id="contact" class="cp-section">
+          <div class="cp-section-label"><Shield size={14} />Contact Us</div>
+          <h2 class="cp-section-title">Questions about cookies?</h2>
+          <p>If you have any questions, feel free to reach out to our privacy team.</p>
+
+          <div class="cp-contact-card">
+            <div class="cp-contact-row">
+              <span class="cp-contact-label">Email</span>
+              <a href="mailto:privacy@lezie.app" class="cp-link">privacy@lezie.app</a>
+            </div>
+            <div class="cp-contact-row">
+              <span class="cp-contact-label">Related</span>
+              <div class="cp-contact-links">
+                <a href="/privacy" class="cp-link">Privacy Policy</a>
+                <a href="/terms" class="cp-link">Terms of Service</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </div>
-    {/each}
-  </div>
-</section>
 
-      <!-- Types -->
-      <section id="types" class="cp-section">
-        <div class="cp-section-label"><BarChart2 size={14} />Cookie Types</div>
-        <h2 class="cp-section-title">What we set and why</h2>
-        <p>We organise our cookies into four categories. Strictly necessary cookies are always active; the rest are only set with your consent.</p>
+      <p class="cp-footer-text">
+        Last updated: 1 April 2025
+      </p>
 
-        <div class="cp-type-list">
-          {#each cookieTypes as ct}
-            <div class="cp-type-card">
-              <div class="cp-type-card-header">
-                <div class="cp-type-icon" style="background:{ct.bg}">
-                  <ct.icon size={18} color="white" />
-                </div>
-                <div class="cp-type-meta">
-                  <span class="cp-type-name">{ct.label}</span>
-                  <span class="cp-type-tag" style="color:{ct.tagColor};background:{ct.tagBg}">{ct.tag}</span>
-                </div>
-                <span class="cp-type-retention">Retention: {ct.retention}</span>
-              </div>
-              <p class="cp-type-desc">{ct.desc}</p>
-              <div class="cp-type-examples">
-                <span class="cp-examples-label">Examples</span>
-                <div class="cp-examples-list">
-                  {#each ct.examples as ex}
-                    <span class="cp-example-chip">{ex}</span>
-                  {/each}
-                </div>
-              </div>
-            </div>
-          {/each}
-        </div>
-      </section>
-
-      <!-- Third party -->
-      <section id="third-party" class="cp-section">
-        <div class="cp-section-label"><ExternalLink size={14} />Third Parties</div>
-        <h2 class="cp-section-title">Who else may set cookies</h2>
-        <p>Some Lezie features rely on trusted third-party services. These providers may set their own cookies subject to their own privacy policies. We vet all third parties and only engage those with strong data protection practices.</p>
-
-        <div class="cp-third-list">
-          {#each thirdParties as tp}
-            <div class="cp-third-row">
-              <div class="cp-third-info">
-                <strong>{tp.name}</strong>
-                <span>{tp.purpose}</span>
-              </div>
-              <a href={tp.link} target="_blank" rel="noopener noreferrer" class="cp-third-link">
-                Privacy policy <ExternalLink size={11} />
-              </a>
-            </div>
-          {/each}
-        </div>
-      </section>
-
-      <!-- Your choices -->
-      <section id="your-choices" class="cp-section">
-        <div class="cp-section-label"><Settings size={14} />Your Choices</div>
-        <h2 class="cp-section-title">You're in control</h2>
-        <p>You have several ways to manage cookies on Lezie:</p>
-
-        <div class="cp-choices">
-          <div class="cp-choice">
-            <div class="cp-choice-num">1</div>
-            <div>
-              <strong>Cookie banner</strong>
-              <p>When you first visit Lezie, a banner lets you accept all, accept necessary only, or manage preferences per category.</p>
-            </div>
-          </div>
-          <div class="cp-choice">
-            <div class="cp-choice-num">2</div>
-            <div>
-              <strong>Privacy settings</strong>
-              <p>Visit <a href="/settings#privacy" class="cp-link">Settings → Privacy</a> at any time to update your cookie preferences. Changes take effect immediately.</p>
-            </div>
-          </div>
-          <div class="cp-choice">
-            <div class="cp-choice-num">3</div>
-            <div>
-              <strong>Browser controls</strong>
-              <p>All modern browsers let you view, block, or delete cookies. Note that blocking strictly necessary cookies will prevent Lezie from working correctly.</p>
-            </div>
-          </div>
-          <div class="cp-choice">
-            <div class="cp-choice-num">4</div>
-            <div>
-              <strong>Opt-out tools</strong>
-              <p>For analytics, you can also opt out via your browser's Do Not Track setting, which Lezie respects where technically feasible.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="cp-warning-box">
-          <strong>Heads up:</strong> Disabling functional or analytics cookies won't prevent you from using Lezie, but some features — like remembering your map region — may not work as expected.
-        </div>
-      </section>
-
-      <!-- Updates -->
-      <section id="updates" class="cp-section">
-        <div class="cp-section-label"><Cookie size={14} />Policy Updates</div>
-        <h2 class="cp-section-title">When this policy changes</h2>
-        <p>We may update this Cookie Policy from time to time to reflect changes in technology, regulation, or the way we operate Lezie. When we make material changes, we'll notify you via an in-app banner and update the "Last updated" date at the top of this page.</p>
-        <p>Continued use of Lezie after a policy update constitutes acceptance of the revised terms. We encourage you to review this page periodically.</p>
-      </section>
-
-      <!-- Contact -->
-      <section id="contact" class="cp-section">
-        <div class="cp-section-label"><Shield size={14} />Contact Us</div>
-        <h2 class="cp-section-title">Questions about cookies?</h2>
-        <p>If you have any questions about how Lezie uses cookies, or wish to exercise your data rights, please reach out to our privacy team.</p>
-
-        <div class="cp-contact-card">
-          <div class="cp-contact-row">
-            <span class="cp-contact-label">Email</span>
-            <a href="mailto:privacy@lezie.app" class="cp-link">privacy@lezie.app</a>
-          </div>
-          <div class="cp-contact-row">
-            <span class="cp-contact-label">Related</span>
-            <div class="cp-contact-links">
-              <a href="/privacy" class="cp-link">Privacy Policy</a>
-              <a href="/terms"   class="cp-link">Terms of Service</a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-    </main>
-  </div>
+    </div>
+  </main>
 </div>
 
 <style>
-  :global(.cp-page *) { font-family:'DM Sans',system-ui,sans-serif; box-sizing:border-box; }
-
-  .cp-page { min-height:100vh; background:#faf9ff; }
-
-  /* ── HERO ── */
-  .cp-hero {
-    background:linear-gradient(160deg,#1a0b2e 0%,#2d1b4e 60%,#1a0b2e 100%);
-    position:relative; overflow:hidden;
-    padding:3rem 1.5rem 3.5rem;
-  }
-  .cp-hero-glow {
-    position:absolute; inset:0; pointer-events:none;
-    background:radial-gradient(ellipse 70% 80% at 30% 50%,rgba(139,92,246,.18),transparent 65%);
-  }
-  .cp-hero-inner {
-    position:relative; z-index:1;
-    max-width:860px; margin:0 auto;
-    display:flex; flex-direction:column; gap:1rem;
-  }
-  .cp-back {
-    display:inline-flex; align-items:center; gap:.4rem;
-    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15);
-    border-radius:100px; padding:.375rem .875rem;
-    font-size:.75rem; font-weight:500; color:rgba(196,181,253,.85);
-    cursor:pointer; font-family:'DM Sans',sans-serif;
-    transition:all .2s; width:fit-content;
-  }
-  .cp-back:hover { background:rgba(255,255,255,.14); color:white; }
-
-  .cp-hero-badge {
-    display:inline-flex; align-items:center; gap:.5rem;
-    background:rgba(106,44,145,.3); border:1px solid rgba(139,92,246,.35);
-    border-radius:100px; padding:.3rem .875rem;
-    font-size:.75rem; color:#c4b5fd; width:fit-content;
+  :global(.cp-page *) { 
+    font-family: 'DM Sans', system-ui, sans-serif; 
+    box-sizing: border-box; 
   }
 
-  .cp-hero-title {
-    font-family:'DM Serif Display',Georgia,serif;
-    font-size:clamp(2rem,5vw,3rem);
-    color:white; margin:0; letter-spacing:-.02em; line-height:1.1;
+  .cp-page { 
+    display: flex; 
+    min-height: 100vh; 
+    background: linear-gradient(135deg, #faf9ff 0%, #f3f0ff 100%); 
   }
 
-  .cp-hero-subtitle {
-    font-size:clamp(.875rem,2vw,1rem); color:rgba(196,181,253,.85);
-    max-width:520px; line-height:1.65; margin:0;
+  /* LEFT PANEL - Matching FAQ exactly */
+  .cp-panel { 
+    display: none; 
+    position: relative; 
+    width: 440px; 
+    flex-shrink: 0; 
+    background: linear-gradient(160deg, #1a0b2e 0%, #2d1b4e 50%, #1a0b2e 100%); 
+    overflow: hidden; 
   }
 
-  .cp-hero-meta {
-    display:flex; align-items:center; flex-wrap:wrap; gap:.625rem;
-    font-size:.75rem; color:rgba(196,181,253,.7); margin-top:.25rem;
-  }
-  .cp-hero-meta strong { color:rgba(196,181,253,.95); font-weight:600; }
-  .cp-meta-dot { width:3px; height:3px; border-radius:50%; background:rgba(196,181,253,.35); }
-
-  /* ── BODY LAYOUT ── */
-  .cp-body {
-    max-width:1060px; margin:0 auto;
-    display:grid; grid-template-columns:220px 1fr;
-    gap:2.5rem; padding:3rem 1.5rem 5rem;
-    align-items:start;
-  }
-  @media (max-width:768px) {
-    .cp-body { grid-template-columns:1fr; }
-    .cp-sidebar { display:none; }
+  @media (min-width: 1024px) { 
+    .cp-panel { display: flex; } 
   }
 
-  /* ── SIDEBAR ── */
-  .cp-sidebar { position:sticky; top:2rem; }
-  .cp-sidebar-inner {
-    background:white; border:1.5px solid #e5e7eb; border-radius:1.25rem;
-    padding:1.25rem; display:flex; flex-direction:column; gap:1rem;
-    box-shadow:0 4px 16px rgba(0,0,0,.05);
-  }
-  .cp-sidebar-heading { font-size:.6875rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.08em; margin:0; }
-
-  .cp-nav { display:flex; flex-direction:column; gap:.125rem; }
-  .cp-nav-item {
-    display:flex; align-items:center; gap:.5rem;
-    padding:.5rem .625rem; border-radius:.625rem; border:none;
-    background:none; font-size:.8125rem; color:#64748b; font-weight:500;
-    cursor:pointer; font-family:'DM Sans',sans-serif;
-    transition:all .15s; text-align:left;
-  }
-  .cp-nav-item:hover { background:#f3e8ff; color:#6a2c91; }
-  .cp-nav-item--active { background:#f3e8ff; color:#6a2c91; font-weight:700; }
-  :global(.cp-nav-chevron) { flex-shrink:0; opacity:.5; }
-  .cp-nav-item--active :global(.cp-nav-chevron) { opacity:1; }
-
-  .cp-sidebar-cta {
-    background:linear-gradient(135deg,#f3e8ff,#ede9fe);
-    border-radius:.875rem; padding:1rem;
-    border:1px solid #ddd6fe;
-  }
-  .cp-sidebar-cta p { font-size:.75rem; color:#4b1d68; margin:0 0 .75rem; line-height:1.5; }
-  .cp-sidebar-btn {
-    display:inline-flex; align-items:center; gap:.4rem;
-    padding:.4375rem .875rem; background:#6a2c91; color:white;
-    border-radius:.625rem; font-size:.75rem; font-weight:600;
-    text-decoration:none; transition:all .2s;
-    box-shadow:0 3px 8px rgba(106,44,145,.25);
-  }
-  .cp-sidebar-btn:hover { background:#4a1d6e; transform:translateY(-1px); }
-
-  /* ── CONTENT ── */
-  .cp-content { display:flex; flex-direction:column; gap:3rem; }
-
-  .cp-section { display:flex; flex-direction:column; gap:1rem; scroll-margin-top:2rem; }
-
-  .cp-section-label {
-    display:inline-flex; align-items:center; gap:.4rem;
-    font-size:.6875rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
-    color:#6a2c91; background:#f3e8ff; padding:.3rem .875rem;
-    border-radius:100px; width:fit-content; border:1px solid #ddd6fe;
+  .cp-panel-inner { 
+    position: relative; 
+    z-index: 2; 
+    display: flex; 
+    flex-direction: column; 
+    padding: 2.5rem; 
+    height: 100%; 
   }
 
-  .cp-section-title {
-    font-family:'DM Serif Display',Georgia,serif;
-    font-size:clamp(1.25rem,3vw,1.625rem); color:#1e1b4b;
-    margin:0; letter-spacing:-.01em; line-height:1.25;
+  .cp-panel-glow { 
+    position: absolute; 
+    inset: 0; 
+    z-index: 1; 
+    background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(139,92,246,0.15) 0%, transparent 70%); 
+    pointer-events: none; 
   }
 
-  .cp-section p {
-    font-size:.9rem; color:#475569; line-height:1.75; margin:0;
+  .cp-logo-link { 
+    display: inline-block; 
+    line-height: 0; 
+    margin-bottom: 2.5rem; 
   }
 
-  /* Info box */
-  .cp-info-box {
-    background:linear-gradient(135deg,#f0f9ff,#e0f2fe);
-    border:1.5px solid #bae6fd; border-radius:1rem;
-    padding:1rem 1.25rem; font-size:.875rem; color:#0369a1; line-height:1.6;
+  .cp-logo-img { 
+    width: 80px; 
+    height: 80px; 
+    object-fit: contain; 
   }
-  .cp-info-box strong { color:#0c4a6e; }
 
-  .cp-warning-box {
-    background:linear-gradient(135deg,#fffbeb,#fef3c7);
-    border:1.5px solid #fde68a; border-radius:1rem;
-    padding:1rem 1.25rem; font-size:.875rem; color:#92400e; line-height:1.6;
+  .cp-panel-badge { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    padding: 0.375rem 0.875rem; 
+    background: rgba(139,92,246,0.2); 
+    border: 1px solid rgba(139,92,246,0.3); 
+    border-radius: 100px; 
+    font-size: 0.75rem; 
+    color: #c4b5fd; 
+    margin-bottom: 1.5rem; 
   }
-  .cp-warning-box strong { color:#78350f; }
+
+  .cp-panel-headline { 
+    font-family: 'DM Serif Display', Georgia, serif; 
+    font-size: 2.5rem; 
+    line-height: 1.15; 
+    color: white; 
+    margin: 0 0 1rem 0; 
+  }
+
+  .cp-panel-desc { 
+    font-size: 0.875rem; 
+    line-height: 1.6; 
+    color: rgba(196,181,253,0.85); 
+  }
+
+  .cp-panel-footer { 
+    margin-top: auto; 
+    padding-top: 2rem; 
+    border-top: 1px solid rgba(255,255,255,0.1); 
+    color: rgba(196,181,253,0.7); 
+    font-size: 0.813rem; 
+  }
+
+  /* MAIN CONTENT */
+  .cp-main { 
+    flex: 1; 
+    padding: 2rem 1.25rem; 
+    overflow-y: auto; 
+  }
+
+  .cp-content-shell { 
+    max-width: 680px; 
+    margin: 0 auto; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 2rem; 
+  }
+
+  .cp-back-home { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    background: white; 
+    border: 1px solid #e5e7eb; 
+    border-radius: 100px; 
+    padding: 0.5rem 1rem; 
+    font-size: 0.813rem; 
+    font-weight: 500; 
+    color: #64748b; 
+    cursor: pointer; 
+    transition: all 0.2s; 
+  }
+
+  .cp-back-home:hover { 
+    border-color: #6a2c91; 
+    color: #6a2c91; 
+    background: #f3e8ff; 
+  }
+
+  .cp-form-header { 
+    text-align: center; 
+  }
+
+  .cp-form-title { 
+    font-family: 'DM Serif Display', Georgia, serif; 
+    font-size: clamp(1.75rem, 5vw, 2.25rem); 
+    color: #1e1b4b; 
+    margin-bottom: 0.25rem; 
+  }
+
+  .cp-form-subtitle { 
+    color: #64748b; 
+    font-size: 0.875rem; 
+  }
+
+  /* Table of Contents */
+  .cp-toc { 
+    background: white; 
+    border: 1px solid #e2e8f0; 
+    border-radius: 1rem; 
+    padding: 1.25rem; 
+  }
+
+  .cp-toc-label { 
+    font-size: 0.6875rem; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 0.06em; 
+    color: #94a3b8; 
+    margin-bottom: 0.75rem; 
+  }
+
+  .cp-toc-nav { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 0.25rem; 
+  }
+
+  .cp-toc-item { 
+    display: flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    padding: 0.5rem 0.75rem; 
+    border-radius: 0.75rem; 
+    font-size: 0.875rem; 
+    color: #64748b; 
+    background: none; 
+    border: none; 
+    text-align: left; 
+    cursor: pointer; 
+    transition: all 0.2s; 
+  }
+
+  .cp-toc-item:hover, .cp-toc-item.active { 
+    background: #f3e8ff; 
+    color: #6a2c91; 
+  }
+
+  .cp-toc-item.active { 
+    font-weight: 600; 
+  }
+
+  /* Section styling */
+  .cp-section { 
+    scroll-margin-top: 2rem; 
+  }
+
+  .cp-section-label { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    font-size: 0.6875rem; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 0.06em; 
+    color: #6a2c91; 
+    background: #f3e8ff; 
+    padding: 0.35rem 0.875rem; 
+    border-radius: 100px; 
+    border: 1px solid #ddd6fe; 
+  }
+
+  .cp-section-title { 
+    font-family: 'DM Serif Display', Georgia, serif; 
+    font-size: 1.75rem; 
+    color: #1e1b4b; 
+    margin: 0.75rem 0 1rem 0; 
+    line-height: 1.2; 
+  }
+
+  .cp-section p { 
+    font-size: 0.9375rem; 
+    line-height: 1.75; 
+    color: #475569; 
+    margin-bottom: 1.25rem; 
+  }
+
+  /* Info & Warning boxes */
+  .cp-info-box, .cp-warning-box { 
+    padding: 1.25rem; 
+    border-radius: 1rem; 
+    font-size: 0.9rem; 
+    line-height: 1.65; 
+  }
+
+  .cp-info-box { 
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe); 
+    border: 1.5px solid #bae6fd; 
+    color: #0369a1; 
+  }
+
+  .cp-warning-box { 
+    background: linear-gradient(135deg, #fffbeb, #fef3c7); 
+    border: 1.5px solid #fde68a; 
+    color: #92400e; 
+  }
 
   /* Use grid */
-  .cp-use-grid {
-    display:grid; grid-template-columns:1fr 1fr; gap:.75rem;
-  }
-  @media (max-width:500px) { .cp-use-grid { grid-template-columns:1fr; } }
-
-  .cp-use-card {
-    display:flex; flex-direction:column; gap:.375rem;
-    padding:1rem 1.125rem; background:white;
-    border:1.5px solid #e5e7eb; border-radius:1rem;
-    transition:border-color .2s, box-shadow .2s;
-  }
-  .cp-use-card:hover { border-color:#c4b5fd; box-shadow:0 4px 16px rgba(106,44,145,.07); }
-  .cp-use-emoji { font-size:1.375rem; line-height:1; }
-  .cp-use-card strong { font-size:.875rem; font-weight:700; color:#1e1b4b; }
-  .cp-use-card span { font-size:.8125rem; color:#64748b; line-height:1.5; }
-
-  /* Cookie type cards */
-  .cp-type-list { display:flex; flex-direction:column; gap:1rem; }
-
-  .cp-type-card {
-    background:white; border:1.5px solid #e5e7eb; border-radius:1.25rem;
-    padding:1.25rem; display:flex; flex-direction:column; gap:1rem;
-    transition:border-color .2s, box-shadow .2s;
-  }
-  .cp-type-card:hover { border-color:#c4b5fd; box-shadow:0 6px 20px rgba(106,44,145,.07); }
-
-  .cp-type-card-header {
-    display:flex; align-items:center; gap:.875rem; flex-wrap:wrap;
+  .cp-use-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); 
+    gap: 1rem; 
+    margin-top: 1.5rem; 
   }
 
-  .cp-type-icon {
-    width:42px; height:42px; border-radius:.875rem; flex-shrink:0;
-    display:flex; align-items:center; justify-content:center;
-    box-shadow:0 4px 10px rgba(0,0,0,.15);
+  .cp-use-card { 
+    background: white; 
+    border: 1.5px solid #e5e7eb; 
+    border-radius: 1rem; 
+    padding: 1.25rem; 
+    transition: all 0.2s; 
   }
 
-  .cp-type-meta { display:flex; flex-direction:column; gap:.3rem; flex:1; min-width:120px; }
-  .cp-type-name { font-size:.9375rem; font-weight:700; color:#1e1b4b; }
-  .cp-type-tag {
-    display:inline-block; font-size:.6875rem; font-weight:700;
-    padding:.2rem .625rem; border-radius:100px; width:fit-content;
-  }
-  .cp-type-retention {
-    font-size:.75rem; color:#94a3b8; font-weight:500;
-    margin-left:auto; white-space:nowrap; align-self:center;
+  .cp-use-card:hover { 
+    border-color: #c4b5fd; 
+    box-shadow: 0 4px 16px rgba(106,44,145,0.07); 
   }
 
-  .cp-type-desc { font-size:.875rem; color:#475569; line-height:1.65; margin:0; }
+  .cp-use-icon { 
+    color: #6a2c91; 
+    margin-bottom: 0.75rem; 
+  }
 
-  .cp-type-examples { display:flex; flex-direction:column; gap:.5rem; }
-  .cp-examples-label { font-size:.6875rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.06em; }
-  .cp-examples-list { display:flex; flex-wrap:wrap; gap:.375rem; }
-  .cp-example-chip {
-    font-size:.75rem; color:#4b5563; background:#f8fafc;
-    border:1px solid #e2e8f0; border-radius:.5rem; padding:.25rem .625rem;
-    font-weight:500;
+  .cp-use-card strong { 
+    display: block; 
+    font-size: 1rem; 
+    margin-bottom: 0.375rem; 
+    color: #1e1b4b; 
+  }
+
+  /* Cookie type cards - kept similar but harmonized */
+  .cp-type-list { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.25rem; 
+    margin-top: 1rem; 
+  }
+
+  .cp-type-card { 
+    background: white; 
+    border: 1.5px solid #e5e7eb; 
+    border-radius: 1.25rem; 
+    padding: 1.5rem; 
+  }
+
+  .cp-type-card:hover { 
+    border-color: #c4b5fd; 
+  }
+
+  .cp-type-card-header { 
+    display: flex; 
+    align-items: center; 
+    gap: 1rem; 
+    flex-wrap: wrap; 
+    margin-bottom: 1rem; 
+  }
+
+  .cp-type-icon { 
+    width: 48px; 
+    height: 48px; 
+    border-radius: 12px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    flex-shrink: 0; 
+  }
+
+  .cp-type-name { 
+    font-size: 1.0625rem; 
+    font-weight: 700; 
+    color: #1e1b4b; 
+  }
+
+  .cp-type-tag { 
+    font-size: 0.75rem; 
+    font-weight: 700; 
+    padding: 0.2rem 0.75rem; 
+    border-radius: 100px; 
+  }
+
+  .cp-type-retention { 
+    margin-left: auto; 
+    font-size: 0.8125rem; 
+    color: #64748b; 
+  }
+
+  .cp-type-desc { 
+    color: #475569; 
+    line-height: 1.7; 
+  }
+
+  .cp-examples-label { 
+    font-size: 0.6875rem; 
+    font-weight: 700; 
+    color: #94a3b8; 
+    text-transform: uppercase; 
+    letter-spacing: 0.05em; 
+  }
+
+  .cp-example-chip { 
+    display: inline-block; 
+    font-size: 0.8125rem; 
+    background: #f8fafc; 
+    border: 1px solid #e2e8f0; 
+    padding: 0.25rem 0.75rem; 
+    border-radius: 0.5rem; 
+    margin-right: 0.375rem; 
+    margin-bottom: 0.375rem; 
   }
 
   /* Third party */
-  .cp-third-list { display:flex; flex-direction:column; gap:.5rem; }
-  .cp-third-row {
-    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.5rem;
-    padding:.875rem 1rem; background:white;
-    border:1.5px solid #e5e7eb; border-radius:.875rem;
-    transition:border-color .15s;
+  .cp-third-list { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 0.75rem; 
+    margin-top: 1rem; 
   }
-  .cp-third-row:hover { border-color:#c4b5fd; }
-  .cp-third-info { display:flex; flex-direction:column; gap:.2rem; }
-  .cp-third-info strong { font-size:.875rem; font-weight:700; color:#1e1b4b; }
-  .cp-third-info span { font-size:.8125rem; color:#64748b; }
-  .cp-third-link {
-    display:inline-flex; align-items:center; gap:.3rem;
-    font-size:.75rem; font-weight:600; color:#6a2c91;
-    text-decoration:none; padding:.375rem .75rem;
-    background:#f3e8ff; border-radius:.5rem; transition:all .15s;
-    white-space:nowrap;
+
+  .cp-third-row { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    gap: 1rem; 
+    padding: 1.25rem; 
+    background: white; 
+    border: 1.5px solid #e5e7eb; 
+    border-radius: 1rem; 
   }
-  .cp-third-link:hover { background:#ede9fe; }
+
+  .cp-third-row:hover { 
+    border-color: #c4b5fd; 
+  }
+
+  .cp-third-link { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    color: #6a2c91; 
+    font-weight: 600; 
+    text-decoration: none; 
+    font-size: 0.875rem; 
+  }
 
   /* Choices */
-  .cp-choices { display:flex; flex-direction:column; gap:.75rem; }
-  .cp-choice {
-    display:flex; align-items:flex-start; gap:.875rem;
-    padding:1rem; background:white; border:1.5px solid #e5e7eb;
-    border-radius:1rem; transition:border-color .15s;
+  .cp-choices { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1rem; 
+    margin: 1.25rem 0; 
   }
-  .cp-choice:hover { border-color:#c4b5fd; }
-  .cp-choice-num {
-    width:28px; height:28px; border-radius:50%; flex-shrink:0;
-    background:linear-gradient(135deg,#6a2c91,#4a1d6e);
-    color:white; font-size:.75rem; font-weight:700;
-    display:flex; align-items:center; justify-content:center;
-    box-shadow:0 2px 6px rgba(106,44,145,.25); margin-top:.1rem;
+
+  .cp-choice { 
+    display: flex; 
+    gap: 1rem; 
+    background: white; 
+    border: 1.5px solid #e5e7eb; 
+    border-radius: 1rem; 
+    padding: 1.25rem; 
   }
-  .cp-choice strong { display:block; font-size:.875rem; font-weight:700; color:#1e1b4b; margin-bottom:.25rem; }
-  .cp-choice p { font-size:.8125rem; color:#64748b; line-height:1.6; margin:0; }
 
-  /* Contact */
-  .cp-contact-card {
-    background:white; border:1.5px solid #e5e7eb; border-radius:1.25rem;
-    overflow:hidden;
+  .cp-choice:hover { 
+    border-color: #c4b5fd; 
   }
-  .cp-contact-row {
-    display:flex; align-items:center; gap:1rem; padding:.875rem 1.125rem;
-    border-bottom:1px solid #f1f5f9; flex-wrap:wrap;
+
+  .cp-choice-num { 
+    width: 32px; 
+    height: 32px; 
+    background: linear-gradient(135deg, #6a2c91, #4a1d6e); 
+    color: white; 
+    font-weight: 700; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    flex-shrink: 0; 
   }
-  .cp-contact-row:last-child { border-bottom:none; }
-  .cp-contact-label { font-size:.75rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.06em; min-width:56px; }
-  .cp-contact-links { display:flex; gap:.75rem; flex-wrap:wrap; }
 
-  .cp-link { color:#6a2c91; font-weight:600; text-decoration:none; font-size:.875rem; }
-  .cp-link:hover { text-decoration:underline; }
+  .cp-contact-card { 
+    background: white; 
+    border: 1.5px solid #e5e7eb; 
+    border-radius: 1.25rem; 
+    overflow: hidden; 
+    margin-top: 1rem; 
+  }
 
-.cp-use-icon {
-  color: #6a2c91;
-  margin-bottom: 0.25rem;
-}
+  .cp-contact-row { 
+    display: flex; 
+    align-items: center; 
+    gap: 1.5rem; 
+    padding: 1.25rem 1.5rem; 
+    border-bottom: 1px solid #f1f5f9; 
+  }
 
-.cp-use-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-  padding: 1rem 1.125rem;
-  background: white;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 1rem;
-  transition: border-color .2s, box-shadow .2s;
-}
+  .cp-contact-row:last-child { 
+    border-bottom: none; 
+  }
 
-.cp-use-card:hover {
-  border-color: #c4b5fd;
-  box-shadow: 0 4px 16px rgba(106, 44, 145, .07);
-}
+  .cp-contact-label { 
+    font-size: 0.75rem; 
+    font-weight: 700; 
+    color: #94a3b8; 
+    text-transform: uppercase; 
+    min-width: 70px; 
+  }
 
-.cp-use-card strong {
-  font-size: .875rem;
-  font-weight: 700;
-  color: #1e1b4b;
-}
+  .cp-link { 
+    color: #6a2c91; 
+    font-weight: 600; 
+    text-decoration: none; 
+  }
 
-.cp-use-card span {
-  font-size: .8125rem;
-  color: #64748b;
-  line-height: 1.5;
-}
+  .cp-footer-text { 
+    text-align: center; 
+    color: #64748b; 
+    font-size: 0.813rem; 
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .cp-panel { display: none; }
+  }
 </style>
