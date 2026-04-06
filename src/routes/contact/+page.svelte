@@ -3,8 +3,7 @@
   import {
     ChevronLeft, Home, Mail, Phone, MapPin, Send,
     CheckCircle, AlertCircle, User, MessageCircle,
-    Github, Clock,
-    Sparkles, Shield, Users, Globe
+    Clock, Sparkles, Shield, Users, Globe
   } from 'lucide-svelte';
 
   let name = '';
@@ -135,7 +134,7 @@
           </button>
         </div>
       {:else}
-        <form onsubmit|preventDefault={handleSubmit} class="contact-form">
+        <form class="contact-form">
           {#if error}
             <div class="error-alert">
               <AlertCircle size={16} />
@@ -207,7 +206,7 @@
             {/if}
           </div>
 
-          <button type="submit" class="submit-btn" disabled={isLoading}>
+          <button type="button" class="submit-btn" onclick={handleSubmit} disabled={isLoading}>
             {#if isLoading}
               <span class="spinner"></span>
               Sending...
@@ -666,14 +665,14 @@
     gap: 1.5rem;
   }
 
-  .info-panel, .social-panel, .trust-panel {
+  .info-panel, .trust-panel {
     background: white;
     border-radius: 1rem;
     padding: 1.5rem;
     border: 1px solid #e2e8f0;
   }
 
-  .info-panel h3, .social-panel h3 {
+  .info-panel h3 {
     font-size: 0.875rem;
     font-weight: 700;
     color: #1e1b4b;
@@ -703,37 +702,6 @@
     font-size: 0.75rem;
     color: #6b7280;
     line-height: 1.5;
-  }
-
-  .social-panel p {
-    font-size: 0.75rem;
-    color: #6b7280;
-    margin-bottom: 1rem;
-  }
-
-  .social-links {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .social-btn {
-    width: 36px;
-    height: 36px;
-    background: var(--light-color);
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: #6b7280;
-    transition: all 0.2s;
-  }
-
-  .social-btn:hover {
-    background: var(--primary-bg);
-    color: var(--primary-color);
-    border-color: var(--primary-border);
   }
 
   .trust-panel {
@@ -784,11 +752,6 @@
     color: #6b7280;
     line-height: 1.5;
     margin-bottom: 1rem;
-  }
-
-  .footer-social {
-    display: flex;
-    gap: 0.5rem;
   }
 
   .footer-links {
