@@ -21,7 +21,7 @@
   const cookieTypes = [
     {
       icon:    Shield,
-      bg:      '6a2c91',
+      bg:      '#6a2c91',
       label:   'Strictly Necessary',
       tag:     'Always active',
       tagColor: '#ffffff',
@@ -32,7 +32,7 @@
     },
     {
       icon:    BarChart2,
-      bg:      '6a2c91',
+      bg:      '#6a2c91',
       label:   'Analytics',
       tag:     'Optional',
       tagColor: '#ffffff',
@@ -43,7 +43,7 @@
     },
     {
       icon:    Settings,
-      bg:      '6a2c91',
+      bg:      '#6a2c91',
       label:   'Functional',
       tag:     'Optional',
       tagColor: '#ffffff',
@@ -54,7 +54,7 @@
     },
     {
       icon:    Target,
-      bg:      '6a2c91',
+      bg:      '#6a2c91',
       label:   'Marketing',
       tag:     'Optional',
       tagColor: '#ffffff',
