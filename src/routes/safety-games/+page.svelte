@@ -124,9 +124,7 @@
       </button>
       
       <div class="nav-brand">
-        <div class="logo-icon">
-          <ShieldCheck size={22} />
-        </div>
+                  <img src="/icons/lz_ico.png" alt="Lezie" class="cu-logo-img" />
         <span class="logo-text">Lezie</span>
       </div>
       
