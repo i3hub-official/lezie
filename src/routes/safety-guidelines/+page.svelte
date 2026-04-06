@@ -172,7 +172,7 @@
               <div class="sg-number-item"><strong>United States</strong><span>911</span></div>
               <div class="sg-number-item"><strong>United Kingdom</strong><span>999 / 112</span></div>
               <div class="sg-number-item"><strong>European Union</strong><span>112</span></div>
-              <div class="sg-number-item"><strong>Nigeria</strong><span>112 / 767</span></div>
+              <div class="sg-number-item"><strong>Nigeria</strong><span>112 / 911</span></div>
               <div class="sg-number-item"><strong>Canada</strong><span>911</span></div>
               <div class="sg-number-item"><strong>Australia</strong><span>000</span></div>
               <div class="sg-number-item"><strong>India</strong><span>112</span></div>
