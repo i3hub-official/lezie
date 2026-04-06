@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation';
   import {
     ArrowRight, ArrowLeft, CheckCircle, AlertCircle,
-    User, Mail, MessageCircle, Home, ChevronLeft
+    User, Mail, MessageCircle, Home, ChevronLeft, ShieldCheck
   } from 'lucide-svelte';
 
   let isLoading = $state(false);
