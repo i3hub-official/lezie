@@ -4,8 +4,7 @@
     ChevronLeft, Home, Shield, Zap, Users, Heart, 
     MapPin, Bell, Eye, Lock, Globe, Target, 
     Award, TrendingUp, CheckCircle, Sparkles,
-    ArrowRight, Calendar, Clock, Phone, Mail,
-    Linkedin, Twitter, Instagram, Github
+    ArrowRight, Calendar, Clock
   } from 'lucide-svelte';
 
   let activeSection = $state('mission');
@@ -328,12 +327,6 @@
       <div class="footer-brand">
         <img src="/icons/lz_ico.png" alt="Lezie" class="footer-logo" />
         <p>Building safer communities through technology and collective vigilance.</p>
-        <div class="social-links">
-          <button class="social-btn"><Twitter size={18} /></button>
-          <button class="social-btn"><Linkedin size={18} /></button>
-          <button class="social-btn"><Instagram size={18} /></button>
-          <button class="social-btn"><Github size={18} /></button>
-        </div>
       </div>
       <div class="footer-links">
         <div class="link-group">
@@ -944,31 +937,6 @@
     color: #6b7280;
     line-height: 1.5;
     margin-bottom: 1rem;
-  }
-
-  .social-links {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .social-btn {
-    width: 36px;
-    height: 36px;
-    background: var(--light-color);
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: #6b7280;
-    transition: all 0.2s;
-  }
-
-  .social-btn:hover {
-    background: var(--primary-bg);
-    color: var(--primary-color);
-    border-color: var(--primary-border);
   }
 
   .footer-links {
