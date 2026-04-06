@@ -7,22 +7,20 @@
     Shield,
     Users,
     MapPin,
-    Bell,
-    Heart,
     Target,
     Zap,
     Globe,
-    Award,
     ArrowRight,
-    CheckCircle2,
-    Quote
+    Quote,
+    ChevronRight,
+    Heart
   } from 'lucide-svelte';
 
   const stats = [
-    { value: '50K+', label: 'Active Users', icon: Users },
-    { value: '120+', label: 'Communities', icon: MapPin },
-    { value: '99.9%', label: 'Uptime', icon: Zap },
-    { value: '24/7', label: 'Support', icon: Heart }
+    { value: '50K+', label: 'Active Users' },
+    { value: '120+', label: 'Communities' },
+    { value: '99.9%', label: 'Uptime' },
+    { value: '24/7', label: 'Support' }
   ];
 
   const values = [
@@ -89,9 +87,6 @@
       <div class="ab-stats">
         {#each stats as stat}
           <div class="ab-stat-card">
-            <div class="ab-stat-icon">
-              <svelte:component this={stat.icon} size={18} />
-            </div>
             <div class="ab-stat-value">{stat.value}</div>
             <div class="ab-stat-label">{stat.label}</div>
           </div>
@@ -99,13 +94,7 @@
       </div>
 
       <div class="ab-panel-footer">
-        <div class="ab-avatars">
-          <div class="ab-avatar" style="background: var(--secondary-color)"></div>
-          <div class="ab-avatar" style="background: #a78bfa"></div>
-          <div class="ab-avatar" style="background: #8b5cf6"></div>
-          <div class="ab-avatar" style="background: var(--primary-color)"></div>
-        </div>
-        <p>Join 50,000+ neighbors worldwide</p>
+        <p>Trusted by communities worldwide</p>
       </div>
     </div>
     <div class="ab-panel-glow"></div>
@@ -161,7 +150,7 @@
             {#each values as value}
               <div class="ab-value-card">
                 <div class="ab-value-icon">
-                  <svelte:component this={value.icon} size={22} />
+                  <svelte:component this={value.icon} size={24} strokeWidth={1.5} />
                 </div>
                 <h4>{value.title}</h4>
                 <p>{value.description}</p>
@@ -190,10 +179,8 @@
         <!-- CTA -->
         <section class="ab-section ab-cta-section">
           <div class="ab-cta-card">
-            <div class="ab-cta-content">
-              <h3>Ready to make your community safer?</h3>
-              <p>Join thousands of neighborhoods already using Lezie to stay connected and protected.</p>
-            </div>
+            <h3>Ready to make your community safer?</h3>
+            <p>Join thousands of neighborhoods already using Lezie to stay connected and protected.</p>
             <div class="ab-cta-actions">
               <button class="ab-btn-primary" onclick={() => goto('/signup')}>
                 Get Started <ArrowRight size={16} />
@@ -224,21 +211,26 @@
   .ab-page { 
     display: flex; 
     min-height: 100vh; 
-    background: linear-gradient(135deg, #faf9ff 0%, #f3f0ff 100%); 
+    background: #fafafa; 
   }
 
-  /* LEFT PANEL - Exact match to sign-in/contact */
+  /* LEFT PANEL */
   .ab-panel { 
     display: none; 
-    position: relative; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
     width: 440px; 
+    height: 100vh; 
     flex-shrink: 0; 
-    background: linear-gradient(160deg, #1a0b2e 0%, #2d1b4e 50%, #1a0b2e 100%); 
+    background: #111827; 
     overflow: hidden; 
+    overflow-y: auto; 
   }
 
   @media (min-width: 1024px) { 
     .ab-panel { display: flex; } 
+    .ab-main { margin-left: 440px; } 
   }
 
   .ab-panel-inner { 
@@ -247,14 +239,14 @@
     display: flex; 
     flex-direction: column; 
     padding: 2.5rem; 
-    height: 100%; 
+    min-height: 100%; 
   }
 
   .ab-panel-glow { 
     position: absolute; 
     inset: 0; 
     z-index: 1; 
-    background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(139,92,246,0.15) 0%, transparent 70%); 
+    background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(106,44,145,0.15) 0%, transparent 70%); 
     pointer-events: none; 
   }
 
@@ -262,19 +254,19 @@
     display: inline-block; 
     line-height: 0; 
     margin-bottom: 2.5rem; 
-    transition: transform 0.2s, opacity 0.2s; 
+    transition: opacity 0.2s; 
   }
 
   .ab-logo-link:hover { 
-    opacity: 0.85; 
-    transform: scale(1.02); 
+    opacity: 0.8; 
   }
 
   .ab-logo-img { 
-    width: 80px; 
-    height: 80px; 
+    width: 48px; 
+    height: 48px; 
     object-fit: contain; 
     display: block; 
+    filter: brightness(0) invert(1); 
   }
 
   .ab-panel-badge { 
@@ -282,80 +274,72 @@
     align-items: center; 
     gap: 0.5rem; 
     padding: 0.375rem 0.875rem; 
-    background: rgba(139,92,246,0.2); 
-    border: 1px solid rgba(139,92,246,0.3); 
+    background: rgba(255,255,255,0.05); 
+    border: 1px solid rgba(255,255,255,0.1); 
     border-radius: 100px; 
     font-size: 0.75rem; 
-    color: #c4b5fd; 
+    color: #9ca3af; 
     margin-bottom: 1.5rem; 
+    font-weight: 500; 
   }
 
   .ab-panel-headline { 
     font-family: 'DM Serif Display', Georgia, serif; 
     font-size: 2.5rem; 
-    line-height: 1.2; 
+    line-height: 1.15; 
     color: white; 
     margin-bottom: 1rem; 
+    font-weight: 400; 
   }
 
   .ab-panel-headline em { 
-    color: #c4b5fd; 
+    color: #a78bfa; 
     font-style: italic; 
   }
 
   .ab-panel-desc { 
-    font-size: 0.875rem; 
-    line-height: 1.6; 
-    color: rgba(196,181,253,0.85); 
+    font-size: 0.9375rem; 
+    line-height: 1.7; 
+    color: #9ca3af; 
     margin-bottom: 2.5rem; 
+    font-weight: 400; 
   }
 
-  /* Stats Grid - Unique to About page */
+  /* Stats - Minimal */
   .ab-stats { 
     display: grid; 
     grid-template-columns: 1fr 1fr; 
-    gap: 1rem; 
+    gap: 1px; 
+    background: rgba(255,255,255,0.1); 
+    border-radius: 0.75rem; 
+    overflow: hidden; 
     margin-bottom: auto; 
   }
 
   .ab-stat-card { 
-    background: rgba(255,255,255,0.05); 
-    border: 1px solid rgba(255,255,255,0.1); 
-    border-radius: 1rem; 
-    padding: 1.25rem; 
+    background: rgba(255,255,255,0.03); 
+    padding: 1.5rem 1rem; 
     text-align: center; 
-    backdrop-filter: blur(10px); 
-    transition: all 0.3s ease; 
+    transition: background 0.2s; 
   }
 
   .ab-stat-card:hover { 
-    background: rgba(255,255,255,0.08); 
-    transform: translateY(-4px); 
-    border-color: rgba(139,92,246,0.3); 
-  }
-
-  .ab-stat-icon { 
-    width: 40px; 
-    height: 40px; 
-    background: rgba(139,92,246,0.2); 
-    border-radius: 10px; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    color: #c4b5fd; 
-    margin: 0 auto 0.75rem; 
+    background: rgba(255,255,255,0.05); 
   }
 
   .ab-stat-value { 
     font-size: 1.5rem; 
-    font-weight: 700; 
+    font-weight: 600; 
     color: white; 
     margin-bottom: 0.25rem; 
+    letter-spacing: -0.02em; 
   }
 
   .ab-stat-label { 
     font-size: 0.75rem; 
-    color: rgba(196,181,253,0.8); 
+    color: #6b7280; 
+    text-transform: uppercase; 
+    letter-spacing: 0.05em; 
   }
 
   .ab-panel-footer { 
@@ -364,27 +348,9 @@
     border-top: 1px solid rgba(255,255,255,0.1); 
   }
 
-  .ab-avatars { 
-    display: flex; 
-    align-items: center; 
-    margin-bottom: 0.75rem; 
-  }
-
-  .ab-avatar { 
-    width: 32px; 
-    height: 32px; 
-    border-radius: 50%; 
-    border: 2px solid #2d1b4e; 
-    margin-left: -8px; 
-  }
-
-  .ab-avatar:first-child { 
-    margin-left: 0; 
-  }
-
   .ab-panel-footer p { 
-    font-size: 0.688rem; 
-    color: rgba(196,181,253,0.7); 
+    font-size: 0.875rem; 
+    color: #6b7280; 
   }
 
   /* RIGHT PANEL */
@@ -400,7 +366,7 @@
 
   .ab-form-shell { 
     width: 100%; 
-    max-width: 680px; 
+    max-width: 640px; 
     display: flex; 
     flex-direction: column; 
     gap: 1.5rem; 
@@ -417,7 +383,7 @@
     padding: 0.5rem 1rem; 
     font-size: 0.813rem; 
     font-weight: 500; 
-    color: #64748b; 
+    color: #6b7280; 
     cursor: pointer; 
     transition: all 0.2s; 
     width: fit-content; 
@@ -427,8 +393,7 @@
   .ab-back-home:hover { 
     border-color: #6a2c91; 
     color: #6a2c91; 
-    background: #f3e8ff; 
-    transform: translateX(-2px); 
+    background: #faf5ff; 
   }
 
   .ab-mobile-brand { 
@@ -441,8 +406,9 @@
   }
 
   .ab-mobile-brand .ab-logo-img { 
-    width: 80px; 
-    height: 80px; 
+    width: 48px; 
+    height: 48px; 
+    filter: none; 
   }
 
   @media (min-width: 1024px) { 
@@ -456,27 +422,28 @@
 
   .ab-form-title { 
     font-family: 'DM Serif Display', Georgia, serif; 
-    font-size: clamp(1.625rem, 4vw, 2rem); 
-    color: #1e1b4b; 
-    margin-bottom: 0.25rem; 
+    font-size: clamp(1.75rem, 4vw, 2.25rem); 
+    color: #111827; 
+    margin-bottom: 0.5rem; 
     letter-spacing: -0.02em; 
+    font-weight: 400; 
   }
 
   .ab-form-subtitle { 
-    font-size: 0.875rem; 
-    color: #64748b; 
+    font-size: 1rem; 
+    color: #6b7280; 
+    font-weight: 400; 
   }
 
-  /* Content Card - Wider for about page content */
+  /* Content */
   .ab-content { 
     background: white; 
-    border-radius: 1.5rem; 
-    border: 1px solid #e2e8f0; 
+    border-radius: 1rem; 
+    border: 1px solid #e5e7eb; 
     padding: clamp(1.5rem, 5vw, 2.5rem); 
-    box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1); 
     display: flex; 
     flex-direction: column; 
-    gap: 2.5rem; 
+    gap: 3rem; 
   }
 
   .ab-section { 
@@ -489,9 +456,10 @@
     display: inline-flex; 
     align-items: center; 
     gap: 0.75rem; 
-    padding: 0.875rem 1rem; 
-    background: linear-gradient(135deg, #f3e8ff 0%, #f5f0ff 100%); 
-    border-radius: 1rem; 
+    padding: 0.75rem 1rem; 
+    background: #fafafa; 
+    border: 1px solid #e5e7eb; 
+    border-radius: 0.75rem; 
     width: fit-content; 
   }
 
@@ -503,20 +471,21 @@
   .ab-welcome-message strong { 
     display: block; 
     font-size: 0.875rem; 
-    font-weight: 700; 
-    color: #1e1b4b; 
+    font-weight: 600; 
+    color: #111827; 
   }
 
   .ab-welcome-message span { 
     font-size: 0.75rem; 
-    color: #64748b; 
+    color: #6b7280; 
   }
 
   .ab-section-title { 
     font-family: 'DM Serif Display', Georgia, serif; 
-    font-size: 1.375rem; 
-    color: #1e1b4b; 
+    font-size: 1.25rem; 
+    color: #111827; 
     margin: 0; 
+    font-weight: 400; 
   }
 
   /* Mission Block */
@@ -530,13 +499,13 @@
     font-family: 'DM Serif Display', Georgia, serif; 
     font-size: 1.25rem; 
     line-height: 1.5; 
-    color: #6a2c91; 
+    color: #374151; 
     margin: 0; 
-    padding: 1.5rem; 
-    background: linear-gradient(135deg, #f3e8ff 0%, #faf5ff 100%); 
-    border-radius: 1rem; 
-    border-left: 4px solid #6a2c91; 
+    padding: 0; 
     font-style: italic; 
+    position: relative; 
+    padding-left: 1.5rem; 
+    border-left: 2px solid #6a2c91; 
   }
 
   .ab-mission-text { 
@@ -546,68 +515,63 @@
     margin: 0; 
   }
 
-  /* Values Grid */
+  /* Values Grid - Minimal */
   .ab-values-grid { 
     display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
-    gap: 1rem; 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 1.5rem; 
+  }
+
+  @media (max-width: 640px) {
+    .ab-values-grid { 
+      grid-template-columns: 1fr; 
+    }
   }
 
   .ab-value-card { 
-    padding: 1.5rem; 
-    background: #faf9ff; 
-    border: 1px solid #e0d4f5; 
-    border-radius: 1rem; 
-    transition: all 0.3s ease; 
-  }
-
-  .ab-value-card:hover { 
-    transform: translateY(-4px); 
-    box-shadow: 0 10px 25px -5px rgba(106,44,145,0.15); 
-    border-color: #c4b5fd; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 0.75rem; 
+    padding: 0; 
   }
 
   .ab-value-icon { 
-    width: 48px; 
-    height: 48px; 
-    background: linear-gradient(135deg, #6a2c91 0%, #8b5cf6 100%); 
-    border-radius: 12px; 
+    color: #6b7280; 
     display: flex; 
     align-items: center; 
     justify-content: center; 
-    color: white; 
-    margin-bottom: 1rem; 
+    width: 40px; 
+    height: 40px; 
   }
 
   .ab-value-card h4 { 
     font-size: 1rem; 
-    font-weight: 700; 
-    color: #1e1b4b; 
-    margin: 0 0 0.5rem 0; 
+    font-weight: 600; 
+    color: #111827; 
+    margin: 0; 
   }
 
   .ab-value-card p { 
     font-size: 0.875rem; 
     line-height: 1.6; 
-    color: #64748b; 
+    color: #6b7280; 
     margin: 0; 
   }
 
-  /* Timeline */
+  /* Timeline - Minimal */
   .ab-timeline { 
     position: relative; 
-    padding-left: 2rem; 
+    padding-left: 1.5rem; 
   }
 
   .ab-timeline::before { 
     content: ''; 
     position: absolute; 
-    left: 7px; 
-    top: 0; 
-    bottom: 0; 
-    width: 2px; 
-    background: linear-gradient(to bottom, #6a2c91, #c4b5fd); 
-    border-radius: 1px; 
+    left: 0; 
+    top: 0.5rem; 
+    bottom: 0.5rem; 
+    width: 1px; 
+    background: #e5e7eb; 
   }
 
   .ab-timeline-item { 
@@ -621,153 +585,134 @@
 
   .ab-timeline-dot { 
     position: absolute; 
-    left: -2rem; 
+    left: -1.5rem; 
     top: 0.25rem; 
-    width: 16px; 
-    height: 16px; 
+    width: 9px; 
+    height: 9px; 
     background: white; 
-    border: 3px solid #6a2c91; 
+    border: 1.5px solid #6a2c91; 
     border-radius: 50%; 
-    box-shadow: 0 0 0 4px rgba(106,44,145,0.1); 
+    margin-left: -4px; 
   }
 
   .ab-timeline-content { 
-    background: #faf9ff; 
-    padding: 1.25rem; 
-    border-radius: 1rem; 
-    border: 1px solid #e0d4f5; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 0.25rem; 
   }
 
   .ab-timeline-year { 
-    display: inline-block; 
-    padding: 0.25rem 0.75rem; 
-    background: #6a2c91; 
-    color: white; 
-    font-size: 0.75rem; 
-    font-weight: 700; 
-    border-radius: 100px; 
-    margin-bottom: 0.5rem; 
+    font-size: 0.875rem; 
+    font-weight: 600; 
+    color: #6a2c91; 
+    font-variant-numeric: tabular-nums; 
   }
 
   .ab-timeline-content h4 { 
     font-size: 1rem; 
-    font-weight: 700; 
-    color: #1e1b4b; 
-    margin: 0 0 0.375rem 0; 
+    font-weight: 600; 
+    color: #111827; 
+    margin: 0; 
   }
 
   .ab-timeline-content p { 
     font-size: 0.875rem; 
-    color: #64748b; 
+    color: #6b7280; 
     margin: 0; 
     line-height: 1.5; 
   }
 
-  /* CTA Section */
+  /* CTA Section - Minimal */
   .ab-cta-section { 
     margin-top: 0.5rem; 
   }
 
   .ab-cta-card { 
-    background: linear-gradient(135deg, #1a0b2e 0%, #2d1b4e 100%); 
-    border-radius: 1.25rem; 
+    background: #fafafa; 
+    border: 1px solid #e5e7eb; 
+    border-radius: 0.75rem; 
     padding: 2rem; 
-    color: white; 
     display: flex; 
     flex-direction: column; 
-    gap: 1.5rem; 
-    position: relative; 
-    overflow: hidden; 
+    gap: 1.25rem; 
+    text-align: center; 
   }
 
-  .ab-cta-card::before { 
-    content: ''; 
-    position: absolute; 
-    top: -50%; 
-    right: -20%; 
-    width: 300px; 
-    height: 300px; 
-    background: radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%); 
-    pointer-events: none; 
-  }
-
-  .ab-cta-content { 
-    position: relative; 
-    z-index: 1; 
-  }
-
-  .ab-cta-content h3 { 
+  .ab-cta-card h3 { 
     font-family: 'DM Serif Display', Georgia, serif; 
-    font-size: 1.5rem; 
-    margin: 0 0 0.5rem 0; 
+    font-size: 1.375rem; 
+    color: #111827; 
+    margin: 0; 
+    font-weight: 400; 
   }
 
-  .ab-cta-content p { 
+  .ab-cta-card p { 
     font-size: 0.9375rem; 
-    color: rgba(196,181,253,0.9); 
+    color: #6b7280; 
     margin: 0; 
     line-height: 1.6; 
+    max-width: 400px; 
+    margin-left: auto; 
+    margin-right: auto; 
   }
 
   .ab-cta-actions { 
     display: flex; 
     gap: 0.75rem; 
+    justify-content: center; 
     flex-wrap: wrap; 
-    position: relative; 
-    z-index: 1; 
   }
 
   .ab-btn-primary { 
     display: inline-flex; 
     align-items: center; 
     gap: 0.5rem; 
-    padding: 0.875rem 1.5rem; 
-    background: white; 
-    color: #1a0b2e; 
+    padding: 0.75rem 1.5rem; 
+    background: #111827; 
+    color: white; 
     border: none; 
-    border-radius: 0.75rem; 
-    font-size: 0.9375rem; 
-    font-weight: 600; 
+    border-radius: 0.5rem; 
+    font-size: 0.875rem; 
+    font-weight: 500; 
     cursor: pointer; 
     transition: all 0.2s; 
   }
 
   .ab-btn-primary:hover { 
-    transform: translateY(-2px); 
-    box-shadow: 0 10px 20px -5px rgba(0,0,0,0.3); 
+    background: #374151; 
   }
 
   .ab-btn-secondary { 
     display: inline-flex; 
     align-items: center; 
     gap: 0.5rem; 
-    padding: 0.875rem 1.5rem; 
-    background: rgba(255,255,255,0.1); 
-    color: white; 
-    border: 1px solid rgba(255,255,255,0.2); 
-    border-radius: 0.75rem; 
-    font-size: 0.9375rem; 
-    font-weight: 600; 
+    padding: 0.75rem 1.5rem; 
+    background: white; 
+    color: #374151; 
+    border: 1px solid #e5e7eb; 
+    border-radius: 0.5rem; 
+    font-size: 0.875rem; 
+    font-weight: 500; 
     cursor: pointer; 
     transition: all 0.2s; 
   }
 
   .ab-btn-secondary:hover { 
-    background: rgba(255,255,255,0.2); 
-    border-color: rgba(255,255,255,0.3); 
+    border-color: #111827; 
+    color: #111827; 
   }
 
   /* Footer */
   .ab-footer-text { 
     text-align: center; 
     font-size: 0.875rem; 
-    color: #64748b; 
+    color: #6b7280; 
     margin-top: 0.5rem; 
   }
 
   .ab-link { 
     color: #6a2c91; 
-    font-weight: 600; 
+    font-weight: 500; 
     text-decoration: none; 
   }
 
@@ -776,31 +721,6 @@
   }
 
   /* Responsive */
-  @media (max-width: 768px) {
-    .ab-stats { 
-      grid-template-columns: 1fr 1fr; 
-      gap: 0.75rem; 
-    }
-    
-    .ab-stat-card { 
-      padding: 1rem; 
-    }
-    
-    .ab-values-grid { 
-      grid-template-columns: 1fr; 
-    }
-    
-    .ab-cta-actions { 
-      flex-direction: column; 
-    }
-    
-    .ab-btn-primary, 
-    .ab-btn-secondary { 
-      width: 100%; 
-      justify-content: center; 
-    }
-  }
-
   @media (max-width: 640px) {
     .ab-main { 
       padding: 1.5rem 1rem; 
@@ -811,29 +731,23 @@
     }
     
     .ab-content { 
-      border-radius: 1.25rem; 
-      padding: 1.25rem; 
-      gap: 2rem; 
+      border-radius: 0.75rem; 
+      padding: 1.5rem; 
+      gap: 2.5rem; 
     }
     
     .ab-quote { 
       font-size: 1.125rem; 
-      padding: 1.25rem; 
     }
     
-    .ab-timeline { 
-      padding-left: 1.5rem; 
+    .ab-cta-actions { 
+      flex-direction: column; 
     }
     
-    .ab-timeline-dot { 
-      left: -1.5rem; 
-      width: 14px; 
-      height: 14px; 
-    }
-    
-    .ab-back-home { 
-      font-size: 0.75rem; 
-      padding: 0.375rem 0.875rem; 
+    .ab-btn-primary, 
+    .ab-btn-secondary { 
+      width: 100%; 
+      justify-content: center; 
     }
     
     .ab-panel-headline { 
