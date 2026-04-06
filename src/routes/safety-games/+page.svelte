@@ -33,9 +33,17 @@
     Flame,
     Shield,
     Eye,
-    Ear,
+    Droplets,
+    Zap,
+    Package,
+    AlertOctagon,
+    HardHat,
+    Glasses,
+    Hand,
     Footprints,
-    HeartPulse
+    Vest,
+    Mask,
+    Flame as FireIcon
   } from 'lucide-svelte';
 
   let isMenuOpen = $state(false);
@@ -44,13 +52,13 @@
   let gameTimer = $state(0);
   let gameInterval: ReturnType<typeof setInterval> | null = null;
 
-  // Game 1: Spot the Hazard
+  // Game 1: Spot the Hazard - using Lucide icons only
   let hazardItems = $state([
-    { id: 1, x: 20, y: 30, type: 'spill', found: false, icon: '💧' },
-    { id: 2, x: 70, y: 20, type: 'wire', found: false, icon: '🔌' },
-    { id: 3, x: 45, y: 60, type: 'box', found: false, icon: '📦' },
-    { id: 4, x: 80, y: 70, type: 'fire', found: false, icon: '🔥' },
-    { id: 5, x: 15, y: 80, type: 'wet', found: false, icon: '⚠️' }
+    { id: 1, x: 20, y: 30, type: 'spill', found: false, icon: Droplets, color: '#06b6d4' },
+    { id: 2, x: 70, y: 20, type: 'wire', found: false, icon: Zap, color: '#f59e0b' },
+    { id: 3, x: 45, y: 60, type: 'box', found: false, icon: Package, color: '#8b5cf6' },
+    { id: 4, x: 80, y: 70, type: 'fire', found: false, icon: FireIcon, color: '#ef4444' },
+    { id: 5, x: 15, y: 80, type: 'wet', found: false, icon: AlertOctagon, color: '#f97316' }
   ]);
 
   // Game 2: Emergency Response
@@ -66,7 +74,7 @@
     submitted: false
   });
 
-  // Game 3: Safety Crossword (Simplified Word Find)
+  // Game 3: Safety Crossword
   let crosswordWords = $state([
     { word: 'HELMET', found: false, hint: 'Head protection gear' },
     { word: 'EXIT', found: false, hint: 'Way out during emergency' },
@@ -97,14 +105,14 @@
     }
   ];
 
-  // Game 5: PPE Matching
+  // Game 5: PPE Matching - using Lucide icons only
   let ppeItems = $state([
-    { id: 1, name: 'Hard Hat', icon: '⛑️', matched: false },
-    { id: 2, name: 'Safety Glasses', icon: '🥽', matched: false },
-    { id: 3, name: 'Gloves', icon: '🧤', matched: false },
-    { id: 4, name: 'Boots', icon: '👢', matched: false },
-    { id: 5, name: 'Vest', icon: '🦺', matched: false },
-    { id: 6, name: 'Mask', icon: '😷', matched: false }
+    { id: 1, name: 'Hard Hat', icon: HardHat, color: '#f59e0b', matched: false },
+    { id: 2, name: 'Safety Glasses', icon: Glasses, color: '#06b6d4', matched: false },
+    { id: 3, name: 'Gloves', icon: Hand, color: '#8b5cf6', matched: false },
+    { id: 4, name: 'Boots', icon: Footprints, color: '#ef4444', matched: false },
+    { id: 5, name: 'Vest', icon: Vest, color: '#f97316', matched: false },
+    { id: 6, name: 'Mask', icon: Mask, color: '#10b981', matched: false }
   ]);
   let selectedPPE: number | null = $state(null);
   let ppeMatches = $state(0);
@@ -131,7 +139,6 @@
     isMenuOpen = false;
   };
 
-  // Game Functions
   function startGame(gameId: string) {
     activeGame = gameId;
     gameScore = 0;
@@ -149,9 +156,29 @@
       gameInterval = null;
     }
     activeGame = null;
+    // Reset game states
+    hazardItems = hazardItems.map(h => ({ ...h, found: false }));
+    emergencyScenario = {
+      situation: 'Fire in the kitchen',
+      options: [
+        { id: 1, text: 'Use water to put out grease fire', correct: false },
+        { id: 2, text: 'Cover with metal lid and turn off heat', correct: true },
+        { id: 3, text: 'Throw flour on the fire', correct: false },
+        { id: 4, text: 'Leave and call 911', correct: true }
+      ],
+      selected: [],
+      submitted: false
+    };
+    crosswordWords = crosswordWords.map(w => ({ ...w, found: false }));
+    foundWords = [];
+    currentGuess = '';
+    trafficQuestion = 0;
+    trafficScore = 0;
+    ppeItems = ppeItems.map(p => ({ ...p, matched: false }));
+    selectedPPE = null;
+    ppeMatches = 0;
   }
 
-  // Hazard Game Functions
   function findHazard(id: number) {
     const hazard = hazardItems.find(h => h.id === id);
     if (hazard && !hazard.found) {
@@ -168,7 +195,6 @@
     }
   }
 
-  // Emergency Response Functions
   function selectEmergencyOption(id: number) {
     if (emergencyScenario.submitted) return;
     
@@ -201,7 +227,6 @@
     gameScore = 0;
   }
 
-  // Crossword Functions
   function submitWordGuess() {
     const upper = currentGuess.toUpperCase();
     const word = crosswordWords.find(w => w.word === upper && !w.found);
@@ -215,7 +240,6 @@
     currentGuess = '';
   }
 
-  // Traffic Safety Functions
   function answerTrafficQuestion(answerIndex: number) {
     if (trafficQuestions[trafficQuestion].correct === answerIndex) {
       trafficScore += 100;
@@ -227,19 +251,15 @@
     } else {
       setTimeout(() => {
         alert(`Traffic Safety Complete! Score: ${trafficScore}`);
-        trafficQuestion = 0;
-        trafficScore = 0;
         endGame();
       }, 500);
     }
   }
 
-  // PPE Matching Functions
   function selectPPE(id: number) {
     if (selectedPPE === null) {
       selectedPPE = id;
     } else {
-      // Simple matching logic - in real game would check if they match
       const item1 = ppeItems.find(p => p.id === selectedPPE);
       const item2 = ppeItems.find(p => p.id === id);
       
@@ -465,16 +485,11 @@
           <div class="game-canvas hazard-game">
             <h3>Find all 5 hazards in the scene!</h3>
             <div class="scene-container">
-              <!-- Floor -->
               <div class="floor"></div>
-              <!-- Desk -->
               <div class="desk"></div>
-              <!-- Chair -->
               <div class="chair"></div>
-              <!-- Shelves -->
               <div class="shelf"></div>
               
-              <!-- Hazards -->
               {#each hazardItems as hazard}
                 {#if !hazard.found}
                   <button
@@ -484,7 +499,9 @@
                     aria-label="Potential hazard"
                   >
                     <span class="hazard-pulse"></span>
-                    <span class="hazard-icon">{hazard.icon}</span>
+                    <span class="hazard-icon" style="color: {hazard.color};">
+                      <svelte:component this={hazard.icon} size={24} />
+                    </span>
                   </button>
                 {:else}
                   <div class="hazard-found" style="left: {hazard.x}%; top: {hazard.y}%;">
@@ -629,7 +646,9 @@
                   disabled={item.matched}
                   onclick={() => selectPPE(item.id)}
                 >
-                  <span class="ppe-emoji">{item.icon}</span>
+                  <span class="ppe-icon" style="color: {item.color};">
+                    <svelte:component this={item.icon} size={32} />
+                  </span>
                   {#if item.matched}
                     <span class="ppe-name">{item.name}</span>
                     <CheckCircle2 size={16} color="#10b981" />
@@ -644,7 +663,7 @@
           </div>
         {/if}
 
-        <!-- Home Safety (Placeholder for expansion) -->
+        <!-- Home Safety -->
         {#if activeGame === 'home-safety'}
           <div class="game-canvas home-game">
             <h3>Home Safety Scanner</h3>
@@ -846,7 +865,6 @@
     --border-color: rgba(255, 255, 255, 0.1);
   }
 
-  /* Game Interface Styles */
   .games-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -953,7 +971,7 @@
     color: var(--text-primary);
   }
 
-  /* Hazard Game Styles */
+  /* Hazard Game */
   .hazard-game .scene-container {
     position: relative;
     width: 100%;
@@ -1010,6 +1028,9 @@
     cursor: pointer;
     z-index: 10;
     animation: pulse 2s infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .hazard-pulse {
@@ -1023,9 +1044,10 @@
 
   .hazard-icon {
     position: relative;
-    font-size: 1.5rem;
-    display: block;
-    transform: translate(8px, 8px);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .hazard-found {
@@ -1055,7 +1077,7 @@
     font-size: 0.9rem;
   }
 
-  /* Emergency Game Styles */
+  /* Emergency Game */
   .emergency-alert {
     text-align: center;
     margin-bottom: 2rem;
@@ -1127,7 +1149,7 @@
     margin-top: 1rem;
   }
 
-  /* Word Game Styles */
+  /* Word Game */
   .word-grid {
     display: grid;
     gap: 1rem;
@@ -1210,7 +1232,7 @@
     font-weight: 600;
   }
 
-  /* Traffic Game Styles */
+  /* Traffic Game */
   .progress-bar {
     width: 100%;
     height: 6px;
@@ -1280,7 +1302,7 @@
     font-weight: 600;
   }
 
-  /* PPE Game Styles */
+  /* PPE Game */
   .ppe-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1300,6 +1322,7 @@
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
+    gap: 0.5rem;
   }
 
   .ppe-card:hover:not(:disabled) {
@@ -1319,9 +1342,10 @@
     cursor: default;
   }
 
-  .ppe-emoji {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
+  .ppe-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .ppe-name {
@@ -1336,7 +1360,7 @@
     font-size: 1rem;
   }
 
-  /* Home Game Styles */
+  /* Home Game */
   .home-game {
     text-align: center;
   }
@@ -1353,7 +1377,6 @@
     justify-content: center;
   }
 
-  /* Responsive */
   @media (max-width: 768px) {
     .games-grid {
       grid-template-columns: 1fr;
