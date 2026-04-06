@@ -8,7 +8,7 @@ export interface Answer {
 
 export interface SafetyQuestion {
   id: string;
-  category: 'online' | 'street' | 'home' | 'travel' | 'general';
+  category: 'online' | 'street' | 'home' | 'travel' | 'general' | 'food-safety' | 'water-safety' | 'fire-safety' | 'health-wellness' | 'cyberbullying' | 'road-safety' | 'mental-health' | 'emergency-preparedness' | 'environmental-safety' | 'public-health' | 'online' | 'street' | 'home' | 'travel' | 'general' | 'workplace' | 'first-aid' | 'natural-disasters' | 'children-safety' | 'pet-safety' | 'recreational-safety' | 'home-safety' | 'online-safety' | 'street-safety' | 'general-safety' | 'travel-safety' ;
   question: string;
   answers: Answer[];
   difficulty: 'easy' | 'medium' | 'hard';
@@ -2998,6 +2998,3633 @@ export const safetyQuestions: SafetyQuestion[] = [
   ],
   "difficulty": "easy",
   "tags": ["car-safety", "maintenance", "emergency"]
+},
+{
+  "id": "q226",
+  "category": "workplace",
+  "question": "You discover a colleague is engaging in unethical behavior that could harm the company. What should you do?",
+  "answers": [
+    { "text": "Ignore it, it's not your problem", "correct": false },
+    { "text": "Confront the colleague directly in front of others", "correct": false },
+    { "text": "Report the behavior to HR or a supervisor through proper channels", "correct": true, "explanation": "Reporting unethical behavior through official channels protects both you and the company from potential harm." },
+    { "text": "Spread rumors about the colleague to others", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["ethics", "workplace-safety", "reporting"]
+},
+{
+  "id": "q227",
+  "category": "workplace",
+  "question": "You witness a co-worker struggling to lift a heavy object alone. What should you do?",
+  "answers": [
+    { "text": "Watch and see if they can manage it", "correct": false },
+    { "text": "Offer assistance or suggest finding appropriate lifting equipment", "correct": true, "explanation": "Preventing workplace injuries is a shared responsibility. Offer help or suggest safer methods." },
+    { "text": "Tell them to be careful and walk away", "correct": false },
+    { "text": "Film them for a safety training video", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["physical-safety", "workplace", "assistance"]
+},
+{
+  "id": "q228",
+  "category": "workplace",
+  "question": "Your company's computer system shows signs of a cyber attack (e.g., unusual activity, locked files). What should you do?",
+  "answers": [
+    { "text": "Try to fix it yourself using online tutorials", "correct": false },
+    { "text": "Immediately disconnect your computer from the network and report it to IT security", "correct": true, "explanation": "Isolating the affected system can prevent the attack from spreading, and IT security needs to be informed immediately." },
+    { "text": "Shut down all computers in the office", "correct": false },
+    { "text": "Wait to see if the issue resolves itself", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["cybersecurity", "workplace", "incident-response"]
+},
+{
+  "id": "q229",
+  "category": "workplace",
+  "question": "During an emergency evacuation drill at work, you notice a clear exit path is blocked by boxes. What should you do?",
+  "answers": [
+    { "text": "Continue evacuating and ignore the obstruction for now", "correct": false },
+    { "text": "Immediately report the blocked exit to the drill supervisor or safety officer", "correct": true, "explanation": "Blocked emergency exits are a serious safety hazard and must be reported and addressed promptly." },
+    { "text": "Move the boxes yourself, even if they are heavy", "correct": false },
+    { "text": "Take a photo of the blocked exit and post it on social media", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["fire-safety", "evacuation", "workplace"]
+},
+{
+  "id": "q230",
+  "category": "workplace",
+  "question": "A new piece of equipment in your workplace seems to be malfunctioning and making strange noises. What should you do?",
+  "answers": [
+    { "text": "Try to operate it carefully to see if it fixes itself", "correct": false },
+    { "text": "Immediately stop using the equipment, tag it out, and report the malfunction", "correct": true, "explanation": "Using malfunctioning equipment can lead to accidents or further damage. It should be taken out of service and reported." },
+    { "text": "Ask a colleague if they know how to fix it", "correct": false },
+    { "text": "Ignore the noises as long as it's still working", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["equipment-safety", "workplace", "maintenance"]
+},
+{
+  "id": "q231",
+  "category": "first-aid",
+  "question": "Someone is bleeding heavily from a wound. What is the first thing you should do?",
+  "answers": [
+    { "text": "Apply a tourniquet immediately", "correct": false },
+    { "text": "Apply direct pressure to the wound with a clean cloth", "correct": true, "explanation": "Direct pressure is the most effective initial step to control severe bleeding." },
+    { "text": "Elevate the injured limb above the heart", "correct": false },
+    { "text": "Wash the wound thoroughly with water", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["first-aid", "bleeding", "emergency"]
+},
+{
+  "id": "q232",
+  "category": "first-aid",
+  "question": "You suspect someone has broken a bone. What is the best course of action?",
+  "answers": [
+    { "text": "Try to reset the bone yourself", "correct": false },
+    { "text": "Immobilize the injured area and seek professional medical help", "correct": true, "explanation": "Immobilizing the injury prevents further damage, and a medical professional is needed for diagnosis and treatment." },
+    { "text": "Apply heat to reduce swelling", "correct": false },
+    { "text": "Encourage the person to try and move the limb to check the extent of the injury", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["first-aid", "fracture", "injury"]
+},
+{
+  "id": "q233",
+  "category": "first-aid",
+  "question": "Someone is experiencing symptoms of a severe allergic reaction (anaphylaxis). What should you do?",
+  "answers": [
+    { "text": "Give them a glass of water", "correct": false },
+    { "text": "Administer an epinephrine auto-injector (if available and trained) and call emergency services", "correct": true, "explanation": "Epinephrine is the primary treatment for anaphylaxis, and immediate medical attention is crucial." },
+    { "text": "Make them lie down and rest", "correct": false },
+    { "text": "Give them an antihistamine pill", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["first-aid", "allergies", "anaphylaxis", "emergency"]
+},
+{
+  "id": "q234",
+  "category": "first-aid",
+  "question": "What is the correct compression-to-breath ratio for adult CPR?",
+  "answers": [
+    { "text": "15 compressions to 2 breaths", "correct": false },
+    { "text": "30 compressions to 2 breaths", "correct": true, "explanation": "The standard ratio for adult CPR is 30 chest compressions followed by 2 rescue breaths." },
+    { "text": "5 compressions to 1 breath", "correct": false },
+    { "text": "Continuous compressions without breaths", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["first-aid", "CPR", "resuscitation"]
+},
+{
+  "id": "q235",
+  "category": "first-aid",
+  "question": "Someone has a minor burn (redness, pain, no blisters). What is the best initial treatment?",
+  "answers": [
+    { "text": "Apply ice directly to the burn", "correct": false },
+    { "text": "Apply cool, running water to the burn for several minutes", "correct": true, "explanation": "Cool water helps to relieve pain and reduce swelling. Avoid ice as it can cause further tissue damage." },
+    { "text": "Cover it tightly with a bandage", "correct": false },
+    { "text": "Apply butter or oil to the burn", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["first-aid", "burns", "injury"]
+},
+
+{
+  "id": "q236",
+  "category": "natural-disasters",
+  "question": "During an earthquake, if you are indoors, what is the safest action to take?",
+  "answers": [
+    { "text": "Run outside as quickly as possible", "correct": false },
+    { "text": "Stand in a doorway", "correct": false },
+    { "text": "Drop, Cover, and Hold On under sturdy furniture away from windows", "correct": true, "explanation": "This technique minimizes your risk from falling objects and debris during an earthquake." },
+    { "text": "Go to the highest floor of the building", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["earthquake", "natural-disaster", "safety-protocol"]
+},
+{
+  "id": "q237",
+  "category": "natural-disasters",
+  "question": "You hear a tornado warning for your area. Where is the safest place to take shelter?",
+  "answers": [
+    { "text": "Near a large window to observe the tornado", "correct": false },
+    { "text": "In a car on the highway", "correct": false },
+    { "text": "In a basement, storm cellar, or an interior room on the lowest floor", "correct": true, "explanation": "These locations offer the most protection from high winds and flying debris during a tornado." },
+    { "text": "Under a bridge or overpass", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["tornado", "natural-disaster", "shelter"]
+},
+{
+  "id": "q238",
+  "category": "natural-disasters",
+  "question": "What is the most important item to have in a natural disaster emergency kit?",
+  "answers": [
+    { "text": "A full set of board games", "correct": false },
+    { "text": "Extra clothing for fashion", "correct": false },
+    { "text": "A supply of fresh water and non-perishable food for at least 3 days", "correct": true, "explanation": "Water and food are essential for survival when utilities may be disrupted." },
+    { "text": "A large collection of books", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["emergency-kit", "natural-disaster", "preparedness"]
+},
+{
+  "id": "q239",
+  "category": "natural-disasters",
+  "question": "If you are caught outdoors during a lightning storm, what should you do?",
+  "answers": [
+    { "text": "Stand under a tall, isolated tree for shelter", "correct": false },
+    { "text": "Lie flat on the ground", "correct": false },
+    { "text": "Seek low-lying open spaces or crouch down away from tall objects", "correct": true, "explanation": "Tall objects attract lightning. Crouching low reduces your height and contact with the ground." },
+    { "text": "Stay in a swimming pool", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["lightning", "natural-disaster", "outdoors"]
+},
+{
+  "id": "q240",
+  "category": "natural-disasters",
+  "question": "When evacuating due to a hurricane, what is crucial to do before leaving your home?",
+  "answers": [
+    { "text": "Leave all windows open to equalize pressure", "correct": false },
+    { "text": "Turn off the main water valve and gas line if instructed", "correct": true, "explanation": "Turning off utilities can prevent further damage like flooding or gas leaks after the storm." },
+    { "text": "Secure outdoor furniture with tape", "correct": false },
+    { "text": "Hide your valuables in secret spots", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["hurricane", "evacuation", "natural-disaster"]
+},
+
+{
+  "id": "q241",
+  "category": "children-safety",
+  "question": "What is the safest way to put an infant to sleep to reduce the risk of SIDS?",
+  "answers": [
+    { "text": "On their stomach with soft bedding", "correct": false },
+    { "text": "On their side with a pillow", "correct": false },
+    { "text": "On their back in a crib with a firm mattress, free of loose bedding or toys", "correct": true, "explanation": "This position and environment significantly reduce the risk of Sudden Infant Death Syndrome." },
+    { "text": "In an adult bed with parents", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["child-safety", "infant", "SIDS"]
+},
+{
+  "id": "q242",
+  "category": "children-safety",
+  "question": "You see a young child unattended near a swimming pool. What should you do?",
+  "answers": [
+    { "text": "Assume a parent is nearby and continue walking", "correct": false },
+    { "text": "Immediately secure the child or call for help/supervision", "correct": true, "explanation": "Drowning can happen quickly and silently. Immediate action is crucial to prevent tragedy." },
+    { "text": "Shout loudly to get their attention", "correct": false },
+    { "text": "Wait to see if they get in trouble before acting", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["child-safety", "drowning-prevention", "supervision"]
+},
+{
+  "id": "q243",
+  "category": "children-safety",
+  "question": "What is a common choking hazard for young children that should be kept out of reach?",
+  "answers": [
+    { "text": "Large soft toys", "correct": false },
+    { "text": "Pieces of fruit cut into small chunks", "correct": false },
+    { "text": "Small objects like coins, marbles, or small toy parts", "correct": true, "explanation": "Young children can easily choke on small, round objects that can block their airway." },
+    { "text": "Books with large pages", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["child-safety", "choking-hazards", "toddler"]
+},
+{
+  "id": "q244",
+  "category": "children-safety",
+  "question": "Your child swallows a household cleaning product. What should you do immediately?",
+  "answers": [
+    { "text": "Try to make them vomit", "correct": false },
+    { "text": "Give them milk to neutralize the product", "correct": false },
+    { "text": "Call emergency services or a poison control center immediately", "correct": true, "explanation": "Professional guidance is crucial as inducing vomiting or giving liquids can sometimes worsen the situation depending on the substance." },
+    { "text": "Wait to see if they develop symptoms", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["child-safety", "poisoning", "emergency"]
+},
+{
+  "id": "q245",
+  "category": "children-safety",
+  "question": "When teaching children about 'good touch' and 'bad touch,' what is the most important concept to emphasize?",
+  "answers": [
+    { "text": "Only report bad touch to a parent", "correct": false },
+    { "text": "That all secrets should be kept, even if they feel bad", "correct": false },
+    { "text": "Their body belongs to them, and they have the right to say 'no' to any touch that makes them feel uncomfortable", "correct": true, "explanation": "Empowering children with bodily autonomy and the right to refuse uncomfortable touch is vital for their safety." },
+    { "text": "To always hug family members, even if they don't want to", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["child-safety", "abuse-prevention", "bodily-autonomy"]
+},
+
+{
+  "id": "q246",
+  "category": "pet-safety",
+  "question": "Your dog suddenly starts limping after a walk. What is the first thing you should do?",
+  "answers": [
+    { "text": "Force them to walk to see if it improves", "correct": false },
+    { "text": "Give them human pain medication", "correct": false },
+    { "text": "Rest the limb and gently check for visible injuries, then contact a vet if pain persists or worsens", "correct": true, "explanation": "Rest prevents further injury, and a vet can diagnose and treat the cause of the limping." },
+    { "text": "Ignore it, as most limps go away on their own", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["pet-safety", "dog-injury", "veterinary-care"]
+},
+{
+  "id": "q247",
+  "category": "pet-safety",
+  "question": "What common household item is highly toxic to dogs and should be kept out of reach?",
+  "answers": [
+    { "text": "Uncooked rice", "correct": false },
+    { "text": "Carrots", "correct": false },
+    { "text": "Chocolate", "correct": true, "explanation": "Chocolate contains theobromine, which is toxic to dogs and can cause serious health problems." },
+    { "text": "Cooked chicken", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["pet-safety", "dog-poisoning", "toxic-foods"]
+},
+{
+  "id": "q248",
+  "category": "pet-safety",
+  "question": "You find a lost pet with no collar or identification. What is the most appropriate first step?",
+  "answers": [
+    { "text": "Keep it and assume it's a stray", "correct": false },
+    { "text": "Post a picture on social media immediately without checking anything else", "correct": false },
+    { "text": "Take it to a local vet clinic or animal shelter to be scanned for a microchip", "correct": true, "explanation": "A microchip is the fastest way to identify an owner. Shelters and vets are equipped to scan for them." },
+    { "text": "Feed it a large meal to make it comfortable", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["pet-safety", "lost-pet", "animal-welfare"]
+},
+{
+  "id": "q249",
+  "category": "pet-safety",
+  "question": "What is a common danger for pets left in a car, even on a seemingly mild day?",
+  "answers": [
+    { "text": "They might get bored and chew the seats", "correct": false },
+    { "text": "They could accidentally put the car in gear", "correct": false },
+    { "text": "Rapid heatstroke due to quickly rising internal temperatures", "correct": true, "explanation": "Car interiors can heat up very quickly, leading to fatal heatstroke for pets, even with windows cracked." },
+    { "text": "They might eat your lunch from the dashboard", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["pet-safety", "heatstroke", "car-safety"]
+},
+{
+  "id": "q250",
+  "category": "pet-safety",
+  "question": "Your cat is showing signs of distress (hiding, hissing, dilated pupils). What should you avoid doing?",
+  "answers": [
+    { "text": "Giving them space and a quiet environment", "correct": false },
+    { "text": "Attempting to comfort or restrain them forcefully", "correct": true, "explanation": "A distressed cat can lash out and injure you. Give them space and identify the cause of distress safely." },
+    { "text": "Checking for any obvious injuries or changes in their environment", "correct": false },
+    { "text": "Calling a vet for advice", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["pet-safety", "cat-behavior", "animal-handling"]
+},
+
+{
+  "id": "q251",
+  "category": "recreational-safety",
+  "question": "Before going swimming, what is the most important safety rule to follow?",
+  "answers": [
+    { "text": "Eat a large meal to have energy", "correct": false },
+    { "text": "Always swim alone to enjoy the peace", "correct": false },
+    { "text": "Never swim alone; always swim with a buddy or in supervised areas", "correct": true, "explanation": "Swimming with a buddy ensures someone is there to help in case of an emergency." },
+    { "text": "Swim immediately after eating", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["swimming", "recreation", "buddy-system"]
+},
+{
+  "id": "q252",
+  "category": "recreational-safety",
+  "question": "When cycling, what is the most crucial piece of safety equipment?",
+  "answers": [
+    { "text": "Expensive cycling shoes", "correct": false },
+    { "text": "A loud bell", "correct": false },
+    { "text": "A properly fitted helmet", "correct": true, "explanation": "A helmet protects your head from serious injury in case of a fall or collision." },
+    { "text": "Stylish sunglasses", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["cycling", "recreation", "helmet"]
+},
+{
+  "id": "q253",
+  "category": "recreational-safety",
+  "question": "You are hiking in a remote area and get lost. What is your best immediate action?",
+  "answers": [
+    { "text": "Wander aimlessly to find a path", "correct": false },
+    { "text": "Start running to cover more ground quickly", "correct": false },
+    { "text": "Stay calm, stay put, and try to signal for help", "correct": true, "explanation": "Staying in one place makes it easier for search and rescue teams to find you. Moving increases the risk of further injury or getting more lost." },
+    { "text": "Eat all your food at once to boost energy", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["hiking", "lost", "wilderness-safety"]
+},
+{
+  "id": "q254",
+  "category": "recreational-safety",
+  "question": "What is essential to remember when engaging in winter sports like skiing or snowboarding?",
+  "answers": [
+    { "text": "It's okay to go off-piste in unfamiliar terrain", "correct": false },
+    { "text": "Wearing cotton clothing layers for warmth", "correct": false },
+    { "text": "Wear appropriate safety gear (helmet, goggles) and be aware of your skill level and conditions", "correct": true, "explanation": "Proper gear protects you, and knowing your limits prevents accidents. Cotton gets wet and loses insulating properties." },
+    { "text": "Always try the hardest slopes first", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["winter-sports", "skiing", "snowboarding", "safety-gear"]
+},
+{
+  "id": "q255",
+  "category": "recreational-safety",
+  "question": "Before using any power tools for a DIY project, what is a critical safety step?",
+  "answers": [
+    { "text": "Start using it immediately to get the job done", "correct": false },
+    { "text": "Remove all safety guards to improve visibility", "correct": false },
+    { "text": "Read the instruction manual, wear appropriate PPE (Personal Protective Equipment), and ensure the work area is clear", "correct": true, "explanation": "Understanding the tool, protecting yourself, and having a safe workspace are fundamental to preventing accidents." },
+    { "text": "Ask a friend who used it once for advice", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["power-tools", "DIY", "PPE", "safety-protocol"]
+},
+
+{
+  "id": "q256",
+  "category": "online",
+  "question": "You receive a message from a lottery company congratulating you on winning a large sum of money, but you never entered. What should you do?",
+  "answers": [
+    { "text": "Provide your bank details to claim the prize", "correct": false },
+    { "text": "Reply asking for more details about how to claim", "correct": false },
+    { "text": "Delete the message and block the sender, recognizing it as a scam", "correct": true, "explanation": "Unsolicited lottery winnings are almost always scams designed to get your personal information or money." },
+    { "text": "Share the good news on social media", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["scams", "phishing", "online-fraud"]
+},
+{
+  "id": "q257",
+  "category": "online",
+  "question": "What is the primary purpose of using a strong, unique password for each online account?",
+  "answers": [
+    { "text": "To make it harder for you to remember your passwords", "correct": false },
+    { "text": "To show off your creativity in password design", "correct": false },
+    { "text": "To prevent a breach of one account from compromising your other accounts", "correct": true, "explanation": "If hackers get one password, unique passwords prevent them from accessing all your other accounts." },
+    { "text": "To make online banking more secure for the bank", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["password-security", "cybersecurity", "account-protection"]
+},
+{
+  "id": "q258",
+  "category": "online",
+  "question": "You are creating an online profile and are asked for highly personal information (e.g., mother's maiden name, pet's name). What should you consider?",
+  "answers": [
+    { "text": "Provide accurate information to complete the profile faster", "correct": false },
+    { "text": "Use random or false information for security questions if possible, or avoid providing it unless absolutely necessary", "correct": true, "explanation": "This information is often used for security questions and can be easily found by identity thieves if shared publicly." },
+    { "text": "It's fine, everyone shares this information online", "correct": false },
+    { "text": "Only provide it if the site looks very official", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["privacy", "identity-theft", "online-security"]
+},
+{
+  "id": "q259",
+  "category": "online",
+  "question": "What is two-factor authentication (2FA) and why is it recommended?",
+  "answers": [
+    { "text": "Logging in twice with the same password", "correct": false },
+    { "text": "Using two different devices to log into one account", "correct": false },
+    { "text": "An extra layer of security requiring a second verification method (e.g., code from phone) in addition to your password, making accounts much harder to hack", "correct": true, "explanation": "2FA significantly increases account security by requiring something you know (password) and something you have (phone/token)." },
+    { "text": "A way to share your login with two friends", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["cybersecurity", "2FA", "account-security"]
+},
+{
+  "id": "q260",
+  "category": "online",
+  "question": "You see an advertisement online for a product at an unbelievably low price from an unknown website. What is a red flag?",
+  "answers": [
+    { "text": "The website has a professional design", "correct": false },
+    { "text": "The price is significantly lower than retail value, and the site lacks clear contact information or reviews", "correct": true, "explanation": "Scammers often lure victims with unrealistic deals. Lack of transparency and extreme discounts are major warning signs." },
+    { "text": "It accepts all major credit cards", "correct": false },
+    { "text": "It offers free shipping", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["online-shopping", "scams", "fraud"]
+},
+
+{
+  "id": "q261",
+  "category": "street",
+  "question": "You are using an ATM in a public place. What should you do to protect your pin?",
+  "answers": [
+    { "text": "Say your PIN out loud as you enter it", "correct": false },
+    { "text": "Let someone standing nearby watch you enter it", "correct": false },
+    { "text": "Cover the keypad with your other hand while entering your PIN", "correct": true, "explanation": "Shielding the keypad prevents shoulder surfing and hidden cameras from capturing your PIN." },
+    { "text": "Enter your PIN slowly and deliberately", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["street-safety", "ATM", "pin-security"]
+},
+{
+  "id": "q262",
+  "category": "street",
+  "question": "You see an unattended bag in a public area like an airport or train station. What should you do?",
+  "answers": [
+    { "text": "Open it to check for identification", "correct": false },
+    { "text": "Leave it alone and report it to security personnel immediately", "correct": true, "explanation": "Unattended bags can be a security risk. It's best to let trained personnel handle them." },
+    { "text": "Move it out of the way so it doesn't block traffic", "correct": false },
+    { "text": "Assume it's trash and kick it aside", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["public-safety", "security-threat", "unattended-items"]
+},
+{
+  "id": "q263",
+  "category": "street",
+  "question": "What is a good strategy to avoid becoming a target for petty crime while out in public?",
+  "answers": [
+    { "text": "Flash expensive jewelry and electronics to show confidence", "correct": false },
+    { "text": "Walk with your headphones on, ignoring your surroundings", "correct": false },
+    { "text": "Be aware of your surroundings, avoid displaying valuables, and walk with purpose", "correct": true, "explanation": "Looking alert and not making yourself an obvious target can deter opportunistic criminals." },
+    { "text": "Carry all your cash in your back pocket", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["street-safety", "crime-prevention", "awareness"]
+},
+{
+  "id": "q264",
+  "category": "street",
+  "question": "You are at a busy crosswalk and the pedestrian signal is green, but a car is clearly running the red light. What should you do?",
+  "answers": [
+    { "text": "Walk quickly to beat the car", "correct": false },
+    { "text": "Step into the crosswalk anyway, you have the right of way", "correct": false },
+    { "text": "Wait for the car to pass before entering the crosswalk, prioritizing your safety over the right of way", "correct": true, "explanation": "Always ensure the path is clear, even if you have the right of way, as a driver might not see you or be able to stop." },
+    { "text": "Shout at the driver for breaking the law", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["pedestrian-safety", "traffic", "awareness"]
+},
+{
+  "id": "q265",
+  "category": "street",
+  "question": "If you are using public transportation and feel uncomfortable due to another passenger's behavior, what should you do?",
+  "answers": [
+    { "text": "Engage them in a verbal confrontation", "correct": false },
+    { "text": "Ignore them and hope they stop", "correct": false },
+    { "text": "Move to another part of the vehicle, notify the driver or staff, or exit at the next safe stop", "correct": true, "explanation": "Prioritize your comfort and safety. Removing yourself from the situation and informing authorities are key steps." },
+    { "text": "Take a photo of them for evidence", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["public-transport", "personal-safety", "harassment"]
+},
+
+{
+  "id": "q266",
+  "category": "home",
+  "question": "What is the most effective way to prevent carbon monoxide poisoning in your home?",
+  "answers": [
+    { "text": "Open windows slightly during winter", "correct": false },
+    { "text": "Install a carbon monoxide detector on every level of your home and outside sleeping areas", "correct": true, "explanation": "Carbon monoxide is odorless and colorless. Detectors are the only reliable way to detect its presence and prevent poisoning." },
+    { "text": "Only use gas appliances when someone is awake", "correct": false },
+    { "text": "Burn candles frequently to purify the air", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["home-safety", "carbon-monoxide", "detection"]
+},
+{
+  "id": "q267",
+  "category": "home",
+  "question": "You find an elderly family member has fallen and cannot get up. What should you do?",
+  "answers": [
+    { "text": "Try to lift them up quickly by yourself", "correct": false },
+    { "text": "Leave them to rest and check on them later", "correct": false },
+    { "text": "Assess for injuries, reassure them, and call for appropriate medical help if needed", "correct": true, "explanation": "Attempting to lift them improperly can cause further injury. Medical assessment is crucial, especially for the elderly." },
+    { "text": "Give them food and water while they are on the floor", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["home-safety", "elderly-care", "falls", "first-aid"]
+},
+{
+  "id": "q268",
+  "category": "home",
+  "question": "What is the safest practice for storing firearms in a home with children?",
+  "answers": [
+    { "text": "Loaded and easily accessible for self-defense", "correct": false },
+    { "text": "In a locked cabinet, unloaded, with ammunition stored separately and locked away", "correct": true, "explanation": "This practice prevents accidental shootings and unauthorized access by children or others." },
+    { "text": "Hidden under a mattress for quick access", "correct": false },
+    { "text": "Displayed openly to teach children about responsibility", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["home-safety", "firearms", "child-safety"]
+},
+{
+  "id": "q269",
+  "category": "home",
+  "question": "You notice an electrical cord in your home is frayed and exposed. What should you do?",
+  "answers": [
+    { "text": "Cover it with electrical tape and continue using it", "correct": false },
+    { "text": "Ignore it if it's still working", "correct": false },
+    { "text": "Unplug the cord and replace it immediately to prevent fire or shock hazards", "correct": true, "explanation": "Frayed cords are a serious fire and electrocution risk and must be replaced." },
+    { "text": "Tuck it behind furniture where it won't be seen", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["home-safety", "electrical-hazard", "fire-prevention"]
+},
+{
+  "id": "q270",
+  "category": "home",
+  "question": "How often should smoke detectors in a home be tested and batteries replaced?",
+  "answers": [
+    { "text": "Annually for testing, every 5 years for batteries", "correct": false },
+    { "text": "Monthly for testing, and batteries replaced at least once a year", "correct": true, "explanation": "Regular testing ensures they are working, and annual battery replacement ensures they function during power outages." },
+    { "text": "Only when they start beeping continuously", "correct": false },
+    { "text": "Never, they last forever", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["home-safety", "smoke-detector", "fire-safety"]
+},
+
+{
+  "id": "q271",
+  "category": "travel",
+  "question": "Before traveling internationally, what is a key safety precaution regarding your medications?",
+  "answers": [
+    { "text": "Pack all medications in your checked luggage", "correct": false },
+    { "text": "Assume your medications are legal everywhere", "correct": false },
+    { "text": "Carry necessary medications in their original prescription bottles in your carry-on, with a doctor's note for controlled substances", "correct": true, "explanation": "This avoids issues at customs, ensures you have medication if luggage is lost, and provides proof of necessity." },
+    { "text": "Buy new medications at your destination to try local brands", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["travel", "medication", "international-travel"]
+},
+{
+  "id": "q272",
+  "category": "travel",
+  "question": "When exploring a new city, what is a smart way to keep your valuables safe?",
+  "answers": [
+    { "text": "Carry all your money and cards in one easily accessible wallet", "correct": false },
+    { "text": "Wear a fanny pack openly on your front", "correct": false },
+    { "text": "Distribute cash and cards in different secure locations, use a money belt or secure inner pockets, and avoid carrying all important documents", "correct": true, "explanation": "Diversifying where you keep valuables minimizes loss if one item is stolen. Avoid being an obvious target." },
+    { "text": "Leave your passport visible in an open bag", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["travel", "theft-prevention", "valuables"]
+},
+{
+  "id": "q273",
+  "category": "travel",
+  "question": "You are approached by someone offering to carry your luggage for a 'small fee' at an unofficial area of a bus station. What should you do?",
+  "answers": [
+    { "text": "Accept their offer to be polite", "correct": false },
+    { "text": "Let them carry it, but keep an eye on them", "correct": false },
+    { "text": "Politely decline and only use official, uniformed porters or manage your own luggage", "correct": true, "explanation": "Unofficial porters can be scammers or thieves. Stick to official services or handle your own belongings." },
+    { "text": "Offer them an even smaller fee as a negotiation tactic", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["travel", "scams", "luggage-safety"]
+},
+{
+  "id": "q274",
+  "category": "travel",
+  "question": "What should you do if you become separated from your travel group in a crowded foreign place?",
+  "answers": [
+    { "text": "Immediately try to call each person individually", "correct": false },
+    { "text": "Wait exactly where you are until they find you", "correct": false },
+    { "text": "Have a pre-arranged meeting point and time, and if not possible, go to a pre-designated safe spot (e.g., hotel, embassy)", "correct": true, "explanation": "Pre-planning a meeting strategy is key. Going to a known safe location prevents further disorientation." },
+    { "text": "Ask strangers for directions to your hotel", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["travel", "lost", "group-travel"]
+},
+{
+  "id": "q275",
+  "category": "travel",
+  "question": "Before renting a car in a foreign country, what safety check should you prioritize?",
+  "answers": [
+    { "text": "Checking if it's the most expensive model available", "correct": false },
+    { "text": "Ensuring it has a good sound system", "correct": false },
+    { "text": "Inspect the car for existing damage, ensure all lights and safety features (seatbelts, brakes) are working, and understand local traffic laws", "correct": true, "explanation": "Ensuring the car is roadworthy and knowing local laws are vital for your safety and to avoid legal issues." },
+    { "text": "Making sure it has enough cup holders", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["travel", "car-rental", "road-safety"]
+},
+
+{
+  "id": "q276",
+  "category": "general",
+  "question": "What is the 'Stop, Drop, and Roll' technique used for?",
+  "answers": [
+    { "text": "Extinguishing a small kitchen fire", "correct": false },
+    { "text": "Putting out a campfire safely", "correct": false },
+    { "text": "Extinguishing clothes that are on fire", "correct": true, "explanation": "This technique smothers the flames and prevents further burns if your clothing catches fire." },
+    { "text": "Cooling down after strenuous exercise", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["fire-safety", "personal-safety", "emergency"]
+},
+{
+  "id": "q277",
+  "category": "general",
+  "question": "What is the universal emergency telephone number in many countries (e.g., North America, Europe)?",
+  "answers": [
+    { "text": "411", "correct": false },
+    { "text": "911 or 112", "correct": true, "explanation": "911 in North America and 112 in Europe are widely recognized as emergency numbers for police, fire, and ambulance." },
+    { "text": "000", "correct": false },
+    { "text": "Any 7-digit number", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["emergency-services", "universal-number", "calling-for-help"]
+},
+{
+  "id": "q278",
+  "category": "general",
+  "question": "If you are caught in a rip current while swimming, what should you do?",
+  "answers": [
+    { "text": "Swim directly against the current towards shore", "correct": false },
+    { "text": "Panic and shout loudly", "correct": false },
+    { "text": "Stay calm, conserve energy, and swim parallel to the shore until you are out of the current, then swim to shore", "correct": true, "explanation": "Fighting a rip current directly will exhaust you. Swimming parallel allows you to escape its pull." },
+    { "text": "Float on your back and let the current take you further out to sea", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["water-safety", "rip-current", "swimming"]
+},
+{
+  "id": "q279",
+  "category": "general",
+  "question": "What is the best defense against a dog attack if you encounter an aggressive dog?",
+  "answers": [
+    { "text": "Run away screaming", "correct": false },
+    { "text": "Make eye contact and shout at it", "correct": false },
+    { "text": "Remain calm, avoid eye contact, stand sideways, and slowly back away without turning your back", "correct": true, "explanation": "Appearing non-threatening and slowly disengaging reduces the likelihood of an attack. Running can trigger a chase response." },
+    { "text": "Try to pet it to calm it down", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["animal-safety", "dog-attack", "self-defense"]
+},
+{
+  "id": "q280",
+  "category": "general",
+  "question": "You witness a minor car accident where no one appears seriously injured. What is a crucial first step?",
+  "answers": [
+    { "text": "Leave the scene if it's not your car", "correct": false },
+    { "text": "Immediately start taking photos of the damage", "correct": false },
+    { "text": "Ensure the scene is safe, move vehicles if necessary and safe to do so, and exchange information with the other driver(s)", "correct": true, "explanation": "Safety first, then information exchange for insurance purposes. Call emergency services if there are injuries or significant damage." },
+    { "text": "Call your insurance company before checking on anyone", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["car-accident", "road-safety", "emergency"]
+},
+
+{
+  "id": "q281",
+  "category": "online",
+  "question": "A friend shares a post on social media that contains clearly false information. What should you do?",
+  "answers": [
+    { "text": "Share it quickly before it gets taken down", "correct": false },
+    { "text": "Ignore it, it's just social media", "correct": false },
+    { "text": "Politely comment or message your friend with factual corrections, or report the post to the platform if it violates guidelines", "correct": true, "explanation": "Combating misinformation helps maintain a healthy online environment and informs your friends." },
+    { "text": "Publicly ridicule your friend for sharing false information", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["online-safety", "misinformation", "social-media"]
+},
+{
+  "id": "q282",
+  "category": "online",
+  "question": "What is the purpose of a Virtual Private Network (VPN) for online safety?",
+  "answers": [
+    { "text": "To make your internet faster", "correct": false },
+    { "text": "To hide your activity from your internet service provider and encrypt your online traffic, enhancing privacy and security", "correct": true, "explanation": "A VPN creates a secure, encrypted connection over a less secure network, protecting your data." },
+    { "text": "To get free access to paid websites", "correct": false },
+    { "text": "To bypass firewalls to download illegal content", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["cybersecurity", "VPN", "privacy"]
+},
+{
+  "id": "q283",
+  "category": "online",
+  "question": "You accidentally click on a suspicious link and your browser starts acting strangely. What is a recommended immediate action?",
+  "answers": [
+    { "text": "Continue browsing to see what happens", "correct": false },
+    { "text": "Restart your computer immediately without checking anything", "correct": false },
+    { "text": "Disconnect from the internet, close the browser, and run a full antivirus/malware scan", "correct": true, "explanation": "Disconnecting limits potential damage, and scanning helps remove any malicious software that may have been downloaded." },
+    { "text": "Click on more links to see if the problem gets worse", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["malware", "cybersecurity", "suspicious-links"]
+},
+{
+  "id": "q284",
+  "category": "online",
+  "question": "What information is generally safe to share publicly on social media?",
+  "answers": [
+    { "text": "Your home address and phone number", "correct": false },
+    { "text": "Your current location in real-time", "correct": false },
+    { "text": "General interests, hobbies, and carefully selected photos that do not reveal sensitive personal information", "correct": true, "explanation": "Avoid sharing anything that can be used for identity theft or to track your movements." },
+    { "text": "Your full birth date, including the year", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["social-media", "privacy", "online-sharing"]
+},
+{
+  "id": "q285",
+  "category": "online",
+  "question": "What is 'phishing' in the context of online safety?",
+  "answers": [
+    { "text": "A type of online fishing game", "correct": false },
+    { "text": "Sending emails or messages pretending to be a trustworthy entity to trick individuals into revealing sensitive information", "correct": true, "explanation": "Phishing attacks aim to steal passwords, credit card numbers, and other personal data." },
+    { "text": "A new method for secure online shopping", "correct": false },
+    { "text": "Searching for lost items online", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["phishing", "scams", "cybersecurity"]
+},
+
+{
+  "id": "q286",
+  "category": "first-aid",
+  "question": "What does R.I.C.E. stand for in the context of treating sprains and strains?",
+  "answers": [
+    { "text": "Run, Inject, Compress, Elevate", "correct": false },
+    { "text": "Rest, Ice, Compression, Elevation", "correct": true, "explanation": "R.I.C.E. is a mnemonic for the basic first-aid treatment for soft tissue injuries." },
+    { "text": "Relax, Immobilize, Comfort, Examine", "correct": false },
+    { "text": "Remove, Inspect, Call, Escort", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["first-aid", "sprains", "strains", "RICE"]
+},
+{
+  "id": "q287",
+  "category": "first-aid",
+  "question": "If someone is experiencing symptoms of a stroke, what should you note and report to emergency services?",
+  "answers": [
+    { "text": "Their favorite color and food", "correct": false },
+    { "text": "The time symptoms started, using the F.A.S.T. acronym (Face drooping, Arm weakness, Speech difficulty, Time to call 911/112)", "correct": true, "explanation": "Time is critical for stroke treatment, and F.A.S.T. helps identify key symptoms quickly." },
+    { "text": "Their medical history from childhood", "correct": false },
+    { "text": "Only if they seem to be in pain", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["first-aid", "stroke", "emergency", "FAST"]
+},
+{
+  "id": "q288",
+  "category": "first-aid",
+  "question": "What should you do if a person is unconscious but breathing normally?",
+  "answers": [
+    { "text": "Try to wake them by shaking vigorously", "correct": false },
+    { "text": "Place them in the recovery position and call for emergency medical help", "correct": true, "explanation": "The recovery position keeps the airway open and prevents choking on vomit, while awaiting professional help." },
+    { "text": "Give them water to drink", "correct": false },
+    { "text": "Leave them lying on their back", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["first-aid", "unconscious", "recovery-position"]
+},
+{
+  "id": "q289",
+  "category": "first-aid",
+  "question": "How do you treat a nosebleed?",
+  "answers": [
+    { "text": "Tilt the head back and lie down", "correct": false },
+    { "text": "Stuff tissues up the nostrils", "correct": false },
+    { "text": "Lean slightly forward, pinch the soft part of the nose just above the nostrils, and breathe through the mouth", "correct": true, "explanation": "This helps stop the bleeding and prevents blood from flowing down the throat." },
+    { "text": "Apply a hot compress to the nose", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["first-aid", "nosebleed"]
+},
+{
+  "id": "q290",
+  "category": "first-aid",
+  "question": "You see someone having a seizure. What is your primary concern and action?",
+  "answers": [
+    { "text": "Restrain their movements to prevent injury", "correct": false },
+    { "text": "Put something in their mouth to prevent them from biting their tongue", "correct": false },
+    { "text": "Protect them from injury by clearing the area, cushioning their head, and timing the seizure, then call emergency services if it's their first or lasts longer than 5 minutes", "correct": true, "explanation": "The goal is to prevent self-injury and ensure their airway is clear. Do not restrain or put anything in their mouth." },
+    { "text": "Forcefully wake them up", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["first-aid", "seizure", "emergency"]
+},
+
+{
+  "id": "q291",
+  "category": "natural-disasters",
+  "question": "What is a 'tsunami' and what should you do if you are near a coast and feel a strong earthquake?",
+  "answers": [
+    { "text": "A type of strong wind; seek shelter indoors", "correct": false },
+    { "text": "A sudden large ocean wave caused by undersea earthquakes or volcanic eruptions; immediately move to higher ground", "correct": true, "explanation": "A strong earthquake felt near the coast is a natural warning sign of a potential tsunami. Evacuate to high ground without waiting for official warnings." },
+    { "text": "A prolonged period of drought; conserve water", "correct": false },
+    { "text": "A large-scale forest fire; evacuate immediately", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["tsunami", "natural-disaster", "earthquake", "coastal-safety"]
+},
+{
+  "id": "q292",
+  "category": "natural-disasters",
+  "question": "During a flood, what is the most important safety rule regarding walking or driving through water?",
+  "answers": [
+    { "text": "If it looks shallow, it's safe to walk or drive through", "correct": false },
+    { "text": "Always drive through floodwaters to get to safety faster", "correct": false },
+    { "text": "Turn around, don't drown – never walk or drive through floodwaters, as hidden hazards or strong currents can be present", "correct": true, "explanation": "Even shallow water can hide dangers or sweep vehicles away. It's safer to avoid floodwaters entirely." },
+    { "text": "Only walk through if you can see the bottom", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["flood", "natural-disaster", "water-safety"]
+},
+{
+  "id": "q293",
+  "category": "natural-disasters",
+  "question": "If a wildfire is approaching your area, what should you do to prepare for potential evacuation?",
+  "answers": [
+    { "text": "Go to the highest point in your house to watch it", "correct": false },
+    { "text": "Stay home and try to put out small fires yourself", "correct": false },
+    { "text": "Gather essential documents, medications, and a 'go bag,' and follow official evacuation orders promptly", "correct": true, "explanation": "Preparing an emergency kit and evacuating when advised are crucial for safety during wildfires." },
+    { "text": "Water your garden to protect your house from embers", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["wildfire", "natural-disaster", "evacuation"]
+},
+{
+  "id": "q294",
+  "category": "natural-disasters",
+  "question": "What is the primary danger posed by a blizzard, beyond just heavy snowfall?",
+  "answers": [
+    { "text": "Too much snow for skiing", "correct": false },
+    { "text": "Difficulty finding your car", "correct": false },
+    { "text": "Extreme cold, whiteout conditions, and potential power outages, leading to hypothermia and isolation", "correct": true, "explanation": "Blizzards combine severe cold with limited visibility and can cut off essential services, making survival difficult." },
+    { "text": "The inability to make a snowman", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["blizzard", "natural-disaster", "cold-weather-safety"]
+},
+{
+  "id": "q295",
+  "category": "natural-disasters",
+  "question": "During a volcanic eruption, if you are in the path of ashfall, what protective measure should you take?",
+  "answers": [
+    { "text": "Go outside to get a better view", "correct": false },
+    { "text": "Cover your mouth and nose with a damp cloth or mask, and stay indoors to avoid inhaling ash", "correct": true, "explanation": "Volcanic ash can cause respiratory problems. Protecting your airways and staying sheltered are critical." },
+    { "text": "Run as fast as you can through the ash", "correct": false },
+    { "text": "Open windows to let the ash out", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["volcanic-eruption", "natural-disaster", "ashfall"]
+},
+
+{
+  "id": "q296",
+  "category": "workplace",
+  "question": "You witness a co-worker being harassed by a superior. What is the most appropriate action?",
+  "answers": [
+    { "text": "Join in the harassment to fit in", "correct": false },
+    { "text": "Ignore it, as it's not your business", "correct": false },
+    { "text": "Document what you observed and report it to HR or a trusted supervisor, or intervene if it is safe to do so", "correct": true, "explanation": "Harassment is illegal and creates a hostile work environment. Reporting it through official channels is crucial, and safe intervention can also be considered." },
+    { "text": "Confront the superior directly and aggressively", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["workplace", "harassment", "reporting", "ethics"]
+},
+{
+  "id": "q297",
+  "category": "workplace",
+  "question": "Your workplace has a fire escape plan. How often should you review and practice it?",
+  "answers": [
+    { "text": "Only when a fire drill is announced unexpectedly", "correct": false },
+    { "text": "Never, the plan is always the same", "correct": false },
+    { "text": "Regularly, as per company policy, to ensure familiarity with escape routes and meeting points", "correct": true, "explanation": "Regular practice ensures everyone knows what to do in a real emergency, reducing panic and improving safety." },
+    { "text": "Only if you are new to the company", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["workplace-safety", "fire-safety", "evacuation-plan"]
+},
+{
+  "id": "q298",
+  "category": "workplace",
+  "question": "What is the purpose of Lockout/Tagout (LOTO) procedures in industrial settings?",
+  "answers": [
+    { "text": "To lock equipment away from unauthorized users", "correct": false },
+    { "text": "To ensure dangerous machinery is properly shut down, de-energized, and cannot be restarted unexpectedly during maintenance or repair", "correct": true, "explanation": "LOTO prevents serious injuries or fatalities by controlling hazardous energy during servicing of machinery." },
+    { "text": "To tag equipment for inventory purposes", "correct": false },
+    { "text": "To mark broken equipment for disposal", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["workplace-safety", "industrial-safety", "LOTO"]
+},
+{
+  "id": "q299",
+  "category": "workplace",
+  "question": "You notice a wet spill on a high-traffic floor area in your workplace. What should you do?",
+  "answers": [
+    { "text": "Walk around it and hope someone else cleans it", "correct": false },
+    { "text": "Cover it with a piece of paper to absorb the liquid", "correct": false },
+    { "text": "Immediately place a 'wet floor' sign, clean it up if safe, or report it to appropriate personnel", "correct": true, "explanation": "Wet spills are a slip hazard and need to be addressed promptly to prevent accidents." },
+    { "text": "Spread sand over it to dry it out", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["workplace-safety", "slip-hazard", "housekeeping"]
+},
+{
+  "id": "q300",
+  "category": "workplace",
+  "question": "What is the primary benefit of wearing Personal Protective Equipment (PPE) in hazardous work environments?",
+  "answers": [
+    { "text": "To make you look professional", "correct": false },
+    { "text": "To replace safe work practices entirely", "correct": false },
+    { "text": "To minimize exposure to hazards that could cause serious workplace injuries and illnesses", "correct": true, "explanation": "PPE is a critical control measure to protect workers from residual hazards that cannot be eliminated or controlled by other means." },
+    { "text": "To keep you warm or cool", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["workplace-safety", "PPE", "hazard-control"]
+},
+{
+  "id": "q301",
+  "category": "food-safety",
+  "question": "What is the 'danger zone' temperature range for food, where bacteria multiply most rapidly?",
+  "answers": [
+    { "text": "Below 0°C (32°F)", "correct": false },
+    { "text": "Between 5°C (41°F) and 60°C (140°F)", "correct": true, "explanation": "Foods should not be left in this temperature range for more than two hours to prevent rapid bacterial growth." },
+    { "text": "Above 100°C (212°F)", "correct": false },
+    { "text": "Any temperature where food is visible steaming", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["food-safety", "bacteria", "temperature"]
+},
+{
+  "id": "q302",
+  "category": "food-safety",
+  "question": "How long can perishable foods safely be left out at room temperature?",
+  "answers": [
+    { "text": "Up to 4 hours", "correct": false },
+    { "text": "Up to 8 hours", "correct": false },
+    { "text": "No more than 2 hours", "correct": true, "explanation": "Beyond two hours, perishable foods enter the 'danger zone' where bacteria can multiply to unsafe levels." },
+    { "text": "Indefinitely if covered", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["food-safety", "perishable", "bacteria"]
+},
+{
+  "id": "q303",
+  "category": "food-safety",
+  "question": "What is cross-contamination and how can you prevent it when preparing food?",
+  "answers": [
+    { "text": "Mixing different types of food together for flavor; by using fresh ingredients", "correct": false },
+    { "text": "Bacteria spreading from one food or surface to another; by using separate cutting boards and utensils for raw meats and produce", "correct": true, "explanation": "Preventing cross-contamination is crucial to avoid foodborne illnesses. Separate equipment is key." },
+    { "text": "Food touching your clothes; by wearing an apron", "correct": false },
+    { "text": "Cooking different foods in the same pot; by cooking at high temperatures", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["food-safety", "cross-contamination", "hygiene"]
+},
+{
+  "id": "q304",
+  "category": "food-safety",
+  "question": "What is the safest way to thaw frozen meat?",
+  "answers": [
+    { "text": "On the kitchen counter at room temperature", "correct": false },
+    { "text": "Under hot running water", "correct": false },
+    { "text": "In the refrigerator, in cold water (changed every 30 mins), or in the microwave (if cooking immediately)", "correct": true, "explanation": "Thawing methods that keep meat out of the danger zone are safest to prevent bacterial growth." },
+    { "text": "In the dishwasher", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["food-safety", "thawing", "meat"]
+},
+{
+  "id": "q305",
+  "category": "food-safety",
+  "question": "What is the recommended internal temperature for safely cooking poultry (chicken, turkey)?",
+  "answers": [
+    { "text": "60°C (140°F)", "correct": false },
+    { "text": "70°C (158°F)", "correct": false },
+    { "text": "74°C (165°F)", "correct": true, "explanation": "Cooking poultry to this temperature ensures harmful bacteria like Salmonella are destroyed." },
+    { "text": "85°C (185°F)", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["food-safety", "cooking", "poultry"]
+},
+
+{
+  "id": "q306",
+  "category": "water-safety",
+  "question": "What should you always check before jumping into any body of water, especially unfamiliar ones?",
+  "answers": [
+    { "text": "If anyone else is already in it", "correct": false },
+    { "text": "The water temperature", "correct": false },
+    { "text": "The depth, presence of submerged objects, and clarity of the water", "correct": true, "explanation": "Shallow water or hidden objects can cause severe head and spinal injuries. Clarity indicates potential hazards." },
+    { "text": "If there are any fish visible", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["water-safety", "swimming", "diving"]
+},
+{
+  "id": "q307",
+  "category": "water-safety",
+  "question": "If you fall into cold water, what is the best immediate response to increase your survival time?",
+  "answers": [
+    { "text": "Start swimming vigorously to get warm", "correct": false },
+    { "text": "Remove your clothes to lighten your load", "correct": false },
+    { "text": "Stay calm, float on your back, and if possible, adopt the H.E.L.P. (Heat Escape Lessening Posture) or huddle with others", "correct": true, "explanation": "Sudden immersion in cold water causes 'cold shock.' Staying calm and conserving heat are vital." },
+    { "text": "Shout for help non-stop", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["water-safety", "cold-water", "hypothermia"]
+},
+{
+  "id": "q308",
+  "category": "water-safety",
+  "question": "When boating, who should always wear a properly fitted life jacket?",
+  "answers": [
+    { "text": "Only non-swimmers", "correct": false },
+    { "text": "Only children", "correct": false },
+    { "text": "Everyone on board, regardless of swimming ability, especially during rough water or high-risk activities", "correct": true, "explanation": "Life jackets save lives. Even strong swimmers can be incapacitated in unexpected boating incidents." },
+    { "text": "Only the person driving the boat", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["water-safety", "boating", "life-jacket"]
+},
+{
+  "id": "q309",
+  "category": "water-safety",
+  "question": "What does a double red flag at a beach typically signify?",
+  "answers": [
+    { "text": "Excellent swimming conditions", "correct": false },
+    { "text": "Presence of jellyfish", "correct": false },
+    { "text": "Water is closed to the public; dangerous conditions are present (e.g., strong currents, pollution)", "correct": true, "explanation": "Double red flags indicate severe hazards and that swimming is strictly prohibited." },
+    { "text": "Strong currents, but swimming is allowed with caution", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["water-safety", "beach", "flags"]
+},
+{
+  "id": "q310",
+  "category": "water-safety",
+  "question": "If you see someone struggling in the water and are not a trained lifeguard, what is the safest way to help?",
+  "answers": [
+    { "text": "Jump in immediately to save them", "correct": false },
+    { "text": "Throw them a floating object or extend a reaching aid, and call for professional help", "correct": true, "explanation": "Untrained rescues can put both lives at risk. 'Reach or Throw, Don't Go' is a critical water safety principle." },
+    { "text": "Shout advice from the shore", "correct": false },
+    { "text": "Go find a stick and try to pull them out", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["water-safety", "rescue", "drowning"]
+},
+
+{
+  "id": "q311",
+  "category": "fire-safety",
+  "question": "What are the three components of the 'fire triangle' that are necessary for a fire to start and continue?",
+  "answers": [
+    { "text": "Wood, paper, and oxygen", "correct": false },
+    { "text": "Spark, fuel, and air", "correct": false },
+    { "text": "Heat, Fuel, and Oxygen", "correct": true, "explanation": "Remove any one of these elements, and the fire will extinguish." },
+    { "text": "Water, heat, and smoke", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["fire-safety", "fire-triangle", "chemistry"]
+},
+{
+  "id": "q312",
+  "category": "fire-safety",
+  "question": "What type of fire extinguisher should be used on an electrical fire (Class C)?",
+  "answers": [
+    { "text": "Water (Class A)", "correct": false },
+    { "text": "Foam (Class B)", "correct": false },
+    { "text": "Dry chemical (Class ABC) or Carbon Dioxide (Class BC)", "correct": true, "explanation": "Water conducts electricity and foam can cause further electrical hazards. Dry chemical or CO2 extinguishers are non-conductive." },
+    { "text": "A blanket (Class K)", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["fire-safety", "fire-extinguisher", "electrical"]
+},
+{
+  "id": "q313",
+  "category": "fire-safety",
+  "question": "If your clothes catch fire, what should you do?",
+  "answers": [
+    { "text": "Run around to find water", "correct": false },
+    { "text": "Fan the flames to put them out", "correct": false },
+    { "text": "Stop, Drop, and Roll to smother the flames", "correct": true, "explanation": "This action cuts off the oxygen supply to the fire." },
+    { "text": "Try to remove the burning clothing", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["fire-safety", "clothes-on-fire", "personal-safety"]
+},
+{
+  "id": "q314",
+  "category": "fire-safety",
+  "question": "What is the main danger of using a faulty or overloaded extension cord?",
+  "answers": [
+    { "text": "It can shorten the lifespan of your devices", "correct": false },
+    { "text": "It can cause a minor electrical shock", "correct": false },
+    { "text": "It can overheat, leading to electrical fires", "correct": true, "explanation": "Overloaded or damaged cords generate excessive heat, which is a common cause of residential fires." },
+    { "text": "It can slow down your internet connection", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["fire-safety", "electrical", "home-safety"]
+},
+{
+  "id": "q315",
+  "category": "fire-safety",
+  "question": "When exiting a burning building, why should you stay low to the ground?",
+  "answers": [
+    { "text": "To avoid tripping over debris", "correct": false },
+    { "text": "To stay hidden from the fire", "correct": false },
+    { "text": "Smoke and toxic gases rise, so the air quality is better closer to the floor", "correct": true, "explanation": "Smoke inhalation is a major cause of death in fires. Staying low provides cleaner air and better visibility." },
+    { "text": "It makes it easier for firefighters to see you", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["fire-safety", "evacuation", "smoke-inhalation"]
+},
+
+{
+  "id": "q316",
+  "category": "health-wellness",
+  "question": "What is the recommended amount of sleep for an average adult to maintain good health?",
+  "answers": [
+    { "text": "4-5 hours", "correct": false },
+    { "text": "6-7 hours", "correct": false },
+    { "text": "7-9 hours", "correct": true, "explanation": "Adequate sleep is crucial for physical and mental health, including cognitive function, mood, and immune system strength." },
+    { "text": "10+ hours", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["health", "sleep", "well-being"]
+},
+{
+  "id": "q317",
+  "category": "health-wellness",
+  "question": "What is a common sign of dehydration?",
+  "answers": [
+    { "text": "Increased energy levels", "correct": false },
+    { "text": "Clear urine", "correct": false },
+    { "text": "Dark-colored urine, thirst, dry mouth, and fatigue", "correct": true, "explanation": "These symptoms indicate that your body needs more fluids to function properly." },
+    { "text": "Feeling overly full", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["health", "hydration", "dehydration"]
+},
+{
+  "id": "q318",
+  "category": "health-wellness",
+  "question": "What is the primary benefit of regular physical activity for long-term health?",
+  "answers": [
+    { "text": "It allows you to eat whatever you want without consequences", "correct": false },
+    { "text": "It makes you look muscular instantly", "correct": false },
+    { "text": "Reduces risk of chronic diseases (heart disease, diabetes), improves mental health, strengthens bones and muscles, and helps with weight management", "correct": true, "explanation": "Regular exercise is a cornerstone of preventative health." },
+    { "text": "It guarantees you will never get sick", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["health", "exercise", "physical-activity"]
+},
+{
+  "id": "q319",
+  "category": "health-wellness",
+  "question": "Why is it important to get vaccinated against preventable diseases?",
+  "answers": [
+    { "text": "Vaccines guarantee you'll never catch a disease", "correct": false },
+    { "text": "To avoid having to take medication", "correct": false },
+    { "text": "To protect yourself and contribute to 'herd immunity,' preventing the spread of diseases to vulnerable populations", "correct": true, "explanation": "Vaccines reduce individual risk and protect communities, especially those who cannot be vaccinated." },
+    { "text": "They boost your immune system against all illnesses", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["health", "vaccination", "public-health"]
+},
+{
+  "id": "q320",
+  "category": "health-wellness",
+  "question": "What is the significance of the "ABCDE" rule for checking moles and skin spots?",
+  "answers": [
+    { "text": "It's a mnemonic for remembering sunscreen application", "correct": false },
+    { "text": "It helps determine if a mole is growing hair", "correct": false },
+    { "text": "It's a guide to identify potential signs of melanoma (Asymmetry, Border irregularity, Color variation, Diameter >6mm, Evolving)", "correct": true, "explanation": "Early detection of melanoma significantly improves treatment outcomes." },
+    { "text": "It's for assessing the depth of a cut", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["health", "skin-cancer", "melanoma", "self-check"]
+},
+
+{
+  "id": "q321",
+  "category": "cyberbullying",
+  "question": "What is cyberbullying?",
+  "answers": [
+    { "text": "Sending a lot of friendly messages online", "correct": false },
+    { "text": "Using digital technologies to repeatedly harass, threaten, or embarrass someone", "correct": true, "explanation": "Cyberbullying involves harmful intent and repetition, causing distress to the victim." },
+    { "text": "Playing online video games with strangers", "correct": false },
+    { "text": "Debating different opinions in online forums", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["cyberbullying", "online-safety", "harassment"]
+},
+{
+  "id": "q322",
+  "category": "cyberbullying",
+  "question": "If you or someone you know is being cyberbullied, what is the most important first step?",
+  "answers": [
+    { "text": "Retaliate immediately to scare the bully away", "correct": false },
+    { "text": "Delete all evidence so no one can see it", "correct": false },
+    { "text": "Do not respond to the bully, block them, save the evidence, and tell a trusted adult or authority figure", "correct": true, "explanation": "Responding often escalates the situation. Saving evidence is crucial for reporting, and seeking help is vital." },
+    { "text": "Post publicly about the bully to shame them", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["cyberbullying", "reporting", "evidence"]
+},
+{
+  "id": "q323",
+  "category": "cyberbullying",
+  "question": "Why is it important to think before you post anything online?",
+  "answers": [
+    { "text": "Because everything online disappears quickly anyway", "correct": false },
+    { "text": "To make sure it gets the most likes", "correct": false },
+    { "text": "Once something is posted, it can be permanent and accessible to a wide audience, potentially impacting your future", "correct": true, "explanation": "The 'digital footprint' lasts. Future employers, colleges, or even friends might see old posts." },
+    { "text": "To avoid running out of things to say later", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["cyberbullying", "digital-footprint", "online-reputation"]
+},
+{
+  "id": "q324",
+  "category": "cyberbullying",
+  "question": "What is a 'troll' in an online context?",
+  "answers": [
+    { "text": "Someone who offers helpful advice and support", "correct": false },
+    { "text": "A mythological creature that lives under bridges", "correct": false },
+    { "text": "Someone who intentionally posts inflammatory, extraneous, or off-topic messages to provoke readers and disrupt online discussions", "correct": true, "explanation": "Trolls seek to upset and create chaos, often through personal attacks or deceptive posts." },
+    { "text": "A person who shares interesting facts", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["cyberbullying", "trolling", "online-behavior"]
+},
+{
+  "id": "q325",
+  "category": "cyberbullying",
+  "question": "If an online game or platform has a reporting feature for inappropriate behavior, when should you use it?",
+  "answers": [
+    { "text": "Only if someone uses extremely offensive language", "correct": false },
+    { "text": "Never, it's just part of the game", "correct": false },
+    { "text": "Whenever someone violates the platform's terms of service or engages in harassment/abuse, to help maintain a safe environment", "correct": true, "explanation": "Reporting inappropriate behavior helps platform moderators address issues and protect users." },
+    { "text": "Only if you are personally targeted", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["cyberbullying", "online-gaming", "reporting-features"]
+},
+
+{
+  "id": "q326",
+  "category": "road-safety",
+  "question": "When driving, what is the 'two-second rule' for following distance?",
+  "answers": [
+    { "text": "It means you should always drive exactly two car lengths behind the car in front", "correct": false },
+    { "text": "It means you should be able to count to two from when the car in front passes a fixed object until your car passes the same object", "correct": true, "explanation": "This rule provides a safe following distance, allowing enough time to react and stop if the vehicle ahead suddenly brakes." },
+    { "text": "It's the time it takes to change lanes safely", "correct": false },
+    { "text": "It's the maximum time you should look away from the road", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["road-safety", "driving", "following-distance"]
+},
+{
+  "id": "q327",
+  "category": "road-safety",
+  "question": "What is the most common cause of traffic accidents?",
+  "answers": [
+    { "text": "Mechanical failure of vehicles", "correct": false },
+    { "text": "Poor road conditions", "correct": false },
+    { "text": "Driver error, including distracted driving, speeding, and impaired driving", "correct": true, "explanation": "Human factors are overwhelmingly the leading cause of collisions." },
+    { "text": "Bad weather", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["road-safety", "accidents", "driver-error"]
+},
+{
+  "id": "q328",
+  "category": "road-safety",
+  "question": "If you are involved in a minor fender-bender with no injuries, what is the first thing you should do after ensuring everyone's safety?",
+  "answers": [
+    { "text": "Drive away if the damage is minimal", "correct": false },
+    { "text": "Immediately argue with the other driver about who is at fault", "correct": false },
+    { "text": "Move your vehicles to a safe location if possible, and exchange insurance and contact information", "correct": true, "explanation": "Clear the road to prevent further accidents and ensure you have necessary information for insurance claims." },
+    { "text": "Call your lawyer before talking to anyone", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["road-safety", "car-accident", "post-accident"]
+},
+{
+  "id": "q329",
+  "category": "road-safety",
+  "question": "Why is it dangerous to use a cell phone (texting or talking) while driving?",
+  "answers": [
+    { "text": "It can distract you from enjoying the scenery", "correct": false },
+    { "text": "It uses up your phone's battery faster", "correct": false },
+    { "text": "It causes cognitive, visual, and manual distraction, significantly increasing the risk of an accident", "correct": true, "explanation": "Distracted driving impairs your ability to react to hazards, making accidents far more likely." },
+    { "text": "It's only dangerous if you are speeding", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["road-safety", "distracted-driving", "cell-phone"]
+},
+{
+  "id": "q330",
+  "category": "road-safety",
+  "question": "What is the purpose of reflective materials on clothing or vehicles when driving at night?",
+  "answers": [
+    { "text": "To make you look stylish", "correct": false },
+    { "text": "To absorb light and keep you warm", "correct": false },
+    { "text": "To increase visibility to other drivers, especially pedestrians and cyclists, in low-light conditions", "correct": true, "explanation": "Reflective materials bounce light back to the source, making objects easier to see and preventing accidents." },
+    { "text": "To act as a secondary light source", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["road-safety", "night-driving", "visibility", "pedestrian-safety"]
+},
+
+{
+  "id": "q331",
+  "category": "mental-health",
+  "question": "What is a common myth about mental health?",
+  "answers": [
+    { "text": "Mental health issues are often treatable", "correct": false },
+    { "text": "Everyone has mental health, just like everyone has physical health", "correct": false },
+    { "text": "Mental health problems are a sign of weakness or something to be ashamed of", "correct": true, "explanation": "Mental health conditions are illnesses, not character flaws, and are not a choice. Stigma prevents many from seeking help." },
+    { "text": "Support for mental health is available", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["mental-health", "stigma", "myth"]
+},
+{
+  "id": "q332",
+  "category": "mental-health",
+  "question": "If a friend confides in you that they are struggling with their mental health, what is the best initial response?",
+  "answers": [
+    { "text": "Tell them to just 'snap out of it'", "correct": false },
+    { "text": "Give them unsolicited advice about what they should do", "correct": false },
+    { "text": "Listen empathetically, offer support, and encourage them to seek professional help", "correct": true, "explanation": "Active listening and suggesting professional support are crucial first steps. Avoid minimizing their feelings." },
+    { "text": "Ignore their concerns and change the subject", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["mental-health", "support", "empathy"]
+},
+{
+  "id": "q333",
+  "category": "mental-health",
+  "question": "What are some healthy coping mechanisms for stress?",
+  "answers": [
+    { "text": "Excessive drinking or drug use", "correct": false },
+    { "text": "Ignoring the stress and hoping it goes away", "correct": false },
+    { "text": "Exercise, mindfulness, talking to a trusted person, engaging in hobbies, and getting enough sleep", "correct": true, "explanation": "Healthy coping strategies help manage stress effectively without causing further harm." },
+    { "text": "Spending all your money on impulsive purchases", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["mental-health", "stress", "coping-mechanisms"]
+},
+{
+  "id": "q334",
+  "category": "mental-health",
+  "question": "What is the importance of setting boundaries in relationships (personal or professional) for mental well-being?",
+  "answers": [
+    { "text": "Boundaries push people away and lead to loneliness", "correct": false },
+    { "text": "Boundaries are only for people who are easily offended", "correct": false },
+    { "text": "Boundaries protect your energy, time, and emotional space, preventing burnout and fostering healthier connections", "correct": true, "explanation": "Clear boundaries communicate your needs and limits, which are vital for self-respect and healthy interactions." },
+    { "text": "Boundaries are a sign of distrust", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["mental-health", "boundaries", "relationships"]
+},
+{
+  "id": "q335",
+  "category": "mental-health",
+  "question": "What is the difference between feeling sad and experiencing depression?",
+  "answers": [
+    { "text": "There is no difference; they are the same thing", "correct": false },
+    { "text": "Sadness is a temporary emotion, while depression is a persistent mood disorder characterized by prolonged sadness, loss of interest, and other symptoms impacting daily life", "correct": true, "explanation": "Clinical depression is a serious medical condition requiring professional diagnosis and treatment, distinct from transient sadness." },
+    { "text": "Depression only happens to weak people", "correct": false },
+    { "text": "Sadness is always caused by a specific event, depression is not", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["mental-health", "depression", "sadness"]
+},
+
+{
+  "id": "q336",
+  "category": "emergency-preparedness",
+  "question": "What is the purpose of a 'go bag' or emergency kit?",
+  "answers": [
+    { "text": "To have extra clothes for a quick trip", "correct": false },
+    { "text": "To store sentimental items", "correct": false },
+    { "text": "To provide essential supplies for survival for at least 72 hours in case of evacuation or disaster", "correct": true, "explanation": "An emergency kit ensures you have immediate access to necessities like food, water, first aid, and important documents." },
+    { "text": "To carry your daily essentials", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["emergency-preparedness", "go-bag", "survival"]
+},
+{
+  "id": "q337",
+  "category": "emergency-preparedness",
+  "question": "Why is it important to have an emergency meeting place established with family members?",
+  "answers": [
+    { "text": "To make sure everyone gets home on time for dinner", "correct": false },
+    { "text": "To have a fun place to hang out after an emergency", "correct": false },
+    { "text": "To ensure everyone knows where to go and can reconnect safely if separated during an emergency or evacuation", "correct": true, "explanation": "A pre-determined meeting point reduces confusion and anxiety when communication might be difficult." },
+    { "text": "To avoid each other after a disaster", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["emergency-preparedness", "family-plan", "communication"]
+},
+{
+  "id": "q338",
+  "category": "emergency-preparedness",
+  "question": "What type of important documents should be included in an emergency kit?",
+  "answers": [
+    { "text": "Only your passport", "correct": false },
+    { "text": "Old shopping lists and receipts", "correct": false },
+    { "text": "Copies of identification (passports, driver's licenses), insurance policies, birth certificates, and medical records", "correct": true, "explanation": "These documents are crucial for proving identity, accessing aid, and reconstructing your life after a disaster." },
+    { "text": "Recent utility bills", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["emergency-preparedness", "documents", "identity"]
+},
+{
+  "id": "q339",
+  "category": "emergency-preparedness",
+  "question": "How often should you check and refresh the items in your emergency kit?",
+  "answers": [
+    { "text": "Only after a major disaster has occurred", "correct": false },
+    { "text": "Once every five years", "correct": false },
+    { "text": "At least once a year, checking expiration dates on food and water, and updating medications and documents", "correct": true, "explanation": "Food and water expire, medications need to be current, and family needs may change. Regular checks ensure your kit is always ready." },
+    { "text": "Never, items last indefinitely", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["emergency-preparedness", "maintenance", "go-bag"]
+},
+{
+  "id": "q340",
+  "category": "emergency-preparedness",
+  "question": "Why is it advisable to keep your vehicle's fuel tank at least half full?",
+  "answers": [
+    { "text": "To get better gas mileage", "correct": false },
+    { "text": "To make fewer stops at gas stations", "correct": false },
+    { "text": "In case of an emergency evacuation, you have enough fuel to get to safety without worrying about gas stations being closed or inaccessible", "correct": true, "explanation": "During large-scale emergencies, fuel supplies can be disrupted or roads can become gridlocked, making a full tank critical." },
+    { "text": "It keeps the engine cooler", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["emergency-preparedness", "vehicle-safety", "evacuation"]
+},
+
+{
+  "id": "q341",
+  "category": "environmental-safety",
+  "question": "What is the primary concern with prolonged exposure to loud noise?",
+  "answers": [
+    { "text": "It can give you a headache", "correct": false },
+    { "text": "It can be annoying", "correct": false },
+    { "text": "It can lead to permanent hearing damage or loss", "correct": true, "explanation": "Loud noise can damage the delicate structures of the inner ear, leading to irreversible hearing loss." },
+    { "text": "It makes it harder to concentrate", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["environmental-safety", "noise-pollution", "hearing-loss"]
+},
+{
+  "id": "q342",
+  "category": "environmental-safety",
+  "question": "What does the UV Index measure, and why is it important for outdoor safety?",
+  "answers": [
+    { "text": "The wind speed, for kite flying", "correct": false },
+    { "text": "The temperature, for dressing appropriately", "correct": false },
+    { "text": "The strength of sun-burning ultraviolet (UV) radiation, helping you decide on sun protection measures", "correct": true, "explanation": "High UV levels increase the risk of sunburn, skin cancer, and eye damage. The index guides sun safety." },
+    { "text": "The humidity level, for comfort", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["environmental-safety", "UV-index", "sun-safety"]
+},
+{
+  "id": "q343",
+  "category": "environmental-safety",
+  "question": "What is the most effective way to protect yourself from mosquito-borne illnesses like West Nile or Zika?",
+  "answers": [
+    { "text": "Avoid going outside at all", "correct": false },
+    { "text": "Eat garlic regularly", "correct": false },
+    { "text": "Use EPA-registered insect repellent, wear long sleeves and pants, and eliminate standing water where mosquitoes breed", "correct": true, "explanation": "Reducing exposure and mosquito populations are key to preventing these diseases." },
+    { "text": "Take antibiotics as a preventative measure", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["environmental-safety", "mosquito-borne-diseases", "insect-repellent"]
+},
+{
+  "id": "q344",
+  "category": "environmental-safety",
+  "question": "Why is it dangerous to ignore air quality alerts (e.g., for smog or ozone)?",
+  "answers": [
+    { "text": "It means the weather will be unpleasant", "correct": false },
+    { "text": "It can spoil your outdoor activities", "correct": false },
+    { "text": "High levels of pollutants can cause respiratory problems, especially for sensitive groups, and exacerbate existing health conditions", "correct": true, "explanation": "Poor air quality directly impacts lung and cardiovascular health. Limiting exposure during alerts is crucial." },
+    { "text": "It's just a government warning that doesn't affect individuals", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["environmental-safety", "air-quality", "respiratory-health"]
+},
+{
+  "id": "q345",
+  "category": "environmental-safety",
+  "question": "What is the best practice for disposing of hazardous household waste (e.g., old batteries, paints, chemicals)?",
+  "answers": [
+    { "text": "Throw them in the regular trash", "correct": false },
+    { "text": "Pour them down the drain or toilet", "correct": false },
+    { "text": "Take them to designated hazardous waste collection sites or events", "correct": true, "explanation": "Improper disposal can contaminate soil and water, harming the environment and public health." },
+    { "text": "Bury them in your backyard", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["environmental-safety", "hazardous-waste", "disposal"]
+},
+
+{
+  "id": "q346",
+  "category": "public-health",
+  "question": "What is the role of handwashing in preventing the spread of infectious diseases?",
+  "answers": [
+    { "text": "It makes your hands smell good", "correct": false },
+    { "text": "It only removes visible dirt", "correct": false },
+    { "text": "It physically removes germs and viruses from your hands, breaking the chain of infection", "correct": true, "explanation": "Proper handwashing is one of the most effective ways to prevent the transmission of many common illnesses." },
+    { "text": "It's only necessary before eating", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["public-health", "handwashing", "infectious-diseases"]
+},
+{
+  "id": "q347",
+  "category": "public-health",
+  "question": "What is 'herd immunity' and why is it important for public health?",
+  "answers": [
+    { "text": "When animals become immune to human diseases", "correct": false },
+    { "text": "When everyone takes the same medication", "correct": false },
+    { "text": "Indirect protection from an infectious disease that happens when a population is immune to infection, thereby protecting unvaccinated individuals", "correct": true, "explanation": "Herd immunity protects vulnerable individuals who cannot be vaccinated, preventing widespread outbreaks." },
+    { "text": "Immunity gained by eating a specific type of food", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["public-health", "herd-immunity", "vaccination"]
+},
+{
+  "id": "q348",
+  "category": "public-health",
+  "question": "What is the best way to prevent the spread of colds and flu?",
+  "answers": [
+    { "text": "Shake hands with everyone to build immunity", "correct": false },
+    { "text": "Avoid leaving your house during flu season", "correct": false },
+    { "text": "Frequent handwashing, covering coughs/sneezes, avoiding touching your face, and getting vaccinated annually", "correct": true, "explanation": "These practices reduce the chances of contracting and transmitting respiratory viruses." },
+    { "text": "Take large doses of vitamin C every day", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["public-health", "cold-flu", "prevention"]
+},
+{
+  "id": "q349",
+  "category": "public-health",
+  "question": "What is the purpose of public health advisories and warnings during outbreaks?",
+  "answers": [
+    { "text": "To create panic among the population", "correct": false },
+    { "text": "To entertain the public with health facts", "correct": false },
+    { "text": "To inform the public about health risks, provide guidance on protective measures, and encourage collective action to control disease spread", "correct": true, "explanation": "Public health communications are vital for effective disease management and community protection." },
+    { "text": "To restrict people's freedoms unnecessarily", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["public-health", "outbreak", "communication"]
+},
+{
+  "id": "q350",
+  "category": "public-health",
+  "question": "What is the primary health risk associated with excessive sugar consumption?",
+  "answers": [
+    { "text": "It can make your teeth whiter", "correct": false },
+    { "text": "It gives you immediate energy for a long time", "correct": false },
+    { "text": "Increased risk of obesity, type 2 diabetes, heart disease, and dental decay", "correct": true, "explanation": "High sugar intake contributes to a range of chronic health problems beyond just weight gain." },
+    { "text": "It improves your memory", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["public-health", "nutrition", "sugar", "chronic-disease"]
+},
+
+{
+  "id": "q351",
+  "category": "online",
+  "question": "What is 'doxing' and why is it a privacy concern?",
+  "answers": [
+    { "text": "Sending anonymous gifts to someone online", "correct": false },
+    { "text": "The process of searching for and publishing private or identifying information about an individual on the internet, typically with malicious intent", "correct": true, "explanation": "Doxing can lead to harassment, identity theft, and real-world harm by exposing sensitive personal data." },
+    { "text": "Creating a public profile for a pet", "correct": false },
+    { "text": "Sharing your professional accomplishments online", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["online-safety", "privacy", "doxing", "cybersecurity"]
+},
+{
+  "id": "q352",
+  "category": "online",
+  "question": "You receive a message from a supposed technical support agent asking for remote access to your computer to fix an issue you didn't report. What should you do?",
+  "answers": [
+    { "text": "Grant them access immediately to get the issue fixed", "correct": false },
+    { "text": "Try to fix it yourself by giving them your password", "correct": false },
+    { "text": "Decline the request, hang up/block the sender, and report the scam attempt to relevant authorities", "correct": true, "explanation": "This is a common tech support scam aimed at gaining control of your computer or stealing personal information." },
+    { "text": "Engage them in conversation to learn more about the 'issue'", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["online-safety", "tech-support-scam", "phishing"]
+},
+{
+  "id": "q353",
+  "category": "online",
+  "question": "What is the primary risk of connecting to public, unsecured Wi-Fi networks?",
+  "answers": [
+    { "text": "Slow internet speeds", "correct": false },
+    { "text": "Running out of battery on your device", "correct": false },
+    { "text": "Your data (passwords, banking info) can be easily intercepted by malicious actors on the same network", "correct": true, "explanation": "Unsecured public Wi-Fi offers no encryption, making your online activities vulnerable to eavesdropping." },
+    { "text": "You might accidentally download viruses", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["online-safety", "wi-fi-security", "data-privacy"]
+},
+{
+  "id": "q354",
+  "category": "online",
+  "question": "What does a 'HTTPS' prefix in a website's URL indicate?",
+  "answers": [
+    { "text": "It's a very old website", "correct": false },
+    { "text": "It's a website for shopping only", "correct": false },
+    { "text": "That the connection to the website is encrypted and secure, protecting your data during transmission", "correct": true, "explanation": "HTTPS (Hypertext Transfer Protocol Secure) is crucial for protecting sensitive information exchanged online." },
+    { "text": "It's a website that is currently under construction", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["online-safety", "HTTPS", "encryption", "web-security"]
+},
+{
+  "id": "q355",
+  "category": "online",
+  "question": "What is 'ransomware'?",
+  "answers": [
+    { "text": "Software that helps you organize your files", "correct": false },
+    { "text": "A type of online game where you collect items", "correct": false },
+    { "text": "Malware that encrypts your files and demands a payment (ransom) to restore access", "correct": true, "explanation": "Ransomware is a major cybersecurity threat that can cripple individuals and organizations by locking up their data." },
+    { "text": "A program that automatically backs up your data", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["online-safety", "ransomware", "malware", "cybersecurity"]
+},
+
+{
+  "id": "q356",
+  "category": "street",
+  "question": "When walking at night, what color clothing offers the best visibility to drivers?",
+  "answers": [
+    { "text": "Dark blue or black", "correct": false },
+    { "text": "White or light-colored clothing, especially with reflective elements", "correct": true, "explanation": "Light colors contrast better with the darkness, and reflective materials bounce headlight beams back to the driver." },
+    { "text": "Green or brown to blend with nature", "correct": false },
+    { "text": "Any color, as long as it's fashionable", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["street-safety", "night-safety", "visibility", "pedestrian-safety"]
+},
+{
+  "id": "q357",
+  "category": "street",
+  "question": "If you are using an e-scooter or bicycle on a sidewalk (where permitted), what is a key safety practice?",
+  "answers": [
+    { "text": "Speed up to get off the sidewalk quickly", "correct": false },
+    { "text": "Weave in and out of pedestrians", "correct": false },
+    { "text": "Slow down, yield to pedestrians, and make your presence known respectfully", "correct": true, "explanation": "Pedestrians have the right of way on sidewalks. Operators must be cautious to avoid collisions." },
+    { "text": "Assume pedestrians will hear you coming", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["street-safety", "e-scooter", "bicycle", "pedestrian-safety"]
+},
+{
+  "id": "q358",
+  "category": "street",
+  "question": "What does the phrase 'Situational Awareness' mean in the context of street safety?",
+  "answers": [
+    { "text": "Only paying attention to your phone while walking", "correct": false },
+    { "text": "Being aware of your immediate surroundings, potential threats, and escape routes", "correct": true, "explanation": "Good situational awareness allows you to identify and avoid dangerous situations before they escalate." },
+    { "text": "Knowing where all the shops are located", "correct": false },
+    { "text": "Only noticing things that directly affect you", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["street-safety", "situational-awareness", "prevention"]
+},
+{
+  "id": "q359",
+  "category": "street",
+  "question": "If someone tries to snatch your bag or phone, what is generally recommended?",
+  "answers": [
+    { "text": "Fight back aggressively to keep your belongings", "correct": false },
+    { "text": "Scream for help, but hold on tight to your items", "correct": false },
+    { "text": "Let go of the item to avoid injury, and prioritize your personal safety over material possessions", "correct": true, "explanation": "Resisting can escalate the situation and lead to serious physical harm. Items can be replaced, you cannot." },
+    { "text": "Run after them to get it back", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["street-safety", "robbery", "personal-safety"]
+},
+{
+  "id": "q360",
+  "category": "street",
+  "question": "When meeting someone for the first time from an online dating app, what is a crucial safety measure?",
+  "answers": [
+    { "text": "Meet them at their home to build trust", "correct": false },
+    { "text": "Go to a secluded location for privacy", "correct": false },
+    { "text": "Meet in a public place, inform a friend or family member of your plans, and arrange your own transportation", "correct": true, "explanation": "Public meetings and a safety net reduce risks associated with meeting strangers." },
+    { "text": "Don't tell anyone where you are going", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["street-safety", "online-dating", "personal-safety"]
+},
+
+{
+  "id": "q361",
+  "category": "home",
+  "question": "What is the recommended maximum water heater temperature setting to prevent scalding?",
+  "answers": [
+    { "text": "60°C (140°F)", "correct": false },
+    { "text": "70°C (158°F)", "correct": false },
+    { "text": "49°C (120°F)", "correct": true, "explanation": "Water hotter than 120°F can cause serious burns in a very short time, especially for children and the elderly." },
+    { "text": "90°C (194°F)", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["home-safety", "scalding", "water-heater"]
+},
+{
+  "id": "q362",
+  "category": "home",
+  "question": "When storing cleaning products and chemicals, where is the safest place?",
+  "answers": [
+    { "text": "Under the kitchen sink for easy access", "correct": false },
+    { "text": "On an open shelf where they are visible", "correct": false },
+    { "text": "In their original containers, in a locked cabinet, out of reach of children and pets", "correct": true, "explanation": "Locked storage prevents accidental ingestion or exposure, especially by curious children or animals." },
+    { "text": "Mixed together in a large bottle to save space", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["home-safety", "chemicals", "child-safety", "pet-safety"]
+},
+{
+  "id": "q363",
+  "category": "home",
+  "question": "What is the purpose of ground fault circuit interrupters (GFCIs) in electrical outlets, especially in bathrooms and kitchens?",
+  "answers": [
+    { "text": "To prevent power surges", "correct": false },
+    { "text": "To make outlets look modern", "correct": false },
+    { "text": "To immediately shut off power if there's a ground fault, preventing severe electrical shock", "correct": true, "explanation": "GFCIs are designed to protect people from electrocution by detecting imbalances in electrical current." },
+    { "text": "To charge devices faster", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["home-safety", "electrical", "GFCI"]
+},
+{
+  "id": "q364",
+  "category": "home",
+  "question": "What is a safe alternative to candles for ambient lighting or power outages?",
+  "answers": [
+    { "text": "Open flame oil lamps", "correct": false },
+    { "text": "Using a gas stove burner", "correct": false },
+    { "text": "Battery-operated lanterns, flashlights, or LED candles", "correct": true, "explanation": "These alternatives eliminate the fire hazard associated with open flames." },
+    { "text": "Leaving the oven door open for light and heat", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["home-safety", "fire-prevention", "lighting"]
+},
+{
+  "id": "q365",
+  "category": "home",
+  "question": "If you are home alone and hear suspicious noises downstairs, what is your safest course of action?",
+  "answers": [
+    { "text": "Go downstairs quietly to investigate", "correct": false },
+    { "text": "Shout loudly to scare them away", "correct": false },
+    { "text": "Barricade yourself in a safe room, call emergency services (e.g., 911/112), and remain quiet until help arrives", "correct": true, "explanation": "Confronting an intruder can be extremely dangerous. Prioritizing your safety and calling for help is paramount." },
+    { "text": "Turn on all the lights to see what's happening", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["home-safety", "intruder", "personal-safety"]
+},
+
+{
+  "id": "q366",
+  "category": "travel",
+  "question": "When booking accommodations in an unfamiliar area, what is a good safety tip?",
+  "answers": [
+    { "text": "Choose the cheapest option regardless of reviews or location", "correct": false },
+    { "text": "Book a place with no reviews to experience something new", "correct": false },
+    { "text": "Read recent reviews focusing on safety and location, and check for 24-hour reception or good security measures", "correct": true, "explanation": "Researching accommodations helps ensure you choose a safe environment." },
+    { "text": "Only book places recommended by strangers online", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["travel", "accommodation", "security"]
+},
+{
+  "id": "q367",
+  "category": "travel",
+  "question": "What is a general rule for drinking water in developing countries or areas with uncertain water quality?",
+  "answers": [
+    { "text": "Drink tap water if it looks clear", "correct": false },
+    { "text": "Only drink water from restaurants", "correct": false },
+    { "text": "Only drink bottled water with an unbroken seal, or purify local water (boil, filter, chemical treatment)", "correct": true, "explanation": "Contaminated water can cause severe gastrointestinal illnesses. Always prioritize safe drinking water sources." },
+    { "text": "Drink from public fountains if they are accessible", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["travel", "water-safety", "health", "developing-countries"]
+},
+{
+  "id": "q368",
+  "category": "travel",
+  "question": "When flying, what valuable items should always be kept in your carry-on bag?",
+  "answers": [
+    { "text": "All your clothing", "correct": false },
+    { "text": "Only heavy books", "correct": false },
+    { "text": "Important documents, medications, electronics, and valuables", "correct": true, "explanation": "Checked luggage can be lost, delayed, or stolen. Keeping essentials and valuables with you ensures access and security." },
+    { "text": "Souvenirs you bought at the airport", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["travel", "flying", "luggage", "valuables"]
+},
+{
+  "id": "q369",
+  "category": "travel",
+  "question": "What is the purpose of purchasing travel insurance?",
+  "answers": [
+    { "text": "To guarantee sunny weather on your trip", "correct": false },
+    { "text": "To get discounts on flights and hotels", "correct": false },
+    { "text": "To cover unexpected expenses and losses such as medical emergencies, trip cancellations, lost luggage, or travel delays", "correct": true, "explanation": "Travel insurance provides financial protection against unforeseen events that can disrupt your trip." },
+    { "text": "To impress your travel companions", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["travel", "travel-insurance", "emergencies"]
+},
+{
+  "id": "q370",
+  "category": "travel",
+  "question": "If you are confronted by a local scammer trying to sell you an overpriced item or experience, what should you do?",
+  "answers": [
+    { "text": "Engage in a long negotiation to get the best price", "correct": false },
+    { "text": "Buy the item to avoid confrontation", "correct": false },
+    { "text": "Politely but firmly decline, walk away, and avoid direct eye contact to discourage further interaction", "correct": true, "explanation": "Engaging can encourage persistence. Disengaging quickly is usually the safest approach." },
+    { "text": "Threaten to call the police", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["travel", "scams", "hawkers"]
+},
+
+{
+  "id": "q371",
+  "category": "general",
+  "question": "What should you do if you encounter a suspicious package in a public place?",
+  "answers": [
+    { "text": "Open it to see what's inside", "correct": false },
+    { "text": "Move it to a less conspicuous spot", "correct": false },
+    { "text": "Do not touch it, move away from it, and report it to the authorities (e.g., police or security personnel) immediately", "correct": true, "explanation": "Treat suspicious packages as potential threats. The priority is to evacuate yourself and others, and notify experts." },
+    { "text": "Take a photo and post it online asking what it is", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["general-safety", "suspicious-package", "public-safety"]
+},
+{
+  "id": "q372",
+  "category": "general",
+  "question": "What does the phrase 'Run, Hide, Fight' refer to?",
+  "answers": [
+    { "text": "A new fitness routine", "correct": false },
+    { "text": "A strategy for dealing with wild animal encounters", "correct": false },
+    { "text": "A widely adopted protocol for responding to an active shooter or violent intruder situation", "correct": true, "explanation": "These actions provide options for increasing survival chances in such critical incidents." },
+    { "text": "A game for children to play outdoors", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["general-safety", "active-shooter", "emergency-response"]
+},
+{
+  "id": "q373",
+  "category": "general",
+  "question": "Why is it important to learn basic self-defense techniques?",
+  "answers": [
+    { "text": "To provoke fights with others", "correct": false },
+    { "text": "To become a professional fighter", "correct": false },
+    { "text": "To increase confidence, be better prepared to protect yourself in dangerous situations, and potentially deter attackers", "correct": true, "explanation": "Self-defense provides skills and awareness that can be crucial for personal safety, not for aggression." },
+    { "text": "To only be able to defend yourself against trained martial artists", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["general-safety", "self-defense", "personal-safety"]
+},
+{
+  "id": "q374",
+  "category": "general",
+  "question": "When driving in foggy conditions, what lights should you use?",
+  "answers": [
+    { "text": "High beams to see further", "correct": false },
+    { "text": "Daytime running lights only", "correct": false },
+    { "text": "Low beams or fog lights to improve visibility without blinding oncoming drivers", "correct": true, "explanation": "High beams reflect off the fog, reducing visibility. Low beams or fog lights project light lower, improving vision." },
+    { "text": "No lights, as they can cause reflections", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["general-safety", "driving", "foggy-conditions"]
+},
+{
+  "id": "q375",
+  "category": "general",
+  "question": "What is the primary danger of swimming in unsupervised quarries or construction sites?",
+  "answers": [
+    { "text": "The water might be too cold", "correct": false },
+    { "text": "The lack of changing facilities", "correct": false },
+    { "text": "Unstable edges, deep and cold water, hidden machinery, and no lifeguards, leading to high risk of drowning or injury", "correct": true, "explanation": "These sites are not designed for recreation and pose numerous hidden hazards." },
+    { "text": "The water might be too murky to see your feet", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["general-safety", "swimming-hazards", "quarry"]
+},
+
+{
+  "id": "q376",
+  "category": "workplace",
+  "question": "What does a yellow caution sign in a workplace typically indicate?",
+  "answers": [
+    { "text": "An immediate danger that will cause death or serious injury", "correct": false },
+    { "text": "A temporary closure of the area", "correct": false },
+    { "text": "A potential hazard or unsafe practice that could result in minor or moderate injury", "correct": true, "explanation": "Yellow signs warn of conditions that require careful attention to avoid accidents." },
+    { "text": "An area where food is served", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["workplace-safety", "safety-signs", "hazard-warning"]
+},
+{
+  "id": "q377",
+  "category": "workplace",
+  "question": "What is the 'Hierarchy of Controls' in workplace safety?",
+  "answers": [
+    { "text": "A list of managers responsible for safety", "correct": false },
+    { "text": "A system for ranking employee safety suggestions", "correct": false },
+    { "text": "A system for controlling risks, prioritizing elimination, substitution, engineering controls, administrative controls, and PPE", "correct": true, "explanation": "This hierarchy prioritizes the most effective and permanent controls over less effective ones like PPE." },
+    { "text": "The order in which safety drills are conducted", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["workplace-safety", "risk-management", "hierarchy-of-controls"]
+},
+{
+  "id": "q378",
+  "category": "workplace",
+  "question": "If you are unsure how to safely operate a piece of equipment at work, what should you do?",
+  "answers": [
+    { "text": "Guess based on similar equipment", "correct": false },
+    { "text": "Watch a colleague and try to imitate them", "correct": false },
+    { "text": "Stop, ask for training, consult the manual, or seek guidance from a supervisor or qualified person", "correct": true, "explanation": "Operating equipment without proper knowledge can lead to serious accidents and injuries." },
+    { "text": "Try it and learn from your mistakes", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["workplace-safety", "equipment-operation", "training"]
+},
+{
+  "id": "q379",
+  "category": "workplace",
+  "question": "What is a 'Near Miss' in a workplace context, and why is it important to report?",
+  "answers": [
+    { "text": "An almost completed sale; for sales reports", "correct": false },
+    { "text": "An instance where an accident almost happened but did not result in injury or damage; because it helps identify hazards and prevent future accidents", "correct": true, "explanation": "Near misses are valuable indicators of potential hazards that need to be addressed to prevent actual incidents." },
+    { "text": "A close call with a deadline; for project management", "correct": false },
+    { "text": "An employee who nearly missed their shift; for attendance records", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["workplace-safety", "near-miss", "hazard-identification"]
+},
+{
+  "id": "q380",
+  "category": "workplace",
+  "question": "What is the primary benefit of good ergonomics in the workplace?",
+  "answers": [
+    { "text": "To make the office look more aesthetic", "correct": false },
+    { "text": "To encourage more breaks", "correct": false },
+    { "text": "To reduce discomfort, prevent musculoskeletal injuries, and improve productivity by designing workspaces and tasks to fit the worker", "correct": true, "explanation": "Ergonomics focuses on fitting the job to the person, enhancing health and efficiency." },
+    { "text": "To speed up internet connection", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["workplace-safety", "ergonomics", "injury-prevention"]
+},
+
+{
+  "id": "q381",
+  "category": "first-aid",
+  "question": "When should you NOT move someone who has been injured?",
+  "answers": [
+    { "text": "If they are in immediate danger (e.g., burning building)", "correct": false },
+    { "text": "If they are conscious and can walk", "correct": false },
+    { "text": "If you suspect a head, neck, or spinal injury, unless their life is in immediate danger", "correct": true, "explanation": "Moving someone with a suspected spinal injury can cause further, irreversible damage. Immobilization is key." },
+    { "text": "If they are bleeding heavily", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["first-aid", "spinal-injury", "movement"]
+},
+{
+  "id": "q382",
+  "category": "first-aid",
+  "question": "What are the common signs of a heart attack in an adult?",
+  "answers": [
+    { "text": "Sudden headache and dizziness", "correct": false },
+    { "text": "Sharp pain in the leg and arm", "correct": false },
+    { "text": "Chest pain or discomfort, shortness of breath, pain radiating to the arm, jaw, or back, and cold sweats", "correct": true, "explanation": "Recognizing these symptoms is critical for seeking immediate medical attention." },
+    { "text": "Blurred vision and ringing in the ears", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["first-aid", "heart-attack", "emergency"]
+},
+{
+  "id": "q383",
+  "category": "first-aid",
+  "question": "What is the recommended treatment for a minor cut or scrape?",
+  "answers": [
+    { "text": "Cover it immediately with a dirty bandage", "correct": false },
+    { "text": "Pour alcohol directly onto it", "correct": false },
+    { "text": "Clean the wound with soap and water, apply antiseptic, and cover with a sterile bandage", "correct": true, "explanation": "Proper wound care prevents infection and promotes healing." },
+    { "text": "Leave it open to the air to heal faster", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["first-aid", "cuts", "scrapes", "wound-care"]
+},
+{
+  "id": "q384",
+  "category": "first-aid",
+  "question": "If someone is experiencing symptoms of heatstroke, what is the first priority?",
+  "answers": [
+    { "text": "Give them a hot drink to warm them up", "correct": false },
+    { "text": "Wrap them in blankets to cause sweating", "correct": false },
+    { "text": "Move them to a cooler environment, loosen clothing, and apply cool, wet cloths or immerse them in cool water to lower body temperature", "correct": true, "explanation": "Heatstroke is a medical emergency requiring rapid cooling to prevent organ damage or death." },
+    { "text": "Ignore them and hope they recover on their own", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["first-aid", "heatstroke", "emergency"]
+},
+{
+  "id": "q385",
+  "category": "first-aid",
+  "question": "What should you NOT do if someone is choking and able to cough forcefully?",
+  "answers": [
+    { "text": "Encourage them to keep coughing", "correct": false },
+    { "text": "Call for emergency help if the choking becomes severe", "correct": false },
+    { "text": "Perform abdominal thrusts (Heimlich maneuver)", "correct": true, "explanation": "If a person can cough, their airway is not fully blocked. Intervening can make the situation worse by dislodging the object further down." },
+    { "text": "Stay with them and monitor their condition", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["first-aid", "choking", "heimlich"]
+},
+
+{
+  "id": "q386",
+  "category": "natural-disasters",
+  "question": "What is the 'Eye' of a hurricane?",
+  "answers": [
+    { "text": "The strongest part of the storm with the highest winds", "correct": false },
+    { "text": "The outer bands where rain is heaviest", "correct": false },
+    { "text": "The calm, clear center of the hurricane, surrounded by the eyewall (most intense part)", "correct": true, "explanation": "The eye is deceptively calm, but the dangerous conditions of the eyewall will return." },
+    { "text": "The area where the hurricane first makes landfall", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["natural-disasters", "hurricane", "meteorology"]
+},
+{
+  "id": "q387",
+  "category": "natural-disasters",
+  "question": "What is the primary danger during a severe winter storm or blizzard if you are stranded in your car?",
+  "answers": [
+    { "text": "Running out of snacks", "correct": false },
+    { "text": "Being bored", "correct": false },
+    { "text": "Hypothermia and carbon monoxide poisoning if running the engine without proper ventilation", "correct": true, "explanation": "Exhaust can be blocked by snow, leading to deadly CO buildup inside the vehicle. Hypothermia is a risk due to extreme cold." },
+    { "text": "Getting a flat tire", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["natural-disasters", "blizzard", "car-safety", "carbon-monoxide"]
+},
+{
+  "id": "q388",
+  "category": "natural-disasters",
+  "question": "If you are advised to 'shelter in place' due to a hazardous materials incident, what does that mean?",
+  "answers": [
+    { "text": "Evacuate the area as quickly as possible", "correct": false },
+    { "text": "Go outside to see what is happening", "correct": false },
+    { "text": "Go indoors immediately, close and seal all windows and doors, and turn off ventilation systems", "correct": true, "explanation": "This protects you from external airborne contaminants by creating a temporary barrier." },
+    { "text": "Gather your family and wait by the front door", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["natural-disasters", "hazmat", "shelter-in-place"]
+},
+{
+  "id": "q389",
+  "category": "natural-disasters",
+  "question": "What should you do if you are caught outdoors during a severe thunderstorm with lightning?",
+  "answers": [
+    { "text": "Seek shelter under a tall tree", "correct": false },
+    { "text": "Lie flat on the ground in an open field", "correct": false },
+    { "text": "Seek immediate shelter in a sturdy building or enclosed metal vehicle; if none are available, crouch low in an open area", "correct": true, "explanation": "Tall objects and open fields increase your risk of being struck by lightning." },
+    { "text": "Continue your outdoor activity, hoping it will pass", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["natural-disasters", "thunderstorm", "lightning"]
+},
+{
+  "id": "q390",
+  "category": "natural-disasters",
+  "question": "During a power outage, what is a safe way to provide light without using candles?",
+  "answers": [
+    { "text": "Open the refrigerator door for light", "correct": false },
+    { "text": "Use a gas stove burner", "correct": false },
+    { "text": "Flashlights, battery-powered lanterns, or solar-powered lights", "correct": true, "explanation": "These options provide light without the fire risk associated with candles or other open flames." },
+    { "text": "Keep your phone's flashlight on indefinitely", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["natural-disasters", "power-outage", "lighting-safety"]
+},
+
+{
+  "id": "q391",
+  "category": "children-safety",
+  "question": "At what age should children typically switch from a forward-facing car seat to a booster seat?",
+  "answers": [
+    { "text": "When they turn 1 year old", "correct": false },
+    { "text": "When they complain about being in a car seat", "correct": false },
+    { "text": "When they exceed the height or weight limits of their forward-facing car seat, usually around 4-8 years old", "correct": true, "explanation": "It's based on size and development, not just age, to ensure proper fit of the vehicle's seatbelt." },
+    { "text": "When they ask to sit in the front seat", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["children-safety", "car-seat", "booster-seat"]
+},
+{
+  "id": "q392",
+  "category": "children-safety",
+  "question": "What is the '5-second rule' commonly used for in relation to children and hot surfaces?",
+  "answers": [
+    { "text": "It's the maximum time food can be on the floor and still be safe to eat", "correct": false },
+    { "text": "It's how quickly a child can get into trouble if left unsupervised", "correct": false },
+    { "text": "It's a guideline that if you can't hold your hand on a surface for 5 seconds, it's too hot for a child's skin", "correct": true, "explanation": "This rule helps prevent burns from hot pavement, metal slides, or other heated objects." },
+    { "text": "It's the time it takes for a child to cool down after exercise", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["children-safety", "burns", "hot-surfaces"]
+},
+{
+  "id": "q393",
+  "category": "children-safety",
+  "question": "What is the safest place for children under 12 to ride in a vehicle?",
+  "answers": [
+    { "text": "The front passenger seat", "correct": false },
+    { "text": "In the very back row of an SUV or minivan", "correct": false },
+    { "text": "In the back seat, preferably in a car seat or booster seat appropriate for their size and age", "correct": true, "explanation": "The back seat is safest to avoid injury from airbags or direct impact in a frontal collision." },
+    { "text": "On a parent's lap in the front seat", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["children-safety", "car-safety", "seatbelts"]
+},
+{
+  "id": "q394",
+  "category": "children-safety",
+  "question": "When babysitting, what information should you always have readily available?",
+  "answers": [
+    { "text": "The latest gossip from school", "correct": false },
+    { "text": "The child's favorite TV shows", "correct": false },
+    { "text": "Emergency contact numbers (parents, pediatrician, poison control, emergency services), child's allergies, and relevant medical conditions", "correct": true, "explanation": "Access to critical information allows for quick and appropriate action in an emergency." },
+    { "text": "A list of all their toys", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["children-safety", "babysitting", "emergency-contacts"]
+},
+{
+  "id": "q395",
+  "category": "children-safety",
+  "question": "What is the main danger of leaving small toys or balloons within reach of infants and toddlers?",
+  "answers": [
+    { "text": "They might break them", "correct": false },
+    { "text": "They might get lost", "correct": false },
+    { "text": "They pose a choking hazard, as small items can easily block a child's airway", "correct": true, "explanation": "Infants and toddlers explore by putting objects in their mouths. Any item small enough to fit through a toilet paper roll is a choking risk." },
+    { "text": "They might make a mess", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["children-safety", "choking-hazards", "toys"]
+},
+
+{
+  "id": "q396",
+  "category": "pet-safety",
+  "question": "What is an appropriate response if your dog suddenly becomes aggressive towards a stranger?",
+  "answers": [
+    { "text": "Punish the dog harshly to show dominance", "correct": false },
+    { "text": "Let the dog continue to assert its dominance", "correct": false },
+    { "text": "Immediately remove the dog from the situation, manage the environment, and seek professional training or veterinary advice to address the underlying cause", "correct": true, "explanation": "Aggression indicates a problem that needs to be safely managed and addressed to prevent harm and improve behavior." },
+    { "text": "Tell the stranger to leave immediately", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["pet-safety", "dog-behavior", "aggression", "training"]
+},
+{
+  "id": "q397",
+  "category": "pet-safety",
+  "question": "What are common signs of heatstroke in pets?",
+  "answers": [
+    { "text": "Increased appetite and playfulness", "correct": false },
+    { "text": "Excessive panting, lethargy, drooling, vomiting, and loss of coordination", "correct": true, "explanation": "Recognizing these signs early is critical for immediate intervention to cool the animal down and seek veterinary care." },
+    { "text": "Shivering and seeking warmth", "correct": false },
+    { "text": "Sleeping more than usual", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["pet-safety", "heatstroke", "animal-health"]
+},
+{
+  "id": "q398",
+  "category": "pet-safety",
+  "question": "Why is it important to keep household plants out of reach of pets?",
+  "answers": [
+    { "text": "Pets might make a mess with the soil", "correct": false },
+    { "text": "Many common household plants are toxic to pets if ingested", "correct": true, "explanation": "Ingesting toxic plants can cause mild to severe health problems, organ damage, or even death in pets." },
+    { "text": "Pets might chew on the leaves and ruin the plant's appearance", "correct": false },
+    { "text": "Pets might drink the water from the plant's pot", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["pet-safety", "toxic-plants", "poisoning"]
+},
+{
+  "id": "q399",
+  "category": "pet-safety",
+  "question": "What is the safest way to restrain a cat if it needs to go to the vet and is resistant?",
+  "answers": [
+    { "text": "Grab it by the scruff of its neck and force it into a carrier", "correct": false },
+    { "text": "Try to calm it down by talking loudly", "correct": false },
+    { "text": "Use a towel to gently wrap it, then place it into a secure, hard-sided carrier", "correct": true, "explanation": "A towel protects you from scratches and helps calm the cat, and a secure carrier prevents escape during transport." },
+    { "text": "Let it roam freely in the car", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["pet-safety", "cat-handling", "vet-visits"]
+},
+{
+  "id": "q400",
+  "category": "pet-safety",
+  "question": "What is the purpose of regular veterinary check-ups for pets?",
+  "answers": [
+    { "text": "Only to get vaccinations", "correct": false },
+    { "text": "To socialize your pet with other animals", "correct": false },
+    { "text": "To maintain preventative health, detect potential health issues early, and ensure vaccinations and parasite prevention are up-to-date", "correct": true, "explanation": "Regular vet visits are essential for a pet's long-term health and well-being." },
+    { "text": "To get a new collar every year", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["pet-safety", "veterinary-care", "preventative-health"]
+},
+
+{
+  "id": "q401",
+  "category": "recreational-safety",
+  "question": "When engaging in winter sports, why is it crucial to dress in layers?",
+  "answers": [
+    { "text": "To make you look more fashionable on the slopes", "correct": false },
+    { "text": "To make it harder for you to move quickly", "correct": false },
+    { "text": "Layers allow you to regulate body temperature by adding or removing clothing as activity levels and external temperatures change", "correct": true, "explanation": "Layering prevents overheating and chilling, both of which can be dangerous in cold environments." },
+    { "text": "To protect against falling snow", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["recreational-safety", "winter-sports", "dressing-in-layers"]
+},
+{
+  "id": "q402",
+  "category": "recreational-safety",
+  "question": "What is the 'buddy system' in outdoor activities (e.g., hiking, camping)?",
+  "answers": [
+    { "text": "Bringing your pet along for company", "correct": false },
+    { "text": "Carrying a small doll or toy with you", "correct": false },
+    { "text": "Participating with a companion who can provide assistance or seek help in an emergency", "correct": true, "explanation": "The buddy system ensures someone is aware of your status and can act if something goes wrong." },
+    { "text": "Using a smartphone to track your friends", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["recreational-safety", "buddy-system", "outdoor-activities"]
+},
+{
+  "id": "q403",
+  "category": "recreational-safety",
+  "question": "Before using a campfire, what is the most important safety precaution?",
+  "answers": [
+    { "text": "Gather as much wood as possible", "correct": false },
+    { "text": "Light it quickly before the wind picks up", "correct": false },
+    { "text": "Ensure there is a clear area around the fire pit, away from flammable materials, and have water/fire extinguisher nearby", "correct": true, "explanation": "Preventing the spread of fire is paramount to avoiding wildfires." },
+    { "text": "Build it as large as possible for warmth", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["recreational-safety", "campfire", "fire-prevention"]
+},
+{
+  "id": "q404",
+  "category": "recreational-safety",
+  "question": "When boating or kayaking, what should you do before heading out on the water?",
+  "answers": [
+    { "text": "Assume the weather will remain calm", "correct": false },
+    { "text": "Overload the vessel with extra gear", "correct": false },
+    { "text": "Check weather forecasts, inspect equipment, inform someone of your route and estimated return time, and wear a life jacket", "correct": true, "explanation": "Preparation is key to safe boating, allowing you to anticipate conditions and get help if needed." },
+    { "text": "Go alone to enjoy solitude", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["recreational-safety", "boating", "kayaking", "preparedness"]
+},
+{
+  "id": "q405",
+  "category": "recreational-safety",
+  "question": "What is 'Leave No Trace' in the context of outdoor ethics?",
+  "answers": [
+    { "text": "Leaving small markers to find your way back", "correct": false },
+    { "text": "Taking only pictures and leaving only footprints, minimizing your impact on natural environments", "correct": true, "explanation": "This principle promotes responsible recreation to preserve the natural beauty and ecological health of outdoor areas." },
+    { "text": "Leaving all your trash behind to decompose naturally", "correct": false },
+    { "text": "Not telling anyone where you went hiking", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["recreational-safety", "outdoor-ethics", "leave-no-trace"]
+},
+
+{
+  "id": "q406",
+  "category": "first-aid",
+  "question": "What does an Automated External Defibrillator (AED) do?",
+  "answers": [
+    { "text": "Measures blood pressure", "correct": false },
+    { "text": "Administers medication for heart conditions", "correct": false },
+    { "text": "Delivers an electrical shock to restore a normal heart rhythm in cases of sudden cardiac arrest", "correct": true, "explanation": "AEDs are vital life-saving devices used in conjunction with CPR." },
+    { "text": "Massages the heart externally", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["first-aid", "AED", "cardiac-arrest"]
+},
+{
+  "id": "q407",
+  "category": "first-aid",
+  "question": "What is the best way to stop bleeding from a minor cut on the finger?",
+  "answers": [
+    { "text": "Let it bleed out to clean the wound", "correct": false },
+    { "text": "Apply a cold pack directly to the wound", "correct": false },
+    { "text": "Apply direct pressure with a clean cloth, and if possible, elevate the hand above the heart", "correct": true, "explanation": "Direct pressure and elevation are effective for controlling minor bleeding." },
+    { "text": "Tie a tourniquet tightly around the finger", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["first-aid", "bleeding", "minor-cuts"]
+},
+{
+  "id": "q408",
+  "category": "first-aid",
+  "question": "If someone is experiencing symptoms of hypoglycemia (low blood sugar), and is conscious, what should you give them?",
+  "answers": [
+    { "text": "A diet soda", "correct": false },
+    { "text": "A glass of water", "correct": false },
+    { "text": "A fast-acting carbohydrate like fruit juice, candy, or glucose tablets", "correct": true, "explanation": "Quickly raising blood sugar levels is critical to prevent a severe hypoglycemic episode." },
+    { "text": "A high-fat meal", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["first-aid", "hypoglycemia", "diabetes"]
+},
+{
+  "id": "q409",
+  "category": "first-aid",
+  "question": "What is the most important step to take after applying a dressing to a wound?",
+  "answers": [
+    { "text": "Remove the dressing to check if the bleeding has stopped", "correct": false },
+    { "text": "Continue to apply firm, direct pressure and monitor for continued bleeding or signs of infection", "correct": true, "explanation": "Continued pressure is crucial for hemostasis, and monitoring for infection ensures proper wound healing." },
+    { "text": "Ignore the wound and focus on other injuries", "correct": false },
+    { "text": "Apply a second, looser dressing over the first", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["first-aid", "wound-care", "bleeding"]
+},
+{
+  "id": "q410",
+  "category": "first-aid",
+  "question": "When assessing an unconscious person, what does 'AVPU' stand for?",
+  "answers": [
+    { "text": "Always Verify Patients' Understanding", "correct": false },
+    { "text": "Airway, Ventilation, Pulse, Urine", "correct": false },
+    { "text": "Alert, Voice, Pain, Unresponsive – a scale to assess a patient's level of consciousness", "correct": true, "explanation": "The AVPU scale is a quick and simple way to gauge responsiveness in first aid." },
+    { "text": "Assist, Vaccinate, Protect, Urge", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["first-aid", "consciousness", "AVPU"]
+},
+
+{
+  "id": "q411",
+  "category": "home-safety",
+  "question": "What is a safe maximum amount of weight to store on upper shelves or in high cabinets?",
+  "answers": [
+    { "text": "As much as you can fit", "correct": false },
+    { "text": "Only light items to prevent instability and falling hazards", "correct": true, "explanation": "Heavy items on high shelves can cause shelves to collapse or items to fall, leading to injuries." },
+    { "text": "Heavy items, as they are less likely to be bumped", "correct": false },
+    { "text": "Only items you rarely use", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["home-safety", "storage", "falling-hazards"]
+},
+{
+  "id": "q412",
+  "category": "home-safety",
+  "question": "Why is it dangerous to stand on the top step of a stepladder?",
+  "answers": [
+    { "text": "It can scratch the ceiling", "correct": false },
+    { "text": "It makes it harder to reach things", "correct": false },
+    { "text": "It significantly increases the risk of losing balance and falling, as it's not designed to be a standing platform", "correct": true, "explanation": "The top step often lacks stability and a proper handhold, making falls common." },
+    { "text": "It can damage the ladder", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["home-safety", "ladders", "falls"]
+},
+{
+  "id": "q413",
+  "category": "home-safety",
+  "question": "What is the purpose of child safety locks on cabinets and drawers?",
+  "answers": [
+    { "text": "To organize your belongings better", "correct": false },
+    { "text": "To keep adults from accessing items easily", "correct": false },
+    { "text": "To prevent young children from accessing hazardous items (chemicals, sharp objects) or getting fingers pinched", "correct": true, "explanation": "These locks are crucial for preventing accidents involving curious children." },
+    { "text": "To add a decorative touch to furniture", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["home-safety", "child-proofing", "cabinet-locks"]
+},
+{
+  "id": "q414",
+  "category": "home-safety",
+  "question": "What should you do with expired or unused prescription medications?",
+  "answers": [
+    { "text": "Flush them down the toilet", "correct": false },
+    { "text": "Keep them in the medicine cabinet for future use", "correct": false },
+    { "text": "Take them to a designated medication take-back program or follow local guidelines for safe disposal", "correct": true, "explanation": "Improper disposal can lead to environmental contamination or accidental poisoning. Keeping them can lead to misuse." },
+    { "text": "Throw them in the regular household trash", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["home-safety", "medication-disposal", "poisoning-prevention"]
+},
+{
+  "id": "q415",
+  "category": "home-safety",
+  "question": "Why is it important to clean dryer lint traps after every load?",
+  "answers": [
+    { "text": "To make your clothes dry faster", "correct": false },
+    { "text": "To extend the life of your dryer", "correct": false },
+    { "text": "To prevent lint buildup, which is a common cause of household fires", "correct": true, "explanation": "Lint is highly flammable, and accumulated lint in the trap or vent can easily ignite." },
+    { "text": "To improve the smell of your laundry", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["home-safety", "fire-prevention", "dryer-maintenance"]
+},
+
+{
+  "id": "q416",
+  "category": "food-safety",
+  "question": "What is the common term for food poisoning caused by bacteria, viruses, or parasites in contaminated food?",
+  "answers": [
+    { "text": "Food allergy", "correct": false },
+    { "text": "Food intolerance", "correct": false },
+    { "text": "Foodborne illness", "correct": true, "explanation": "Foodborne illnesses are caused by consuming food contaminated with harmful microorganisms or toxins." },
+    { "text": "Stomach flu", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["food-safety", "foodborne-illness", "food-poisoning"]
+},
+{
+  "id": "q417",
+  "category": "food-safety",
+  "question": "What does a 'Best By' or 'Use By' date on food packaging indicate?",
+  "answers": [
+    { "text": "That the food is definitely unsafe after this date", "correct": false },
+    { "text": "The date the food was manufactured", "correct": false },
+    { "text": "A recommendation for when food is at its best quality (Best By) or when it should be consumed for safety (Use By)", "correct": true, "explanation": "While 'Best By' refers to quality, 'Use By' is a safety indicator, especially for highly perishable foods." },
+    { "text": "The date the product will be restocked", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["food-safety", "expiration-dates", "food-quality"]
+},
+{
+  "id": "q418",
+  "category": "food-safety",
+  "question": "Why should you avoid washing raw chicken before cooking?",
+  "answers": [
+    { "text": "It removes flavor from the chicken", "correct": false },
+    { "text": "It makes the chicken tougher", "correct": false },
+    { "text": "It can spread bacteria (like Salmonella) from the chicken to other surfaces in the kitchen via splashing water", "correct": true, "explanation": "Washing raw chicken creates a risk of cross-contamination. Cooking to the correct internal temperature kills bacteria." },
+    { "text": "It reduces the nutritional value", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["food-safety", "raw-chicken", "cross-contamination"]
+},
+{
+  "id": "q419",
+  "category": "food-safety",
+  "question": "What is the safest temperature for refrigerating perishable foods?",
+  "answers": [
+    { "text": "10°C (50°F)", "correct": false },
+    { "text": "Above 5°C (41°F)", "correct": false },
+    { "text": "At or below 4°C (40°F)", "correct": true, "explanation": "This temperature slows the growth of most harmful bacteria." },
+    { "text": "0°C (32°F)", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["food-safety", "refrigeration", "temperature"]
+},
+{
+  "id": "q420",
+  "category": "food-safety",
+  "question": "What is the primary risk of eating wild mushrooms without expert identification?",
+  "answers": [
+    { "text": "They might taste bad", "correct": false },
+    { "text": "They might be tough to chew", "correct": false },
+    { "text": "Many wild mushrooms are highly poisonous and can cause severe illness, organ damage, or death", "correct": true, "explanation": "Misidentifying edible mushrooms can have fatal consequences. Never eat wild mushrooms unless identified by an expert." },
+    { "text": "They might contain too many calories", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["food-safety", "wild-mushrooms", "poisoning"]
+},
+
+{
+  "id": "q421",
+  "category": "online",
+  "question": "What is a 'strong password' characterized by?",
+  "answers": [
+    { "text": "Being short and easy to remember", "correct": false },
+    { "text": "Using only lowercase letters", "correct": false },
+    { "text": "A combination of upper and lowercase letters, numbers, and symbols, and at least 12-16 characters long", "correct": true, "explanation": "Complexity and length make passwords much harder for hackers to guess or crack." },
+    { "text": "Your birthdate or common words", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["online-safety", "password-security", "cybersecurity"]
+},
+{
+  "id": "q422",
+  "category": "online",
+  "question": "What is the safest way to store multiple passwords?",
+  "answers": [
+    { "text": "Write them down on sticky notes attached to your monitor", "correct": false },
+    { "text": "Use the same password for all accounts", "correct": false },
+    { "text": "Use a reputable password manager, which securely encrypts and stores your login credentials", "correct": true, "explanation": "Password managers generate and store complex, unique passwords, protected by a single master password." },
+    { "text": "Memorize them all perfectly without writing them down", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["online-safety", "password-manager", "cybersecurity"]
+},
+{
+  "id": "q423",
+  "category": "online",
+  "question": "Why is it generally unsafe to post your full vacation itinerary on social media before or during your trip?",
+  "answers": [
+    { "text": "It might make your friends jealous", "correct": false },
+    { "text": "It can attract too many unsolicited travel tips", "correct": false },
+    { "text": "It advertises that your home will be vacant, making it a target for burglars", "correct": true, "explanation": "Sharing travel plans publicly can alert criminals to opportune times for home invasion." },
+    { "text": "It reveals too much about your travel style", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["online-safety", "social-media", "home-security"]
+},
+{
+  "id": "q424",
+  "category": "online",
+  "question": "What is a common indicator that an email is a phishing attempt?",
+  "answers": [
+    { "text": "It uses a familiar company logo", "correct": false },
+    { "text": "It asks you to confirm personal information, contains suspicious links, and has grammatical errors or an urgent tone", "correct": true, "explanation": "Phishing emails are designed to trick you into revealing sensitive information. Look for these warning signs." },
+    { "text": "It comes from a known sender's name", "correct": false },
+    { "text": "It has a catchy subject line", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["online-safety", "phishing", "email-scams"]
+},
+{
+  "id": "q425",
+  "category": "online",
+  "question": "What is the main purpose of privacy settings on social media platforms?",
+  "answers": [
+    { "text": "To hide your profile from everyone", "correct": false },
+    { "text": "To make your profile more exclusive", "correct": false },
+    { "text": "To control who can see your posts, photos, and personal information, thus managing your digital footprint and online safety", "correct": true, "explanation": "Adjusting privacy settings allows you to limit exposure and protect your personal data from unintended audiences." },
+    { "text": "To simplify the platform's interface", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["online-safety", "privacy-settings", "social-media"]
+},
+
+{
+  "id": "q426",
+  "category": "general-safety",
+  "question": "What is the importance of having a designated meeting point outside your home in case of a fire or other emergency?",
+  "answers": [
+    { "text": "To make sure everyone gets fresh air", "correct": false },
+    { "text": "To have a place to discuss what happened", "correct": false },
+    { "text": "To ensure everyone has safely evacuated and is accounted for, preventing anyone from re-entering a dangerous situation to search for missing family members", "correct": true, "explanation": "A meeting point is critical for family accountability during an emergency." },
+    { "text": "To decide who drives to the hospital", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["general-safety", "fire-safety", "emergency-plan"]
+},
+{
+  "id": "q427",
+  "category": "general-safety",
+  "question": "When approaching a busy intersection as a pedestrian, what is the safest practice?",
+  "answers": [
+    { "text": "Assume drivers see you and will stop", "correct": false },
+    { "text": "Run across the street as quickly as possible", "correct": false },
+    { "text": "Look left, right, then left again, make eye contact with drivers, and wait for a safe gap in traffic before crossing", "correct": true, "explanation": "Even with a green light, always verify that the path is clear before stepping into the street." },
+    { "text": "Cross immediately after the light turns green without looking", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["general-safety", "pedestrian-safety", "traffic"]
+},
+{
+  "id": "q428",
+  "category": "general-safety",
+  "question": "What is the safest way to store sharp objects (knives, razors) in a household with children?",
+  "answers": [
+    { "text": "In a visible knife block on the counter", "correct": false },
+    { "text": "Loose in a drawer with other utensils", "correct": false },
+    { "text": "In a locked drawer or cabinet, or in sheaths/holders that keep the sharp edges contained and out of reach", "correct": true, "explanation": "Preventing accidental cuts is crucial for child safety." },
+    { "text": "Under the sink, hidden behind other items", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["general-safety", "child-safety", "sharp-objects"]
+},
+{
+  "id": "q429",
+  "category": "general-safety",
+  "question": "If you are trapped in a car that is sinking in water, what is the most critical action to take first?",
+  "answers": [
+    { "text": "Call emergency services on your phone", "correct": false },
+    { "text": "Try to open the doors immediately", "correct": false },
+    { "text": "Unbuckle your seatbelt and open or break a window to escape before the car is fully submerged", "correct": true, "explanation": "As the car fills with water, pressure makes doors impossible to open. Act quickly while windows are still accessible." },
+    { "text": "Wait for the car to completely fill with water", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["general-safety", "car-safety", "sinking-car", "emergency"]
+},
+{
+  "id": "q430",
+  "category": "general-safety",
+  "question": "What is the purpose of an 'escape ladder' for multi-story homes?",
+  "answers": [
+    { "text": "To help you reach high shelves", "correct": false },
+    { "text": "To provide a fun way to exit your house", "correct": false },
+    { "text": "To provide an alternative means of egress from upper floors in case of fire or other emergencies where stairs are blocked", "correct": true, "explanation": "Escape ladders offer a vital secondary exit, especially if the primary exit is compromised." },
+    { "text": "To decorate the side of your house", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["general-safety", "fire-safety", "escape-ladder"]
+},
+
+{
+  "id": "q431",
+  "category": "health-wellness",
+  "question": "What is the recommended daily water intake for most adults?",
+  "answers": [
+    { "text": "1-2 glasses", "correct": false },
+    { "text": "Around 8 glasses (approximately 2 liters or half a gallon)", "correct": true, "explanation": "Adequate hydration supports bodily functions, metabolism, and energy levels." },
+    { "text": "Only when you feel thirsty", "correct": false },
+    { "text": "4-5 liters", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["health", "hydration", "water-intake"]
+},
+{
+  "id": "q432",
+  "category": "health-wellness",
+  "question": "What is the main benefit of incorporating fiber into your diet?",
+  "answers": [
+    { "text": "It adds flavor to food", "correct": false },
+    { "text": "It helps you lose weight instantly", "correct": false },
+    { "text": "Aids digestion, promotes bowel regularity, helps control blood sugar, and reduces cholesterol levels", "correct": true, "explanation": "Fiber is crucial for a healthy digestive system and overall metabolic health." },
+    { "text": "It provides a lot of energy", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["health", "nutrition", "fiber"]
+},
+{
+  "id": "q433",
+  "category": "health-wellness",
+  "question": "Why is regular dental hygiene (brushing and flossing) important for overall health?",
+  "answers": [
+    { "text": "To have fresh breath only", "correct": false },
+    { "text": "It only prevents cavities", "correct": false },
+    { "text": "Prevents cavities, gum disease, and can impact systemic health by reducing inflammation and the risk of other chronic conditions", "correct": true, "explanation": "Oral health is strongly linked to overall body health, including heart health." },
+    { "text": "It makes your teeth sparkle", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["health", "dental-hygiene", "oral-health"]
+},
+{
+  "id": "q434",
+  "category": "health-wellness",
+  "question": "What is 'mindfulness' and how can it benefit mental health?",
+  "answers": [
+    { "text": "A way to forget your problems", "correct": false },
+    { "text": "Constantly thinking about the future", "correct": false },
+    { "text": "A state of focused awareness on the present moment, intentionally observing thoughts and feelings without judgment, which reduces stress and improves emotional regulation", "correct": true, "explanation": "Mindfulness practices can help manage anxiety, depression, and improve overall well-being." },
+    { "text": "Ignoring your emotions", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["health", "mental-health", "mindfulness", "stress-reduction"]
+},
+{
+  "id": "q435",
+  "category": "health-wellness",
+  "question": "What is the recommended frequency for performing a skin self-exam to check for moles or spots?",
+  "answers": [
+    { "text": "Once a year by a dermatologist", "correct": false },
+    { "text": "Only if you notice a new or changing spot", "correct": false },
+    { "text": "Monthly, to become familiar with your skin and easily detect any new or changing moles/lesions", "correct": true, "explanation": "Regular self-exams are crucial for early detection of skin cancer." },
+    { "text": "Every few years", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["health", "skin-self-exam", "skin-cancer", "prevention"]
+},
+
+{
+  "id": "q436",
+  "category": "cyberbullying",
+  "question": "If someone posts an embarrassing photo of you online without your permission, what is your best course of action?",
+  "answers": [
+    { "text": "Post an embarrassing photo of them in retaliation", "correct": false },
+    { "text": "Ignore it and hope it goes away", "correct": false },
+    { "text": "Ask them to remove it, report the post to the platform's administrators, and if necessary, involve a trusted adult or legal counsel", "correct": true, "explanation": "You have the right to control your image. Platforms often have policies against non-consensual sharing of photos." },
+    { "text": "Delete all your social media accounts", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["cyberbullying", "privacy", "non-consensual-images"]
+},
+{
+  "id": "q437",
+  "category": "cyberbullying",
+  "question": "What is 'catfishing' in the context of online interactions?",
+  "answers": [
+    { "text": "Luring people into online fishing games", "correct": false },
+    { "text": "Pretending to be someone else online to deceive or exploit others, often in romantic relationships", "correct": true, "explanation": "Catfishing involves creating fake online identities to trick individuals, leading to emotional or financial harm." },
+    { "text": "Sharing adorable cat videos online", "correct": false },
+    { "text": "An online scam involving fake prize winnings", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["cyberbullying", "catfishing", "online-deception", "scams"]
+},
+{
+  "id": "q438",
+  "category": "cyberbullying",
+  "question": "Why is it important to use strong privacy settings on gaming platforms and social media?",
+  "answers": [
+    { "text": "To keep your friends list short", "correct": false },
+    { "text": "To make it harder for you to find new friends", "correct": false },
+    { "text": "To control who can interact with you, see your content, and access your personal information, reducing exposure to cyberbullying and predatory behavior", "correct": true, "explanation": "Tailored privacy settings are your first line of defense against unwanted attention and harassment online." },
+    { "text": "To optimize game performance", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["cyberbullying", "privacy-settings", "online-gaming", "social-media"]
+},
+{
+  "id": "q439",
+  "category": "cyberbullying",
+  "question": "If you witness cyberbullying occurring in an online group chat, what is a responsible action?",
+  "answers": [
+    { "text": "Ignore it, it's not happening to you", "correct": false },
+    { "text": "Join in on the bullying to avoid being targeted", "correct": false },
+    { "text": "Speak up if safe, support the victim privately, report the behavior to the group administrator or platform, and do not forward or share the content", "correct": true, "explanation": "Being an active bystander and reporting abusive behavior helps create a safer online community." },
+    { "text": "Leave the group chat without saying anything", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["cyberbullying", "bystander", "reporting"]
+},
+{
+  "id": "q440",
+  "category": "cyberbullying",
+  "question": "What is a key difference between online harassment and cyberbullying?",
+  "answers": [
+    { "text": "There is no difference, they are interchangeable terms", "correct": false },
+    { "text": "Online harassment is always illegal, cyberbullying is not", "correct": false },
+    { "text": "Cyberbullying typically involves minors and targets, often with an imbalance of power, while online harassment can target anyone and may involve a single incident", "correct": true, "explanation": "While both are harmful, cyberbullying often has a distinct dynamic, frequently occurring among young people." },
+    { "text": "Cyberbullying only happens on social media, harassment happens everywhere online", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["cyberbullying", "online-harassment", "definitions"]
+},
+
+{
+  "id": "q441",
+  "category": "road-safety",
+  "question": "What does a solid yellow line on your side of the road typically mean?",
+  "answers": [
+    { "text": "You can pass if the way is clear", "correct": false },
+    { "text": "You can only turn left", "correct": false },
+    { "text": "No passing allowed from your lane", "correct": true, "explanation": "Solid lines indicate areas where passing is prohibited for safety reasons, such as curves or hilltops." },
+    { "text": "A bike lane is ahead", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["road-safety", "road-markings", "driving-rules"]
+},
+{
+  "id": "q442",
+  "category": "road-safety",
+  "question": "When driving in adverse weather conditions (rain, snow, ice), what should you primarily do?",
+  "answers": [
+    { "text": "Drive faster to get through it quickly", "correct": false },
+    { "text": "Use cruise control to maintain a steady speed", "correct": false },
+    { "text": "Reduce your speed, increase following distance, and ensure all lights are on", "correct": true, "explanation": "These actions compensate for reduced traction and visibility, minimizing accident risk." },
+    { "text": "Brake sharply to test your tires' grip", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["road-safety", "adverse-weather", "driving-tips"]
+},
+{
+  "id": "q443",
+  "category": "road-safety",
+  "question": "What is the purpose of ABS (Anti-lock Braking System) in a vehicle?",
+  "answers": [
+    { "text": "To make the car stop faster in all conditions", "correct": false },
+    { "text": "To help the car accelerate quickly", "correct": false },
+    { "text": "To prevent the wheels from locking up during hard braking, allowing the driver to maintain steering control", "correct": true, "explanation": "ABS helps avoid skidding and allows for safer emergency braking." },
+    { "text": "To alert other drivers when you are braking", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["road-safety", "ABS", "braking"]
+},
+{
+  "id": "q444",
+  "category": "road-safety",
+  "question": "If you are being tailgated, what is the safest response?",
+  "answers": [
+    { "text": "Brake suddenly to make them back off", "correct": false },
+    { "text": "Speed up to increase the distance", "correct": false },
+    { "text": "Gently reduce speed, move to another lane if possible, and allow them to pass, prioritizing safety over asserting your right of way", "correct": true, "explanation": "Aggressive responses can escalate the situation. Creating space is the safest strategy." },
+    { "text": "Turn on your hazard lights", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["road-safety", "tailgating", "defensive-driving"]
+},
+{
+  "id": "q445",
+  "category": "road-safety",
+  "question": "What does a flashing yellow traffic light indicate?",
+  "answers": [
+    { "text": "Stop immediately", "correct": false },
+    { "text": "Proceed with caution, yielding to other traffic or pedestrians", "correct": true, "explanation": "A flashing yellow light warns drivers to be alert and prepared to stop if necessary." },
+    { "text": "Speed up to clear the intersection", "correct": false },
+    { "text": "The light is broken, treat it as a stop sign", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["road-safety", "traffic-lights", "driving-rules"]
+},
+
+{
+  "id": "q446",
+  "category": "emergency-preparedness",
+  "question": "Why is it important to have an out-of-state contact for family communication during an emergency?",
+  "answers": [
+    { "text": "They will have better advice", "correct": false },
+    { "text": "Local phone lines may be overwhelmed or out of service, while long-distance lines might still work", "correct": true, "explanation": "This provides a reliable point of contact for family members to check in and share information if local communications fail." },
+    { "text": "It's easier to remember their number", "correct": false },
+    { "text": "They can send help from a distance", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["emergency-preparedness", "communication-plan", "family-contact"]
+},
+{
+  "id": "q447",
+  "category": "emergency-preparedness",
+  "question": "What is a simple, non-electronic method for lighting a dark room during a power outage?",
+  "answers": [
+    { "text": "Calling emergency services for light", "correct": false },
+    { "text": "A gas-powered generator indoors", "correct": false },
+    { "text": "Glow sticks or a hand-crank flashlight", "correct": true, "explanation": "These provide safe illumination without reliance on batteries or electricity, avoiding fire risks." },
+    { "text": "Burning newspaper in a bucket", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["emergency-preparedness", "power-outage", "lighting"]
+},
+{
+  "id": "q448",
+  "category": "emergency-preparedness",
+  "question": "What is the primary role of a designated emergency shelter during a widespread disaster?",
+  "answers": [
+    { "text": "To provide entertainment and recreation", "correct": false },
+    { "text": "To offer luxury accommodations for evacuees", "correct": false },
+    { "text": "To provide safe refuge, basic necessities (food, water, medical aid), and support services for displaced individuals", "correct": true, "explanation": "Shelters are critical for housing and assisting those affected by emergencies." },
+    { "text": "To coordinate news broadcasts", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["emergency-preparedness", "shelter", "disaster-relief"]
+},
+{
+  "id": "q449",
+  "category": "emergency-preparedness",
+  "question": "Why is it important to have an emergency supply of cash during a widespread power outage?",
+  "answers": [
+    { "text": "ATMs will still work if the power is out", "correct": false },
+    { "text": "Credit card machines and ATMs will likely be non-functional, making cash the only accessible form of payment", "correct": true, "explanation": "Electronic transactions rely on power and network connectivity, which may be unavailable." },
+    { "text": "To buy luxury items", "correct": false },
+    { "text": "To invest in emergency stocks", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["emergency-preparedness", "power-outage", "cash-supply"]
+},
+{
+  "id": "q450",
+  "category": "emergency-preparedness",
+  "question": "What is a basic tool you should have in your emergency kit for light manual tasks or minor repairs?",
+  "answers": [
+    { "text": "A laptop computer", "correct": false },
+    { "text": "A full power tool set", "correct": false },
+    { "text": "A multi-tool or basic wrench/pliers set", "correct": true, "explanation": "These tools can be invaluable for simple repairs, turning off utilities, or other urgent needs." },
+    { "text": "A portable gaming console", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["emergency-preparedness", "emergency-kit", "tools"]
+},
+
+{
+  "id": "q451",
+  "category": "environmental-safety",
+  "question": "What is the primary risk of swimming in natural bodies of water (lakes, rivers) after heavy rainfall?",
+  "answers": [
+    { "text": "The water will be colder", "correct": false },
+    { "text": "The water will be too clear", "correct": false },
+    { "text": "Increased levels of bacteria and pollutants from runoff, and stronger currents or hidden debris", "correct": true, "explanation": "Rainfall washes contaminants into waterways and can increase the force of currents, creating unsafe conditions." },
+    { "text": "More fish will be present", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["environmental-safety", "water-pollution", "natural-water-bodies"]
+},
+{
+  "id": "q452",
+  "category": "environmental-safety",
+  "question": "What is the purpose of 'boil water' advisories issued by public health authorities?",
+  "answers": [
+    { "text": "To save energy by not using hot water", "correct": false },
+    { "text": "To make water taste better", "correct": false },
+    { "text": "To warn residents that the tap water may be contaminated and needs to be boiled to kill harmful microorganisms before consumption", "correct": true, "explanation": "Boiling water is an effective way to purify it when contamination is suspected." },
+    { "text": "To encourage bottled water sales", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["environmental-safety", "public-health", "boil-water-advisory"]
+},
+{
+  "id": "q453",
+  "category": "environmental-safety",
+  "question": "What does a 'red flag' warning issued by weather services typically signify in fire-prone areas?",
+  "answers": [
+    { "text": "There's a beautiful sunset expected", "correct": false },
+    { "text": "An upcoming heatwave", "correct": false },
+    { "text": "Critical fire weather conditions (high winds, low humidity, dry fuels) are present or expected, increasing wildfire risk", "correct": true, "explanation": "Red flag warnings indicate that outdoor burning or activities that could spark a fire should be avoided." },
+    { "text": "Heavy rainfall is imminent", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["environmental-safety", "wildfire", "red-flag-warning"]
+},
+{
+  "id": "q454",
+  "category": "environmental-safety",
+  "question": "Why is it dangerous to feed wild animals, especially large mammals (bears, deer)?",
+  "answers": [
+    { "text": "It makes them lose their natural shyness", "correct": true, "explanation": "Feeding wild animals makes them lose their natural fear of humans, leading to dependency, aggression, and potential harm to both animals and humans." },
+    { "text": "It changes their fur color", "correct": false },
+    { "text": "It makes them too fat", "correct": false },
+    { "text": "It encourages them to move to new areas", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["environmental-safety", "wildlife", "animal-feeding"]
+},
+{
+  "id": "q455",
+  "category": "environmental-safety",
+  "question": "What is a safe and effective way to deter rodents and pests from entering your home?",
+  "answers": [
+    { "text": "Leave food scraps outside as bait", "correct": false },
+    { "text": "Keep all windows and doors open", "correct": false },
+    { "text": "Seal cracks and openings in foundations and walls, keep food in airtight containers, and maintain a clean environment", "correct": true, "explanation": "Excluding pests and removing food sources are the most effective preventative measures." },
+    { "text": "Adopt a large number of cats", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["environmental-safety", "pest-control", "home-maintenance"]
+},
+
+{
+  "id": "q456",
+  "category": "public-health",
+  "question": "What is the definition of a 'pandemic'?",
+  "answers": [
+    { "text": "A disease that is only found in one region", "correct": false },
+    { "text": "A widespread occurrence of an infectious disease in a community at a particular time", "correct": false },
+    { "text": "An epidemic of an infectious disease that has spread across a large region, for instance, multiple continents or worldwide", "correct": true, "explanation": "Pandemics are characterized by their global or widespread geographic reach." },
+    { "text": "A non-infectious disease that affects many people", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["public-health", "pandemic", "disease"]
+},
+{
+  "id": "q457",
+  "category": "public-health",
+  "question": "Why is proper waste disposal crucial for public health?",
+  "answers": [
+    { "text": "It makes cities look cleaner", "correct": false },
+    { "text": "It helps recycle materials for profit", "correct": false },
+    { "text": "Prevents the spread of diseases, controls pest populations, reduces environmental pollution, and ensures safe living conditions", "correct": true, "explanation": "Unmanaged waste is a breeding ground for pathogens and pests, posing significant health risks." },
+    { "text": "It prevents bad smells", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["public-health", "waste-disposal", "sanitation"]
+},
+{
+  "id": "q458",
+  "category": "public-health",
+  "question": "What is the 'incubation period' of an infectious disease?",
+  "answers": [
+    { "text": "The time it takes to recover from the disease", "correct": false },
+    { "text": "The period during which the disease is most contagious", "correct": false },
+    { "text": "The time interval between exposure to an infectious agent and the appearance of the first symptoms", "correct": true, "explanation": "Understanding the incubation period is important for contact tracing and disease control measures." },
+    { "text": "The time spent in isolation after diagnosis", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["public-health", "infectious-disease", "incubation-period"]
+},
+{
+  "id": "q459",
+  "category": "public-health",
+  "question": "What is the primary role of public health agencies (e.g., CDC, WHO)?",
+  "answers": [
+    { "text": "To treat individual patients in hospitals", "correct": false },
+    { "text": "To develop new pharmaceutical drugs", "correct": false },
+    { "text": "To protect and improve community health through disease prevention, health promotion, and emergency preparedness", "correct": true, "explanation": "Public health focuses on population-level health, distinct from individual medical care." },
+    { "text": "To regulate food prices", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["public-health", "health-agencies", "disease-prevention"]
+},
+{
+  "id": "q460",
+  "category": "public-health",
+  "question": "What is the primary benefit of maintaining a healthy gut microbiome for overall health?",
+  "answers": [
+    { "text": "It makes your stomach flatter", "correct": false },
+    { "text": "It ensures you never get sick", "correct": false },
+    { "text": "Supports digestion, nutrient absorption, immune system function, and can influence mental health", "correct": true, "explanation": "A balanced gut microbiome is increasingly recognized as central to many aspects of health." },
+    { "text": "It helps you remember things better", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["public-health", "gut-health", "microbiome", "nutrition"]
+},
+
+{
+  "id": "q461",
+  "category": "online-safety",
+  "question": "What is 'pharming' in online security?",
+  "answers": [
+    { "text": "A type of online gardening game", "correct": false },
+    { "text": "A scam where users are redirected to fake websites despite typing the correct URL, typically through malicious code or DNS poisoning", "correct": true, "explanation": "Pharming bypasses initial user vigilance, making it a sophisticated form of online fraud." },
+    { "text": "Collecting virtual animals online", "correct": false },
+    { "text": "An online platform for agricultural businesses", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["online-safety", "pharming", "cybersecurity", "scams"]
+},
+{
+  "id": "q462",
+  "category": "online-safety",
+  "question": "Why is it risky to connect unfamiliar USB drives to your computer?",
+  "answers": [
+    { "text": "They might be too slow", "correct": false },
+    { "text": "They might not have enough storage space", "correct": false },
+    { "text": "They could contain malware that automatically installs and infects your system upon connection", "correct": true, "explanation": "Malicious USB drives are a common vector for spreading viruses and ransomware." },
+    { "text": "They might be incompatible with your operating system", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["online-safety", "USB-security", "malware"]
+},
+{
+  "id": "q463",
+  "category": "online-safety",
+  "question": "What is 'digital etiquette' or 'netiquette'?",
+  "answers": [
+    { "text": "Strict rules for formatting online documents", "correct": false },
+    { "text": "The proper way to dress when using a computer", "correct": false },
+    { "text": "The set of informal rules and conventions that govern polite and respectful behavior in online interactions", "correct": true, "explanation": "Good netiquette fosters positive and productive online communication." },
+    { "text": "A new programming language", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["online-safety", "netiquette", "online-behavior"]
+},
+{
+  "id": "q464",
+  "category": "online-safety",
+  "question": "Why should you be cautious about granting excessive permissions to mobile apps (e.g., access to contacts, microphone, camera)?",
+  "answers": [
+    { "text": "It can slow down your phone", "correct": false },
+    { "text": "It will use up your data plan quickly", "correct": false },
+    { "text": "Over-permissioning can allow apps to collect sensitive personal data without your full awareness, potentially compromising privacy and security", "correct": true, "explanation": "Many apps request more permissions than they actually need to function, leading to privacy concerns." },
+    { "text": "It makes the app harder to uninstall", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["online-safety", "app-permissions", "privacy"]
+},
+{
+  "id": "q465",
+  "category": "online-safety",
+  "question": "What is the 'dark web'?",
+  "answers": [
+    { "text": "A section of the internet with poor lighting", "correct": false },
+    { "text": "A secret network for government intelligence agencies only", "correct": false },
+    { "text": "A part of the internet that is not indexed by conventional search engines and requires specific software (like Tor) to access, often associated with illicit activities but also privacy", "correct": true, "explanation": "While it has legitimate uses for privacy, the dark web is often known for hosting illegal marketplaces and activities." },
+    { "text": "A network exclusively for streaming movies", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["online-safety", "dark-web", "cybersecurity", "privacy"]
+},
+
+{
+  "id": "q466",
+  "category": "street-safety",
+  "question": "What is the purpose of reflective vests worn by construction workers or roadside personnel?",
+  "answers": [
+    { "text": "To keep them warm", "correct": false },
+    { "text": "To identify their company affiliation", "correct": false },
+    { "text": "To significantly increase their visibility to drivers, especially in low light or adverse weather conditions, preventing accidents", "correct": true, "explanation": "High-visibility clothing is crucial for protecting workers near traffic." },
+    { "text": "To make them look official", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["street-safety", "worker-safety", "visibility"]
+},
+{
+  "id": "q467",
+  "category": "street-safety",
+  "question": "If you are approached by someone asking for money, and you feel uneasy, what is a safe way to respond?",
+  "answers": [
+    { "text": "Give them all the cash you have to avoid confrontation", "correct": false },
+    { "text": "Engage them in a lengthy conversation about their situation", "correct": false },
+    { "text": "Politely say 'no' or 'sorry, I can't help,' maintain a confident demeanor, and continue walking without stopping", "correct": true, "explanation": "Direct refusal and disengagement are often the safest ways to handle such encounters." },
+    { "text": "Invite them to your home to talk privately", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["street-safety", "strangers", "personal-safety"]
+},
+{
+  "id": "q468",
+  "category": "street-safety",
+  "question": "What is the safest way to carry a backpack or purse in a crowded public area?",
+  "answers": [
+    { "text": "Slung loosely over one shoulder", "correct": false },
+    { "text": "On your back, out of sight", "correct": false },
+    { "text": "Worn on your front, with zippers facing towards your body, or with a cross-body strap", "correct": true, "explanation": "Keeping your bag visible and close to your body makes it much harder for pickpockets." },
+    { "text": "Leave it in a public locker", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["street-safety", "pickpocketing", "valuables"]
+},
+{
+  "id": "q469",
+  "category": "street-safety",
+  "question": "When walking near active construction sites, what should you be aware of?",
+  "answers": [
+    { "text": "The types of machinery being used for fun", "correct": false },
+    { "text": "Potential falling debris, uneven surfaces, moving vehicles, and follow all posted safety signs and detours", "correct": true, "explanation": "Construction sites pose numerous hazards that require vigilance from pedestrians." },
+    { "text": "The schedules of the workers", "correct": false },
+    { "text": "The architectural plans for the new building", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["street-safety", "construction-sites", "pedestrian-safety"]
+},
+{
+  "id": "q470",
+  "category": "street-safety",
+  "question": "If you are caught in a large, unmanageable crowd during an event, what is the safest strategy?",
+  "answers": [
+    { "text": "Push forcefully to get out as quickly as possible", "correct": false },
+    { "text": "Lie down on the ground to avoid being trampled", "correct": false },
+    { "text": "Move with the flow of the crowd, keep your hands up near your chest for protection, and try to move diagonally towards the edge", "correct": true, "explanation": "Fighting against the crowd can be exhausting and dangerous. Protecting yourself and moving with the flow increases survival chances." },
+    { "text": "Shout loudly for attention", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["street-safety", "crowd-safety", "emergency"]
+},
+
+{
+  "id": "q471",
+  "category": "home-safety",
+  "question": "What is the primary danger of leaving portable heaters unattended or too close to flammable materials?",
+  "answers": [
+    { "text": "They can consume too much electricity", "correct": false },
+    { "text": "They might make the room too warm", "correct": false },
+    { "text": "They can easily start a house fire due to overheating or igniting nearby curtains, furniture, or bedding", "correct": true, "explanation": "Portable heaters are a common cause of house fires when not used with caution." },
+    { "text": "They can make a loud noise", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["home-safety", "portable-heaters", "fire-prevention"]
+},
+{
+  "id": "q472",
+  "category": "home-safety",
+  "question": "How often should you replace the air filters in your HVAC system?",
+  "answers": [
+    { "text": "Only when they look very dirty", "correct": false },
+    { "text": "Never, they are designed to last the life of the system", "correct": false },
+    { "text": "Every 1-3 months, or more frequently if you have pets or allergies, to maintain air quality and system efficiency", "correct": true, "explanation": "Regular filter changes improve indoor air quality, reduce energy costs, and extend the life of your HVAC system." },
+    { "text": "Once a year during routine maintenance", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["home-safety", "air-quality", "HVAC"]
+},
+{
+  "id": "q473",
+  "category": "home-safety",
+  "question": "What is the safest way to store sharp kitchen knives?",
+  "answers": [
+    { "text": "Loose in a drawer with other utensils", "correct": false },
+    { "text": "On an open magnetic strip on the wall", "correct": false },
+    { "text": "In a knife block, a drawer organizer, or with blade guards, keeping edges covered and secured", "correct": true, "explanation": "Proper storage prevents accidental cuts and keeps knives sharp." },
+    { "text": "Stacked in the dish drying rack", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["home-safety", "kitchen-safety", "knives"]
+},
+{
+  "id": "q474",
+  "category": "home-safety",
+  "question": "What is the danger of storing flammable liquids (gasoline, paint thinners) in unmarked containers?",
+  "answers": [
+    { "text": "They might lose their potency", "correct": false },
+    { "text": "They might attract pests", "correct": false },
+    { "text": "Risk of accidental ingestion, improper use, or mixing with incompatible substances, leading to poisoning, fire, or explosions", "correct": true, "explanation": "Clear labeling in original containers is essential for identifying contents and preventing dangerous mistakes." },
+    { "text": "They will evaporate faster", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["home-safety", "flammable-liquids", "poisoning", "fire-prevention"]
+},
+{
+  "id": "q475",
+  "category": "home-safety",
+  "question": "Why should you regularly inspect and clean your chimney if you have a fireplace?",
+  "answers": [
+    { "text": "To improve the aesthetics of your fireplace", "correct": false },
+    { "text": "To prevent birds from nesting in it", "correct": false },
+    { "text": "To prevent creosote buildup, which is highly flammable and a common cause of chimney fires", "correct": true, "explanation": "Creosote is a byproduct of burning wood and can easily ignite if not regularly removed." },
+    { "text": "To increase the draft for better heating efficiency", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["home-safety", "fireplace", "chimney-fire", "maintenance"]
+},
+
+{
+  "id": "q476",
+  "category": "travel-safety",
+  "question": "What is the recommended practice for carrying a copy of your passport while traveling internationally?",
+  "answers": [
+    { "text": "Carry the original passport and leave copies at home", "correct": false },
+    { "text": "Keep a physical copy in a separate location from your original passport, and a digital copy on a secure cloud service", "correct": true, "explanation": "Copies can expedite replacement if your original passport is lost or stolen, but should be stored separately for security." },
+    { "text": "Do not carry any copies, it's unnecessary", "correct": false },
+    { "text": "Carry a copy in the same pocket as your original passport", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["travel-safety", "passport", "documentation"]
+},
+{
+  "id": "q477",
+  "category": "travel-safety",
+  "question": "When storing luggage on public transport (bus, train), what is a good security measure?",
+  "answers": [
+    { "text": "Place it far away so you have more space", "correct": false },
+    { "text": "Leave it unlocked to allow for easy inspection", "correct": false },
+    { "text": "Keep it within sight, use luggage locks, and consider securing it to a fixed object if possible", "correct": true, "explanation": "Keeping your luggage secure and visible reduces the risk of theft." },
+    { "text": "Assume it's safe if it's in the designated luggage area", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["travel-safety", "luggage-security", "public-transport"]
+},
+{
+  "id": "q478",
+  "category": "travel-safety",
+  "question": "What is the primary risk of using unregulated ride-sharing services in some foreign countries?",
+  "answers": [
+    { "text": "They might take a longer route", "correct": false },
+    { "text": "The drivers might not speak your language", "correct": false },
+    { "text": "Lack of background checks for drivers, unregulated vehicle safety, and no official recourse in case of incidents or overcharging", "correct": true, "explanation": "Unregulated services lack accountability and can expose travelers to various risks." },
+    { "text": "They might not have air conditioning", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["travel-safety", "ride-sharing", "unregulated-services"]
+},
+{
+  "id": "q479",
+  "category": "travel-safety",
+  "question": "Before visiting an area with potential political unrest or high crime rates, what should you do?",
+  "answers": [
+    { "text": "Assume everything will be fine", "correct": false },
+    { "text": "Only rely on social media for information", "correct": false },
+    { "text": "Check government travel advisories, consult local news, and understand the cultural context and current security situation", "correct": true, "explanation": "Being informed allows you to make safer decisions and take appropriate precautions." },
+    { "text": "Plan to stay out late every night", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["travel-safety", "political-unrest", "crime-rates", "travel-advisories"]
+},
+{
+  "id": "q480",
+  "category": "travel-safety",
+  "question": "What is a good way to secure your hotel room door beyond the standard lock?",
+  "answers": [
+    { "text": "Leave it slightly ajar for air circulation", "correct": false },
+    { "text": "Assume the hotel's lock is completely secure", "correct": false },
+    { "text": "Use a portable door alarm, door jammer, or extra security chain/bolt if available, and utilize the peephole before opening", "correct": true, "explanation": "Additional security measures provide extra peace of mind and protection against unauthorized entry." },
+    { "text": "Hang a 'Do Not Disturb' sign", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["travel-safety", "hotel-security", "door-security"]
+},
+
+{
+  "id": "q481",
+  "category": "workplace-safety",
+  "question": "What is the purpose of an MSDS (Material Safety Data Sheet) or SDS (Safety Data Sheet)?",
+  "answers": [
+    { "text": "To list the ingredients of a product for marketing", "correct": false },
+    { "text": "To provide instructions on how to use a product", "correct": false },
+    { "text": "To provide comprehensive information about hazardous substances, including properties, hazards, safe handling, and emergency procedures", "correct": true, "explanation": "SDS documents are crucial for informing workers and emergency responders about chemical risks." },
+    { "text": "To document product inventory", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["workplace-safety", "MSDS", "SDS", "hazardous-materials"]
+},
+{
+  "id": "q482",
+  "category": "workplace-safety",
+  "question": "Why are 'exit routes' in a workplace required to be clear and unobstructed?",
+  "answers": [
+    { "text": "To allow easy movement of goods and equipment", "correct": false },
+    { "text": "To make the workplace look tidier", "correct": false },
+    { "text": "To ensure rapid and safe evacuation of all personnel during an emergency like a fire or chemical spill", "correct": true, "explanation": "Blocked exit routes can impede escape and lead to injuries or fatalities in emergencies." },
+    { "text": "To provide a clear path for daily commuting", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["workplace-safety", "evacuation", "exit-routes", "fire-safety"]
+},
+{
+  "id": "q483",
+  "category": "workplace-safety",
+  "question": "What is 'confined space entry' in workplace safety?",
+  "answers": [
+    { "text": "Entering a small office cubicle", "correct": false },
+    { "text": "Entering a space that has limited means of entry/exit, is not designed for continuous human occupancy, and has the potential for hazards", "correct": true, "explanation": "Confined spaces (e.g., tanks, silos) require specific safety protocols due to risks like atmospheric hazards, engulfment, or limited rescue options." },
+    { "text": "Entering any room with the door closed", "correct": false },
+    { "text": "Entering a crowded elevator", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["workplace-safety", "confined-space", "hazard-recognition"]
+},
+{
+  "id": "q484",
+  "category": "workplace-safety",
+  "question": "What is the importance of proper manual handling techniques (lifting) in the workplace?",
+  "answers": [
+    { "text": "To make you look stronger", "correct": false },
+    { "text": "To speed up the lifting process", "correct": false },
+    { "text": "To prevent back injuries, muscle strains, and other musculoskeletal disorders by using correct posture and lifting methods", "correct": true, "explanation": "Improper lifting is a leading cause of workplace injuries." },
+    { "text": "To impress your colleagues", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["workplace-safety", "manual-handling", "lifting", "injury-prevention"]
+},
+{
+  "id": "q485",
+  "category": "workplace-safety",
+  "question": "If you witness a colleague being subjected to workplace bullying, what should you consider doing?",
+  "answers": [
+    { "text": "Ignore it, it's a personal matter between them", "correct": false },
+    { "text": "Join in to support the bully", "correct": false },
+    { "text": "Document the incidents, offer support to the victim, and report the bullying to HR or a supervisor through official channels", "correct": true, "explanation": "Bullying creates a toxic environment. Reporting it is essential for intervention and accountability." },
+    { "text": "Confront the bully privately and aggressively", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["workplace-safety", "bullying", "reporting", "ethics"]
+},
+
+{
+  "id": "q486",
+  "category": "general-safety",
+  "question": "What is the recommended practice for storing ladders when not in use?",
+  "answers": [
+    { "text": "Leaning against a wall in a high-traffic area", "correct": false },
+    { "text": "Lying on the ground where they can be tripped over", "correct": false },
+    { "text": "Secured horizontally on wall hooks or stored in a shed/garage, out of the way to prevent falling or tripping hazards", "correct": true, "explanation": "Proper storage prevents accidents and prolongs the life of the ladder." },
+    { "text": "Propped against a fence outside", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["general-safety", "ladder-storage", "tripping-hazards"]
+},
+{
+  "id": "q487",
+  "category": "general-safety",
+  "question": "When driving a car with children, what is the most important rule regarding their safety restraints?",
+  "answers": [
+    { "text": "They should only wear a regular seatbelt once they stop complaining about car seats", "correct": false },
+    { "text": "They can share a seatbelt if they are small enough", "correct": false },
+    { "text": "Every child must be secured in an age and size-appropriate car seat, booster seat, or seatbelt, according to legal requirements", "correct": true, "explanation": "Child safety restraints are legally mandated and critical for protecting children in a collision." },
+    { "text": "They should be allowed to move freely to stay comfortable", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["general-safety", "child-safety", "car-safety", "seatbelts"]
+},
+{
+  "id": "q488",
+  "category": "general-safety",
+  "question": "What is the danger of consuming wild berries or plants without absolute certainty of their edibility?",
+  "answers": [
+    { "text": "They might taste bad", "correct": false },
+    { "text": "Many wild plants are poisonous and can cause severe illness, organ damage, or death", "correct": true, "explanation": "Misidentifying plants can have fatal consequences. Never eat wild plants unless identified by an expert." },
+    { "text": "They might give you an upset stomach", "correct": false },
+    { "text": "They might contain too many calories", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["general-safety", "wild-plants", "poisoning", "foraging"]
+},
+{
+  "id": "q489",
+  "category": "general-safety",
+  "question": "What is the 'good Samaritan' law and how does it relate to providing first aid?",
+  "answers": [
+    { "text": "It requires everyone to be a trained first responder", "correct": false },
+    { "text": "It allows you to bill people for first aid services", "correct": false },
+    { "text": "It provides legal protection to people who give reasonable assistance to those who are injured, ill, or in peril, without fear of being sued", "correct": true, "explanation": "Good Samaritan laws encourage bystanders to offer help without undue legal risk, as long as they act reasonably." },
+    { "text": "It only applies to doctors and nurses", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["general-safety", "good-samaritan-law", "first-aid", "legal-protection"]
+},
+{
+  "id": "q490",
+  "category": "general-safety",
+  "question": "When disposing of broken glass, what is the safest practice?",
+  "answers": [
+    { "text": "Throw it directly into the trash can", "correct": false },
+    { "text": "Wrap it in a single paper towel before discarding", "correct": false },
+    { "text": "Wrap it securely in several layers of newspaper or cardboard, place it in a sturdy bag, and clearly label it 'BROKEN GLASS'", "correct": true, "explanation": "Proper disposal prevents injuries to household members and waste handlers." },
+    { "text": "Sweep it into a dustpan and empty it loosely into the trash", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["general-safety", "broken-glass", "waste-disposal"]
+},
+
+{
+  "id": "q491",
+  "category": "health-wellness",
+  "question": "What is the primary benefit of maintaining a healthy weight?",
+  "answers": [
+    { "text": "It guarantees a longer life", "correct": false },
+    { "text": "It makes you look more attractive", "correct": false },
+    { "text": "Reduces the risk of numerous chronic diseases (e.g., heart disease, diabetes, certain cancers), improves energy levels, and enhances overall quality of life", "correct": true, "explanation": "Healthy weight management is a cornerstone of preventative health." },
+    { "text": "It eliminates the need for exercise", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["health", "weight-management", "chronic-disease-prevention"]
+},
+{
+  "id": "q492",
+  "category": "health-wellness",
+  "question": "Why is stress management crucial for physical health?",
+  "answers": [
+    { "text": "It prevents you from feeling any emotions", "correct": false },
+    { "text": "Chronic stress can lead to high blood pressure, heart disease, weakened immune system, and mental health issues like anxiety and depression", "correct": true, "explanation": "The body's 'fight or flight' response, when prolonged, has detrimental effects on various physiological systems." },
+    { "text": "It makes you more productive at work", "correct": false },
+    { "text": "It speeds up your metabolism", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["health", "stress-management", "chronic-stress"]
+},
+{
+  "id": "q493",
+  "category": "health-wellness",
+  "question": "What is the importance of regular eye exams, even if you don't wear glasses?",
+  "answers": [
+    { "text": "To find a new pair of stylish glasses", "correct": false },
+    { "text": "They only detect problems if your vision is blurry", "correct": false },
+    { "text": "To detect early signs of eye diseases (e.g., glaucoma, cataracts) and other health conditions (e.g., diabetes, high blood pressure) that can manifest in the eyes", "correct": true, "explanation": "Many serious eye conditions are asymptomatic in early stages, making regular checks vital." },
+    { "text": "To measure your eye color", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["health", "eye-health", "preventative-care"]
+},
+{
+  "id": "q494",
+  "category": "health-wellness",
+  "question": "What is the main benefit of incorporating a variety of fruits and vegetables into your diet?",
+  "answers": [
+    { "text": "It makes your meals look more colorful", "correct": false },
+    { "text": "To avoid eating other food groups", "correct": false },
+    { "text": "Provides essential vitamins, minerals, fiber, and antioxidants, supporting immune function, disease prevention, and overall well-being", "correct": true, "explanation": "A diverse intake ensures a broad spectrum of nutrients crucial for health." },
+    { "text": "It helps you remember their names", "correct": false }
+  ],
+  "difficulty": "easy",
+  "tags": ["health", "nutrition", "fruits-vegetables"]
+},
+{
+  "id": "q495",
+  "category": "health-wellness",
+  "question": "Why is it important to consult a doctor before starting a new intense exercise regimen, especially if you have pre-existing health conditions?",
+  "answers": [
+    { "text": "To get permission to exercise", "correct": false },
+    { "text": "To ensure the regimen is safe, appropriate for your health status, and to identify any potential risks or modifications needed", "correct": true, "explanation": "Medical clearance helps prevent injuries or exacerbation of existing conditions." },
+    { "text": "To get tips for faster results", "correct": false },
+    { "text": "To make sure your insurance covers it", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["health", "exercise-safety", "medical-consultation"]
+},
+
+{
+  "id": "q496",
+  "category": "environmental-safety",
+  "question": "What is a 'heat island' effect in urban areas, and why is it a concern?",
+  "answers": [
+    { "text": "An area with many outdoor heaters", "correct": false },
+    { "text": "An urban area that is significantly warmer than surrounding rural areas due to human activities, increasing heat-related illnesses and energy consumption", "correct": true, "explanation": "Heat islands pose public health risks and increase demand for air conditioning." },
+    { "text": "An island surrounded by warm ocean currents", "correct": false },
+    { "text": "An area where temperatures are always consistent", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["environmental-safety", "urban-planning", "heat-island-effect"]
+},
+{
+  "id": "q497",
+  "category": "environmental-safety",
+  "question": "Why is it dangerous to collect and consume rainwater directly from rooftops without purification?",
+  "answers": [
+    { "text": "It tastes bland", "correct": false },
+    { "text": "It can be contaminated with pollutants, chemicals, and microorganisms from the roof surface and atmosphere", "correct": true, "explanation": "Rainwater is not inherently clean and requires filtration/purification for safe consumption." },
+    { "text": "It is too acidic for consumption", "correct": false },
+    { "text": "It contains too many minerals", "correct": false }
+  ],
+  "difficulty": "medium",
+  "tags": ["environmental-safety", "rainwater", "water-contamination"]
+},
+{
+  "id": "q498",
+  "category": "environmental-safety",
+  "question": "What is the significance of the ozone layer for human safety?",
+  "answers": [
+    { "text": "It regulates global temperatures", "correct": false },
+    { "text": "It provides oxygen for breathing", "correct": false },
+    { "text": "It absorbs most of the sun's harmful ultraviolet (UV) radiation, protecting living organisms from skin cancer, cataracts, and immune system damage", "correct": true, "explanation": "The ozone layer is a natural shield against dangerous UV rays." },
+    { "text": "It is responsible for all weather patterns", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["environmental-safety", "ozone-layer", "UV-radiation"]
+},
+{
+  "id": "q499",
+  "category": "environmental-safety",
+  "question": "What is the primary danger associated with exposure to asbestos?",
+  "answers": [
+    { "text": "It causes allergic reactions", "correct": false },
+    { "text": "It is a fire hazard", "correct": false },
+    { "text": "It can cause severe respiratory diseases, including asbestosis, lung cancer, and mesothelioma, due to inhalation of microscopic fibers", "correct": true, "explanation": "Asbestos is a known carcinogen and its fibers can remain in the lungs for decades, causing serious illness." },
+    { "text": "It emits dangerous radiation", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["environmental-safety", "asbestos", "carcinogen", "respiratory-health"]
+},
+{
+  "id": "q500",
+  "category": "environmental-safety",
+  "question": "What is the 'precautionary principle' in environmental safety and public health?",
+  "answers": [
+    { "text": "Only taking action after scientific certainty of harm is proven", "correct": false },
+    { "text": "Prioritizing economic development over environmental protection", "correct": false },
+    { "text": "When an activity raises threats of harm to human health or the environment, precautionary measures should be taken even if some cause-and-effect relationships are not fully established scientifically", "correct": true, "explanation": "This principle advocates for proactive measures to prevent harm when there's scientific uncertainty about potential risks." },
+    { "text": "Relying solely on technological solutions to environmental problems", "correct": false }
+  ],
+  "difficulty": "hard",
+  "tags": ["environmental-safety", "public-health", "precautionary-principle"]
 },
 
 ];
