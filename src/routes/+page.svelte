@@ -216,13 +216,6 @@
       </div>
 
       <div class="lz-foot-col">
-        <h4>Product</h4>
-        <a href="/report" class="lz-foot-link">Report Incident</a>
-        <a href="/dashboard" class="lz-foot-link">Dashboard</a>
-        <a href="/safety-quest" class="lz-foot-link">Safety Quest</a>
-      </div>
-
-      <div class="lz-foot-col">
         <h4>Company</h4>
         <a href="/about" class="lz-foot-link">About Us</a>
         <a href="/contact" class="lz-foot-link">Contact</a>
