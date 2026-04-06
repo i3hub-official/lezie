@@ -124,7 +124,9 @@
       </button>
       
       <div class="nav-brand">
-                  <img src="/icons/lz_ico.png" alt="Lezie" class="cu-logo-img" />
+        <div class="logo-icon">
+                    <img src="/icons/lz_logo_t.png" alt="Lezie" class="cu-logo-img" />
+        </div>
         <span class="logo-text">Lezie</span>
       </div>
       
