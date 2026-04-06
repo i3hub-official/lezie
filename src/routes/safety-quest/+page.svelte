@@ -1,33 +1,18 @@
 <script lang="ts">
   import { safetyQuestions, getRandomQuestions } from '$lib/data/safetyQuestions';
   import { 
-    ShieldCheck, 
-    Trophy, 
-    ArrowRight, 
-    RefreshCw, 
-    Home, 
-    Sparkles,
-    Brain,
-    Target,
-    Zap,
-    CheckCircle2,
-    XCircle,
-    ChevronRight,
-    RotateCcw,
-    Award,
-    Flame,
-    AlertCircle,
-    TrendingUp,
-    Gamepad2,
-    Shield,
-    Clock,
-    Star
+    ShieldCheck, Trophy, ArrowRight, RefreshCw, Home, Sparkles,
+    Brain, Target, Zap, CheckCircle2, XCircle, ChevronRight,
+    RotateCcw, Award, Flame, AlertCircle, TrendingUp, Gamepad2,
+    Shield, Clock, Star, Calendar, Medal, Lock, Users
   } from 'lucide-svelte';
   import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
 
-  // Game state
-  let currentGame = $state<'menu' | 'quiz' | 'results'>('menu');
-  let questions = $state(getRandomQuestions(8));
+  // ====================== STATE ======================
+  let currentGame = $state<'menu' | 'quiz' | 'results' | 'achievements'>('menu');
+  
+  let questions = $state<any[]>([]);
   let currentIndex = $state(0);
   let score = $state(0);
   let selectedAnswer = $state<number | null>(null);
@@ -36,16 +21,123 @@
   let maxStreak = $state(0);
   let answersHistory = $state<boolean[]>([]);
 
-  // Derived values using $derived
+  // Persistent Progress
+  let totalGamesPlayed = $state(0);
+  let totalXP = $state(0);
+  let currentLevel = $state(1);
+  let currentDayStreak = $state(1);
+  let lastPlayedDate = $state('');
+  let completedQuestionIds = $state<string[]>([]);
+  let longestStreak = $state(0);
+  let totalCorrectAnswers = $state(0);
+
+  // Achievements
+  let achievements = $state([
+    { id: 'first_game', name: 'First Steps', desc: 'Complete your first quest', icon: Shield, xp: 50 },
+    { id: 'perfect_8', name: 'Flawless', desc: 'Score 100% on a full quest', icon: Award, xp: 150 },
+    { id: 'streak_3', name: 'Consistent', desc: 'Reach 3-day streak', icon: Flame, xp: 80 },
+    { id: 'streak_7', name: 'Dedicated', desc: 'Reach 7-day streak', icon: Flame, xp: 200 },
+    { id: 'score_50', name: 'High Scorer', desc: 'Earn 50 total XP', icon: Trophy, xp: 100 },
+    { id: 'master_10', name: 'Safety Master', desc: 'Complete 10 quests', icon: Medal, xp: 250 },
+    { id: 'accuracy_90', name: 'Precision', desc: 'Achieve 90%+ accuracy in one game', icon: Target, xp: 120 },
+    { id: 'streak_14', name: 'Unstoppable', desc: 'Reach 14-day streak', icon: Flame, xp: 300 }
+  ]);
+
+  let unlockedAchievements = $state<string[]>([]);
+
+  // Derived
   let totalQuestions = $derived(questions.length);
-  let progressPercent = $derived(((currentIndex + (gameCompleted ? 1 : 0)) / totalQuestions) * 100);
-  let gameCompleted = $derived(currentIndex >= totalQuestions);
   let accuracy = $derived(answersHistory.length > 0 ? Math.round((answersHistory.filter(Boolean).length / answersHistory.length) * 100) : 0);
+  let progressPercent = $derived(((currentIndex + (currentIndex >= totalQuestions ? 1 : 0)) / totalQuestions) * 100);
+  let xpForNextLevel = $derived(currentLevel * 220);
 
-  // Performance level for results screen
-  let performance = $derived(getPerformanceLevel());
+  // ====================== STORAGE ======================
+  function loadProgress() {
+    const saved = localStorage.getItem('safetyQuestFullProgress');
+    if (saved) {
+      const data = JSON.parse(saved);
+      totalGamesPlayed = data.totalGamesPlayed || 0;
+      totalXP = data.totalXP || 0;
+      currentLevel = data.currentLevel || 1;
+      currentDayStreak = data.currentDayStreak || 1;
+      lastPlayedDate = data.lastPlayedDate || '';
+      completedQuestionIds = data.completedQuestionIds || [];
+      longestStreak = data.longestStreak || 0;
+      totalCorrectAnswers = data.totalCorrectAnswers || 0;
+      unlockedAchievements = data.unlockedAchievements || [];
+    }
+  }
 
+  function saveProgress() {
+    const today = new Date().toISOString().split('T')[0];
+
+    if (lastPlayedDate !== today) {
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+      if (lastPlayedDate === yesterday) {
+        currentDayStreak++;
+      } else {
+        currentDayStreak = 1;
+      }
+      lastPlayedDate = today;
+    }
+
+    if (currentDayStreak > longestStreak) longestStreak = currentDayStreak;
+
+    localStorage.setItem('safetyQuestFullProgress', JSON.stringify({
+      totalGamesPlayed,
+      totalXP,
+      currentLevel,
+      currentDayStreak,
+      lastPlayedDate,
+      completedQuestionIds,
+      longestStreak,
+      totalCorrectAnswers,
+      unlockedAchievements
+    }));
+  }
+
+  function checkAndUnlockAchievements() {
+    let newlyUnlocked = false;
+
+    achievements.forEach(ach => {
+      if (unlockedAchievements.includes(ach.id)) return;
+
+      let shouldUnlock = false;
+
+      if (ach.id === 'first_game' && totalGamesPlayed >= 1) shouldUnlock = true;
+      if (ach.id === 'perfect_8' && score === totalQuestions && totalQuestions === 8) shouldUnlock = true;
+      if (ach.id === 'streak_3' && currentDayStreak >= 3) shouldUnlock = true;
+      if (ach.id === 'streak_7' && currentDayStreak >= 7) shouldUnlock = true;
+      if (ach.id === 'streak_14' && currentDayStreak >= 14) shouldUnlock = true;
+      if (ach.id === 'score_50' && totalXP >= 50) shouldUnlock = true;
+      if (ach.id === 'master_10' && totalGamesPlayed >= 10) shouldUnlock = true;
+      if (ach.id === 'accuracy_90' && accuracy >= 90) shouldUnlock = true;
+
+      if (shouldUnlock) {
+        unlockedAchievements = [...unlockedAchievements, ach.id];
+        totalXP += ach.xp;
+        newlyUnlocked = true;
+      }
+    });
+
+    // Level up logic
+    while (totalXP >= xpForNextLevel) {
+      currentLevel++;
+    }
+
+    if (newlyUnlocked) saveProgress();
+  }
+
+  // ====================== GAME LOGIC ======================
   function startNewGame() {
+    let available = safetyQuestions.filter(q => 
+      !completedQuestionIds.includes(q.id || q.question)
+    );
+
+    if (available.length < 6) {
+      available = safetyQuestions;
+    }
+
     questions = getRandomQuestions(8);
     currentIndex = 0;
     score = 0;
@@ -62,15 +154,21 @@
     
     selectedAnswer = index;
     const isCorrect = questions[currentIndex].answers[index].correct;
-    
+
     if (isCorrect) {
       score++;
       streak++;
       if (streak > maxStreak) maxStreak = streak;
+      totalCorrectAnswers++;
+      
+      const qId = questions[currentIndex].id || questions[currentIndex].question;
+      if (!completedQuestionIds.includes(qId)) {
+        completedQuestionIds = [...completedQuestionIds, qId];
+      }
     } else {
       streak = 0;
     }
-    
+
     answersHistory = [...answersHistory, isCorrect];
     showExplanation = true;
   }
@@ -78,40 +176,30 @@
   function nextQuestion() {
     selectedAnswer = null;
     showExplanation = false;
-    
+
     if (currentIndex < totalQuestions - 1) {
       currentIndex++;
     } else {
-      currentIndex++;
+      totalGamesPlayed++;
+      totalXP += Math.floor(score * 15 + (accuracy > 75 ? 40 : 0));
+      checkAndUnlockAchievements();
+      saveProgress();
       currentGame = 'results';
     }
   }
 
-  function getPerformanceLevel() {
-    const percent = score / totalQuestions;
-    if (percent === 1) return { level: 'master', color: '#10B981', bg: '#D1FAE5', icon: Award, title: 'Safety Master', desc: 'Perfect score! You are a true safety champion.' };
-    if (percent >= 0.8) return { level: 'expert', color: '#8B5CF6', bg: '#EDE9FE', icon: Trophy, title: 'Safety Expert', desc: 'Outstanding knowledge! You are well-prepared for any situation.' };
-    if (percent >= 0.6) return { level: 'proficient', color: '#06B6D4', bg: '#CFFAFE', icon: Target, title: 'Safety Proficient', desc: 'Good work! Keep practicing to reach expert level.' };
-    return { level: 'learner', color: '#F59E0B', bg: '#FEF3C7', icon: Brain, title: 'Safety Learner', desc: 'Keep going! Every question helps you stay safer.' };
+  function resetGame() {
+    currentGame = 'menu';
   }
 
-  const features = [
-    { icon: Brain, title: 'Learn', desc: 'Real-world scenarios', color: '#8B5CF6', bg: '#EDE9FE' },
-    { icon: Target, title: 'Practice', desc: 'Test your knowledge', color: '#06B6D4', bg: '#CFFAFE' },
-    { icon: Zap, title: 'Master', desc: 'Build safety habits', color: '#F59E0B', bg: '#FEF3C7' }
-  ];
-
-  const stats = [
-    { value: '50+', label: 'Scenarios', icon: Shield, color: '#8B5CF6', bg: '#EDE9FE' },
-    { value: '8', label: 'Questions', icon: Target, color: '#06B6D4', bg: '#CFFAFE' },
-    { value: '3', label: 'Minutes', icon: Clock, color: '#F59E0B', bg: '#FEF3C7' }
-  ];
+  onMount(() => {
+    loadProgress();
+  });
 </script>
 
 <svelte:head>
   <title>Safety Quest — Lezie</title>
   <meta name="description" content="Master safety skills through interactive challenges" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
 </svelte:head>
 
 <div class="page">
@@ -122,92 +210,87 @@
         <Home size={18} />
         <span>Back to Dashboard</span>
       </button>
-      
+
       <div class="nav-brand">
-                    
-   
+        <Shield size={28} />
+        <span class="logo-text">Safety Quest</span>
       </div>
-      
-      <div class="nav-stats" class:hidden={currentGame === 'menu'}>
+
+      <div class="nav-stats">
         <div class="stat-pill">
-          <Trophy size={14} />
-          <span>{score}/{currentIndex}</span>
+          <Flame size={16} />
+          <span>{currentDayStreak} day streak</span>
+        </div>
+        <div class="stat-pill">
+          <Medal size={16} />
+          <span>Level {currentLevel}</span>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Main Content -->
   <main class="content">
     {#if currentGame === 'menu'}
-      <!-- Menu Screen -->
       <div class="menu-container">
+        <div class="daily-header">
+          <Calendar size={24} />
+          <div>
+            <h2>Day {currentDayStreak}</h2>
+            <p>{new Date().toLocaleDateString('en-US', { weekday: 'long' })} Training</p>
+          </div>
+        </div>
+
         <div class="page-header-card">
           <div class="header-content">
             <div class="badge">
               <Sparkles size={14} />
               Interactive Training
             </div>
-            
             <h1 class="title">Master Safety Through Play</h1>
-            
-            <p class="subtitle">
-              Test your knowledge with real-world scenarios. Learn essential skills that keep you and your community safe.
-            </p>
+            <p class="subtitle">Test your knowledge with real-world scenarios and build lasting safety habits.</p>
             
             <button class="btn-primary" onclick={startNewGame}>
-              <Gamepad2 size={18} />
-              <span>Start Safety Quest</span>
-              <ArrowRight size={18} />
+              <Gamepad2 size={20} />
+              Start Today's Quest
+              <ArrowRight size={20} />
             </button>
           </div>
-          
-          <div class="header-visual">
-            <div class="floating-icon icon-1">
-              <Shield size={32} color="#8B5CF6" />
-            </div>
-            <div class="floating-icon icon-2">
-              <Star size={24} color="#F59E0B" />
-            </div>
-            <div class="floating-icon icon-3">
-              <CheckCircle2 size={28} color="#10B981" />
+        </div>
+
+        <div class="menu-actions">
+          <button class="btn-secondary" onclick={() => currentGame = 'achievements'}>
+            <Medal size={20} />
+            Achievements
+          </button>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <Shield size={28} />
+            <div>
+              <span class="big-number">{totalGamesPlayed}</span>
+              <span>Quests Completed</span>
             </div>
           </div>
-        </div>
-
-        <!-- Features Grid -->
-        <div class="features-grid">
-          {#each features as feature}
-            <div class="feature-card">
-              <div class="feature-icon" style="background: {feature.bg}; color: {feature.color};">
-                <svelte:component this={feature.icon} size={24} />
-              </div>
-              <h3>{feature.title}</h3>
-              <p>{feature.desc}</p>
+          <div class="stat-card">
+            <TrendingUp size={28} />
+            <div>
+              <span class="big-number">{totalXP}</span>
+              <span>Total XP</span>
             </div>
-          {/each}
-        </div>
-
-        <!-- Stats Row -->
-        <div class="stats-row">
-          {#each stats as stat}
-            <div class="stat-card">
-              <div class="stat-icon" style="background: {stat.bg}; color: {stat.color};">
-                <svelte:component this={stat.icon} size={22} />
-              </div>
-              <div class="stat-content">
-                <span class="stat-value">{stat.value}</span>
-                <span class="stat-label">{stat.label}</span>
-              </div>
+          </div>
+          <div class="stat-card">
+            <Flame size={28} />
+            <div>
+              <span class="big-number">{longestStreak}</span>
+              <span>Best Streak</span>
             </div>
-          {/each}
+          </div>
         </div>
       </div>
 
     {:else if currentGame === 'quiz'}
-      <!-- Quiz Screen -->
       <div class="quiz-container">
-        <!-- Progress Section -->
         <div class="progress-section">
           <div class="progress-header">
             <span class="progress-text">Question {Math.min(currentIndex + 1, totalQuestions)} of {totalQuestions}</span>
@@ -224,26 +307,23 @@
               </div>
             </div>
           </div>
-          
           <div class="progress-track">
             <div class="progress-fill" style="width: {progressPercent}%"></div>
           </div>
         </div>
 
-        <!-- Question Card -->
         <div class="question-card">
           <div class="question-header">
             <div class="category-badge">Safety Scenario</div>
             <h2 class="question-text">{questions[currentIndex]?.question}</h2>
           </div>
 
-          <!-- Answers -->
           <div class="answers-list">
             {#each questions[currentIndex]?.answers || [] as answer, i}
               {@const isSelected = selectedAnswer === i}
               {@const isCorrect = answer.correct}
               {@const showResult = selectedAnswer !== null}
-              
+
               <button
                 class="answer-option"
                 class:selected={isSelected}
@@ -254,204 +334,130 @@
               >
                 <div class="answer-indicator">
                   {#if showResult && isCorrect}
-                    <div class="result-icon correct-icon">
-                      <CheckCircle2 size={20} />
-                    </div>
+                    <div class="result-icon correct-icon"><CheckCircle2 size={20} /></div>
                   {:else if showResult && isSelected && !isCorrect}
-                    <div class="result-icon incorrect-icon">
-                      <XCircle size={20} />
-                    </div>
+                    <div class="result-icon incorrect-icon"><XCircle size={20} /></div>
                   {:else}
                     <span class="option-letter">{String.fromCharCode(65 + i)}</span>
                   {/if}
                 </div>
-                
                 <span class="answer-text">{answer.text}</span>
-                
-                {#if showResult && isCorrect && !isSelected}
-                  <div class="correct-badge">
-                    <CheckCircle2 size={16} />
-                  </div>
-                {/if}
               </button>
             {/each}
           </div>
 
-          <!-- Explanation Panel -->
-          {#if showExplanation && questions[currentIndex]?.answers[selectedAnswer]?.explanation}
-            <div class="explanation-panel" class:correct={questions[currentIndex].answers[selectedAnswer].correct}>
+          {#if showExplanation && questions[currentIndex]?.answers[selectedAnswer!]?.explanation}
+            <div class="explanation-panel" class:correct={questions[currentIndex].answers[selectedAnswer!].correct}>
               <div class="explanation-header">
-                {#if questions[currentIndex].answers[selectedAnswer].correct}
-                  <div class="explanation-icon correct">
-                    <CheckCircle2 size={20} />
-                  </div>
-                  <span>Correct!</span>
+                {#if questions[currentIndex].answers[selectedAnswer!].correct}
+                  <CheckCircle2 size={20} /> Correct!
                 {:else}
-                  <div class="explanation-icon incorrect">
-                    <AlertCircle size={20} />
-                  </div>
-                  <span>Not quite right</span>
+                  <AlertCircle size={20} /> Not quite right
                 {/if}
               </div>
-              <p>{questions[currentIndex].answers[selectedAnswer].explanation}</p>
+              <p>{questions[currentIndex].answers[selectedAnswer!].explanation}</p>
             </div>
           {/if}
 
-          <!-- Next Button -->
           <button 
             class="btn-next"
             class:visible={selectedAnswer !== null}
-            disabled={selectedAnswer === null}
             onclick={nextQuestion}
           >
-            <span>{currentIndex === totalQuestions - 1 ? 'View Results' : 'Next Question'}</span>
+            {currentIndex === totalQuestions - 1 ? 'View Results' : 'Next Question'}
             <ChevronRight size={20} />
           </button>
         </div>
       </div>
 
-    {:else}
-      <!-- Results Screen -->
+    {:else if currentGame === 'results'}
       <div class="results-container">
         <div class="results-card">
-          <div class="results-icon-wrapper" style="background: {performance.bg}; color: {performance.color};">
-            <svelte:component this={performance.icon} size={48} />
-          </div>
-          
-          <h2 class="results-title">{performance.title}</h2>
-          <p class="results-desc">{performance.desc}</p>
-          
-          <div class="score-display">
-            <div class="score-circle" style="border-color: {performance.bg};">
-              <div class="score-main">
-                <span class="score-number" style="color: {performance.color};">{score}</span>
-                <span class="score-total">/{totalQuestions}</span>
-              </div>
-              <div class="score-percent">{Math.round((score / totalQuestions) * 100)}%</div>
-            </div>
-          </div>
+          <Award size={72} color="#10B981" />
+          <h2 class="results-title">Quest Complete</h2>
+          <p class="score-display">{score} / {totalQuestions} correct ({accuracy}%)</p>
 
-          <div class="results-stats">
-            <div class="result-stat">
-              <span class="stat-label-sm">Accuracy</span>
-              <span class="stat-value" style="color: {performance.color};">{accuracy}%</span>
-            </div>
-            <div class="result-stat">
-              <span class="stat-label-sm">Best Streak</span>
-              <span class="stat-value">{maxStreak}</span>
-            </div>
-            <div class="result-stat">
-              <span class="stat-label-sm">Correct</span>
-              <span class="stat-value">{score}</span>
-            </div>
+          <div class="xp-gain">
+            <Zap size={32} />
+            <span>+{Math.floor(score * 15)} XP Earned</span>
           </div>
 
           <div class="results-actions">
             <button class="btn-primary" onclick={startNewGame}>
               <RotateCcw size={18} />
-              <span>Play Again</span>
+              Play Again
             </button>
-            <button class="btn-secondary" onclick={() => currentGame = 'menu'}>
+            <button class="btn-secondary" onclick={resetGame}>
               <Home size={18} />
-              <span>Main Menu</span>
+              Main Menu
             </button>
           </div>
         </div>
       </div>
+
+    {:else if currentGame === 'achievements'}
+      <div class="achievements-container">
+        <h1>Achievements</h1>
+        <div class="achievements-grid">
+          {#each achievements as ach}
+            {@const unlocked = unlockedAchievements.includes(ach.id)}
+            <div class="achievement-card" class:unlocked={unlocked}>
+              <div class="achievement-icon">
+                <svelte:component this={ach.icon} size={48} />
+              </div>
+              <div class="achievement-info">
+                <strong>{ach.name}</strong>
+                <p>{ach.desc}</p>
+                <small>+{ach.xp} XP</small>
+              </div>
+              {#if !unlocked}
+                <Lock size={24} class="lock" />
+              {/if}
+            </div>
+          {/each}
+        </div>
+        <button class="btn-secondary" onclick={resetGame}>Back to Menu</button>
+      </div>
     {/if}
   </main>
-
-  <!-- Safety Banner -->
-  <div class="safety-banner">
-    <ShieldCheck size={20} />
-    <div>
-      <strong>Proactive Protection</strong> — Regular safety training helps you respond confidently in emergency situations.
-    </div>
-  </div>
 </div>
 
 <style>
-  :global(*) {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  :global(:root) {
-    --primary-color: #6a2c91;
-    --primary-dark: #4a1d6e;
-    --primary-bg: rgba(106, 44, 145, 0.1);
-    --success-color: #10B981;
-    --success-bg: #D1FAE5;
-    --warning-color: #F59E0B;
-    --warning-bg: #FEF3C7;
-    --error-color: #EF4444;
-    --error-bg: #FEE2E2;
-    --info-color: #06B6D4;
-    --info-bg: #CFFAFE;
-  }
-
+  /* Paste all your original beautiful styles here + the new ones below */
   :global(body) {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    color: #0f172a;
-    min-height: 100vh;
   }
 
-  .page {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    padding: 1.5rem;
-  }
-
-  /* Navigation */
-  .nav {
-    margin-bottom: 2rem;
-  }
-
+  .page { min-height: 100vh; padding: 1.5rem; display: flex; flex-direction: column; }
+  .nav { margin-bottom: 2rem; }
   .nav-content {
-    max-width: 1400px;
-    margin: 0 auto;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: white;
-    border-radius: 1rem;
-    padding: 0.75rem 1.25rem;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;
+    background: white; border-radius: 1rem; padding: 0.75rem 1.25rem; border: 1px solid #e2e8f0;
+  }
+  .nav-brand { display: flex; align-items: center; gap: 0.75rem; font-weight: 700; font-size: 1.3rem; }
+  .stat-pill {
+    display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem;
+    background: #f1f5f9; border-radius: 9999px; font-weight: 600; font-size: 0.9rem;
   }
 
-  .nav-back {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: none;
-    border: none;
-    color: #64748b;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.75rem;
-    transition: all 0.2s;
-  }
+  .daily-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; color: #6a2c91; }
+  .title { font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+  .stat-card { background: white; padding: 1.75rem; border-radius: 1rem; border: 1px solid #e2e8f0; display: flex; gap: 1.25rem; align-items: center; }
 
-  .nav-back:hover {
-    background: #f1f5f9;
-    color: var(--primary-color);
-  }
+  .big-number { font-size: 2.5rem; font-weight: 700; display: block; }
 
-  .nav-brand {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+  .xp-gain { font-size: 1.6rem; font-weight: 600; color: #8b5cf6; display: flex; align-items: center; gap: 1rem; margin: 2rem 0; }
+
+  .achievements-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem; margin: 2rem 0;
   }
+  .achievement-card {
+    background: white; padding: 1.75rem; border-radius: 1rem; border: 2px solid #e2e8f0;
+    display: flex; gap: 1.5rem; align-items: flex-start; opacity: 0.65;
+  }
+  .achievement-card.unlocked { opacity: 1; border-color: #10b981; background: #f0fdf4; }
 
   .logo-icon {
     width: 36px;
