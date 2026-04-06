@@ -4,7 +4,7 @@
     ShieldCheck, Trophy, ArrowRight, RefreshCw, Home, Sparkles,
     Brain, Target, Zap, CheckCircle2, XCircle, ChevronRight,
     RotateCcw, Award, Flame, AlertCircle, TrendingUp, Gamepad2,
-    Shield, Clock, Star, Calendar, Medal, Lock, Users
+    Shield, Clock, Star, Calendar, Medal, Lock, Users, BarChart3
   } from 'lucide-svelte';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
@@ -39,7 +39,7 @@
     { id: 'streak_7', name: 'Dedicated', desc: 'Reach 7-day streak', icon: Flame, xp: 200 },
     { id: 'score_50', name: 'High Scorer', desc: 'Earn 50 total XP', icon: Trophy, xp: 100 },
     { id: 'master_10', name: 'Safety Master', desc: 'Complete 10 quests', icon: Medal, xp: 250 },
-    { id: 'accuracy_90', name: 'Precision', desc: 'Achieve 90%+ accuracy', icon: Target, xp: 120 },
+    { id: 'accuracy_90', name: 'Precision', desc: 'Achieve 90%+ accuracy in one game', icon: Target, xp: 120 },
     { id: 'streak_14', name: 'Unstoppable', desc: 'Reach 14-day streak', icon: Flame, xp: 300 }
   ]);
 
@@ -50,7 +50,10 @@
   let accuracy = $derived(answersHistory.length > 0 ? Math.round((answersHistory.filter(Boolean).length / answersHistory.length) * 100) : 0);
   let progressPercent = $derived(((currentIndex + (currentIndex >= totalQuestions ? 1 : 0)) / totalQuestions) * 100);
   let xpForNextLevel = $derived(currentLevel * 220);
-  let xpProgress = $derived(Math.min((totalXP / xpForNextLevel) * 100, 100));
+  let xpProgressPercent = $derived((totalXP % xpForNextLevel) / xpForNextLevel * 100);
+  let unlockedCount = $derived(unlockedAchievements.length);
+  let totalAchievements = $derived(achievements.length);
+  let overallAccuracy = $derived(totalCorrectAnswers > 0 ? Math.round((totalCorrectAnswers / (totalGamesPlayed * 8)) * 100) : 0);
 
   // ====================== STORAGE ======================
   function loadProgress() {
@@ -71,66 +74,113 @@
 
   function saveProgress() {
     const today = new Date().toISOString().split('T')[0];
+
     if (lastPlayedDate !== today) {
       const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-      currentDayStreak = lastPlayedDate === yesterday ? currentDayStreak + 1 : 1;
+      if (lastPlayedDate === yesterday) {
+        currentDayStreak++;
+      } else {
+        currentDayStreak = 1;
+      }
       lastPlayedDate = today;
     }
+
     if (currentDayStreak > longestStreak) longestStreak = currentDayStreak;
+
     localStorage.setItem('safetyQuestFullProgress', JSON.stringify({
-      totalGamesPlayed, totalXP, currentLevel, currentDayStreak, lastPlayedDate,
-      completedQuestionIds, longestStreak, totalCorrectAnswers, unlockedAchievements
+      totalGamesPlayed,
+      totalXP,
+      currentLevel,
+      currentDayStreak,
+      lastPlayedDate,
+      completedQuestionIds,
+      longestStreak,
+      totalCorrectAnswers,
+      unlockedAchievements
     }));
   }
 
   function checkAndUnlockAchievements() {
     let newlyUnlocked = false;
+
     achievements.forEach(ach => {
       if (unlockedAchievements.includes(ach.id)) return;
-      let should = false;
-      if (ach.id === 'first_game' && totalGamesPlayed >= 1) should = true;
-      if (ach.id === 'perfect_8' && score === totalQuestions && totalQuestions === 8) should = true;
-      if (ach.id === 'streak_3' && currentDayStreak >= 3) should = true;
-      if (ach.id === 'streak_7' && currentDayStreak >= 7) should = true;
-      if (ach.id === 'streak_14' && currentDayStreak >= 14) should = true;
-      if (ach.id === 'score_50' && totalXP >= 50) should = true;
-      if (ach.id === 'master_10' && totalGamesPlayed >= 10) should = true;
-      if (ach.id === 'accuracy_90' && accuracy >= 90) should = true;
-      if (should) {
+
+      let shouldUnlock = false;
+
+      if (ach.id === 'first_game' && totalGamesPlayed >= 1) shouldUnlock = true;
+      if (ach.id === 'perfect_8' && score === totalQuestions && totalQuestions === 8) shouldUnlock = true;
+      if (ach.id === 'streak_3' && currentDayStreak >= 3) shouldUnlock = true;
+      if (ach.id === 'streak_7' && currentDayStreak >= 7) shouldUnlock = true;
+      if (ach.id === 'streak_14' && currentDayStreak >= 14) shouldUnlock = true;
+      if (ach.id === 'score_50' && totalXP >= 50) shouldUnlock = true;
+      if (ach.id === 'master_10' && totalGamesPlayed >= 10) shouldUnlock = true;
+      if (ach.id === 'accuracy_90' && accuracy >= 90) shouldUnlock = true;
+
+      if (shouldUnlock) {
         unlockedAchievements = [...unlockedAchievements, ach.id];
         totalXP += ach.xp;
         newlyUnlocked = true;
       }
     });
-    while (totalXP >= xpForNextLevel) currentLevel++;
+
+    // Level up logic
+    while (totalXP >= xpForNextLevel) {
+      currentLevel++;
+    }
+
     if (newlyUnlocked) saveProgress();
   }
 
   // ====================== GAME LOGIC ======================
   function startNewGame() {
+    let available = safetyQuestions.filter(q => 
+      !completedQuestionIds.includes(q.id || q.question)
+    );
+
+    if (available.length < 6) {
+      available = safetyQuestions;
+    }
+
     questions = getRandomQuestions(8);
-    currentIndex = 0; score = 0; selectedAnswer = null;
-    showExplanation = false; streak = 0; maxStreak = 0; answersHistory = [];
+    currentIndex = 0;
+    score = 0;
+    selectedAnswer = null;
+    showExplanation = false;
+    streak = 0;
+    maxStreak = 0;
+    answersHistory = [];
     currentGame = 'quiz';
   }
 
   function selectAnswer(index: number) {
     if (selectedAnswer !== null) return;
+    
     selectedAnswer = index;
     const isCorrect = questions[currentIndex].answers[index].correct;
+
     if (isCorrect) {
-      score++; streak++;
+      score++;
+      streak++;
       if (streak > maxStreak) maxStreak = streak;
       totalCorrectAnswers++;
+      
       const qId = questions[currentIndex].id || questions[currentIndex].question;
-      if (!completedQuestionIds.includes(qId)) completedQuestionIds = [...completedQuestionIds, qId];
-    } else { streak = 0; }
+      if (!completedQuestionIds.includes(qId)) {
+        completedQuestionIds = [...completedQuestionIds, qId];
+      }
+    } else {
+      streak = 0;
+    }
+
     answersHistory = [...answersHistory, isCorrect];
     showExplanation = true;
   }
 
   function nextQuestion() {
-    selectedAnswer = null; showExplanation = false;
+    selectedAnswer = null;
+    showExplanation = false;
+
     if (currentIndex < totalQuestions - 1) {
       currentIndex++;
     } else {
@@ -142,1343 +192,917 @@
     }
   }
 
-  function resetGame() { currentGame = 'menu'; }
+  function resetGame() {
+    currentGame = 'menu';
+  }
 
-  onMount(() => { loadProgress(); });
+  onMount(() => {
+    loadProgress();
+  });
 </script>
 
 <svelte:head>
   <title>Safety Quest — Lezie</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <meta name="description" content="Master safety skills through interactive challenges" />
 </svelte:head>
 
 <div class="page">
-
-  <!-- ===== NAV ===== -->
+  <!-- Navigation: clean back button only -->
   <header class="nav">
-    <div class="nav-inner">
-      <button class="back-btn" onclick={() => goto('/')}>
-        <Home size={16} />
-        <span>Dashboard</span>
+    <div class="nav-content">
+      <button class="nav-back" onclick={() => goto('/')}>
+        <Home size={18} />
+        <span>Back to Dashboard</span>
       </button>
-      <div class="nav-brand">
-        <div class="brand-icon"><ShieldCheck size={18} /></div>
-        <span>Safety Quest</span>
-      </div>
-      <div class="nav-right">
-        <!-- empty spacer for flex balance -->
-      </div>
     </div>
   </header>
 
   <main class="content">
-
-    <!-- ==================== MENU ==================== -->
     {#if currentGame === 'menu'}
-      <div class="menu-wrap">
-
-        <!-- ACHIEVEMENTS STRIP (TOP) -->
-        <section class="achievements-strip">
-          <div class="strip-header">
-            <div class="strip-title-row">
-              <Trophy size={16} />
-              <span>Achievements</span>
-              <span class="strip-count">{unlockedAchievements.length}/{achievements.length}</span>
+      <div class="menu-container">
+        <!-- Top Stats Bar: Level, Streak, XP prominently displayed -->
+        <div class="top-stats-bar">
+          <div class="stat-block">
+            <div class="stat-icon"><Medal size={28} /></div>
+            <div class="stat-info">
+              <span class="stat-label">Level</span>
+              <span class="stat-number">{currentLevel}</span>
             </div>
-            <button class="strip-see-all" onclick={() => currentGame = 'achievements'}>
-              See all <ChevronRight size={14} />
+          </div>
+          <div class="stat-block">
+            <div class="stat-icon"><Flame size={28} /></div>
+            <div class="stat-info">
+              <span class="stat-label">Day Streak</span>
+              <span class="stat-number">{currentDayStreak}</span>
+            </div>
+          </div>
+          <div class="stat-block xp-block">
+            <div class="stat-icon"><Zap size={28} /></div>
+            <div class="stat-info">
+              <span class="stat-label">Total XP</span>
+              <span class="stat-number">{totalXP}</span>
+              <div class="xp-progress">
+                <div class="xp-fill" style="width: {xpProgressPercent}%"></div>
+              </div>
+              <span class="xp-next">{totalXP % xpForNextLevel} / {xpForNextLevel}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Achievements Preview - Strategic top placement with modern design -->
+        <div class="achievements-preview">
+          <div class="preview-header">
+            <div class="preview-title">
+              <Award size={22} />
+              <h3>Recent Achievements</h3>
+              <span class="achievement-count">{unlockedCount} / {totalAchievements}</span>
+            </div>
+            <button class="view-all-btn" onclick={() => currentGame = 'achievements'}>
+              View All
+              <ChevronRight size={16} />
             </button>
           </div>
-          <div class="strip-scroll">
+          <div class="preview-scroll">
             {#each achievements as ach}
               {@const unlocked = unlockedAchievements.includes(ach.id)}
-              <div class="ach-chip" class:unlocked>
-                <div class="ach-chip-icon">
-                  <svelte:component this={ach.icon} size={18} />
+              <div class="preview-card" class:unlocked={unlocked}>
+                <div class="preview-icon">
+                  <svelte:component this={ach.icon} size={28} />
                 </div>
-                <div class="ach-chip-body">
-                  <span class="ach-chip-name">{ach.name}</span>
-                  <span class="ach-chip-xp">+{ach.xp} XP</span>
+                <div class="preview-details">
+                  <strong>{ach.name}</strong>
+                  <span>{ach.desc}</span>
                 </div>
                 {#if !unlocked}
-                  <div class="ach-chip-lock"><Lock size={12} /></div>
+                  <Lock size={14} class="preview-lock" />
                 {:else}
-                  <div class="ach-chip-check"><CheckCircle2 size={14} /></div>
+                  <CheckCircle2 size={14} class="preview-check" />
                 {/if}
               </div>
             {/each}
           </div>
-        </section>
+        </div>
 
-        <!-- PLAYER STATS BAR -->
-        <section class="player-bar">
-          <div class="player-level">
-            <div class="level-badge">
-              <Star size={14} />
-              <span>Lv {currentLevel}</span>
-            </div>
-            <div class="xp-track">
-              <div class="xp-fill" style="width: {xpProgress}%"></div>
-            </div>
-            <span class="xp-label">{totalXP} / {xpForNextLevel} XP</span>
-          </div>
-          <div class="player-divider"></div>
-          <div class="player-streak">
-            <Flame size={18} />
-            <div>
-              <span class="streak-num">{currentDayStreak}</span>
-              <span class="streak-label">day streak</span>
-            </div>
-          </div>
-          <div class="player-divider"></div>
-          <div class="player-games">
-            <Shield size={18} />
-            <div>
-              <span class="streak-num">{totalGamesPlayed}</span>
-              <span class="streak-label">quests done</span>
-            </div>
-          </div>
-          <div class="player-divider"></div>
-          <div class="player-games">
-            <TrendingUp size={18} />
-            <div>
-              <span class="streak-num">{longestStreak}</span>
-              <span class="streak-label">best streak</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- HERO CARD -->
+        <!-- Main CTA Hero Card -->
         <div class="hero-card">
-          <div class="hero-glow"></div>
-          <div class="hero-body">
-            <div class="hero-badge">
-              <Sparkles size={13} />
-              Daily Training — {new Date().toLocaleDateString('en-US', { weekday: 'long' })}
+          <div class="hero-content">
+            <div class="badge">
+              <Sparkles size={14} />
+              Interactive Training
             </div>
-            <h1 class="hero-title">Master Safety<br/>Through Play</h1>
-            <p class="hero-sub">Test your knowledge with real-world scenarios and build lasting safety habits one quest at a time.</p>
-            <button class="cta-btn" onclick={startNewGame}>
+            <h1 class="hero-title">Master Safety Through Play</h1>
+            <p class="hero-subtitle">Test your knowledge with real-world scenarios and build lasting safety habits.</p>
+            <button class="btn-primary" onclick={startNewGame}>
               <Gamepad2 size={20} />
               Start Today's Quest
-              <ArrowRight size={18} />
+              <ArrowRight size={20} />
             </button>
           </div>
-          <div class="hero-art">
-            <div class="orbit orbit-1">
-              <div class="orbit-icon"><Shield size={22} /></div>
-            </div>
-            <div class="orbit orbit-2">
-              <div class="orbit-icon"><Target size={18} /></div>
-            </div>
-            <div class="orbit orbit-3">
-              <div class="orbit-icon"><Zap size={16} /></div>
-            </div>
-            <div class="center-orb">
-              <ShieldCheck size={32} />
-            </div>
+          <div class="hero-visual">
+            <div class="floating-icon icon-1"><Shield size={32} /></div>
+            <div class="floating-icon icon-2"><Brain size={32} /></div>
+            <div class="floating-icon icon-3"><Target size={32} /></div>
           </div>
         </div>
 
+        <!-- Secondary Stats Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <Shield size={28} class="card-icon" />
+            <div>
+              <span class="big-number">{totalGamesPlayed}</span>
+              <span>Quests Completed</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <BarChart3 size={28} class="card-icon" />
+            <div>
+              <span class="big-number">{overallAccuracy}%</span>
+              <span>Overall Accuracy</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <Flame size={28} class="card-icon" />
+            <div>
+              <span class="big-number">{longestStreak}</span>
+              <span>Best Streak</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-    <!-- ==================== QUIZ ==================== -->
     {:else if currentGame === 'quiz'}
-      <div class="quiz-wrap">
-
-        <!-- Progress Bar -->
-        <div class="q-progress-bar">
-          <div class="q-progress-meta">
-            <span class="q-counter">
-              <Brain size={14} />
-              {Math.min(currentIndex + 1, totalQuestions)} / {totalQuestions}
-            </span>
-            <div class="q-pills">
+      <div class="quiz-container">
+        <div class="progress-section">
+          <div class="progress-header">
+            <span class="progress-text">Question {Math.min(currentIndex + 1, totalQuestions)} of {totalQuestions}</span>
+            <div class="progress-pills">
               {#if streak > 1}
-                <span class="q-pill flame">
-                  <Flame size={13} />
+                <div class="streak-pill">
+                  <Flame size={14} />
                   {streak} streak
-                </span>
+                </div>
               {/if}
-              {#if answersHistory.length > 0}
-                <span class="q-pill accuracy">
-                  <TrendingUp size={13} />
-                  {accuracy}%
-                </span>
-              {/if}
+              <div class="accuracy-pill">
+                <TrendingUp size={14} />
+                {accuracy}%
+              </div>
             </div>
           </div>
-          <div class="q-track">
-            {#each questions as _, i}
-              <div
-                class="q-segment"
-                class:done={i < currentIndex}
-                class:active={i === currentIndex}
-                class:correct={i < answersHistory.length && answersHistory[i]}
-                class:wrong={i < answersHistory.length && !answersHistory[i]}
-              ></div>
-            {/each}
+          <div class="progress-track">
+            <div class="progress-fill" style="width: {progressPercent}%"></div>
           </div>
         </div>
 
-        <!-- Question Card -->
-        <div class="q-card">
-          <div class="q-tag">Safety Scenario</div>
-          <h2 class="q-text">{questions[currentIndex]?.question}</h2>
+        <div class="question-card">
+          <div class="question-header">
+            <div class="category-badge">Safety Scenario</div>
+            <h2 class="question-text">{questions[currentIndex]?.question}</h2>
+          </div>
 
-          <div class="q-answers">
+          <div class="answers-list">
             {#each questions[currentIndex]?.answers || [] as answer, i}
               {@const isSelected = selectedAnswer === i}
               {@const isCorrect = answer.correct}
               {@const showResult = selectedAnswer !== null}
 
               <button
-                class="q-answer"
+                class="answer-option"
                 class:selected={isSelected}
                 class:correct={showResult && isCorrect}
                 class:incorrect={showResult && isSelected && !isCorrect}
-                class:dim={showResult && !isSelected && !isCorrect}
                 disabled={selectedAnswer !== null}
                 onclick={() => selectAnswer(i)}
               >
-                <span class="q-letter">
+                <div class="answer-indicator">
                   {#if showResult && isCorrect}
-                    <CheckCircle2 size={17} />
+                    <div class="result-icon correct-icon"><CheckCircle2 size={20} /></div>
                   {:else if showResult && isSelected && !isCorrect}
-                    <XCircle size={17} />
+                    <div class="result-icon incorrect-icon"><XCircle size={20} /></div>
                   {:else}
-                    {String.fromCharCode(65 + i)}
+                    <span class="option-letter">{String.fromCharCode(65 + i)}</span>
                   {/if}
-                </span>
-                <span class="q-answer-text">{answer.text}</span>
+                </div>
+                <span class="answer-text">{answer.text}</span>
               </button>
             {/each}
           </div>
 
           {#if showExplanation && questions[currentIndex]?.answers[selectedAnswer!]?.explanation}
-            <div class="q-explanation" class:correct={questions[currentIndex].answers[selectedAnswer!].correct}>
-              <div class="q-exp-head">
+            <div class="explanation-panel" class:correct={questions[currentIndex].answers[selectedAnswer!].correct}>
+              <div class="explanation-header">
                 {#if questions[currentIndex].answers[selectedAnswer!].correct}
-                  <CheckCircle2 size={16} /> Correct!
+                  <CheckCircle2 size={20} /> Correct!
                 {:else}
-                  <AlertCircle size={16} /> Not quite right
+                  <AlertCircle size={20} /> Not quite right
                 {/if}
               </div>
               <p>{questions[currentIndex].answers[selectedAnswer!].explanation}</p>
             </div>
           {/if}
 
-          <button
-            class="q-next"
+          <button 
+            class="btn-next"
             class:visible={selectedAnswer !== null}
             onclick={nextQuestion}
           >
             {currentIndex === totalQuestions - 1 ? 'View Results' : 'Next Question'}
-            <ChevronRight size={18} />
+            <ChevronRight size={20} />
           </button>
         </div>
       </div>
 
-    <!-- ==================== RESULTS ==================== -->
     {:else if currentGame === 'results'}
-      <div class="results-wrap">
+      <div class="results-container">
         <div class="results-card">
-          <div class="results-glow"></div>
-          <div class="results-inner">
-            <div class="results-badge">Quest Complete</div>
-            <div class="score-ring-wrap">
-              <svg class="score-ring" viewBox="0 0 120 120">
-                <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
-                <circle
-                  cx="60" cy="60" r="52" fill="none"
-                  stroke="url(#scoreGrad)" stroke-width="8"
-                  stroke-linecap="round"
-                  stroke-dasharray="{Math.round((accuracy / 100) * 327)} 327"
-                  transform="rotate(-90 60 60)"
-                />
-                <defs>
-                  <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stop-color="#10b981"/>
-                    <stop offset="100%" stop-color="#34d399"/>
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div class="score-center">
-                <span class="score-big">{accuracy}%</span>
-                <span class="score-sub">{score}/{totalQuestions}</span>
-              </div>
-            </div>
-            <div class="xp-earned">
-              <Zap size={18} />
-              +{Math.floor(score * 15 + (accuracy > 75 ? 40 : 0))} XP earned
-            </div>
-            <div class="results-meta">
-              <div class="r-stat">
-                <span class="r-val">{maxStreak}</span>
-                <span class="r-lbl">Best Streak</span>
-              </div>
-              <div class="r-stat">
-                <span class="r-val">{totalGamesPlayed}</span>
-                <span class="r-lbl">Total Quests</span>
-              </div>
-              <div class="r-stat">
-                <span class="r-val">Lv {currentLevel}</span>
-                <span class="r-lbl">Level</span>
-              </div>
-            </div>
-            <div class="results-actions">
-              <button class="cta-btn" onclick={startNewGame}>
-                <RotateCcw size={16} />
-                Play Again
-              </button>
-              <button class="ghost-btn" onclick={resetGame}>
-                <Home size={16} />
-                Menu
-              </button>
-            </div>
+          <Award size={72} color="#10B981" />
+          <h2 class="results-title">Quest Complete</h2>
+          <p class="score-display">{score} / {totalQuestions} correct ({accuracy}%)</p>
+
+          <div class="xp-gain">
+            <Zap size={32} />
+            <span>+{Math.floor(score * 15)} XP Earned</span>
+          </div>
+
+          <div class="results-actions">
+            <button class="btn-primary" onclick={startNewGame}>
+              <RotateCcw size={18} />
+              Play Again
+            </button>
+            <button class="btn-secondary" onclick={resetGame}>
+              <Home size={18} />
+              Main Menu
+            </button>
           </div>
         </div>
       </div>
 
-    <!-- ==================== ACHIEVEMENTS FULL ==================== -->
     {:else if currentGame === 'achievements'}
-      <div class="ach-full-wrap">
-        <div class="ach-full-header">
-          <Trophy size={28} />
-          <div>
-            <h1>Achievements</h1>
-            <p>{unlockedAchievements.length} of {achievements.length} unlocked</p>
-          </div>
-        </div>
-        <div class="ach-full-grid">
+      <div class="achievements-container">
+        <h1>Achievements</h1>
+        <div class="achievements-grid">
           {#each achievements as ach}
             {@const unlocked = unlockedAchievements.includes(ach.id)}
-            <div class="ach-full-card" class:unlocked>
-              <div class="ach-full-icon">
-                <svelte:component this={ach.icon} size={28} />
+            <div class="achievement-card" class:unlocked={unlocked}>
+              <div class="achievement-icon">
+                <svelte:component this={ach.icon} size={48} />
               </div>
-              <div class="ach-full-info">
+              <div class="achievement-info">
                 <strong>{ach.name}</strong>
-                <span>{ach.desc}</span>
-                <em>+{ach.xp} XP</em>
+                <p>{ach.desc}</p>
+                <small>+{ach.xp} XP</small>
               </div>
-              <div class="ach-full-status">
-                {#if unlocked}
-                  <CheckCircle2 size={20} />
-                {:else}
-                  <Lock size={18} />
-                {/if}
-              </div>
+              {#if !unlocked}
+                <Lock size={24} class="lock" />
+              {/if}
             </div>
           {/each}
         </div>
-        <button class="ghost-btn" onclick={resetGame}>
-          <ArrowRight size={16} style="transform: rotate(180deg)" />
-          Back to Menu
-        </button>
+        <button class="btn-secondary" onclick={resetGame}>Back to Menu</button>
       </div>
     {/if}
-
   </main>
 </div>
 
 <style>
-  /* ===== TOKENS ===== */
   :global(body) {
-    font-family: 'DM Sans', system-ui, sans-serif;
-    background: #0a0e1a;
-    color: #e2e8f0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #f0f4f8 100%);
     margin: 0;
+    padding: 0;
   }
 
-  :root {
-    --bg: #0a0e1a;
-    --surface: #111827;
-    --surface-2: #1a2235;
-    --border: rgba(255,255,255,0.07);
-    --border-hover: rgba(255,255,255,0.14);
-    --teal: #10b981;
-    --teal-dim: rgba(16,185,129,0.15);
-    --teal-glow: rgba(16,185,129,0.25);
-    --amber: #f59e0b;
-    --amber-dim: rgba(245,158,11,0.15);
-    --red: #ef4444;
-    --red-dim: rgba(239,68,68,0.12);
-    --text-1: #f1f5f9;
-    --text-2: #94a3b8;
-    --text-3: #64748b;
-    --radius: 1rem;
-    --font-display: 'Syne', sans-serif;
+  .page { min-height: 100vh; padding: 1.5rem; display: flex; flex-direction: column; }
+  .nav { margin-bottom: 2rem; }
+  .nav-content {
+    max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: flex-start;
+    background: white; border-radius: 1rem; padding: 0.5rem 1.25rem; border: 1px solid #e2e8f0;
   }
-
-  /* ===== PAGE ===== */
-  .page {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse 60% 40% at 70% 0%, rgba(16,185,129,0.06) 0%, transparent 70%),
-      radial-gradient(ellipse 40% 30% at 10% 80%, rgba(99,102,241,0.05) 0%, transparent 60%);
-  }
-
-  /* ===== NAV ===== */
-  .nav {
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--border);
-    background: rgba(10,14,26,0.8);
-    backdrop-filter: blur(12px);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-
-  .nav-inner {
-    max-width: 900px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .back-btn {
+  .nav-back {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: 0.625rem;
-    color: var(--text-2);
-    font-size: 0.875rem;
+    background: none;
+    border: none;
+    color: #64748b;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
-    font-family: 'DM Sans', sans-serif;
-  }
-
-  .back-btn:hover {
-    color: var(--text-1);
-    border-color: var(--border-hover);
-  }
-
-  .nav-brand {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.125rem;
-    color: var(--text-1);
-  }
-
-  .brand-icon {
-    width: 32px;
-    height: 32px;
-    background: var(--teal-dim);
-    border: 1px solid rgba(16,185,129,0.3);
+    padding: 0.5rem 1rem;
     border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--teal);
+    transition: all 0.2s;
+  }
+  .nav-back:hover {
+    background: #f1f5f9;
+    color: #0f172a;
   }
 
-  .nav-right {
-    width: 100px; /* balance the back button */
-  }
-
-  /* ===== CONTENT ===== */
   .content {
     flex: 1;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 2rem 1.5rem 3rem;
-  }
-
-  /* ===== MENU ===== */
-  .menu-wrap {
+    max-width: 1400px;
+    margin: 0 auto;
     width: 100%;
-    max-width: 860px;
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
-    animation: fadeUp 0.5s ease both;
+    align-items: center;
+    justify-content: center;
   }
 
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(14px); }
-    to   { opacity: 1; transform: translateY(0); }
+  /* Menu Container */
+  .menu-container {
+    width: 100%;
+    max-width: 1200px;
+    animation: fadeIn 0.5s ease;
   }
 
-  /* --- Achievements Strip --- */
-  .achievements-strip {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.125rem 1.25rem 1rem;
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
-  .strip-header {
+  /* Top Stats Bar */
+  .top-stats-bar {
+    display: flex;
+    background: white;
+    border-radius: 1.5rem;
+    padding: 1.25rem 2rem;
+    margin-bottom: 1.5rem;
+    gap: 2rem;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  }
+  .stat-block {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.875rem;
+    gap: 1rem;
+    flex: 1;
+  }
+  .stat-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+    border-radius: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6a2c91;
+  }
+  .stat-info {
+    flex: 1;
+  }
+  .stat-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: #64748b;
+    letter-spacing: 0.03em;
+    display: block;
+  }
+  .stat-number {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.2;
+  }
+  .xp-block {
+    flex: 2;
+  }
+  .xp-progress {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    margin: 0.5rem 0 0.25rem;
+    overflow: hidden;
+  }
+  .xp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6a2c91, #8b5cf6);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+  }
+  .xp-next {
+    font-size: 0.7rem;
+    color: #64748b;
   }
 
-  .strip-title-row {
+  /* Achievements Preview - Horizontal scroll */
+  .achievements-preview {
+    background: white;
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e2e8f0;
+  }
+  .preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 0 0.25rem;
+  }
+  .preview-title {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-family: var(--font-display);
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: var(--text-2);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
   }
-
-  .strip-count {
-    font-size: 0.75rem;
-    padding: 0.125rem 0.5rem;
-    background: var(--teal-dim);
-    border-radius: 999px;
-    color: var(--teal);
+  .preview-title h3 {
+    font-size: 1rem;
     font-weight: 600;
+    margin: 0;
   }
-
-  .strip-see-all {
+  .achievement-count {
+    background: #f1f5f9;
+    padding: 0.25rem 0.75rem;
+    border-radius: 2rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #475569;
+  }
+  .view-all-btn {
     display: flex;
     align-items: center;
     gap: 0.25rem;
     background: none;
     border: none;
-    color: var(--teal);
-    font-size: 0.8125rem;
-    font-weight: 600;
+    color: #6a2c91;
+    font-weight: 500;
+    font-size: 0.85rem;
     cursor: pointer;
-    padding: 0;
-    font-family: 'DM Sans', sans-serif;
     transition: opacity 0.2s;
   }
-
-  .strip-see-all:hover { opacity: 0.7; }
-
-  .strip-scroll {
+  .view-all-btn:hover {
+    opacity: 0.8;
+  }
+  .preview-scroll {
     display: flex;
-    gap: 0.625rem;
+    gap: 1rem;
     overflow-x: auto;
-    scrollbar-width: none;
-    padding-bottom: 2px;
+    padding-bottom: 0.5rem;
+    scrollbar-width: thin;
   }
-
-  .strip-scroll::-webkit-scrollbar { display: none; }
-
-  .ach-chip {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    padding: 0.625rem 0.875rem 0.625rem 0.625rem;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: 0.75rem;
-    opacity: 0.5;
-    transition: all 0.2s;
-    position: relative;
-  }
-
-  .ach-chip.unlocked {
-    opacity: 1;
-    border-color: rgba(16,185,129,0.35);
-    background: rgba(16,185,129,0.07);
-  }
-
-  .ach-chip-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 0.5rem;
-    background: var(--surface);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-3);
-    flex-shrink: 0;
-  }
-
-  .ach-chip.unlocked .ach-chip-icon {
-    background: var(--teal-dim);
-    color: var(--teal);
-  }
-
-  .ach-chip-body {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-  }
-
-  .ach-chip-name {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: var(--text-1);
-    white-space: nowrap;
-  }
-
-  .ach-chip-xp {
-    font-size: 0.7rem;
-    color: var(--text-3);
-    font-weight: 500;
-  }
-
-  .ach-chip.unlocked .ach-chip-xp {
-    color: var(--teal);
-  }
-
-  .ach-chip-lock {
-    color: var(--text-3);
-    margin-left: auto;
-  }
-
-  .ach-chip-check {
-    color: var(--teal);
-    margin-left: auto;
-  }
-
-  /* --- Player Stats Bar --- */
-  .player-bar {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-  }
-
-  .player-level {
+  .preview-card {
+    flex: 0 0 240px;
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .level-badge {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.375rem 0.75rem;
-    background: var(--teal-dim);
-    border: 1px solid rgba(16,185,129,0.3);
-    border-radius: 0.5rem;
-    color: var(--teal);
-    font-family: var(--font-display);
-    font-size: 0.875rem;
-    font-weight: 700;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  .xp-track {
-    flex: 1;
-    height: 6px;
-    background: rgba(255,255,255,0.06);
-    border-radius: 3px;
-    overflow: hidden;
-    min-width: 60px;
-  }
-
-  .xp-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--teal), #34d399);
-    border-radius: 3px;
-    transition: width 0.6s ease;
-  }
-
-  .xp-label {
-    font-size: 0.75rem;
-    color: var(--text-3);
-    white-space: nowrap;
-    font-weight: 500;
-  }
-
-  .player-divider {
-    width: 1px;
-    height: 32px;
-    background: var(--border);
-    flex-shrink: 0;
-  }
-
-  .player-streak, .player-games {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    color: var(--amber);
-    flex-shrink: 0;
-  }
-
-  .player-games {
-    color: var(--teal);
-  }
-
-  .streak-num {
-    display: block;
-    font-family: var(--font-display);
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--text-1);
-    line-height: 1;
-  }
-
-  .streak-label {
-    font-size: 0.7rem;
-    color: var(--text-3);
-    font-weight: 500;
-  }
-
-  /* --- Hero Card --- */
-  .hero-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 1.25rem;
-    padding: 2.25rem;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 2rem;
-    align-items: center;
-    overflow: hidden;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
     position: relative;
   }
-
-  .hero-glow {
-    position: absolute;
-    top: -40px;
-    right: 100px;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, var(--teal-glow) 0%, transparent 70%);
-    pointer-events: none;
+  .preview-card.unlocked {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+  }
+  .preview-icon {
+    width: 44px;
+    height: 44px;
+    background: white;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6a2c91;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  }
+  .preview-details {
+    flex: 1;
+  }
+  .preview-details strong {
+    font-size: 0.85rem;
+    display: block;
+    color: #0f172a;
+  }
+  .preview-details span {
+    font-size: 0.7rem;
+    color: #64748b;
+  }
+  .preview-lock {
+    color: #94a3b8;
+  }
+  .preview-check {
+    color: #10b981;
   }
 
-  .hero-badge {
+  /* Hero Card */
+  .hero-card {
+    background: white;
+    border-radius: 1.5rem;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+    background: linear-gradient(145deg, #ffffff, #fafcff);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+  }
+  .hero-content {
+    flex: 2;
+    text-align: left;
+  }
+  .badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.375rem 0.875rem;
-    background: var(--teal-dim);
-    border: 1px solid rgba(16,185,129,0.25);
-    border-radius: 999px;
-    color: var(--teal);
-    font-size: 0.8rem;
-    font-weight: 600;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #f3e8ff;
+    border: 1px solid rgba(106, 44, 145, 0.2);
+    border-radius: 2rem;
+    color: #6a2c91;
+    font-size: 0.875rem;
+    font-weight: 500;
     margin-bottom: 1.25rem;
   }
-
   .hero-title {
-    font-family: var(--font-display);
-    font-size: 2.25rem;
+    font-size: 2.5rem;
     font-weight: 800;
-    color: var(--text-1);
-    line-height: 1.15;
-    margin: 0 0 0.875rem;
+    color: #0f172a;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #0f172a, #334155);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
-
-  .hero-sub {
-    font-size: 1rem;
-    color: var(--text-2);
-    line-height: 1.65;
-    margin: 0 0 1.75rem;
-    max-width: 420px;
+  .hero-subtitle {
+    font-size: 1.125rem;
+    color: #475569;
+    line-height: 1.6;
+    margin-bottom: 1.75rem;
+    max-width: 500px;
   }
-
-  .cta-btn {
+  .btn-primary {
     display: inline-flex;
     align-items: center;
-    gap: 0.625rem;
+    gap: 0.75rem;
     padding: 0.875rem 1.75rem;
-    background: var(--teal);
+    background: linear-gradient(135deg, #6a2c91, #4c1d6e);
     border: none;
     border-radius: 0.75rem;
-    color: #fff;
-    font-family: 'DM Sans', sans-serif;
+    color: white;
     font-size: 1rem;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 0 24px rgba(16,185,129,0.3);
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(106, 44, 145, 0.3);
   }
-
-  .cta-btn:hover {
-    background: #0ea472;
-    box-shadow: 0 0 32px rgba(16,185,129,0.45);
+  .btn-primary:hover {
     transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(106, 44, 145, 0.35);
   }
-
-  /* Hero art / orbits */
-  .hero-art {
+  .hero-visual {
+    flex: 1;
     position: relative;
-    width: 180px;
-    height: 180px;
-    flex-shrink: 0;
+    min-height: 140px;
   }
-
-  .center-orb {
+  .floating-icon {
     position: absolute;
-    inset: 50%;
-    transform: translate(-50%, -50%);
-    width: 68px;
-    height: 68px;
-    background: var(--teal-dim);
-    border: 1px solid rgba(16,185,129,0.35);
-    border-radius: 1.25rem;
+    width: 56px;
+    height: 56px;
+    background: white;
+    border-radius: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--teal);
-    box-shadow: 0 0 40px var(--teal-glow);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    border: 1px solid #e2e8f0;
+    color: #6a2c91;
   }
-
-  .orbit {
-    position: absolute;
-  }
-
-  .orbit-icon {
-    width: 40px;
-    height: 40px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-2);
-  }
-
-  .orbit-1 { top: 8%; left: 5%;  animation: float 3.2s ease-in-out infinite; }
-  .orbit-2 { top: 50%; right: 0%;  animation: float 3.2s ease-in-out infinite 0.6s; }
-  .orbit-3 { bottom: 8%; left: 25%; animation: float 3.2s ease-in-out infinite 1.1s; }
-
+  .icon-1 { top: 0; left: 0; animation: float 3s ease-in-out infinite; }
+  .icon-2 { top: 30px; right: 20px; animation: float 3s ease-in-out infinite 0.5s; }
+  .icon-3 { bottom: 0; left: 40px; animation: float 3s ease-in-out infinite 1s; }
   @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-10px); }
   }
 
-  /* ===== QUIZ ===== */
-  .quiz-wrap {
-    width: 100%;
-    max-width: 680px;
-    animation: fadeUp 0.4s ease both;
+  /* Stats Grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.25rem;
   }
-
-  .q-progress-bar {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    margin-bottom: 1.25rem;
-  }
-
-  .q-progress-meta {
+  .stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 1.25rem;
+    border: 1px solid #e2e8f0;
     display: flex;
+    gap: 1rem;
     align-items: center;
+    transition: all 0.2s;
+  }
+  .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.03);
+  }
+  .card-icon {
+    color: #6a2c91;
+    opacity: 0.8;
+  }
+  .big-number {
+    font-size: 2rem;
+    font-weight: 800;
+    display: block;
+    color: #0f172a;
+  }
+  .stat-card span:last-child {
+    font-size: 0.85rem;
+    color: #64748b;
+  }
+
+  /* Quiz Screen */
+  .quiz-container {
+    width: 100%;
+    max-width: 720px;
+    animation: slideUp 0.4s ease;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .progress-section {
+    background: white;
+    border-radius: 1rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e2e8f0;
+  }
+  .progress-header {
+    display: flex;
     justify-content: space-between;
     margin-bottom: 0.75rem;
   }
-
-  .q-counter {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
+  .progress-text {
     font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--text-2);
+    font-weight: 500;
+    color: #64748b;
   }
-
-  .q-pills { display: flex; gap: 0.5rem; }
-
-  .q-pill {
+  .progress-pills {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .streak-pill, .accuracy-pill {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.3rem 0.75rem;
-    border-radius: 999px;
-    font-size: 0.8125rem;
+    gap: 0.375rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 2rem;
+    font-size: 0.75rem;
     font-weight: 600;
   }
-
-  .q-pill.flame {
-    background: var(--amber-dim);
-    color: var(--amber);
-    border: 1px solid rgba(245,158,11,0.25);
+  .streak-pill {
+    background: #fef3c7;
+    color: #d97706;
   }
-
-  .q-pill.accuracy {
-    background: var(--teal-dim);
-    color: var(--teal);
-    border: 1px solid rgba(16,185,129,0.25);
+  .accuracy-pill {
+    background: #dcfce7;
+    color: #059669;
   }
-
-  /* Segment track */
-  .q-track {
-    display: flex;
-    gap: 4px;
+  .progress-track {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
   }
-
-  .q-segment {
-    flex: 1;
-    height: 5px;
-    border-radius: 3px;
-    background: rgba(255,255,255,0.07);
-    transition: background 0.3s;
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6a2c91, #8b5cf6);
+    border-radius: 4px;
+    transition: width 0.3s;
   }
-
-  .q-segment.correct { background: var(--teal); }
-  .q-segment.wrong   { background: var(--red); }
-  .q-segment.active  { background: rgba(255,255,255,0.2); }
-
-  /* Question Card */
-  .q-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 1.25rem;
+  .question-card {
+    background: white;
+    border-radius: 1.5rem;
     padding: 2rem;
+    border: 1px solid #e2e8f0;
   }
-
-  .q-tag {
+  .category-badge {
     display: inline-block;
-    padding: 0.3rem 0.875rem;
-    background: var(--teal-dim);
-    border: 1px solid rgba(16,185,129,0.2);
-    border-radius: 999px;
-    color: var(--teal);
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
+    padding: 0.25rem 0.75rem;
+    background: #f3e8ff;
+    border-radius: 2rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #6a2c91;
     margin-bottom: 1rem;
   }
-
-  .q-text {
-    font-family: var(--font-display);
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--text-1);
-    line-height: 1.45;
-    margin: 0 0 1.5rem;
+  .question-text {
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #0f172a;
   }
-
-  .q-answers {
+  .answers-list {
     display: flex;
     flex-direction: column;
-    gap: 0.625rem;
-    margin-bottom: 1.5rem;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
   }
-
-  .q-answer {
+  .answer-option {
     display: flex;
     align-items: center;
     gap: 1rem;
     padding: 1rem 1.25rem;
-    background: var(--surface-2);
-    border: 1.5px solid var(--border);
-    border-radius: 0.875rem;
-    color: var(--text-1);
-    font-size: 0.9375rem;
-    font-family: 'DM Sans', sans-serif;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 1rem;
+    font-size: 1rem;
     text-align: left;
     cursor: pointer;
-    transition: all 0.18s;
+    transition: all 0.2s;
     width: 100%;
   }
-
-  .q-answer:hover:not(:disabled) {
-    border-color: var(--border-hover);
-    background: rgba(255,255,255,0.05);
-    transform: translateX(3px);
+  .answer-option:hover:not(:disabled) {
+    background: white;
+    border-color: #cbd5e1;
+    transform: translateX(4px);
   }
-
-  .q-answer.selected {
-    border-color: var(--teal);
-    background: var(--teal-dim);
+  .answer-option.selected {
+    border-color: #6a2c91;
+    background: #f3e8ff;
   }
-
-  .q-answer.correct {
-    border-color: var(--teal);
-    background: rgba(16,185,129,0.12);
+  .answer-option.correct {
+    border-color: #10b981;
+    background: #f0fdf4;
   }
-
-  .q-answer.incorrect {
-    border-color: var(--red);
-    background: var(--red-dim);
+  .answer-option.incorrect {
+    border-color: #ef4444;
+    background: #fef2f2;
   }
-
-  .q-answer.dim {
-    opacity: 0.4;
+  .answer-indicator {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-
-  .q-answer:disabled { cursor: default; }
-
-  .q-letter {
-    width: 30px;
-    height: 30px;
-    background: rgba(255,255,255,0.06);
+  .option-letter {
+    width: 28px;
+    height: 28px;
+    background: #e2e8f0;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.8125rem;
-    font-weight: 700;
-    color: var(--text-2);
-    flex-shrink: 0;
+    font-weight: 600;
+    color: #64748b;
   }
-
-  .q-answer.correct .q-letter { background: var(--teal); color: #fff; }
-  .q-answer.incorrect .q-letter { background: var(--red); color: #fff; }
-
-  .q-answer-text { flex: 1; line-height: 1.5; }
-
-  /* Explanation */
-  .q-explanation {
-    margin-bottom: 1.25rem;
-    padding: 1.125rem;
-    background: var(--red-dim);
-    border: 1px solid rgba(239,68,68,0.2);
-    border-radius: 0.875rem;
-  }
-
-  .q-explanation.correct {
-    background: var(--teal-dim);
-    border-color: rgba(16,185,129,0.2);
-  }
-
-  .q-exp-head {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 700;
-    font-size: 0.9375rem;
-    color: var(--red);
-    margin-bottom: 0.625rem;
-  }
-
-  .q-explanation.correct .q-exp-head { color: var(--teal); }
-
-  .q-explanation p {
-    color: var(--text-2);
-    font-size: 0.9rem;
-    line-height: 1.6;
-    margin: 0;
-  }
-
-  /* Next Button */
-  .q-next {
+  .result-icon.correct-icon {
+    background: #10b981;
+    color: white;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+  .result-icon.incorrect-icon {
+    background: #ef4444;
+    color: white;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .answer-text {
+    flex: 1;
+    font-weight: 500;
+  }
+  .explanation-panel {
+    margin: 1rem 0;
+    padding: 1rem;
+    border-radius: 1rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+  }
+  .explanation-panel.correct {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+  }
+  .explanation-header {
+    display: flex;
+    align-items: center;
     gap: 0.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  .btn-next {
     width: 100%;
-    padding: 0.9375rem;
-    background: var(--teal);
+    padding: 0.875rem;
+    background: linear-gradient(135deg, #6a2c91, #4c1d6e);
     border: none;
-    border-radius: 0.875rem;
-    color: #fff;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
+    border-radius: 1rem;
+    color: white;
+    font-weight: 600;
     cursor: pointer;
     opacity: 0;
-    transform: translateY(8px);
-    transition: all 0.25s;
+    transform: translateY(10px);
+    transition: all 0.3s;
     pointer-events: none;
-    box-shadow: 0 0 20px rgba(16,185,129,0.2);
   }
-
-  .q-next.visible {
+  .btn-next.visible {
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
   }
-
-  .q-next:hover { background: #0ea472; box-shadow: 0 0 28px rgba(16,185,129,0.35); }
-
-  /* ===== RESULTS ===== */
-  .results-wrap {
+  /* Results */
+  .results-container {
+    max-width: 500px;
     width: 100%;
-    max-width: 480px;
-    animation: fadeUp 0.5s ease both;
   }
-
   .results-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: white;
     border-radius: 1.5rem;
-    padding: 2.5rem;
+    padding: 2rem;
     text-align: center;
-    position: relative;
-    overflow: hidden;
   }
-
-  .results-glow {
-    position: absolute;
-    top: -60px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 280px;
-    height: 280px;
-    background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%);
-    pointer-events: none;
+  .results-title {
+    font-size: 1.75rem;
+    margin: 1rem 0;
   }
-
-  .results-inner { position: relative; }
-
-  .results-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.375rem 1rem;
-    background: var(--teal-dim);
-    border: 1px solid rgba(16,185,129,0.25);
-    border-radius: 999px;
-    color: var(--teal);
-    font-size: 0.8125rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 1.75rem;
-  }
-
-  .score-ring-wrap {
-    position: relative;
-    width: 160px;
-    height: 160px;
-    margin: 0 auto 1.5rem;
-  }
-
-  .score-ring {
-    width: 100%;
-    height: 100%;
-    transform: rotate(0deg);
-  }
-
-  .score-center {
-    position: absolute;
-    inset: 0;
+  .xp-gain {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 0.75rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #6a2c91;
+    margin: 1.5rem 0;
   }
-
-  .score-big {
-    font-family: var(--font-display);
-    font-size: 2.25rem;
-    font-weight: 800;
-    color: var(--text-1);
-    line-height: 1;
-  }
-
-  .score-sub {
-    font-size: 0.875rem;
-    color: var(--text-3);
-    font-weight: 500;
-    margin-top: 0.25rem;
-  }
-
-  .xp-earned {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
-    background: rgba(245,158,11,0.1);
-    border: 1px solid rgba(245,158,11,0.25);
-    border-radius: 999px;
-    color: var(--amber);
-    font-weight: 700;
-    font-size: 0.9375rem;
-    margin-bottom: 1.75rem;
-  }
-
-  .results-meta {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    padding: 1.25rem;
-    background: var(--surface-2);
-    border-radius: 1rem;
-  }
-
-  .r-stat {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .r-val {
-    font-family: var(--font-display);
-    font-size: 1.375rem;
-    font-weight: 700;
-    color: var(--text-1);
-  }
-
-  .r-lbl {
-    font-size: 0.75rem;
-    color: var(--text-3);
-    font-weight: 500;
-  }
-
   .results-actions {
     display: flex;
-    gap: 0.875rem;
+    gap: 1rem;
+    justify-content: center;
   }
-
-  .results-actions .cta-btn { flex: 1; justify-content: center; }
-  .results-actions .ghost-btn { flex: 1; justify-content: center; }
-
-  .ghost-btn {
+  .btn-secondary {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.875rem 1.5rem;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
+    padding: 0.75rem 1.25rem;
+    background: white;
+    border: 1px solid #cbd5e1;
     border-radius: 0.75rem;
-    color: var(--text-2);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
   }
-
-  .ghost-btn:hover {
-    border-color: var(--border-hover);
-    color: var(--text-1);
+  .btn-secondary:hover {
+    background: #f8fafc;
   }
-
-  /* ===== ACHIEVEMENTS FULL ===== */
-  .ach-full-wrap {
+  /* Achievements page */
+  .achievements-container {
     width: 100%;
-    max-width: 860px;
-    animation: fadeUp 0.4s ease both;
+    max-width: 1000px;
   }
-
-  .ach-full-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    color: var(--teal);
-  }
-
-  .ach-full-header h1 {
-    font-family: var(--font-display);
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: var(--text-1);
-    margin: 0 0 0.2rem;
-  }
-
-  .ach-full-header p {
-    font-size: 0.9rem;
-    color: var(--text-3);
-    margin: 0;
-  }
-
-  .ach-full-grid {
+  .achievements-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 0.875rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .ach-full-card {
-    display: flex;
-    align-items: center;
     gap: 1rem;
-    padding: 1.125rem;
-    background: var(--surface);
-    border: 1.5px solid var(--border);
+    margin: 2rem 0;
+  }
+  .achievement-card {
+    background: white;
     border-radius: 1rem;
-    opacity: 0.5;
-    transition: all 0.2s;
-  }
-
-  .ach-full-card.unlocked {
-    opacity: 1;
-    border-color: rgba(16,185,129,0.3);
-    background: rgba(16,185,129,0.06);
-  }
-
-  .ach-full-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 0.875rem;
-    background: var(--surface-2);
+    padding: 1.25rem;
     display: flex;
+    gap: 1rem;
     align-items: center;
-    justify-content: center;
-    color: var(--text-3);
-    flex-shrink: 0;
+    border: 1px solid #e2e8f0;
+    opacity: 0.6;
   }
-
-  .ach-full-card.unlocked .ach-full-icon {
-    background: var(--teal-dim);
-    color: var(--teal);
+  .achievement-card.unlocked {
+    opacity: 1;
+    border-color: #10b981;
+    background: #f0fdf4;
   }
-
-  .ach-full-info {
+  .achievement-icon {
+    color: #6a2c91;
+  }
+  .achievement-info {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
   }
-
-  .ach-full-info strong {
-    font-family: var(--font-display);
-    font-size: 0.9375rem;
-    font-weight: 700;
-    color: var(--text-1);
+  .lock {
+    color: #94a3b8;
   }
-
-  .ach-full-info span {
-    font-size: 0.8125rem;
-    color: var(--text-3);
-  }
-
-  .ach-full-info em {
-    font-style: normal;
-    font-size: 0.75rem;
-    color: var(--teal);
-    font-weight: 600;
-  }
-
-  .ach-full-status {
-    color: var(--text-3);
-    flex-shrink: 0;
-  }
-
-  .ach-full-card.unlocked .ach-full-status { color: var(--teal); }
-
-  /* ===== RESPONSIVE ===== */
-  @media (max-width: 640px) {
-    .content { padding: 1.25rem 1rem 2rem; }
-
-    .hero-card { grid-template-columns: 1fr; }
-    .hero-art { display: none; }
-
-    .player-bar { flex-wrap: wrap; gap: 0.875rem; }
-    .player-level { width: 100%; }
-
-    .hero-title { font-size: 1.75rem; }
-
-    .results-actions { flex-direction: column; }
-    .results-meta { flex-direction: column; gap: 0.75rem; }
-
-    .q-card { padding: 1.25rem; }
-    .q-text { font-size: 1.125rem; }
+  @media (max-width: 768px) {
+    .page { padding: 1rem; }
+    .top-stats-bar { flex-direction: column; gap: 1rem; padding: 1rem; }
+    .stat-block { width: 100%; }
+    .hero-title { font-size: 1.8rem; }
+    .hero-visual { display: none; }
+    .preview-scroll { flex-wrap: wrap; }
+    .preview-card { flex: 1 1 100%; }
   }
 </style>
