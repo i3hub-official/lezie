@@ -1,1019 +1,843 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import {
-    ChevronLeft, Home, Shield, Zap, Users, Heart, 
-    MapPin, Bell, Eye, Lock, Globe, Target, 
-    Award, TrendingUp, CheckCircle, Sparkles,
-    ArrowRight, Calendar, Clock
+    ChevronLeft,
+    Home,
+    Sparkles,
+    Shield,
+    Users,
+    MapPin,
+    Bell,
+    Heart,
+    Target,
+    Zap,
+    Globe,
+    Award,
+    ArrowRight,
+    CheckCircle2,
+    Quote
   } from 'lucide-svelte';
 
-  let activeSection = $state('mission');
+  const stats = [
+    { value: '50K+', label: 'Active Users', icon: Users },
+    { value: '120+', label: 'Communities', icon: MapPin },
+    { value: '99.9%', label: 'Uptime', icon: Zap },
+    { value: '24/7', label: 'Support', icon: Heart }
+  ];
 
-  const scrollToSection = (sectionId: string) => {
-    activeSection = sectionId;
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+  const values = [
+    {
+      icon: Shield,
+      title: 'Safety First',
+      description: 'Every feature we build prioritizes the physical and digital safety of our community members.'
+    },
+    {
+      icon: Users,
+      title: 'Community Driven',
+      description: 'We believe the strongest neighborhoods are built on trust, transparency, and mutual support.'
+    },
+    {
+      icon: Target,
+      title: 'Precision & Speed',
+      description: 'Real-time alerts and accurate location data ensure help arrives when and where it\'s needed.'
+    },
+    {
+      icon: Globe,
+      title: 'Inclusive Design',
+      description: 'Our platform is accessible to everyone, regardless of technical ability or background.'
     }
-  };
+  ];
+
+  const milestones = [
+    { year: '2022', title: 'Founded', desc: 'Lezie started with a simple idea: safer neighborhoods through technology' },
+    { year: '2023', title: 'Beta Launch', desc: 'First 10 communities joined our pilot program' },
+    { year: '2024', title: 'Series A', desc: 'Secured funding to expand nationwide' },
+    { year: '2025', title: 'Growth', desc: 'Launched in 120+ communities across the country' }
+  ];
 </script>
 
 <svelte:head>
-  <title>About Lezie - Community Safety Platform</title>
-  <meta name="description" content="Learn about Lezie's mission to create safer communities through real-time alerts, incident reporting, and AI-powered technology." />
+  <title>About Us — Lezie</title>
+  <meta name="description" content="Learn about Lezie's mission to create safer communities through real-time safety alerts and neighborhood connectivity." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
 </svelte:head>
 
-<div class="about-page">
+<div class="ab-page">
 
-  <!-- Hero Section -->
-  <section class="hero-section">
-    <div class="hero-background"></div>
-    <div class="hero-content">
-      <button class="back-home" onclick={() => goto('/')}>
-        <ChevronLeft size={16} />
+  <!-- LEFT PANEL -->
+  <aside class="ab-panel">
+    <div class="ab-panel-inner">
+      <a href="/" class="ab-logo-link">
+        <img src="/icons/lz_logo_t.png" alt="Lezie" class="ab-logo-img" />
+      </a>
+
+      <div class="ab-panel-hero">
+        <div class="ab-panel-badge">
+          <Sparkles size={14} />
+          <span>Our Story</span>
+        </div>
+        <h2 class="ab-panel-headline">
+          Building safer<br/>
+          <em>communities together</em>
+        </h2>
+        <p class="ab-panel-desc">
+          Lezie was born from a simple belief: everyone deserves to feel safe in their neighborhood. We're combining technology with human connection to make that a reality.
+        </p>
+      </div>
+
+      <div class="ab-stats">
+        {#each stats as stat}
+          <div class="ab-stat-card">
+            <div class="ab-stat-icon">
+              <svelte:component this={stat.icon} size={18} />
+            </div>
+            <div class="ab-stat-value">{stat.value}</div>
+            <div class="ab-stat-label">{stat.label}</div>
+          </div>
+        {/each}
+      </div>
+
+      <div class="ab-panel-footer">
+        <div class="ab-avatars">
+          <div class="ab-avatar" style="background: var(--secondary-color)"></div>
+          <div class="ab-avatar" style="background: #a78bfa"></div>
+          <div class="ab-avatar" style="background: #8b5cf6"></div>
+          <div class="ab-avatar" style="background: var(--primary-color)"></div>
+        </div>
+        <p>Join 50,000+ neighbors worldwide</p>
+      </div>
+    </div>
+    <div class="ab-panel-glow"></div>
+  </aside>
+
+  <!-- RIGHT PANEL -->
+  <main class="ab-main">
+    <div class="ab-form-shell">
+
+      <button class="ab-back-home" onclick={() => goto('/')}>
+        <ChevronLeft size={18} />
         <Home size={14} />
         <span>Back to Home</span>
       </button>
-      
-      <div class="hero-badge">
-        <Sparkles size={14} />
-        <span>Our Story</span>
+
+      <div class="ab-mobile-brand">
+        <a href="/" class="ab-logo-link">
+          <img src="/icons/lz_ico.png" alt="Lezie" class="ab-logo-img" />
+        </a>
       </div>
-      
-      <h1 class="hero-title">
-        Building safer<br/>
-        <em>communities together</em>
-      </h1>
-      
-      <p class="hero-description">
-        Lezie was founded with a clear purpose: to empower neighbourhoods to stay safe 
-        through collective vigilance, advanced technology, and seamless communication.
+
+      <div class="ab-form-header">
+        <h1 class="ab-form-title">About Lezie</h1>
+        <p class="ab-form-subtitle">Our mission, values, and the team behind it all</p>
+      </div>
+
+      <div class="ab-content">
+
+        <!-- Mission Section -->
+        <section class="ab-section">
+          <div class="ab-welcome-message">
+            <Target size={20} />
+            <div>
+              <strong>Our Mission</strong>
+              <span>Why we built Lezie</span>
+            </div>
+          </div>
+          
+          <div class="ab-mission-block">
+            <blockquote class="ab-quote">
+              "To empower communities with real-time safety information and foster genuine neighborly connections that make every neighborhood a safer place to live."
+            </blockquote>
+            <p class="ab-mission-text">
+              Lezie bridges the gap between traditional neighborhood watch programs and modern technology. We provide instant alerts, verified reports, and a secure platform where communities can organize, communicate, and protect one another.
+            </p>
+          </div>
+        </section>
+
+        <!-- Values Grid -->
+        <section class="ab-section">
+          <h3 class="ab-section-title">Our Core Values</h3>
+          <div class="ab-values-grid">
+            {#each values as value}
+              <div class="ab-value-card">
+                <div class="ab-value-icon">
+                  <svelte:component this={value.icon} size={22} />
+                </div>
+                <h4>{value.title}</h4>
+                <p>{value.description}</p>
+              </div>
+            {/each}
+          </div>
+        </section>
+
+        <!-- Timeline -->
+        <section class="ab-section">
+          <h3 class="ab-section-title">Our Journey</h3>
+          <div class="ab-timeline">
+            {#each milestones as milestone, i}
+              <div class="ab-timeline-item" class:last={i === milestones.length - 1}>
+                <div class="ab-timeline-dot"></div>
+                <div class="ab-timeline-content">
+                  <span class="ab-timeline-year">{milestone.year}</span>
+                  <h4>{milestone.title}</h4>
+                  <p>{milestone.desc}</p>
+                </div>
+              </div>
+            {/each}
+          </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="ab-section ab-cta-section">
+          <div class="ab-cta-card">
+            <div class="ab-cta-content">
+              <h3>Ready to make your community safer?</h3>
+              <p>Join thousands of neighborhoods already using Lezie to stay connected and protected.</p>
+            </div>
+            <div class="ab-cta-actions">
+              <button class="ab-btn-primary" onclick={() => goto('/signup')}>
+                Get Started <ArrowRight size={16} />
+              </button>
+              <button class="ab-btn-secondary" onclick={() => goto('/contact')}>
+                Contact Sales
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <p class="ab-footer-text">
+        Want to learn more? <a href="/contact" class="ab-link">Get in touch</a>
       </p>
-      
-      <div class="hero-stats">
-        <div class="hero-stat">
-          <span class="stat-number">12,400+</span>
-          <span class="stat-label">Active Members</span>
-        </div>
-        <div class="hero-stat">
-          <span class="stat-number">847+</span>
-          <span class="stat-label">Communities</span>
-        </div>
-        <div class="hero-stat">
-          <span class="stat-number">99.9%</span>
-          <span class="stat-label">Uptime</span>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- Navigation Tabs -->
-  <div class="nav-tabs">
-    <div class="tabs-container">
-      <button 
-        class="tab-btn {activeSection === 'mission' ? 'active' : ''}"
-        onclick={() => scrollToSection('mission')}
-      >
-        <Target size={16} />
-        <span>Our Mission</span>
-      </button>
-      <button 
-        class="tab-btn {activeSection === 'values' ? 'active' : ''}"
-        onclick={() => scrollToSection('values')}
-      >
-        <Heart size={16} />
-        <span>Our Values</span>
-      </button>
-      <button 
-        class="tab-btn {activeSection === 'platform' ? 'active' : ''}"
-        onclick={() => scrollToSection('platform')}
-      >
-        <Zap size={16} />
-        <span>The Platform</span>
-      </button>
-      <button 
-        class="tab-btn {activeSection === 'team' ? 'active' : ''}"
-        onclick={() => scrollToSection('team')}
-      >
-        <Users size={16} />
-        <span>The Team</span>
-      </button>
     </div>
-  </div>
-
-  <!-- Mission Section -->
-  <section id="mission" class="content-section">
-    <div class="section-container">
-      <div class="section-header">
-        <div class="section-icon mission-icon">
-          <Target size={24} />
-        </div>
-        <div>
-          <span class="section-badge">Why we exist</span>
-          <h2 class="section-title">Our Mission</h2>
-        </div>
-      </div>
-      
-      <div class="mission-grid">
-        <div class="mission-card">
-          <Shield size={32} class="mission-card-icon" />
-          <h3>Prevention First</h3>
-          <p>To build safer, more connected communities where everyone plays an active role in prevention and response.</p>
-        </div>
-        <div class="mission-card">
-          <Zap size={32} class="mission-card-icon" />
-          <h3>Real-Time Response</h3>
-          <p>Enable faster emergency response through instant alerts and verified incident reporting.</p>
-        </div>
-        <div class="mission-card">
-          <Users size={32} class="mission-card-icon" />
-          <h3>Community Empowerment</h3>
-          <p>Give every resident the tools they need to protect their neighbourhood and loved ones.</p>
-        </div>
-      </div>
-      
-      <div class="mission-quote">
-        <p>"Our platform combines real-time incident reporting, AI-driven threat detection, and community verification to help residents and local authorities respond faster and more effectively to safety concerns."</p>
-        <div class="quote-author">
-          <div class="quote-avatar"></div>
-          <div>
-            <strong>Ogwo Godspower</strong>
-            <span>Founder & CEO</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Values Section -->
-  <section id="values" class="content-section alt-bg">
-    <div class="section-container">
-      <div class="section-header">
-        <div class="section-icon values-icon">
-          <Heart size={24} />
-        </div>
-        <div>
-          <span class="section-badge">What we believe</span>
-          <h2 class="section-title">Our Values</h2>
-        </div>
-      </div>
-      
-      <div class="values-grid">
-        <div class="value-card">
-          <div class="value-icon">
-            <CheckCircle size={28} />
-          </div>
-          <h3>Transparency & Trust</h3>
-          <p>Verified information through community consensus and official sources ensures reliable safety data.</p>
-        </div>
-        <div class="value-card">
-          <div class="value-icon">
-            <Lock size={28} />
-          </div>
-          <h3>Privacy-First Design</h3>
-          <p>Optional anonymous reporting puts you in control of your privacy while keeping communities safe.</p>
-        </div>
-        <div class="value-card">
-          <div class="value-icon">
-            <Zap size={28} />
-          </div>
-          <h3>Innovation</h3>
-          <p>AI-powered threat detection enhances human decision-making without replacing community judgment.</p>
-        </div>
-        <div class="value-card">
-          <div class="value-icon">
-            <Users size={28} />
-          </div>
-          <h3>Community Empowerment</h3>
-          <p>Every voice matters. We build tools that enable collaboration and collective action.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Platform Section -->
-  <section id="platform" class="content-section">
-    <div class="section-container">
-      <div class="section-header">
-        <div class="section-icon platform-icon">
-          <Zap size={24} />
-        </div>
-        <div>
-          <span class="section-badge">How it works</span>
-          <h2 class="section-title">The Platform</h2>
-        </div>
-      </div>
-      
-      <div class="platform-features">
-        <div class="feature-row">
-          <div class="feature-content">
-            <div class="feature-tag">Real-Time</div>
-            <h3>Live Incident Map</h3>
-            <p>See what's happening in your neighbourhood as it happens. Our interactive map displays verified incidents, active alerts, and community reports in real-time.</p>
-            <ul class="feature-list">
-              <li><CheckCircle size={14} /> Real-time incident tracking</li>
-              <li><CheckCircle size={14} /> Geofenced alerts</li>
-              <li><CheckCircle size={14} /> Historical incident data</li>
-            </ul>
-          </div>
-          <div class="feature-visual map-preview">
-            <MapPin size={48} />
-            <span>Live Map Preview</span>
-          </div>
-        </div>
-        
-        <div class="feature-row reverse">
-          <div class="feature-content">
-            <div class="feature-tag">AI-Powered</div>
-            <h3>Smart Threat Detection</h3>
-            <p>Our AI analyzes reports, identifies patterns, and predicts potential safety concerns before they escalate.</p>
-            <ul class="feature-list">
-              <li><CheckCircle size={14} /> Pattern recognition</li>
-              <li><CheckCircle size={14} /> Predictive analytics</li>
-              <li><CheckCircle size={14} /> Automated risk scoring</li>
-            </ul>
-          </div>
-          <div class="feature-visual ai-preview">
-            <TrendingUp size={48} />
-            <span>AI Analytics</span>
-          </div>
-        </div>
-        
-        <div class="feature-row">
-          <div class="feature-content">
-            <div class="feature-tag">Community Driven</div>
-            <h3>Verified Reporting</h3>
-            <p>Community members verify reports through consensus, ensuring only accurate information reaches the platform.</p>
-            <ul class="feature-list">
-              <li><CheckCircle size={14} /> Peer verification system</li>
-              <li><CheckCircle size={14} /> Trust scoring</li>
-              <li><CheckCircle size={14} /> Anonymous options</li>
-            </ul>
-          </div>
-          <div class="feature-visual community-preview">
-            <Users size={48} />
-            <span>Community Hub</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Team Section -->
-  <section id="team" class="content-section alt-bg">
-    <div class="section-container">
-      <div class="section-header">
-        <div class="section-icon team-icon">
-          <Users size={24} />
-        </div>
-        <div>
-          <span class="section-badge">Behind the platform</span>
-          <h2 class="section-title">The Team</h2>
-        </div>
-      </div>
-      
-      <div class="team-grid">
-        <div class="team-card">
-          <div class="team-avatar"></div>
-          <h4>Ogwo Godspower</h4>
-          <span class="team-role">Founder & CEO</span>
-          <p>Former security analyst with a passion for community safety technology.</p>
-        </div>
-        <div class="team-card">
-          <div class="team-avatar"></div>
-          <h4>Sarah Johnson</h4>
-          <span class="team-role">Head of Product</span>
-          <p>10+ years building community-driven platforms.</p>
-        </div>
-        <div class="team-card">
-          <div class="team-avatar"></div>
-          <h4>Michael Chen</h4>
-          <span class="team-role">Lead Engineer</span>
-          <p>AI and machine learning specialist.</p>
-        </div>
-        <div class="team-card">
-          <div class="team-avatar"></div>
-          <h4>Emily Rodriguez</h4>
-          <span class="team-role">Community Manager</span>
-          <p>Building bridges between tech and communities.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA Section -->
-  <section class="cta-section">
-    <div class="cta-container">
-      <div class="cta-content">
-        <h2>Ready to join the movement?</h2>
-        <p>Be part of a growing community dedicated to making neighbourhoods safer for everyone.</p>
-        <div class="cta-buttons">
-          <button class="cta-primary" onclick={() => goto('/signup')}>
-            Get Started <ArrowRight size={16} />
-          </button>
-          <button class="cta-secondary" onclick={() => goto('/contact')}>
-            Contact Us
-          </button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-brand">
-        <img src="/icons/lz_ico.png" alt="Lezie" class="footer-logo" />
-        <p>Building safer communities through technology and collective vigilance.</p>
-      </div>
-      <div class="footer-links">
-        <div class="link-group">
-          <h4>Product</h4>
-          <a href="/features">Features</a>
-          <a href="/pricing">Pricing</a>
-          <a href="/security">Security</a>
-        </div>
-        <div class="link-group">
-          <h4>Company</h4>
-          <a href="/about">About</a>
-          <a href="/blog">Blog</a>
-          <a href="/careers">Careers</a>
-        </div>
-        <div class="link-group">
-          <h4>Resources</h4>
-          <a href="/help">Help Center</a>
-          <a href="/privacy">Privacy Policy</a>
-          <a href="/terms">Terms of Service</a>
-        </div>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>&copy; 2024 Lezie. All rights reserved.</p>
-    </div>
-  </footer>
+  </main>
 </div>
 
 <style>
-  :root {
-    --primary-color: #6a2c91;
-    --primary-dark: #4b1d68;
-    --primary-light: #9b4fcc;
-    --primary-bg: #f5f3ff;
-    --primary-border: #ddd6fe;
-    --secondary-color: #c4b5fd;
-    --success-color: #10B981;
-    --warning-color: #F59E0B;
-    --danger-color: #EF4444;
-    --dark-color: #111827;
-    --light-color: #F9FAFB;
-    --gray-color: #6B7280;
+  :global(.ab-page *) { 
+    font-family: 'DM Sans', system-ui, sans-serif; 
+    box-sizing: border-box; 
   }
 
-  .about-page {
-    font-family: 'DM Sans', system-ui, sans-serif;
-    background: linear-gradient(135deg, #faf9ff 0%, #f3f0ff 100%);
-    min-height: 100vh;
+  .ab-page { 
+    display: flex; 
+    min-height: 100vh; 
+    background: linear-gradient(135deg, #faf9ff 0%, #f3f0ff 100%); 
   }
 
-  /* Hero Section */
-  .hero-section {
-    position: relative;
-    padding: 6rem 2rem 4rem;
-    overflow: hidden;
+  /* LEFT PANEL - Exact match to sign-in/contact */
+  .ab-panel { 
+    display: none; 
+    position: relative; 
+    width: 440px; 
+    flex-shrink: 0; 
+    background: linear-gradient(160deg, #1a0b2e 0%, #2d1b4e 50%, #1a0b2e 100%); 
+    overflow: hidden; 
   }
 
-  .hero-background {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(ellipse at 50% 0%, rgba(106,44,145,0.08) 0%, transparent 60%);
-    pointer-events: none;
+  @media (min-width: 1024px) { 
+    .ab-panel { display: flex; } 
   }
 
-  .hero-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    text-align: center;
-    position: relative;
-    z-index: 2;
+  .ab-panel-inner { 
+    position: relative; 
+    z-index: 2; 
+    display: flex; 
+    flex-direction: column; 
+    padding: 2.5rem; 
+    height: 100%; 
   }
 
-  .back-home {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 100px;
-    padding: 0.5rem 1rem;
-    font-size: 0.813rem;
-    font-weight: 500;
-    color: #64748b;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    transition: all 0.2s;
-    margin-bottom: 2rem;
+  .ab-panel-glow { 
+    position: absolute; 
+    inset: 0; 
+    z-index: 1; 
+    background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(139,92,246,0.15) 0%, transparent 70%); 
+    pointer-events: none; 
   }
 
-  .back-home:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-    background: var(--primary-bg);
-    transform: translateX(-2px);
+  .ab-logo-link { 
+    display: inline-block; 
+    line-height: 0; 
+    margin-bottom: 2.5rem; 
+    transition: transform 0.2s, opacity 0.2s; 
   }
 
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--primary-bg);
-    border: 1px solid var(--primary-border);
-    border-radius: 100px;
-    padding: 0.375rem 0.875rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    margin-bottom: 1.5rem;
+  .ab-logo-link:hover { 
+    opacity: 0.85; 
+    transform: scale(1.02); 
   }
 
-  .hero-title {
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: clamp(2.5rem, 5vw, 4rem);
-    line-height: 1.1;
-    color: #1e1b4b;
-    margin-bottom: 1.5rem;
+  .ab-logo-img { 
+    width: 80px; 
+    height: 80px; 
+    object-fit: contain; 
+    display: block; 
   }
 
-  .hero-title em {
-    color: var(--primary-color);
-    font-style: italic;
+  .ab-panel-badge { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    padding: 0.375rem 0.875rem; 
+    background: rgba(139,92,246,0.2); 
+    border: 1px solid rgba(139,92,246,0.3); 
+    border-radius: 100px; 
+    font-size: 0.75rem; 
+    color: #c4b5fd; 
+    margin-bottom: 1.5rem; 
   }
 
-  .hero-description {
-    font-size: 1.125rem;
-    line-height: 1.6;
-    color: #4b5563;
-    max-width: 700px;
-    margin: 0 auto 2rem;
+  .ab-panel-headline { 
+    font-family: 'DM Serif Display', Georgia, serif; 
+    font-size: 2.5rem; 
+    line-height: 1.2; 
+    color: white; 
+    margin-bottom: 1rem; 
   }
 
-  .hero-stats {
-    display: flex;
-    justify-content: center;
-    gap: 3rem;
-    margin-top: 2rem;
+  .ab-panel-headline em { 
+    color: #c4b5fd; 
+    font-style: italic; 
   }
 
-  .hero-stat {
-    text-align: center;
+  .ab-panel-desc { 
+    font-size: 0.875rem; 
+    line-height: 1.6; 
+    color: rgba(196,181,253,0.85); 
+    margin-bottom: 2.5rem; 
   }
 
-  .stat-number {
-    display: block;
-    font-size: 1.875rem;
-    font-weight: 800;
-    color: var(--primary-color);
+  /* Stats Grid - Unique to About page */
+  .ab-stats { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 1rem; 
+    margin-bottom: auto; 
   }
 
-  .stat-label {
-    font-size: 0.75rem;
-    color: #6b7280;
+  .ab-stat-card { 
+    background: rgba(255,255,255,0.05); 
+    border: 1px solid rgba(255,255,255,0.1); 
+    border-radius: 1rem; 
+    padding: 1.25rem; 
+    text-align: center; 
+    backdrop-filter: blur(10px); 
+    transition: all 0.3s ease; 
   }
 
-  /* Navigation Tabs */
-  .nav-tabs {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid #e5e7eb;
-    padding: 0.5rem 1rem;
+  .ab-stat-card:hover { 
+    background: rgba(255,255,255,0.08); 
+    transform: translateY(-4px); 
+    border-color: rgba(139,92,246,0.3); 
   }
 
-  .tabs-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    flex-wrap: wrap;
+  .ab-stat-icon { 
+    width: 40px; 
+    height: 40px; 
+    background: rgba(139,92,246,0.2); 
+    border-radius: 10px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: #c4b5fd; 
+    margin: 0 auto 0.75rem; 
   }
 
-  .tab-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
-    background: none;
-    border: none;
-    border-radius: 0.75rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #6b7280;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: 'DM Sans', sans-serif;
+  .ab-stat-value { 
+    font-size: 1.5rem; 
+    font-weight: 700; 
+    color: white; 
+    margin-bottom: 0.25rem; 
   }
 
-  .tab-btn:hover {
-    background: var(--primary-bg);
-    color: var(--primary-color);
+  .ab-stat-label { 
+    font-size: 0.75rem; 
+    color: rgba(196,181,253,0.8); 
   }
 
-  .tab-btn.active {
-    background: var(--primary-color);
-    color: white;
+  .ab-panel-footer { 
+    margin-top: 2rem; 
+    padding-top: 1.5rem; 
+    border-top: 1px solid rgba(255,255,255,0.1); 
   }
 
-  /* Content Sections */
-  .content-section {
-    padding: 4rem 2rem;
+  .ab-avatars { 
+    display: flex; 
+    align-items: center; 
+    margin-bottom: 0.75rem; 
   }
 
-  .alt-bg {
-    background: rgba(245, 243, 255, 0.5);
+  .ab-avatar { 
+    width: 32px; 
+    height: 32px; 
+    border-radius: 50%; 
+    border: 2px solid #2d1b4e; 
+    margin-left: -8px; 
   }
 
-  .section-container {
-    max-width: 1200px;
-    margin: 0 auto;
+  .ab-avatar:first-child { 
+    margin-left: 0; 
   }
 
-  .section-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 3rem;
+  .ab-panel-footer p { 
+    font-size: 0.688rem; 
+    color: rgba(196,181,253,0.7); 
   }
 
-  .section-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  /* RIGHT PANEL */
+  .ab-main { 
+    flex: 1; 
+    display: flex; 
+    align-items: flex-start; 
+    justify-content: center; 
+    padding: 2rem 1.25rem; 
+    min-height: 100vh; 
+    overflow-y: auto; 
   }
 
-  .mission-icon { background: linear-gradient(135deg, #6a2c91, #4b1d68); color: white; }
-  .values-icon { background: linear-gradient(135deg, #10B981, #059669); color: white; }
-  .platform-icon { background: linear-gradient(135deg, #F59E0B, #D97706); color: white; }
-  .team-icon { background: linear-gradient(135deg, #3B82F6, #2563EB); color: white; }
-
-  .section-badge {
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--primary-color);
+  .ab-form-shell { 
+    width: 100%; 
+    max-width: 680px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.5rem; 
+    padding-top: 1rem; 
   }
 
-  .section-title {
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 2rem;
-    color: #1e1b4b;
-    margin-top: 0.25rem;
+  .ab-back-home { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    background: white; 
+    border: 1px solid #e5e7eb; 
+    border-radius: 100px; 
+    padding: 0.5rem 1rem; 
+    font-size: 0.813rem; 
+    font-weight: 500; 
+    color: #64748b; 
+    cursor: pointer; 
+    transition: all 0.2s; 
+    width: fit-content; 
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
   }
 
-  /* Mission Grid */
-  .mission-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 3rem;
+  .ab-back-home:hover { 
+    border-color: #6a2c91; 
+    color: #6a2c91; 
+    background: #f3e8ff; 
+    transform: translateX(-2px); 
   }
 
-  .mission-card {
-    background: white;
-    border-radius: 1rem;
-    padding: 1.5rem;
-    text-align: center;
-    border: 1px solid #e5e7eb;
-    transition: all 0.2s;
+  .ab-mobile-brand { 
+    display: flex; 
+    justify-content: center; 
   }
 
-  .mission-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  .ab-mobile-brand .ab-logo-link { 
+    margin-bottom: 0; 
   }
 
-  .mission-card-icon {
-    color: var(--primary-color);
-    margin-bottom: 1rem;
+  .ab-mobile-brand .ab-logo-img { 
+    width: 80px; 
+    height: 80px; 
   }
 
-  .mission-card h3 {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: #1e1b4b;
-    margin-bottom: 0.5rem;
+  @media (min-width: 1024px) { 
+    .ab-mobile-brand { display: none; } 
   }
 
-  .mission-card p {
-    font-size: 0.875rem;
-    color: #6b7280;
-    line-height: 1.6;
+  .ab-form-header { 
+    text-align: center; 
+    margin-bottom: 0.5rem; 
   }
 
-  .mission-quote {
-    background: var(--primary-bg);
-    border: 1px solid var(--primary-border);
-    border-radius: 1rem;
-    padding: 2rem;
-    text-align: center;
+  .ab-form-title { 
+    font-family: 'DM Serif Display', Georgia, serif; 
+    font-size: clamp(1.625rem, 4vw, 2rem); 
+    color: #1e1b4b; 
+    margin-bottom: 0.25rem; 
+    letter-spacing: -0.02em; 
   }
 
-  .mission-quote p {
-    font-size: 1rem;
-    line-height: 1.6;
-    color: #4b5563;
-    font-style: italic;
-    margin-bottom: 1.5rem;
+  .ab-form-subtitle { 
+    font-size: 0.875rem; 
+    color: #64748b; 
   }
 
-  .quote-author {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
+  /* Content Card - Wider for about page content */
+  .ab-content { 
+    background: white; 
+    border-radius: 1.5rem; 
+    border: 1px solid #e2e8f0; 
+    padding: clamp(1.5rem, 5vw, 2.5rem); 
+    box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1); 
+    display: flex; 
+    flex-direction: column; 
+    gap: 2.5rem; 
   }
 
-  .quote-avatar {
-    width: 48px;
-    height: 48px;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    border-radius: 50%;
+  .ab-section { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.25rem; 
   }
 
-  .quote-author strong {
-    display: block;
-    font-size: 0.875rem;
-    color: #1e1b4b;
+  .ab-welcome-message { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.75rem; 
+    padding: 0.875rem 1rem; 
+    background: linear-gradient(135deg, #f3e8ff 0%, #f5f0ff 100%); 
+    border-radius: 1rem; 
+    width: fit-content; 
   }
 
-  .quote-author span {
-    font-size: 0.75rem;
-    color: #6b7280;
+  .ab-welcome-message :global(svg) { 
+    color: #6a2c91; 
+    flex-shrink: 0; 
+  }
+
+  .ab-welcome-message strong { 
+    display: block; 
+    font-size: 0.875rem; 
+    font-weight: 700; 
+    color: #1e1b4b; 
+  }
+
+  .ab-welcome-message span { 
+    font-size: 0.75rem; 
+    color: #64748b; 
+  }
+
+  .ab-section-title { 
+    font-family: 'DM Serif Display', Georgia, serif; 
+    font-size: 1.375rem; 
+    color: #1e1b4b; 
+    margin: 0; 
+  }
+
+  /* Mission Block */
+  .ab-mission-block { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1rem; 
+  }
+
+  .ab-quote { 
+    font-family: 'DM Serif Display', Georgia, serif; 
+    font-size: 1.25rem; 
+    line-height: 1.5; 
+    color: #6a2c91; 
+    margin: 0; 
+    padding: 1.5rem; 
+    background: linear-gradient(135deg, #f3e8ff 0%, #faf5ff 100%); 
+    border-radius: 1rem; 
+    border-left: 4px solid #6a2c91; 
+    font-style: italic; 
+  }
+
+  .ab-mission-text { 
+    font-size: 0.9375rem; 
+    line-height: 1.7; 
+    color: #4b5563; 
+    margin: 0; 
   }
 
   /* Values Grid */
-  .values-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
+  .ab-values-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
+    gap: 1rem; 
   }
 
-  .value-card {
-    background: white;
-    border-radius: 1rem;
-    padding: 1.5rem;
-    text-align: center;
-    border: 1px solid #e5e7eb;
-    transition: all 0.2s;
+  .ab-value-card { 
+    padding: 1.5rem; 
+    background: #faf9ff; 
+    border: 1px solid #e0d4f5; 
+    border-radius: 1rem; 
+    transition: all 0.3s ease; 
   }
 
-  .value-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  .ab-value-card:hover { 
+    transform: translateY(-4px); 
+    box-shadow: 0 10px 25px -5px rgba(106,44,145,0.15); 
+    border-color: #c4b5fd; 
   }
 
-  .value-icon {
-    width: 64px;
-    height: 64px;
-    background: var(--primary-bg);
-    border-radius: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1rem;
-    color: var(--primary-color);
+  .ab-value-icon { 
+    width: 48px; 
+    height: 48px; 
+    background: linear-gradient(135deg, #6a2c91 0%, #8b5cf6 100%); 
+    border-radius: 12px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: white; 
+    margin-bottom: 1rem; 
   }
 
-  .value-card h3 {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #1e1b4b;
-    margin-bottom: 0.5rem;
+  .ab-value-card h4 { 
+    font-size: 1rem; 
+    font-weight: 700; 
+    color: #1e1b4b; 
+    margin: 0 0 0.5rem 0; 
   }
 
-  .value-card p {
-    font-size: 0.813rem;
-    color: #6b7280;
-    line-height: 1.5;
+  .ab-value-card p { 
+    font-size: 0.875rem; 
+    line-height: 1.6; 
+    color: #64748b; 
+    margin: 0; 
   }
 
-  /* Platform Features */
-  .platform-features {
-    display: flex;
-    flex-direction: column;
-    gap: 3rem;
+  /* Timeline */
+  .ab-timeline { 
+    position: relative; 
+    padding-left: 2rem; 
   }
 
-  .feature-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    align-items: center;
+  .ab-timeline::before { 
+    content: ''; 
+    position: absolute; 
+    left: 7px; 
+    top: 0; 
+    bottom: 0; 
+    width: 2px; 
+    background: linear-gradient(to bottom, #6a2c91, #c4b5fd); 
+    border-radius: 1px; 
   }
 
-  .feature-row.reverse {
-    direction: rtl;
+  .ab-timeline-item { 
+    position: relative; 
+    padding-bottom: 2rem; 
   }
 
-  .feature-row.reverse .feature-content {
-    direction: ltr;
+  .ab-timeline-item.last { 
+    padding-bottom: 0; 
   }
 
-  .feature-tag {
-    display: inline-block;
-    background: var(--primary-bg);
-    border: 1px solid var(--primary-border);
-    border-radius: 100px;
-    padding: 0.25rem 0.75rem;
-    font-size: 0.688rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    margin-bottom: 1rem;
+  .ab-timeline-dot { 
+    position: absolute; 
+    left: -2rem; 
+    top: 0.25rem; 
+    width: 16px; 
+    height: 16px; 
+    background: white; 
+    border: 3px solid #6a2c91; 
+    border-radius: 50%; 
+    box-shadow: 0 0 0 4px rgba(106,44,145,0.1); 
   }
 
-  .feature-content h3 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #1e1b4b;
-    margin-bottom: 1rem;
+  .ab-timeline-content { 
+    background: #faf9ff; 
+    padding: 1.25rem; 
+    border-radius: 1rem; 
+    border: 1px solid #e0d4f5; 
   }
 
-  .feature-content p {
-    font-size: 0.875rem;
-    color: #6b7280;
-    line-height: 1.6;
-    margin-bottom: 1rem;
+  .ab-timeline-year { 
+    display: inline-block; 
+    padding: 0.25rem 0.75rem; 
+    background: #6a2c91; 
+    color: white; 
+    font-size: 0.75rem; 
+    font-weight: 700; 
+    border-radius: 100px; 
+    margin-bottom: 0.5rem; 
   }
 
-  .feature-list {
-    list-style: none;
-    padding: 0;
+  .ab-timeline-content h4 { 
+    font-size: 1rem; 
+    font-weight: 700; 
+    color: #1e1b4b; 
+    margin: 0 0 0.375rem 0; 
   }
 
-  .feature-list li {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.813rem;
-    color: #4b5563;
-    margin-bottom: 0.5rem;
-  }
-
-  .feature-list li svg {
-    color: var(--success-color);
-    flex-shrink: 0;
-  }
-
-  .feature-visual {
-    background: var(--primary-bg);
-    border: 1px solid var(--primary-border);
-    border-radius: 1rem;
-    padding: 2rem;
-    text-align: center;
-    color: var(--primary-color);
-  }
-
-  .feature-visual span {
-    display: block;
-    margin-top: 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-  }
-
-  /* Team Grid */
-  .team-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-  }
-
-  .team-card {
-    background: white;
-    border-radius: 1rem;
-    padding: 1.5rem;
-    text-align: center;
-    border: 1px solid #e5e7eb;
-    transition: all 0.2s;
-  }
-
-  .team-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
-  }
-
-  .team-avatar {
-    width: 80px;
-    height: 80px;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    border-radius: 50%;
-    margin: 0 auto 1rem;
-  }
-
-  .team-card h4 {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #1e1b4b;
-    margin-bottom: 0.25rem;
-  }
-
-  .team-role {
-    display: block;
-    font-size: 0.688rem;
-    color: var(--primary-color);
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-  }
-
-  .team-card p {
-    font-size: 0.75rem;
-    color: #6b7280;
-    line-height: 1.5;
+  .ab-timeline-content p { 
+    font-size: 0.875rem; 
+    color: #64748b; 
+    margin: 0; 
+    line-height: 1.5; 
   }
 
   /* CTA Section */
-  .cta-section {
-    padding: 4rem 2rem;
+  .ab-cta-section { 
+    margin-top: 0.5rem; 
   }
 
-  .cta-container {
-    max-width: 800px;
-    margin: 0 auto;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    border-radius: 2rem;
-    padding: 3rem;
-    text-align: center;
-    color: white;
+  .ab-cta-card { 
+    background: linear-gradient(135deg, #1a0b2e 0%, #2d1b4e 100%); 
+    border-radius: 1.25rem; 
+    padding: 2rem; 
+    color: white; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.5rem; 
+    position: relative; 
+    overflow: hidden; 
   }
 
-  .cta-content h2 {
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 1.875rem;
-    margin-bottom: 1rem;
+  .ab-cta-card::before { 
+    content: ''; 
+    position: absolute; 
+    top: -50%; 
+    right: -20%; 
+    width: 300px; 
+    height: 300px; 
+    background: radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%); 
+    pointer-events: none; 
   }
 
-  .cta-content p {
-    font-size: 0.875rem;
-    opacity: 0.9;
-    margin-bottom: 2rem;
+  .ab-cta-content { 
+    position: relative; 
+    z-index: 1; 
   }
 
-  .cta-buttons {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
+  .ab-cta-content h3 { 
+    font-family: 'DM Serif Display', Georgia, serif; 
+    font-size: 1.5rem; 
+    margin: 0 0 0.5rem 0; 
   }
 
-  .cta-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: white;
-    color: var(--primary-color);
-    border: none;
-    border-radius: 0.75rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
+  .ab-cta-content p { 
+    font-size: 0.9375rem; 
+    color: rgba(196,181,253,0.9); 
+    margin: 0; 
+    line-height: 1.6; 
   }
 
-  .cta-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  .ab-cta-actions { 
+    display: flex; 
+    gap: 0.75rem; 
+    flex-wrap: wrap; 
+    position: relative; 
+    z-index: 1; 
   }
 
-  .cta-secondary {
-    padding: 0.75rem 1.5rem;
-    background: transparent;
-    border: 1px solid white;
-    color: white;
-    border-radius: 0.75rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
+  .ab-btn-primary { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    padding: 0.875rem 1.5rem; 
+    background: white; 
+    color: #1a0b2e; 
+    border: none; 
+    border-radius: 0.75rem; 
+    font-size: 0.9375rem; 
+    font-weight: 600; 
+    cursor: pointer; 
+    transition: all 0.2s; 
   }
 
-  .cta-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateY(-2px);
+  .ab-btn-primary:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 10px 20px -5px rgba(0,0,0,0.3); 
+  }
+
+  .ab-btn-secondary { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    padding: 0.875rem 1.5rem; 
+    background: rgba(255,255,255,0.1); 
+    color: white; 
+    border: 1px solid rgba(255,255,255,0.2); 
+    border-radius: 0.75rem; 
+    font-size: 0.9375rem; 
+    font-weight: 600; 
+    cursor: pointer; 
+    transition: all 0.2s; 
+  }
+
+  .ab-btn-secondary:hover { 
+    background: rgba(255,255,255,0.2); 
+    border-color: rgba(255,255,255,0.3); 
   }
 
   /* Footer */
-  .footer {
-    background: white;
-    border-top: 1px solid #e5e7eb;
-    padding: 3rem 2rem 1.5rem;
+  .ab-footer-text { 
+    text-align: center; 
+    font-size: 0.875rem; 
+    color: #64748b; 
+    margin-top: 0.5rem; 
   }
 
-  .footer-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 3rem;
-    margin-bottom: 2rem;
+  .ab-link { 
+    color: #6a2c91; 
+    font-weight: 600; 
+    text-decoration: none; 
   }
 
-  .footer-logo {
-    width: 48px;
-    height: 48px;
-    margin-bottom: 1rem;
-  }
-
-  .footer-brand p {
-    font-size: 0.813rem;
-    color: #6b7280;
-    line-height: 1.5;
-    margin-bottom: 1rem;
-  }
-
-  .footer-links {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-  }
-
-  .link-group h4 {
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: #1e1b4b;
-    margin-bottom: 1rem;
-  }
-
-  .link-group a {
-    display: block;
-    font-size: 0.813rem;
-    color: #6b7280;
-    text-decoration: none;
-    margin-bottom: 0.5rem;
-    transition: color 0.2s;
-  }
-
-  .link-group a:hover {
-    color: var(--primary-color);
-  }
-
-  .footer-bottom {
-    text-align: center;
-    padding-top: 1.5rem;
-    border-top: 1px solid #e5e7eb;
-  }
-
-  .footer-bottom p {
-    font-size: 0.75rem;
-    color: #9ca3af;
+  .ab-link:hover { 
+    text-decoration: underline; 
   }
 
   /* Responsive */
   @media (max-width: 768px) {
-    .hero-stats {
-      flex-direction: column;
-      gap: 1rem;
+    .ab-stats { 
+      grid-template-columns: 1fr 1fr; 
+      gap: 0.75rem; 
     }
-
-    .feature-row,
-    .feature-row.reverse {
-      grid-template-columns: 1fr;
-      direction: ltr;
+    
+    .ab-stat-card { 
+      padding: 1rem; 
     }
-
-    .footer-content {
-      grid-template-columns: 1fr;
+    
+    .ab-values-grid { 
+      grid-template-columns: 1fr; 
     }
-
-    .footer-links {
-      grid-template-columns: repeat(2, 1fr);
+    
+    .ab-cta-actions { 
+      flex-direction: column; 
     }
-
-    .cta-buttons {
-      flex-direction: column;
-    }
-
-    .tabs-container {
-      gap: 0.25rem;
-    }
-
-    .tab-btn {
-      padding: 0.5rem 0.875rem;
-      font-size: 0.75rem;
+    
+    .ab-btn-primary, 
+    .ab-btn-secondary { 
+      width: 100%; 
+      justify-content: center; 
     }
   }
 
-  @media (max-width: 480px) {
-    .footer-links {
-      grid-template-columns: 1fr;
+  @media (max-width: 640px) {
+    .ab-main { 
+      padding: 1.5rem 1rem; 
+    }
+    
+    .ab-form-shell { 
+      gap: 1.25rem; 
+    }
+    
+    .ab-content { 
+      border-radius: 1.25rem; 
+      padding: 1.25rem; 
+      gap: 2rem; 
+    }
+    
+    .ab-quote { 
+      font-size: 1.125rem; 
+      padding: 1.25rem; 
+    }
+    
+    .ab-timeline { 
+      padding-left: 1.5rem; 
+    }
+    
+    .ab-timeline-dot { 
+      left: -1.5rem; 
+      width: 14px; 
+      height: 14px; 
+    }
+    
+    .ab-back-home { 
+      font-size: 0.75rem; 
+      padding: 0.375rem 0.875rem; 
+    }
+    
+    .ab-panel-headline { 
+      font-size: 2rem; 
     }
   }
 </style>
