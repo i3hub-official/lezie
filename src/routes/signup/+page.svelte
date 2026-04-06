@@ -660,12 +660,13 @@
     background: #e2e8f0; transition: background .35s; margin-bottom: 1.125rem;
   }
 
-  .su-step-connector.filled { background: var(--primary-color,#6a2c91); }
+  .su-step-connector.filled { background: var(--primary-dark,#4b1d68); }
 
   .su-step-bubble {
     width: 38px; height: 38px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    background: #f1f5f9; border: 2px solid #e2e8f0; color: #94a3b8;
+    background: rgba(245,158,11,.12); border: 2px solid var(--warning-color,#F59E0B);
+    color: var(--warning-color,#F59E0B);
     transition: all .3s;
   }
 
@@ -675,12 +676,12 @@
   }
 
   .su-progress-step.done .su-step-bubble {
-    background: var(--success-color,#10b981); border-color: var(--success-color,#10b981); color: white;
+    background: var(--primary-dark,#4b1d68); border-color: var(--primary-dark,#4b1d68); color: white;
   }
 
-  .su-step-label { font-size: .6875rem; font-weight: 500; color: #94a3b8; transition: color .3s; }
+  .su-step-label { font-size: .6875rem; font-weight: 500; color: var(--warning-color,#F59E0B); transition: color .3s; }
   .su-progress-step.active .su-step-label { color: var(--primary-color,#6a2c91); font-weight: 700; }
-  .su-progress-step.done   .su-step-label { color: var(--success-color,#10b981); }
+  .su-progress-step.done   .su-step-label { color: var(--primary-dark,#4b1d68); font-weight: 600; }
 
   /* Card */
   .su-card {
