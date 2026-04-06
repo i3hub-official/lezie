@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import { 
     Cookie, Shield, BarChart2, Target, Settings, ChevronRight, 
-    ArrowLeft, ExternalLink, Lock, Zap, MapPin, Users, ChevronLeft, TrendingUp 
+    ArrowLeft, ExternalLink, Lock, Zap, MapPin, TrendingUp 
   } from 'lucide-svelte';
 
   let activeSection = $state('what-are-cookies');
@@ -21,48 +21,44 @@
   const cookieTypes = [
     {
       icon:    Shield,
-      color:   '#1a0b2e',
       bg:      'linear-gradient(135deg,#1a0b2e,#2d1b4e)',
       label:   'Strictly Necessary',
       tag:     'Always active',
-      tagColor:'#6a2c91',
-      tagBg:   '#f3e8ff',
+      tagColor: '#ffffff',
+      tagBg:   '#6a2c91',           // brand colour
       desc:    'These cookies are essential for Lezie to function. They handle authentication sessions, security tokens, and core platform operations. Without these, you cannot use the app.',
       examples:['Session authentication','CSRF protection tokens','Load balancer routing','User preference flags'],
       retention: 'Session / up to 1 year',
     },
     {
       icon:    BarChart2,
-      color:   '#0369a1',
       bg:      'linear-gradient(135deg,#0369a1,#0284c7)',
       label:   'Analytics',
       tag:     'Optional',
-      tagColor:'#0369a1',
-      tagBg:   '#e0f2fe',
+      tagColor: '#ffffff',
+      tagBg:   '#6a2c91',           // brand colour
       desc:    'Help us understand how people navigate Lezie — which features they use most, where they encounter friction, and how to improve the experience for everyone in the community.',
       examples:['Page view tracking','Feature usage metrics','Error rate monitoring','Session duration data'],
       retention: 'Up to 2 years',
     },
     {
       icon:    Settings,
-      color:   '#059669',
       bg:      'linear-gradient(135deg,#059669,#10b981)',
       label:   'Functional',
       tag:     'Optional',
-      tagColor:'#059669',
-      tagBg:   '#d1fae5',
+      tagColor: '#ffffff',
+      tagBg:   '#6a2c91',           // brand colour
       desc:    'Remember your preferences so Lezie feels tailored to you — your default map region, notification settings, language choice, and other saved configurations.',
       examples:['Map region preference','Language / locale setting','Notification preferences','Theme selection'],
       retention: 'Up to 1 year',
     },
     {
       icon:    Target,
-      color:   '#b45309',
       bg:      'linear-gradient(135deg,#b45309,#d97706)',
       label:   'Marketing',
       tag:     'Optional',
-      tagColor:'#b45309',
-      tagBg:   '#fef3c7',
+      tagColor: '#ffffff',
+      tagBg:   '#6a2c91',           // brand colour
       desc:    'Used to deliver relevant safety updates, community announcements, and product news. We do not sell your data or use these for third-party advertising.',
       examples:['Re-engagement campaigns','Feature announcement targeting','Community event notifications','Product update comms'],
       retention: 'Up to 90 days',
@@ -106,7 +102,7 @@
 
 <div class="cp-page">
 
-  <!-- LEFT PANEL (same as FAQ) -->
+  <!-- LEFT PANEL -->
   <aside class="cp-panel">
     <div class="cp-panel-inner">
       <a href="/" class="cp-logo-link">
@@ -118,9 +114,7 @@
           <Cookie size={14} />
           <span>Legal</span>
         </div>
-        <h2 class="cp-panel-headline">
-          Cookie Policy
-        </h2>
+        <h2 class="cp-panel-headline">Cookie Policy</h2>
         <p class="cp-panel-desc">
           A clear explanation of the cookies Lezie uses, why we use them, and how you can control them.
         </p>
@@ -180,9 +174,9 @@
           </div>
         </section>
 
-        <!-- How we use -->
-        <section id="how-we-use" class="cp-section">
-          <div class="cp-section-label"><Shield size={14} />How We Use Them</div>
+        <!-- How We Use Them - with extra spacing -->
+        <section id="how-we-use" class="cp-section cp-section-spaced">
+          <div class="cp-section-label brand-label"><Shield size={14} />How We Use Them</div>
           <h2 class="cp-section-title">Keeping the platform safe and useful</h2>
           <p>Lezie uses cookies for four broad purposes: keeping your session secure, understanding how people use the platform, remembering your preferences, and delivering relevant community communications (when opted in).</p>
           <p>We never sell cookie data to advertisers.</p>
@@ -203,9 +197,9 @@
           </div>
         </section>
 
-        <!-- Cookie Types -->
-        <section id="types" class="cp-section">
-          <div class="cp-section-label"><BarChart2 size={14} />Cookie Types</div>
+        <!-- Cookie Types - with extra spacing -->
+        <section id="types" class="cp-section cp-section-spaced">
+          <div class="cp-section-label brand-label"><BarChart2 size={14} />Cookie Types</div>
           <h2 class="cp-section-title">What we set and why</h2>
           <p>We organise our cookies into four categories. Strictly necessary cookies are always active; the others require your consent.</p>
 
@@ -218,7 +212,7 @@
                   </div>
                   <div class="cp-type-meta">
                     <span class="cp-type-name">{ct.label}</span>
-                    <span class="cp-type-tag" style="color:{ct.tagColor}; background:{ct.tagBg}">{ct.tag}</span>
+                    <span class="cp-type-tag" style="background:{ct.tagBg}; color:{ct.tagColor}">{ct.tag}</span>
                   </div>
                   <span class="cp-type-retention">Retention: {ct.retention}</span>
                 </div>
@@ -236,9 +230,9 @@
           </div>
         </section>
 
-        <!-- Third Parties -->
-        <section id="third-party" class="cp-section">
-          <div class="cp-section-label"><ExternalLink size={14} />Third Parties</div>
+        <!-- Third Parties - with extra spacing -->
+        <section id="third-party" class="cp-section cp-section-spaced">
+          <div class="cp-section-label brand-label"><ExternalLink size={14} />Third Parties</div>
           <h2 class="cp-section-title">Who else may set cookies</h2>
           <p>Some features rely on trusted third-party services. These providers may set their own cookies. We only work with partners who maintain strong data protection standards.</p>
 
@@ -257,9 +251,9 @@
           </div>
         </section>
 
-        <!-- Your Choices -->
-        <section id="your-choices" class="cp-section">
-          <div class="cp-section-label"><Settings size={14} />Your Choices</div>
+        <!-- Your Choices - with extra spacing -->
+        <section id="your-choices" class="cp-section cp-section-spaced">
+          <div class="cp-section-label brand-label"><Settings size={14} />Your Choices</div>
           <h2 class="cp-section-title">You're in control</h2>
           <p>You can manage cookies in several ways:</p>
 
@@ -285,9 +279,9 @@
           </div>
         </section>
 
-        <!-- Updates -->
-        <section id="updates" class="cp-section">
-          <div class="cp-section-label"><Cookie size={14} />Policy Updates</div>
+        <!-- Policy Updates - with extra spacing -->
+        <section id="updates" class="cp-section cp-section-spaced">
+          <div class="cp-section-label brand-label"><Cookie size={14} />Policy Updates</div>
           <h2 class="cp-section-title">When this policy changes</h2>
           <p>We may update this Cookie Policy to reflect changes in technology or regulation. Material changes will be notified via an in-app banner, and the "Last updated" date will be changed.</p>
           <p>Continued use of Lezie after updates means you accept the revised policy.</p>
@@ -336,7 +330,7 @@
     background: linear-gradient(135deg, #faf9ff 0%, #f3f0ff 100%); 
   }
 
-  /* LEFT PANEL - Matching FAQ exactly */
+  /* LEFT PANEL - unchanged from previous version */
   .cp-panel { 
     display: none; 
     position: relative; 
@@ -513,9 +507,13 @@
     font-weight: 600; 
   }
 
-  /* Section styling */
+  /* Section styling with extra spacing */
   .cp-section { 
-    scroll-margin-top: 2rem; 
+    scroll-margin-top: 3rem; 
+  }
+
+  .cp-section-spaced {
+    margin-top: 3.5rem;        /* Extra spacing above these sections */
   }
 
   .cp-section-label { 
@@ -526,11 +524,14 @@
     font-weight: 700; 
     text-transform: uppercase; 
     letter-spacing: 0.06em; 
-    color: #6a2c91; 
-    background: #f3e8ff; 
-    padding: 0.35rem 0.875rem; 
+    color: #ffffff; 
+    background: #6a2c91;           /* Primary dark brand colour */
+    padding: 0.4rem 1rem; 
     border-radius: 100px; 
-    border: 1px solid #ddd6fe; 
+  }
+
+  .brand-label {
+    background: #6a2c91;           /* Ensure brand colour for requested sections */
   }
 
   .cp-section-title { 
@@ -585,7 +586,7 @@
   }
 
   .cp-use-card:hover { 
-    border-color: #c4b5fd; 
+    border-color: #6a2c91; 
     box-shadow: 0 4px 16px rgba(106,44,145,0.07); 
   }
 
@@ -601,12 +602,12 @@
     color: #1e1b4b; 
   }
 
-  /* Cookie type cards - kept similar but harmonized */
+  /* Cookie type cards - brand colour accents */
   .cp-type-list { 
     display: flex; 
     flex-direction: column; 
     gap: 1.25rem; 
-    margin-top: 1rem; 
+    margin-top: 1.25rem; 
   }
 
   .cp-type-card { 
@@ -617,7 +618,7 @@
   }
 
   .cp-type-card:hover { 
-    border-color: #c4b5fd; 
+    border-color: #6a2c91; 
   }
 
   .cp-type-card-header { 
@@ -647,7 +648,7 @@
   .cp-type-tag { 
     font-size: 0.75rem; 
     font-weight: 700; 
-    padding: 0.2rem 0.75rem; 
+    padding: 0.25rem 0.875rem; 
     border-radius: 100px; 
   }
 
@@ -686,7 +687,7 @@
     display: flex; 
     flex-direction: column; 
     gap: 0.75rem; 
-    margin-top: 1rem; 
+    margin-top: 1.25rem; 
   }
 
   .cp-third-row { 
@@ -701,7 +702,7 @@
   }
 
   .cp-third-row:hover { 
-    border-color: #c4b5fd; 
+    border-color: #6a2c91; 
   }
 
   .cp-third-link { 
@@ -719,7 +720,7 @@
     display: flex; 
     flex-direction: column; 
     gap: 1rem; 
-    margin: 1.25rem 0; 
+    margin: 1.5rem 0; 
   }
 
   .cp-choice { 
@@ -732,7 +733,7 @@
   }
 
   .cp-choice:hover { 
-    border-color: #c4b5fd; 
+    border-color: #6a2c91; 
   }
 
   .cp-choice-num { 
@@ -791,5 +792,6 @@
   /* Responsive */
   @media (max-width: 1024px) {
     .cp-panel { display: none; }
+    .cp-section-spaced { margin-top: 2.5rem; }
   }
 </style>
