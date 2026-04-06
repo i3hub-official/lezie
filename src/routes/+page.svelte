@@ -238,7 +238,6 @@
         <h4>Company</h4>
         <a href="/about"     class="foot-link">About Us</a>
         <a href="/contact"   class="foot-link">Contact</a>
-        <a href="/dashboard" class="foot-link">Dashboard</a>
       </div>
       <div class="foot-col">
         <h4>Resources</h4>
