@@ -220,41 +220,78 @@
   <main class="content">
     {#if currentGame === 'menu'}
       <div class="menu-container">
-        <!-- Top Stats Bar: Level, Streak, XP prominently displayed -->
-        <div class="top-stats-bar">
-          <div class="stat-block">
-            <div class="stat-icon"><Medal size={28} /></div>
-            <div class="stat-info">
-              <span class="stat-label">Level</span>
-              <span class="stat-number">{currentLevel}</span>
-            </div>
-          </div>
-          <div class="stat-block">
-            <div class="stat-icon"><Flame size={28} /></div>
-            <div class="stat-info">
-              <span class="stat-label">Day Streak</span>
-              <span class="stat-number">{currentDayStreak}</span>
-            </div>
-          </div>
-          <div class="stat-block xp-block">
-            <div class="stat-icon"><Zap size={28} /></div>
-            <div class="stat-info">
-              <span class="stat-label">Total XP</span>
-              <span class="stat-number">{totalXP}</span>
-              <div class="xp-progress">
-                <div class="xp-fill" style="width: {xpProgressPercent}%"></div>
+        <!-- All Stats Together Strategically on Top -->
+        <div class="unified-stats-bar">
+          <!-- Left side: Level + Streak -->
+          <div class="stats-group">
+            <div class="stat-item">
+              <Medal size={22} />
+              <div>
+                <span class="stat-label">Level</span>
+                <span class="stat-number">{currentLevel}</span>
               </div>
-              <span class="xp-next">{totalXP % xpForNextLevel} / {xpForNextLevel}</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <Flame size={22} />
+              <div>
+                <span class="stat-label">Day Streak</span>
+                <span class="stat-number">{currentDayStreak}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Center: XP with progress bar -->
+          <div class="xp-group">
+            <div class="stat-item xp-item">
+              <Zap size={22} />
+              <div class="xp-details">
+                <div class="xp-header">
+                  <span class="stat-label">Total XP</span>
+                  <span class="stat-number">{totalXP}</span>
+                </div>
+                <div class="xp-bar-container">
+                  <div class="xp-bar" style="width: {xpProgressPercent}%"></div>
+                </div>
+                <span class="xp-next">{totalXP % xpForNextLevel} / {xpForNextLevel} XP to next level</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right side: Quests + Accuracy + Best Streak -->
+          <div class="stats-group">
+            <div class="stat-item">
+              <Shield size={22} />
+              <div>
+                <span class="stat-label">Quests</span>
+                <span class="stat-number">{totalGamesPlayed}</span>
+              </div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <BarChart3 size={22} />
+              <div>
+                <span class="stat-label">Accuracy</span>
+                <span class="stat-number">{overallAccuracy}%</span>
+              </div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <Flame size={22} />
+              <div>
+                <span class="stat-label">Best Streak</span>
+                <span class="stat-number">{longestStreak}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Achievements Preview - Strategic top placement with modern design -->
+        <!-- Achievements Preview -->
         <div class="achievements-preview">
           <div class="preview-header">
             <div class="preview-title">
               <Award size={22} />
-              <h3>Recent Achievements</h3>
+              <h3>Achievements</h3>
               <span class="achievement-count">{unlockedCount} / {totalAchievements}</span>
             </div>
             <button class="view-all-btn" onclick={() => currentGame = 'achievements'}>
@@ -267,7 +304,7 @@
               {@const unlocked = unlockedAchievements.includes(ach.id)}
               <div class="preview-card" class:unlocked={unlocked}>
                 <div class="preview-icon">
-                  <svelte:component this={ach.icon} size={28} />
+                  <svelte:component this={ach.icon} size={24} />
                 </div>
                 <div class="preview-details">
                   <strong>{ach.name}</strong>
@@ -283,7 +320,7 @@
           </div>
         </div>
 
-        <!-- Main CTA Hero Card -->
+        <!-- Hero Card -->
         <div class="hero-card">
           <div class="hero-content">
             <div class="badge">
@@ -302,31 +339,6 @@
             <div class="floating-icon icon-1"><Shield size={32} /></div>
             <div class="floating-icon icon-2"><Brain size={32} /></div>
             <div class="floating-icon icon-3"><Target size={32} /></div>
-          </div>
-        </div>
-
-        <!-- Secondary Stats Grid -->
-        <div class="stats-grid">
-          <div class="stat-card">
-            <Shield size={28} class="card-icon" />
-            <div>
-              <span class="big-number">{totalGamesPlayed}</span>
-              <span>Quests Completed</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <BarChart3 size={28} class="card-icon" />
-            <div>
-              <span class="big-number">{overallAccuracy}%</span>
-              <span>Overall Accuracy</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <Flame size={28} class="card-icon" />
-            <div>
-              <span class="big-number">{longestStreak}</span>
-              <span>Best Streak</span>
-            </div>
           </div>
         </div>
       </div>
@@ -507,7 +519,6 @@
     justify-content: center;
   }
 
-  /* Menu Container */
   .menu-container {
     width: 100%;
     max-width: 1200px;
@@ -519,56 +530,95 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* Top Stats Bar */
-  .top-stats-bar {
-    display: flex;
+  /* Unified Stats Bar - All stats together on top */
+  .unified-stats-bar {
     background: white;
-    border-radius: 1.5rem;
-    padding: 1.25rem 2rem;
-    margin-bottom: 1.5rem;
-    gap: 2rem;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-  }
-  .stat-block {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex: 1;
-  }
-  .stat-icon {
-    width: 56px;
-    height: 56px;
-    background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
     border-radius: 1.25rem;
+    padding: 1rem 1.75rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e2e8f0;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  }
+
+  .stats-group {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .stat-item svg {
     color: #6a2c91;
+    opacity: 0.8;
   }
-  .stat-info {
-    flex: 1;
+
+  .stat-item div {
+    display: flex;
+    flex-direction: column;
   }
+
   .stat-label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
     font-weight: 600;
     color: #64748b;
     letter-spacing: 0.03em;
-    display: block;
   }
+
   .stat-number {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 800;
     color: #0f172a;
     line-height: 1.2;
   }
-  .xp-block {
-    flex: 2;
+
+  .stat-divider {
+    width: 1px;
+    height: 40px;
+    background: #e2e8f0;
   }
-  .xp-progress {
+
+  /* XP Group - takes more space */
+  .xp-group {
+    flex: 2;
+    min-width: 200px;
+  }
+
+  .xp-item {
+    width: 100%;
+  }
+
+  .xp-details {
+    flex: 1;
+    width: 100%;
+  }
+
+  .xp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+  }
+
+  .xp-header .stat-label {
+    font-size: 0.7rem;
+  }
+
+  .xp-header .stat-number {
+    font-size: 1.5rem;
+  }
+
+  .xp-bar-container {
     width: 100%;
     height: 6px;
     background: #e2e8f0;
@@ -576,18 +626,20 @@
     margin: 0.5rem 0 0.25rem;
     overflow: hidden;
   }
-  .xp-fill {
+
+  .xp-bar {
     height: 100%;
     background: linear-gradient(90deg, #6a2c91, #8b5cf6);
     border-radius: 3px;
     transition: width 0.3s ease;
   }
+
   .xp-next {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: #64748b;
   }
 
-  /* Achievements Preview - Horizontal scroll */
+  /* Achievements Preview */
   .achievements-preview {
     background: white;
     border-radius: 1.25rem;
@@ -595,6 +647,7 @@
     margin-bottom: 1.5rem;
     border: 1px solid #e2e8f0;
   }
+
   .preview-header {
     display: flex;
     justify-content: space-between;
@@ -602,16 +655,19 @@
     margin-bottom: 1rem;
     padding: 0 0.25rem;
   }
+
   .preview-title {
     display: flex;
     align-items: center;
     gap: 0.5rem;
   }
+
   .preview-title h3 {
     font-size: 1rem;
     font-weight: 600;
     margin: 0;
   }
+
   .achievement-count {
     background: #f1f5f9;
     padding: 0.25rem 0.75rem;
@@ -620,6 +676,7 @@
     font-weight: 600;
     color: #475569;
   }
+
   .view-all-btn {
     display: flex;
     align-items: center;
@@ -632,9 +689,11 @@
     cursor: pointer;
     transition: opacity 0.2s;
   }
+
   .view-all-btn:hover {
     opacity: 0.8;
   }
+
   .preview-scroll {
     display: flex;
     gap: 1rem;
@@ -642,8 +701,9 @@
     padding-bottom: 0.5rem;
     scrollbar-width: thin;
   }
+
   .preview-card {
-    flex: 0 0 240px;
+    flex: 0 0 220px;
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -652,15 +712,16 @@
     border-radius: 1rem;
     border: 1px solid #e2e8f0;
     transition: all 0.2s;
-    position: relative;
   }
+
   .preview-card.unlocked {
     background: #f0fdf4;
     border-color: #bbf7d0;
   }
+
   .preview-icon {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     background: white;
     border-radius: 0.75rem;
     display: flex;
@@ -669,21 +730,26 @@
     color: #6a2c91;
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   }
+
   .preview-details {
     flex: 1;
   }
+
   .preview-details strong {
     font-size: 0.85rem;
     display: block;
     color: #0f172a;
   }
+
   .preview-details span {
     font-size: 0.7rem;
     color: #64748b;
   }
+
   .preview-lock {
     color: #94a3b8;
   }
+
   .preview-check {
     color: #10b981;
   }
@@ -703,10 +769,12 @@
     background: linear-gradient(145deg, #ffffff, #fafcff);
     box-shadow: 0 8px 20px rgba(0,0,0,0.03);
   }
+
   .hero-content {
     flex: 2;
     text-align: left;
   }
+
   .badge {
     display: inline-flex;
     align-items: center;
@@ -720,6 +788,7 @@
     font-weight: 500;
     margin-bottom: 1.25rem;
   }
+
   .hero-title {
     font-size: 2.5rem;
     font-weight: 800;
@@ -731,6 +800,7 @@
     background-clip: text;
     color: transparent;
   }
+
   .hero-subtitle {
     font-size: 1.125rem;
     color: #475569;
@@ -738,6 +808,7 @@
     margin-bottom: 1.75rem;
     max-width: 500px;
   }
+
   .btn-primary {
     display: inline-flex;
     align-items: center;
@@ -753,15 +824,18 @@
     transition: all 0.25s ease;
     box-shadow: 0 4px 12px rgba(106, 44, 145, 0.3);
   }
+
   .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(106, 44, 145, 0.35);
   }
+
   .hero-visual {
     flex: 1;
     position: relative;
     min-height: 140px;
   }
+
   .floating-icon {
     position: absolute;
     width: 56px;
@@ -775,47 +849,14 @@
     border: 1px solid #e2e8f0;
     color: #6a2c91;
   }
+
   .icon-1 { top: 0; left: 0; animation: float 3s ease-in-out infinite; }
   .icon-2 { top: 30px; right: 20px; animation: float 3s ease-in-out infinite 0.5s; }
   .icon-3 { bottom: 0; left: 40px; animation: float 3s ease-in-out infinite 1s; }
+
   @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-10px); }
-  }
-
-  /* Stats Grid */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1.25rem;
-  }
-  .stat-card {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 1.25rem;
-    border: 1px solid #e2e8f0;
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    transition: all 0.2s;
-  }
-  .stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.03);
-  }
-  .card-icon {
-    color: #6a2c91;
-    opacity: 0.8;
-  }
-  .big-number {
-    font-size: 2rem;
-    font-weight: 800;
-    display: block;
-    color: #0f172a;
-  }
-  .stat-card span:last-child {
-    font-size: 0.85rem;
-    color: #64748b;
   }
 
   /* Quiz Screen */
@@ -824,10 +865,12 @@
     max-width: 720px;
     animation: slideUp 0.4s ease;
   }
+
   @keyframes slideUp {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
   .progress-section {
     background: white;
     border-radius: 1rem;
@@ -835,20 +878,24 @@
     margin-bottom: 1.5rem;
     border: 1px solid #e2e8f0;
   }
+
   .progress-header {
     display: flex;
     justify-content: space-between;
     margin-bottom: 0.75rem;
   }
+
   .progress-text {
     font-size: 0.875rem;
     font-weight: 500;
     color: #64748b;
   }
+
   .progress-pills {
     display: flex;
     gap: 0.5rem;
   }
+
   .streak-pill, .accuracy-pill {
     display: flex;
     align-items: center;
@@ -858,32 +905,38 @@
     font-size: 0.75rem;
     font-weight: 600;
   }
+
   .streak-pill {
     background: #fef3c7;
     color: #d97706;
   }
+
   .accuracy-pill {
     background: #dcfce7;
     color: #059669;
   }
+
   .progress-track {
     height: 8px;
     background: #e2e8f0;
     border-radius: 4px;
     overflow: hidden;
   }
+
   .progress-fill {
     height: 100%;
     background: linear-gradient(90deg, #6a2c91, #8b5cf6);
     border-radius: 4px;
     transition: width 0.3s;
   }
+
   .question-card {
     background: white;
     border-radius: 1.5rem;
     padding: 2rem;
     border: 1px solid #e2e8f0;
   }
+
   .category-badge {
     display: inline-block;
     padding: 0.25rem 0.75rem;
@@ -894,18 +947,21 @@
     color: #6a2c91;
     margin-bottom: 1rem;
   }
+
   .question-text {
     font-size: 1.35rem;
     font-weight: 600;
     line-height: 1.4;
     color: #0f172a;
   }
+
   .answers-list {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
     margin: 1.5rem 0;
   }
+
   .answer-option {
     display: flex;
     align-items: center;
@@ -920,23 +976,28 @@
     transition: all 0.2s;
     width: 100%;
   }
+
   .answer-option:hover:not(:disabled) {
     background: white;
     border-color: #cbd5e1;
     transform: translateX(4px);
   }
+
   .answer-option.selected {
     border-color: #6a2c91;
     background: #f3e8ff;
   }
+
   .answer-option.correct {
     border-color: #10b981;
     background: #f0fdf4;
   }
+
   .answer-option.incorrect {
     border-color: #ef4444;
     background: #fef2f2;
   }
+
   .answer-indicator {
     width: 32px;
     height: 32px;
@@ -944,6 +1005,7 @@
     align-items: center;
     justify-content: center;
   }
+
   .option-letter {
     width: 28px;
     height: 28px;
@@ -955,6 +1017,7 @@
     font-weight: 600;
     color: #64748b;
   }
+
   .result-icon.correct-icon {
     background: #10b981;
     color: white;
@@ -965,6 +1028,7 @@
     align-items: center;
     justify-content: center;
   }
+
   .result-icon.incorrect-icon {
     background: #ef4444;
     color: white;
@@ -975,10 +1039,12 @@
     align-items: center;
     justify-content: center;
   }
+
   .answer-text {
     flex: 1;
     font-weight: 500;
   }
+
   .explanation-panel {
     margin: 1rem 0;
     padding: 1rem;
@@ -986,10 +1052,12 @@
     background: #fef2f2;
     border: 1px solid #fecaca;
   }
+
   .explanation-panel.correct {
     background: #f0fdf4;
     border-color: #bbf7d0;
   }
+
   .explanation-header {
     display: flex;
     align-items: center;
@@ -997,6 +1065,7 @@
     font-weight: 600;
     margin-bottom: 0.5rem;
   }
+
   .btn-next {
     width: 100%;
     padding: 0.875rem;
@@ -1011,26 +1080,31 @@
     transition: all 0.3s;
     pointer-events: none;
   }
+
   .btn-next.visible {
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
   }
+
   /* Results */
   .results-container {
     max-width: 500px;
     width: 100%;
   }
+
   .results-card {
     background: white;
     border-radius: 1.5rem;
     padding: 2rem;
     text-align: center;
   }
+
   .results-title {
     font-size: 1.75rem;
     margin: 1rem 0;
   }
+
   .xp-gain {
     display: flex;
     align-items: center;
@@ -1041,11 +1115,13 @@
     color: #6a2c91;
     margin: 1.5rem 0;
   }
+
   .results-actions {
     display: flex;
     gap: 1rem;
     justify-content: center;
   }
+
   .btn-secondary {
     display: inline-flex;
     align-items: center;
@@ -1058,20 +1134,24 @@
     cursor: pointer;
     transition: all 0.2s;
   }
+
   .btn-secondary:hover {
     background: #f8fafc;
   }
+
   /* Achievements page */
   .achievements-container {
     width: 100%;
     max-width: 1000px;
   }
+
   .achievements-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1rem;
     margin: 2rem 0;
   }
+
   .achievement-card {
     background: white;
     border-radius: 1rem;
@@ -1082,27 +1162,53 @@
     border: 1px solid #e2e8f0;
     opacity: 0.6;
   }
+
   .achievement-card.unlocked {
     opacity: 1;
     border-color: #10b981;
     background: #f0fdf4;
   }
+
   .achievement-icon {
     color: #6a2c91;
   }
+
   .achievement-info {
     flex: 1;
   }
+
   .lock {
     color: #94a3b8;
   }
+
+  @media (max-width: 900px) {
+    .unified-stats-bar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .stats-group {
+      justify-content: space-between;
+    }
+    .stat-divider {
+      display: none;
+    }
+    .xp-group {
+      width: 100%;
+    }
+  }
+
   @media (max-width: 768px) {
     .page { padding: 1rem; }
-    .top-stats-bar { flex-direction: column; gap: 1rem; padding: 1rem; }
-    .stat-block { width: 100%; }
     .hero-title { font-size: 1.8rem; }
     .hero-visual { display: none; }
     .preview-scroll { flex-wrap: wrap; }
     .preview-card { flex: 1 1 100%; }
+    .stats-group {
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .stat-number {
+      font-size: 1.2rem;
+    }
   }
 </style>
