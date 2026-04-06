@@ -134,7 +134,6 @@
 
       <button class="cp-back-home" onclick={() => goto("/")}>
         <ChevronLeft size={18} />
-        <ArrowLeft size={14} />
         <span>Back</span>
       </button>
 
