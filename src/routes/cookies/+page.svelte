@@ -25,7 +25,7 @@
       label:   'Strictly Necessary',
       tag:     'Always active',
       tagColor: '#ffffff',
-      tagBg:   '#6a2c91',           // brand colour
+      tagBg:   '#9b4fcc',           // brand colour
       desc:    'These cookies are essential for Lezie to function. They handle authentication sessions, security tokens, and core platform operations. Without these, you cannot use the app.',
       examples:['Session authentication','CSRF protection tokens','Load balancer routing','User preference flags'],
       retention: 'Session / up to 1 year',
@@ -36,7 +36,7 @@
       label:   'Analytics',
       tag:     'Optional',
       tagColor: '#ffffff',
-      tagBg:   '#6a2c91',           // brand colour
+      tagBg:   '#9b4fcc',           // brand colour
       desc:    'Help us understand how people navigate Lezie — which features they use most, where they encounter friction, and how to improve the experience for everyone in the community.',
       examples:['Page view tracking','Feature usage metrics','Error rate monitoring','Session duration data'],
       retention: 'Up to 2 years',
@@ -47,7 +47,7 @@
       label:   'Functional',
       tag:     'Optional',
       tagColor: '#ffffff',
-      tagBg:   '#6a2c91',           // brand colour
+      tagBg:   '#9b4fcc',           // brand colour
       desc:    'Remember your preferences so Lezie feels tailored to you — your default map region, notification settings, language choice, and other saved configurations.',
       examples:['Map region preference','Language / locale setting','Notification preferences','Theme selection'],
       retention: 'Up to 1 year',
@@ -58,7 +58,7 @@
       label:   'Marketing',
       tag:     'Optional',
       tagColor: '#ffffff',
-      tagBg:   '#6a2c91',           // brand colour
+      tagBg:   '#9b4fcc',           // brand colour
       desc:    'Used to deliver relevant safety updates, community announcements, and product news. We do not sell your data or use these for third-party advertising.',
       examples:['Re-engagement campaigns','Feature announcement targeting','Community event notifications','Product update comms'],
       retention: 'Up to 90 days',
