@@ -11,6 +11,7 @@
     PanelLeftClose, PanelLeftOpen
   } from 'lucide-svelte';
 
+  // Import all page components
   import MapPage        from './MapPage.svelte';
   import AlertsPage     from './AlertsPage.svelte';
   import StatisticsPage from './StatisticsPage.svelte';
@@ -30,10 +31,16 @@
   let isSidebarCollapsed = $state(false);
   let isMobile         = $state(false);
 
+  // Page components mapping
   const pages: Record<string, any> = {
-    dashboard: null, map: MapPage, alerts: AlertsPage,
-    statistics: StatisticsPage, reports: ReportsPage,
-    community: CommunityPage, profile: ProfilePage, settings: SettingsPage
+    dashboard: null,
+    map: MapPage,
+    alerts: AlertsPage,
+    statistics: StatisticsPage,
+    reports: ReportsPage,
+    community: CommunityPage,
+    profile: ProfilePage,
+    settings: SettingsPage
   };
 
   let CurrentPageComponent = $derived(pages[activePage]);
@@ -42,7 +49,24 @@
     checkMobile();
     window.addEventListener('resize', checkMobile);
     loadData();
-    return () => window.removeEventListener('resize', checkMobile);
+    
+    // Use hash-based routing to hide URLs from address bar
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1);
+      if (hash && pages[hash]) {
+        activePage = hash;
+      } else if (!hash) {
+        activePage = 'dashboard';
+      }
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    handleHashChange();
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   });
 
   function checkMobile() {
@@ -102,12 +126,12 @@
 
   const unreadCount = $derived(notifications.filter(n => !n.read).length);
 
+  // Navigate using hash - URLs stay hidden from browser history bar
   function navigate(page: string) {
     activePage = page;
     isMobileMenuOpen = false;
-    const url = new URL(window.location.href);
-    url.searchParams.set('page', page);
-    window.history.pushState({}, '', url);
+    // Use hash to store state without changing the actual URL path
+    window.location.hash = page === 'dashboard' ? '' : page;
   }
 
   async function handleLogout() {
@@ -183,7 +207,7 @@
 
     <!-- Footer actions -->
     <div class="db-sidebar-foot">
-      <button class="db-report-btn" onclick={() => goto('/auth/report')}
+      <button class="db-report-btn" onclick={() => goto('/report')}
               title={isSidebarCollapsed ? 'Report Incident' : ''}>
         <FlagTriangleRight size={15} />
         {#if !isSidebarCollapsed}<span>Report Incident</span>{/if}
@@ -389,8 +413,6 @@
 
   <!-- ══ MOBILE DRAWER ══ -->
   {#if isMobileMenuOpen}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="db-drawer-overlay" onclick={() => isMobileMenuOpen = false}>
       <aside class="db-drawer" onclick={(e) => e.stopPropagation()}>
 
@@ -425,7 +447,7 @@
         </nav>
 
         <div class="db-drawer-foot">
-          <button class="db-drawer-report" onclick={() => { goto('/auth/report'); isMobileMenuOpen = false; }}>
+          <button class="db-drawer-report" onclick={() => { goto('/report'); isMobileMenuOpen = false; }}>
             <FlagTriangleRight size={15} /> Report Incident
           </button>
           <button class="db-drawer-logout" onclick={handleLogout}>
