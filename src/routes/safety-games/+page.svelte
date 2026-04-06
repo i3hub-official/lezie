@@ -22,21 +22,21 @@
   import { goto } from '$app/navigation';
 
   // Game state
-  let currentGame: 'menu' | 'quiz' | 'results' = 'menu';
-  let questions = getRandomQuestions(8);
-  let currentIndex = 0;
-  let score = 0;
-  let selectedAnswer: number | null = null;
-  let showExplanation = false;
-  let streak = 0;
-  let maxStreak = 0;
-  let answersHistory: boolean[] = [];
+  let currentGame = $state<'menu' | 'quiz' | 'results'>('menu');
+  let questions = $state(getRandomQuestions(8));
+  let currentIndex = $state(0);
+  let score = $state(0);
+  let selectedAnswer = $state<number | null>(null);
+  let showExplanation = $state(false);
+  let streak = $state(0);
+  let maxStreak = $state(0);
+  let answersHistory = $state<boolean[]>([]);
 
-  // Derived values
-  $: totalQuestions = questions.length;
-  $: progressPercent = ((currentIndex + (gameCompleted ? 1 : 0)) / totalQuestions) * 100;
-  $: gameCompleted = currentIndex >= totalQuestions;
-  $: accuracy = answersHistory.length > 0 ? Math.round((answersHistory.filter(Boolean).length / answersHistory.length) * 100) : 0;
+  // Derived values using $derived
+  let totalQuestions = $derived(questions.length);
+  let progressPercent = $derived(((currentIndex + (gameCompleted ? 1 : 0)) / totalQuestions) * 100);
+  let gameCompleted = $derived(currentIndex >= totalQuestions);
+  let accuracy = $derived(answersHistory.length > 0 ? Math.round((answersHistory.filter(Boolean).length / answersHistory.length) * 100) : 0);
 
   function startNewGame() {
     questions = getRandomQuestions(8);
@@ -104,7 +104,7 @@
   <!-- Navigation -->
   <header class="nav">
     <div class="nav-content">
-      <button class="nav-back" on:click={() => goto('/')}>
+      <button class="nav-back" onclick={() => goto('/')}>
         <Home size={18} />
         <span>Home</span>
       </button>
@@ -146,7 +146,7 @@
             Learn essential skills that keep you and your community safe.
           </p>
           
-          <button class="btn-primary" on:click={startNewGame}>
+          <button class="btn-primary" onclick={startNewGame}>
             <span>Start Safety Quest</span>
             <ArrowRight size={20} />
           </button>
@@ -204,7 +204,7 @@
           </div>
           
           <div class="progress-track">
-            <div class="progress-fill" style="width: {progressPercent}%" />
+            <div class="progress-fill" style="width: {progressPercent}%"></div>
           </div>
         </div>
 
@@ -228,7 +228,7 @@
                 class:correct={showResult && isCorrect}
                 class:incorrect={showResult && isSelected && !isCorrect}
                 disabled={selectedAnswer !== null}
-                on:click={() => selectAnswer(i)}
+                onclick={() => selectAnswer(i)}
               >
                 <div class="answer-indicator">
                   {#if showResult && isCorrect}
@@ -270,7 +270,7 @@
             class="btn-next"
             class:visible={selectedAnswer !== null}
             disabled={selectedAnswer === null}
-            on:click={nextQuestion}
+            onclick={nextQuestion}
           >
             <span>{currentIndex === totalQuestions - 1 ? 'View Results' : 'Next Question'}</span>
             <ChevronRight size={20} />
@@ -315,11 +315,11 @@
           </div>
 
           <div class="results-actions">
-            <button class="btn-primary" on:click={startNewGame}>
+            <button class="btn-primary" onclick={startNewGame}>
               <RotateCcw size={18} />
               <span>Play Again</span>
             </button>
-            <button class="btn-secondary" on:click={() => currentGame = 'menu'}>
+            <button class="btn-secondary" onclick={() => currentGame = 'menu'}>
               <Home size={18} />
               <span>Main Menu</span>
             </button>
