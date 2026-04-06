@@ -14,6 +14,8 @@
   let isLoading          = $state(false);
   let showPassword       = $state(false);
   let showConfirmPassword= $state(false);
+  let acceptedTerms = $state(false);
+let touchedTerms  = $state(false);
   let touched            = $state<Record<string, boolean>>({});
   let errors             = $state<Record<string, string>>({});
 
@@ -239,6 +241,7 @@
       e.password = 'Must contain uppercase, lowercase, and number';
     if (formData.password !== formData.confirmPassword)
       e.confirmPassword = 'Passwords do not match';
+      if (!acceptedTerms) e.terms = 'You must accept the terms to continue';
     return e;
   }
 
@@ -307,6 +310,7 @@
       Object.keys(errs).forEach(k => { touched[k] = true; });
       return;
     }
+    touchedTerms = true;
     isLoading = true; errors = {};
     try {
       const res = await fetch('/api/signup', {
@@ -738,12 +742,15 @@
                   <p class="su-hint su-hint--ok"><Check size={12} /> Passwords match</p>
                 {/if}
               </div>
-
-              <label class="su-terms">
-                <input type="checkbox" class="su-checkbox" required />
-                I agree to the <a href="/terms" class="su-link">Terms of Service</a> and
-                <a href="/privacy" class="su-link">Privacy Policy</a>
-              </label>
+<label class="su-terms">
+  <input type="checkbox" class="su-checkbox" bind:checked={acceptedTerms}
+    onchange={() => { touchedTerms = true; errors.terms = acceptedTerms ? '' : 'You must accept the terms to continue'; }} />
+  I agree to the <a href="/terms" class="su-link">Terms of Service</a> and
+  <a href="/privacy" class="su-link">Privacy Policy</a>
+</label>
+{#if errors.terms && touchedTerms}
+  <p class="su-err"><AlertCircle size={13} />{errors.terms}</p>
+{/if}
             </div>
           {/if}
 
