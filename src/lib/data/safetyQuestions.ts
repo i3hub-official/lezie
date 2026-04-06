@@ -2201,7 +2201,473 @@ export const safetyQuestions: SafetyQuestion[] = [
     tags: ["planning", "solo-safety", "preparedness"]
   },
 
+  // ====================== ONLINE SAFETY ======================
+  {
+    id: "q166",
+    category: "online",
+    question: "A website asks you to scan a QR code to 'secure your account' instead of logging in normally. What should you do?",
+    answers: [
+      { text: "Scan it immediately because QR codes are always safe", correct: false },
+      { text: "Only use it if you independently verify it is from the official service", correct: true, explanation: "QR codes can hide malicious links. Treat them like any other link and verify the source first." },
+      { text: "Share it with friends to see what happens", correct: false },
+      { text: "Scan it on every device to compare results", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["qr-codes", "phishing", "account-security"]
+  },
+  {
+    id: "q167",
+    category: "online",
+    question: "You see a job post promising huge pay for very easy work, but it asks for your banking details before an interview. What is the safest response?",
+    answers: [
+      { text: "Send the details quickly so you don't miss out", correct: false },
+      { text: "Treat it as suspicious and verify the employer before sharing anything", correct: true, explanation: "Scam job offers often request sensitive details early to steal money or identity." },
+      { text: "Give only part of your banking details", correct: false },
+      { text: "Pay them a fee to prove you're serious", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["job-scams", "identity-theft", "fraud"]
+  },
+  {
+    id: "q168",
+    category: "online",
+    question: "A fun social media quiz asks for your first pet's name, school, and birthday. Why should you be careful?",
+    answers: [
+      { text: "Because quizzes are always boring", correct: false },
+      { text: "Because those answers may match security questions or reveal personal data", correct: true, explanation: "Seemingly harmless questions can help attackers guess passwords or recovery answers." },
+      { text: "Because your phone might overheat", correct: false },
+      { text: "Because birthdays are private only offline", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["privacy", "security-questions", "social-media"]
+  },
+  {
+    id: "q169",
+    category: "online",
+    question: "What is the main benefit of using a reputable password manager?",
+    answers: [
+      { text: "It lets you reuse one simple password everywhere", correct: false },
+      { text: "It helps you store strong, unique passwords more securely", correct: true, explanation: "Password managers make it easier to use different strong passwords for different accounts." },
+      { text: "It automatically stops all hackers forever", correct: false },
+      { text: "It removes the need for account recovery", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["passwords", "password-manager", "account-security"]
+  },
+  {
+    id: "q170",
+    category: "online",
+    question: "Someone claiming to be tech support calls and asks you to install remote access software. What should you do?",
+    answers: [
+      { text: "Install it so they can help faster", correct: false },
+      { text: "Refuse and contact the company through official support channels yourself", correct: true, explanation: "Unsolicited tech support calls are a common scam used to steal money or access your device." },
+      { text: "Give them your card details too", correct: false },
+      { text: "Let them connect only for a minute", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["tech-support-scam", "remote-access", "fraud"]
+  },
+  {
+    id: "q171",
+    category: "online",
+    question: "Why is posting your live location publicly during travel sometimes risky?",
+    answers: [
+      { text: "Because maps stop working afterward", correct: false },
+      { text: "Because it can reveal where you are in real time to strangers", correct: true, explanation: "Real-time location posts can increase stalking, theft, or other safety risks." },
+      { text: "Because it drains your battery instantly", correct: false },
+      { text: "Because friends dislike updates", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["location-sharing", "privacy", "travel"]
+  },
+  {
+    id: "q172",
+    category: "online",
+    question: "What is a safer way to choose answers to account recovery questions?",
+    answers: [
+      { text: "Use answers anyone can find on your profile", correct: false },
+      { text: "Use answers that are hard for others to guess and keep them secure", correct: true, explanation: "Recovery questions should not be easily discovered through social media or public records." },
+      { text: "Use your real details and post them publicly", correct: false },
+      { text: "Use the same answer for every question and tell friends", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["recovery-questions", "account-security", "privacy"]
+  },
+
+  // ====================== STREET SAFETY ======================
+  {
+    id: "q173",
+    category: "street",
+    question: "Someone at an ATM offers to help because the machine 'looks confusing.' What should you do?",
+    answers: [
+      { text: "Accept and let them stand close while you use it", correct: false },
+      { text: "Decline, protect your PIN, and use the ATM only if you feel safe", correct: true, explanation: "Strangers offering ATM help may be trying to see your PIN or distract you." },
+      { text: "Hand them your card so they can show you", correct: false },
+      { text: "Read your PIN out loud so they can confirm it", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["atm", "money", "street-scams"]
+  },
+  {
+    id: "q174",
+    category: "street",
+    question: "Why is it safer not to count large amounts of cash openly in public?",
+    answers: [
+      { text: "Because cash loses value in sunlight", correct: false },
+      { text: "Because it can attract thieves or unwanted attention", correct: true, explanation: "Displaying valuables in public can make you a target." },
+      { text: "Because shops dislike visible money", correct: false },
+      { text: "Because cash is hard to count outdoors", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["cash", "theft-prevention", "awareness"]
+  },
+  {
+    id: "q175",
+    category: "street",
+    question: "You unexpectedly walk into a tense crowd situation or protest and feel unsafe. What is usually the safest response?",
+    answers: [
+      { text: "Move closer to film from the middle", correct: false },
+      { text: "Leave the area calmly and avoid getting trapped in the crowd", correct: true, explanation: "Crowd situations can escalate quickly. Distance and clear exits improve safety." },
+      { text: "Start arguing with people nearby", correct: false },
+      { text: "Stand between opposing groups", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["crowds", "public-safety", "situational-awareness"]
+  },
+  {
+    id: "q176",
+    category: "street",
+    question: "Someone approaches you in a parking lot while you're loading your car and asks you to help find a lost item. What should you do?",
+    answers: [
+      { text: "Follow them between parked cars right away", correct: false },
+      { text: "Keep distance, stay aware, and do not go to isolated spots with strangers", correct: true, explanation: "Parking lots can be risky because they often have limited visibility and fewer people nearby." },
+      { text: "Leave your car open while you search", correct: false },
+      { text: "Hand them your keys first", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["parking-lot", "strangers", "awareness"]
+  },
+  {
+    id: "q177",
+    category: "street",
+    question: "A stranger asks to 'just see' your phone screen to check something quickly. What is the safer choice?",
+    answers: [
+      { text: "Hand them the unlocked phone", correct: false },
+      { text: "Keep control of your phone and do not hand it over", correct: true, explanation: "Even a brief handoff can lead to theft, unauthorized transfers, or exposure of personal information." },
+      { text: "Give it to them if they smile", correct: false },
+      { text: "Let them walk away with it for privacy", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["phone-safety", "theft", "boundaries"]
+  },
+  {
+    id: "q178",
+    category: "street",
+    question: "A person asks you to sign a petition while another stands very close beside you. Why should you be alert?",
+    answers: [
+      { text: "Because petitions are illegal", correct: false },
+      { text: "Because one person may distract you while another targets your belongings", correct: true, explanation: "Some thefts use clipboards, maps, or petitions as distractions." },
+      { text: "Because clipboards block phone signals", correct: false },
+      { text: "Because all public charities are fake", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["distraction", "theft", "crowds"]
+  },
+  {
+    id: "q179",
+    category: "street",
+    question: "What is a safer habit when riding public transport alone late at night?",
+    answers: [
+      { text: "Sit in an empty carriage far from everyone", correct: false },
+      { text: "Stay near the driver, staff area, or other passengers when possible", correct: true, explanation: "Being closer to people or staff can improve safety and make help easier to access." },
+      { text: "Fall asleep with your bag open", correct: false },
+      { text: "Turn your phone off to save power", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["public-transport", "night-safety", "awareness"]
+  },
+
+  // ====================== HOME SAFETY ======================
+  {
+    id: "q180",
+    category: "home",
+    question: "What is the safest way to store prescription medicines at home?",
+    answers: [
+      { text: "Loose on the kitchen table", correct: false },
+      { text: "In a secure place, away from children and anyone not prescribed them", correct: true, explanation: "Medicines should be stored safely to prevent misuse, poisoning, or accidental ingestion." },
+      { text: "Mixed together in an unlabeled jar", correct: false },
+      { text: "In drink bottles for convenience", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["medication", "children", "storage"]
+  },
+  {
+    id: "q181",
+    category: "home",
+    question: "Why is it unsafe to leave candles burning unattended?",
+    answers: [
+      { text: "They use too much oxygen for plants", correct: false },
+      { text: "They can start a fire if knocked over or left too close to materials", correct: true, explanation: "Open flames should never be left unattended because they can quickly cause house fires." },
+      { text: "They make clocks run slowly", correct: false },
+      { text: "They damage Wi-Fi signals", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["candles", "fire-safety", "home"]
+  },
+  {
+    id: "q182",
+    category: "home",
+    question: "A window above ground level is open in a room where a young child is playing. What is the safest action?",
+    answers: [
+      { text: "Assume the child knows not to go near it", correct: false },
+      { text: "Secure the window and supervise the child closely", correct: true, explanation: "Open windows can create serious fall risks for children." },
+      { text: "Place furniture under the window so the child can look out", correct: false },
+      { text: "Leave the room for a few minutes", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["children", "falls", "windows"]
+  },
+  {
+    id: "q183",
+    category: "home",
+    question: "Why is it a good habit to keep doors locked even during the day?",
+    answers: [
+      { text: "Because sunlight unlocks them", correct: false },
+      { text: "Because daytime burglaries and unwanted entries can still happen", correct: true, explanation: "Basic security habits reduce opportunities for theft or intrusion." },
+      { text: "Because deliveries never come during the day", correct: false },
+      { text: "Because neighbors should not visit", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["locks", "home-security", "prevention"]
+  },
+  {
+    id: "q184",
+    category: "home",
+    question: "Before cleaning or repairing a powered appliance, what should you do first?",
+    answers: [
+      { text: "Turn it on to test it", correct: false },
+      { text: "Switch it off and unplug it if safe to do so", correct: true, explanation: "Disconnecting power reduces the risk of electric shock or accidental startup." },
+      { text: "Spray water on it to cool it down", correct: false },
+      { text: "Ask a child to hold it steady", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["appliances", "electricity", "maintenance"]
+  },
+  {
+    id: "q185",
+    category: "home",
+    question: "You spill water near plugged-in electronics. What is the safest response?",
+    answers: [
+      { text: "Touch everything immediately to move it", correct: false },
+      { text: "Avoid contact until power is safely disconnected", correct: true, explanation: "Water and electricity are a dangerous combination. Reduce shock risk before handling anything." },
+      { text: "Plug in more devices to test the outlet", correct: false },
+      { text: "Ignore it if the floor looks dry", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["electricity", "water", "shock-risk"]
+  },
+  {
+    id: "q186",
+    category: "home",
+    question: "Why should hallways and exits in a home be kept clear of clutter?",
+    answers: [
+      { text: "So pets have more room to play", correct: false },
+      { text: "So people can leave quickly and safely in an emergency", correct: true, explanation: "Blocked exits can slow escape and increase injury risk during fires or other emergencies." },
+      { text: "So vacuuming is less noisy", correct: false },
+      { text: "So mail is easier to spot", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["exits", "evacuation", "fire-safety"]
+  },
+
+  // ====================== TRAVEL SAFETY ======================
+  {
+    id: "q187",
+    category: "travel",
+    question: "A stranger offers to exchange money for a better rate than the official booth. What should you do?",
+    answers: [
+      { text: "Accept because street rates are always better", correct: false },
+      { text: "Use official exchange services or ATMs you trust", correct: true, explanation: "Unofficial exchanges can involve counterfeit notes, theft, or scams." },
+      { text: "Hand over your passport and cash together", correct: false },
+      { text: "Follow them to a quiet side street", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["money", "currency-exchange", "scams"]
+  },
+  {
+    id: "q188",
+    category: "travel",
+    question: "Why is it helpful to know the local emergency number when traveling?",
+    answers: [
+      { text: "So you can order food faster", correct: false },
+      { text: "So you can get help quickly if an emergency happens", correct: true, explanation: "Emergency numbers differ by country, so knowing the right one can save time in urgent situations." },
+      { text: "So you can avoid using maps", correct: false },
+      { text: "So hotels trust you more", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["emergency", "planning", "international-travel"]
+  },
+  {
+    id: "q189",
+    category: "travel",
+    question: "What should you do with boarding passes, baggage tags, or travel documents after use?",
+    answers: [
+      { text: "Leave them in public bins if they show personal details", correct: false },
+      { text: "Dispose of them securely because they may contain personal information", correct: true, explanation: "Travel documents can expose names, booking details, and other useful information to strangers." },
+      { text: "Post photos of them online", correct: false },
+      { text: "Give them to other travelers as souvenirs", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["privacy", "documents", "airports"]
+  },
+  {
+    id: "q190",
+    category: "travel",
+    question: "You leave your drink unattended while traveling and come back later. What is the safest choice?",
+    answers: [
+      { text: "Drink it anyway if it looks normal", correct: false },
+      { text: "Do not drink it and get a new one", correct: true, explanation: "An unattended drink may have been tampered with, even if nothing looks different." },
+      { text: "Ask a stranger to taste it first", correct: false },
+      { text: "Add water and continue", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["drink-safety", "nightlife", "tampering"]
+  },
+  {
+    id: "q191",
+    category: "travel",
+    question: "When using a rental car, what is a safer practice regarding valuables?",
+    answers: [
+      { text: "Leave your bags visible on the seats", correct: false },
+      { text: "Keep valuables out of sight and lock the vehicle", correct: true, explanation: "Visible belongings can attract break-ins, especially in tourist areas." },
+      { text: "Leave the engine running while you unload", correct: false },
+      { text: "Hide money under the windshield", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["rental-car", "theft-prevention", "valuables"]
+  },
+  {
+    id: "q192",
+    category: "travel",
+    question: "You are visiting a natural area known for wildlife. What is the safest rule?",
+    answers: [
+      { text: "Approach animals slowly for a better photo", correct: false },
+      { text: "Keep a safe distance and follow local safety guidance", correct: true, explanation: "Wild animals can be unpredictable. Distance protects both you and the animal." },
+      { text: "Feed them so they stay calm", correct: false },
+      { text: "Turn your back if they come near", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["wildlife", "outdoors", "nature-safety"]
+  },
+  {
+    id: "q193",
+    category: "travel",
+    question: "A person in plain clothes claims to be a ticket inspector and demands cash immediately. What should you do?",
+    answers: [
+      { text: "Pay right away to avoid trouble", correct: false },
+      { text: "Ask for official identification and resolve the issue through official channels", correct: true, explanation: "Fraudsters may pretend to be transport staff to pressure travelers into paying fake fines." },
+      { text: "Hand over your wallet so they can choose the amount", correct: false },
+      { text: "Follow them to an isolated place", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["transport", "scams", "verification"]
+  },
+
+  // ====================== GENERAL SAFETY ======================
+  {
+    id: "q194",
+    category: "general",
+    question: "What is a good reason to keep a small emergency kit at home or in your car?",
+    answers: [
+      { text: "So it can stay unopened forever as decoration", correct: false },
+      { text: "So basic supplies are available quickly when needed", correct: true, explanation: "Emergency kits can help with short-term needs until full assistance is available." },
+      { text: "So you never need planning again", correct: false },
+      { text: "So everyone borrows it for everyday items", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["emergency-kit", "preparedness", "supplies"]
+  },
+  {
+    id: "q195",
+    category: "general",
+    question: "If someone threatens you and you have a safe chance to leave, what is usually the best option?",
+    answers: [
+      { text: "Stay and argue to prove a point", correct: false },
+      { text: "Create distance and get to safety as soon as possible", correct: true, explanation: "Escaping a dangerous situation is usually safer than escalating it." },
+      { text: "Move closer so they can hear you better", correct: false },
+      { text: "Give them more personal information", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["threats", "de-escalation", "personal-safety"]
+  },
+  {
+    id: "q196",
+    category: "general",
+    question: "Why is it important to label containers clearly, especially for chemicals or medicines?",
+    answers: [
+      { text: "Because labels make shelves prettier", correct: false },
+      { text: "Because unclear containers can lead to dangerous mistakes", correct: true, explanation: "Clear labeling helps prevent accidental drinking, misuse, or mixing of hazardous substances." },
+      { text: "Because unlabeled items work faster", correct: false },
+      { text: "Because labels stop leaks", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["labels", "chemicals", "medication"]
+  },
+  {
+    id: "q197",
+    category: "general",
+    question: "What is the safest way to respond if a battery or device starts overheating or smoking?",
+    answers: [
+      { text: "Put it in your pocket and keep moving", correct: false },
+      { text: "Move away if needed and follow device or fire safety guidance without taking unnecessary risks", correct: true, explanation: "Overheating batteries can ignite or release dangerous fumes. Prioritize distance and safety." },
+      { text: "Hold it tightly so it does not fall", correct: false },
+      { text: "Charge it more to stabilize it", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["battery-safety", "fire-risk", "devices"]
+  },
+  {
+    id: "q198",
+    category: "general",
+    question: "During a confusing situation or crisis, why is it risky to rely on rumors?",
+    answers: [
+      { text: "Because rumors are usually more exciting", correct: false },
+      { text: "Because false information can lead to unsafe decisions", correct: true, explanation: "Reliable, official information is important when quick safety decisions are needed." },
+      { text: "Because rumors are always illegal", correct: false },
+      { text: "Because facts do not matter in emergencies", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["information", "emergency", "critical-thinking"]
+  },
+  {
+    id: "q199",
+    category: "general",
+    question: "What is one benefit of using a buddy system at large events or unfamiliar places?",
+    answers: [
+      { text: "It guarantees nothing can go wrong", correct: false },
+      { text: "It helps people keep track of each other and respond faster if something goes wrong", correct: true, explanation: "Staying connected with another person can improve awareness and support." },
+      { text: "It means neither person needs a phone", correct: false },
+      { text: "It lets you separate without a plan", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["buddy-system", "events", "preparedness"]
+  },
+  {
+    id: "q200",
+    category: "general",
+    question: "What is the safest final check before you leave for a trip or a long day out?",
+    answers: [
+      { text: "Assume everything is fine without checking", correct: false },
+      { text: "Make sure you have essentials like phone, charge, keys, ID, and a basic plan", correct: true, explanation: "A quick check of essentials can prevent avoidable problems and improve safety." },
+      { text: "Leave in a rush so you are not late", correct: false },
+      { text: "Carry everything loose in your hands", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["planning", "preparedness", "essentials"]
+  },
+
 ];
+
 
 export const getQuestionsByCategory = (category: SafetyQuestion['category']) => {
   return safetyQuestions.filter(q => q.category === category);
