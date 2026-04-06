@@ -13,14 +13,17 @@
     ArrowRight,
     Quote,
     ChevronRight,
-    Heart
+    Heart,
+    Clock,
+    Bell,
+    ShieldCheck
   } from 'lucide-svelte';
 
   const stats = [
-    { value: '50K+', label: 'Active Users' },
-    { value: '120+', label: 'Communities' },
-    { value: '99.9%', label: 'Uptime' },
-    { value: '24/7', label: 'Support' }
+    { value: '50K+', label: 'Active Users', icon: Users },
+    { value: '120+', label: 'Communities', icon: MapPin },
+    { value: '99.9%', label: 'Uptime', icon: Zap },
+    { value: '24/7', label: 'Support', icon: Heart }
   ];
 
   const values = [
@@ -84,17 +87,39 @@
         </p>
       </div>
 
-      <div class="ab-stats">
-        {#each stats as stat}
-          <div class="ab-stat-card">
-            <div class="ab-stat-value">{stat.value}</div>
-            <div class="ab-stat-label">{stat.label}</div>
+      <div class="ab-features">
+        <div class="ab-feature-card">
+          <div class="ab-feature-icon"><Clock size={18} /></div>
+          <div>
+            <strong>Fast Response</strong>
+            <span>We typically reply within 24 hours</span>
           </div>
-        {/each}
+        </div>
+        <div class="ab-feature-card">
+          <div class="ab-feature-icon"><Users size={18} /></div>
+          <div>
+            <strong>Real People</strong>
+            <span>Talk to a dedicated team member</span>
+          </div>
+        </div>
+        <div class="ab-feature-card">
+          <div class="ab-feature-icon"><ShieldCheck size={18} /></div>
+          <div>
+            <strong>Privacy First</strong>
+            <span>Your information is always protected</span>
+          </div>
+        </div>
       </div>
 
       <div class="ab-panel-footer">
-        <p>Trusted by communities worldwide</p>
+        <div class="ab-avatars">
+          <div class="ab-avatar" style="background: #c4b5fd"></div>
+          <div class="ab-avatar" style="background: #a78bfa"></div>
+          <div class="ab-avatar" style="background: #8b5cf6"></div>
+          <div class="ab-avatar" style="background: #6a2c91"></div>
+          <div class="ab-avatar-count">Support</div>
+        </div>
+        <p>Lezie Support Team</p>
       </div>
     </div>
     <div class="ab-panel-glow"></div>
@@ -121,10 +146,10 @@
         <p class="ab-form-subtitle">Our mission, values, and the team behind it all</p>
       </div>
 
-      <div class="ab-content">
+      <div class="ab-card">
 
         <!-- Mission Section -->
-        <section class="ab-section">
+        <div class="ab-step-body">
           <div class="ab-welcome-message">
             <Target size={20} />
             <div>
@@ -141,26 +166,26 @@
               Lezie bridges the gap between traditional neighborhood watch programs and modern technology. We provide instant alerts, verified reports, and a secure platform where communities can organize, communicate, and protect one another.
             </p>
           </div>
-        </section>
+        </div>
 
         <!-- Values Grid -->
-        <section class="ab-section">
+        <div class="ab-section">
           <h3 class="ab-section-title">Our Core Values</h3>
           <div class="ab-values-grid">
             {#each values as value}
               <div class="ab-value-card">
                 <div class="ab-value-icon">
-                  <svelte:component this={value.icon} size={24} strokeWidth={1.5} />
+                  <svelte:component this={value.icon} size={20} />
                 </div>
                 <h4>{value.title}</h4>
                 <p>{value.description}</p>
               </div>
             {/each}
           </div>
-        </section>
+        </div>
 
         <!-- Timeline -->
-        <section class="ab-section">
+        <div class="ab-section">
           <h3 class="ab-section-title">Our Journey</h3>
           <div class="ab-timeline">
             {#each milestones as milestone, i}
@@ -174,23 +199,23 @@
               </div>
             {/each}
           </div>
-        </section>
+        </div>
 
         <!-- CTA -->
-        <section class="ab-section ab-cta-section">
+        <div class="ab-cta-section">
           <div class="ab-cta-card">
             <h3>Ready to make your community safer?</h3>
             <p>Join thousands of neighborhoods already using Lezie to stay connected and protected.</p>
             <div class="ab-cta-actions">
               <button class="ab-btn-primary" onclick={() => goto('/signup')}>
-                Get Started <ArrowRight size={16} />
+                Get Started <ArrowRight size={15} />
               </button>
               <button class="ab-btn-secondary" onclick={() => goto('/contact')}>
                 Contact Sales
               </button>
             </div>
           </div>
-        </section>
+        </div>
 
       </div>
 
@@ -211,26 +236,21 @@
   .ab-page { 
     display: flex; 
     min-height: 100vh; 
-    background: #fafafa; 
+    background: linear-gradient(135deg, #faf9ff 0%, #f3f0ff 100%); 
   }
 
-  /* LEFT PANEL */
+  /* LEFT PANEL - Exact match to sign-in page */
   .ab-panel { 
     display: none; 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
+    position: relative; 
     width: 440px; 
-    height: 100vh; 
     flex-shrink: 0; 
-    background: #111827; 
+    background: linear-gradient(160deg, #1a0b2e 0%, #2d1b4e 50%, #1a0b2e 100%); 
     overflow: hidden; 
-    overflow-y: auto; 
   }
 
   @media (min-width: 1024px) { 
     .ab-panel { display: flex; } 
-    .ab-main { margin-left: 440px; } 
   }
 
   .ab-panel-inner { 
@@ -239,14 +259,14 @@
     display: flex; 
     flex-direction: column; 
     padding: 2.5rem; 
-    min-height: 100%; 
+    height: 100%; 
   }
 
   .ab-panel-glow { 
     position: absolute; 
     inset: 0; 
     z-index: 1; 
-    background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(106,44,145,0.15) 0%, transparent 70%); 
+    background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(139,92,246,0.15) 0%, transparent 70%); 
     pointer-events: none; 
   }
 
@@ -254,19 +274,19 @@
     display: inline-block; 
     line-height: 0; 
     margin-bottom: 2.5rem; 
-    transition: opacity 0.2s; 
+    transition: transform 0.2s, opacity 0.2s; 
   }
 
   .ab-logo-link:hover { 
-    opacity: 0.8; 
+    opacity: 0.85; 
+    transform: scale(1.02); 
   }
 
   .ab-logo-img { 
-    width: 48px; 
-    height: 48px; 
+    width: 80px; 
+    height: 80px; 
     object-fit: contain; 
     display: block; 
-    filter: brightness(0) invert(1); 
   }
 
   .ab-panel-badge { 
@@ -274,72 +294,80 @@
     align-items: center; 
     gap: 0.5rem; 
     padding: 0.375rem 0.875rem; 
-    background: rgba(255,255,255,0.05); 
-    border: 1px solid rgba(255,255,255,0.1); 
+    background: rgba(139,92,246,0.2); 
+    border: 1px solid rgba(139,92,246,0.3); 
     border-radius: 100px; 
     font-size: 0.75rem; 
-    color: #9ca3af; 
+    color: #c4b5fd; 
     margin-bottom: 1.5rem; 
-    font-weight: 500; 
   }
 
   .ab-panel-headline { 
     font-family: 'DM Serif Display', Georgia, serif; 
     font-size: 2.5rem; 
-    line-height: 1.15; 
+    line-height: 1.2; 
     color: white; 
     margin-bottom: 1rem; 
-    font-weight: 400; 
   }
 
   .ab-panel-headline em { 
-    color: #a78bfa; 
+    color: #c4b5fd; 
     font-style: italic; 
   }
 
   .ab-panel-desc { 
-    font-size: 0.9375rem; 
-    line-height: 1.7; 
-    color: #9ca3af; 
-    margin-bottom: 2.5rem; 
-    font-weight: 400; 
+    font-size: 0.875rem; 
+    line-height: 1.6; 
+    color: rgba(196,181,253,0.85); 
+    margin-bottom: 2rem; 
   }
 
-  /* Stats - Minimal */
-  .ab-stats { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 1px; 
-    background: rgba(255,255,255,0.1); 
-    border-radius: 0.75rem; 
-    overflow: hidden; 
+  .ab-features { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1rem; 
     margin-bottom: auto; 
   }
 
-  .ab-stat-card { 
-    background: rgba(255,255,255,0.03); 
-    padding: 1.5rem 1rem; 
-    text-align: center; 
+  .ab-feature-card { 
+    display: flex; 
+    align-items: flex-start; 
+    gap: 0.875rem; 
+    padding: 0.875rem; 
+    background: rgba(255,255,255,0.05); 
+    border-radius: 1rem; 
+    backdrop-filter: blur(10px); 
     transition: background 0.2s; 
   }
 
-  .ab-stat-card:hover { 
-    background: rgba(255,255,255,0.05); 
+  .ab-feature-card:hover { 
+    background: rgba(255,255,255,0.08); 
   }
 
-  .ab-stat-value { 
-    font-size: 1.5rem; 
+  .ab-feature-icon { 
+    width: 36px; 
+    height: 36px; 
+    background: rgba(139,92,246,0.2); 
+    border-radius: 10px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: #c4b5fd; 
+    flex-shrink: 0; 
+  }
+
+  .ab-feature-card strong { 
+    display: block; 
+    font-size: 0.813rem; 
     font-weight: 600; 
     color: white; 
     margin-bottom: 0.25rem; 
-    letter-spacing: -0.02em; 
   }
 
-  .ab-stat-label { 
+  .ab-feature-card span { 
     font-size: 0.75rem; 
-    color: #6b7280; 
-    text-transform: uppercase; 
-    letter-spacing: 0.05em; 
+    color: rgba(196,181,253,0.8); 
+    line-height: 1.4; 
   }
 
   .ab-panel-footer { 
@@ -348,29 +376,61 @@
     border-top: 1px solid rgba(255,255,255,0.1); 
   }
 
-  .ab-panel-footer p { 
-    font-size: 0.875rem; 
-    color: #6b7280; 
+  .ab-avatars { 
+    display: flex; 
+    align-items: center; 
+    margin-bottom: 0.75rem; 
   }
 
-  /* RIGHT PANEL */
+  .ab-avatar { 
+    width: 32px; 
+    height: 32px; 
+    border-radius: 50%; 
+    border: 2px solid #2d1b4e; 
+    margin-left: -8px; 
+  }
+
+  .ab-avatar:first-child { 
+    margin-left: 0; 
+  }
+
+  .ab-avatar-count { 
+    width: auto; 
+    padding: 0 0.75rem; 
+    height: 32px; 
+    border-radius: 16px; 
+    background: rgba(139,92,246,0.3); 
+    border: 2px solid #2d1b4e; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 0.688rem; 
+    font-weight: 600; 
+    color: white; 
+    margin-left: -8px; 
+  }
+
+  .ab-panel-footer p { 
+    font-size: 0.688rem; 
+    color: rgba(196,181,253,0.7); 
+  }
+
+  /* RIGHT PANEL - Exact match to sign-in page patterns */
   .ab-main { 
     flex: 1; 
     display: flex; 
-    align-items: flex-start; 
+    align-items: center; 
     justify-content: center; 
     padding: 2rem 1.25rem; 
     min-height: 100vh; 
-    overflow-y: auto; 
   }
 
   .ab-form-shell { 
     width: 100%; 
-    max-width: 640px; 
+    max-width: 600px; 
     display: flex; 
     flex-direction: column; 
     gap: 1.5rem; 
-    padding-top: 1rem; 
   }
 
   .ab-back-home { 
@@ -383,7 +443,7 @@
     padding: 0.5rem 1rem; 
     font-size: 0.813rem; 
     font-weight: 500; 
-    color: #6b7280; 
+    color: #64748b; 
     cursor: pointer; 
     transition: all 0.2s; 
     width: fit-content; 
@@ -393,7 +453,8 @@
   .ab-back-home:hover { 
     border-color: #6a2c91; 
     color: #6a2c91; 
-    background: #faf5ff; 
+    background: #f3e8ff; 
+    transform: translateX(-2px); 
   }
 
   .ab-mobile-brand { 
@@ -406,9 +467,8 @@
   }
 
   .ab-mobile-brand .ab-logo-img { 
-    width: 48px; 
-    height: 48px; 
-    filter: none; 
+    width: 80px; 
+    height: 80px; 
   }
 
   @media (min-width: 1024px) { 
@@ -417,50 +477,45 @@
 
   .ab-form-header { 
     text-align: center; 
-    margin-bottom: 0.5rem; 
   }
 
   .ab-form-title { 
     font-family: 'DM Serif Display', Georgia, serif; 
-    font-size: clamp(1.75rem, 4vw, 2.25rem); 
-    color: #111827; 
-    margin-bottom: 0.5rem; 
+    font-size: clamp(1.625rem, 4vw, 2rem); 
+    color: #1e1b4b; 
+    margin-bottom: 0.25rem; 
     letter-spacing: -0.02em; 
-    font-weight: 400; 
   }
 
   .ab-form-subtitle { 
-    font-size: 1rem; 
-    color: #6b7280; 
-    font-weight: 400; 
+    font-size: 0.875rem; 
+    color: #64748b; 
   }
 
-  /* Content */
-  .ab-content { 
+  .ab-card { 
     background: white; 
-    border-radius: 1rem; 
-    border: 1px solid #e5e7eb; 
-    padding: clamp(1.5rem, 5vw, 2.5rem); 
+    border-radius: 1.5rem; 
+    border: 1px solid #e2e8f0; 
+    padding: clamp(1.25rem, 5vw, 2rem); 
+    box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1); 
     display: flex; 
     flex-direction: column; 
-    gap: 3rem; 
+    gap: 2.5rem; 
   }
 
-  .ab-section { 
+  .ab-step-body { 
     display: flex; 
     flex-direction: column; 
-    gap: 1.25rem; 
   }
 
   .ab-welcome-message { 
-    display: inline-flex; 
+    display: flex; 
     align-items: center; 
     gap: 0.75rem; 
-    padding: 0.75rem 1rem; 
-    background: #fafafa; 
-    border: 1px solid #e5e7eb; 
-    border-radius: 0.75rem; 
-    width: fit-content; 
+    padding: 0.875rem 1rem; 
+    background: linear-gradient(135deg, #f3e8ff 0%, #f5f0ff 100%); 
+    border-radius: 1rem; 
+    margin-bottom: 1.5rem; 
   }
 
   .ab-welcome-message :global(svg) { 
@@ -471,24 +526,15 @@
   .ab-welcome-message strong { 
     display: block; 
     font-size: 0.875rem; 
-    font-weight: 600; 
-    color: #111827; 
+    font-weight: 700; 
+    color: #1e1b4b; 
   }
 
   .ab-welcome-message span { 
     font-size: 0.75rem; 
-    color: #6b7280; 
+    color: #64748b; 
   }
 
-  .ab-section-title { 
-    font-family: 'DM Serif Display', Georgia, serif; 
-    font-size: 1.25rem; 
-    color: #111827; 
-    margin: 0; 
-    font-weight: 400; 
-  }
-
-  /* Mission Block */
   .ab-mission-block { 
     display: flex; 
     flex-direction: column; 
@@ -499,13 +545,13 @@
     font-family: 'DM Serif Display', Georgia, serif; 
     font-size: 1.25rem; 
     line-height: 1.5; 
-    color: #374151; 
+    color: #1e1b4b; 
     margin: 0; 
-    padding: 0; 
+    padding: 1.25rem; 
+    background: linear-gradient(135deg, #f3e8ff 0%, #f5f0ff 100%); 
+    border-radius: 1rem; 
+    border-left: 4px solid #6a2c91; 
     font-style: italic; 
-    position: relative; 
-    padding-left: 1.5rem; 
-    border-left: 2px solid #6a2c91; 
   }
 
   .ab-mission-text { 
@@ -515,7 +561,20 @@
     margin: 0; 
   }
 
-  /* Values Grid - Minimal */
+  .ab-section { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.25rem; 
+  }
+
+  .ab-section-title { 
+    font-family: 'DM Serif Display', Georgia, serif; 
+    font-size: 1.375rem; 
+    color: #1e1b4b; 
+    margin: 0; 
+  }
+
+  /* Values Grid - No background colors on icons */
   .ab-values-grid { 
     display: grid; 
     grid-template-columns: repeat(2, 1fr); 
@@ -532,33 +591,34 @@
     display: flex; 
     flex-direction: column; 
     gap: 0.75rem; 
-    padding: 0; 
   }
 
   .ab-value-icon { 
-    color: #6b7280; 
+    color: #6a2c91; 
     display: flex; 
     align-items: center; 
     justify-content: center; 
     width: 40px; 
     height: 40px; 
+    background: linear-gradient(135deg, #f3e8ff 0%, #f5f0ff 100%); 
+    border-radius: 10px; 
   }
 
   .ab-value-card h4 { 
     font-size: 1rem; 
     font-weight: 600; 
-    color: #111827; 
+    color: #1e1b4b; 
     margin: 0; 
   }
 
   .ab-value-card p { 
     font-size: 0.875rem; 
     line-height: 1.6; 
-    color: #6b7280; 
+    color: #64748b; 
     margin: 0; 
   }
 
-  /* Timeline - Minimal */
+  /* Timeline */
   .ab-timeline { 
     position: relative; 
     padding-left: 1.5rem; 
@@ -568,10 +628,11 @@
     content: ''; 
     position: absolute; 
     left: 0; 
-    top: 0.5rem; 
-    bottom: 0.5rem; 
-    width: 1px; 
-    background: #e5e7eb; 
+    top: 0; 
+    bottom: 0; 
+    width: 2px; 
+    background: #e2e8f0; 
+    border-radius: 1px; 
   }
 
   .ab-timeline-item { 
@@ -587,73 +648,74 @@
     position: absolute; 
     left: -1.5rem; 
     top: 0.25rem; 
-    width: 9px; 
-    height: 9px; 
-    background: white; 
-    border: 1.5px solid #6a2c91; 
+    width: 8px; 
+    height: 8px; 
+    background: #6a2c91; 
     border-radius: 50%; 
-    margin-left: -4px; 
+    margin-left: -3px; 
+    box-shadow: 0 0 0 3px rgba(106,44,145,0.15); 
   }
 
   .ab-timeline-content { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 0.25rem; 
+    background: #f8fafc; 
+    padding: 1.25rem; 
+    border-radius: 1rem; 
+    border: 1px solid #e2e8f0; 
   }
 
   .ab-timeline-year { 
-    font-size: 0.875rem; 
-    font-weight: 600; 
-    color: #6a2c91; 
-    font-variant-numeric: tabular-nums; 
+    display: inline-block; 
+    padding: 0.25rem 0.75rem; 
+    background: #6a2c91; 
+    color: white; 
+    font-size: 0.75rem; 
+    font-weight: 700; 
+    border-radius: 100px; 
+    margin-bottom: 0.5rem; 
   }
 
   .ab-timeline-content h4 { 
     font-size: 1rem; 
     font-weight: 600; 
-    color: #111827; 
-    margin: 0; 
+    color: #1e1b4b; 
+    margin: 0 0 0.375rem 0; 
   }
 
   .ab-timeline-content p { 
     font-size: 0.875rem; 
-    color: #6b7280; 
+    color: #64748b; 
     margin: 0; 
     line-height: 1.5; 
   }
 
-  /* CTA Section - Minimal */
+  /* CTA Section - Toned down */
   .ab-cta-section { 
     margin-top: 0.5rem; 
   }
 
   .ab-cta-card { 
-    background: #fafafa; 
-    border: 1px solid #e5e7eb; 
-    border-radius: 0.75rem; 
-    padding: 2rem; 
+    background: linear-gradient(135deg, #f3e8ff 0%, #f5f0ff 100%); 
+    border: 1px solid #e0d4f5; 
+    border-radius: 1rem; 
+    padding: 1.75rem; 
     display: flex; 
     flex-direction: column; 
-    gap: 1.25rem; 
+    gap: 1rem; 
     text-align: center; 
   }
 
   .ab-cta-card h3 { 
     font-family: 'DM Serif Display', Georgia, serif; 
     font-size: 1.375rem; 
-    color: #111827; 
+    color: #1e1b4b; 
     margin: 0; 
-    font-weight: 400; 
   }
 
   .ab-cta-card p { 
     font-size: 0.9375rem; 
-    color: #6b7280; 
+    color: #64748b; 
     margin: 0; 
     line-height: 1.6; 
-    max-width: 400px; 
-    margin-left: auto; 
-    margin-right: auto; 
   }
 
   .ab-cta-actions { 
@@ -661,52 +723,56 @@
     gap: 0.75rem; 
     justify-content: center; 
     flex-wrap: wrap; 
+    margin-top: 0.5rem; 
   }
 
   .ab-btn-primary { 
     display: inline-flex; 
     align-items: center; 
     gap: 0.5rem; 
-    padding: 0.75rem 1.5rem; 
-    background: #111827; 
+    padding: 0.8125rem 1.25rem; 
+    background: linear-gradient(135deg, #6a2c91 0%, #4a1d6e 100%); 
     color: white; 
     border: none; 
-    border-radius: 0.5rem; 
-    font-size: 0.875rem; 
-    font-weight: 500; 
+    border-radius: 0.75rem; 
+    font-size: 0.9375rem; 
+    font-weight: 600; 
     cursor: pointer; 
+    box-shadow: 0 4px 14px rgba(106,44,145,0.3); 
     transition: all 0.2s; 
   }
 
   .ab-btn-primary:hover { 
-    background: #374151; 
+    transform: translateY(-2px); 
+    box-shadow: 0 6px 20px rgba(106,44,145,0.4); 
   }
 
   .ab-btn-secondary { 
     display: inline-flex; 
     align-items: center; 
     gap: 0.5rem; 
-    padding: 0.75rem 1.5rem; 
+    padding: 0.8125rem 1.25rem; 
     background: white; 
-    color: #374151; 
-    border: 1px solid #e5e7eb; 
-    border-radius: 0.5rem; 
-    font-size: 0.875rem; 
-    font-weight: 500; 
+    color: #1e1b4b; 
+    border: 1.5px solid #e5e7eb; 
+    border-radius: 0.75rem; 
+    font-size: 0.9375rem; 
+    font-weight: 600; 
     cursor: pointer; 
     transition: all 0.2s; 
   }
 
   .ab-btn-secondary:hover { 
-    border-color: #111827; 
-    color: #111827; 
+    border-color: #6a2c91; 
+    color: #6a2c91; 
+    background: white; 
   }
 
   /* Footer */
   .ab-footer-text { 
     text-align: center; 
     font-size: 0.875rem; 
-    color: #6b7280; 
+    color: #64748b; 
     margin-top: 0.5rem; 
   }
 
@@ -724,20 +790,22 @@
   @media (max-width: 640px) {
     .ab-main { 
       padding: 1.5rem 1rem; 
+      align-items: flex-start; 
     }
     
     .ab-form-shell { 
       gap: 1.25rem; 
     }
     
-    .ab-content { 
-      border-radius: 0.75rem; 
-      padding: 1.5rem; 
-      gap: 2.5rem; 
+    .ab-card { 
+      border-radius: 1.25rem; 
+      padding: 1.25rem; 
+      gap: 2rem; 
     }
     
     .ab-quote { 
       font-size: 1.125rem; 
+      padding: 1rem; 
     }
     
     .ab-cta-actions { 
@@ -750,8 +818,9 @@
       justify-content: center; 
     }
     
-    .ab-panel-headline { 
-      font-size: 2rem; 
+    .ab-back-home { 
+      font-size: 0.75rem; 
+      padding: 0.375rem 0.875rem; 
     }
   }
 </style>
