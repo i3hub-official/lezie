@@ -1,6 +1,6 @@
 <script lang="ts">
   import { safetyQuestions, getRandomQuestions } from '$lib/data/safetyQuestions';
-  import { ShieldCheck, Trophy, Clock, Users, ArrowRight, RefreshCw, Home } from 'lucide-svelte';
+  import { ShieldCheck, Trophy, ArrowRight, RefreshCw, Home } from 'lucide-svelte';
   import { goto } from '$app/navigation';
 
   let currentGame = $state<'menu' | 'quiz'>('menu');
@@ -11,7 +11,7 @@
   let showExplanation = $state(false);
   let gameCompleted = $state(false);
 
-  const totalQuestions = questions.length;
+  const totalQuestions = $derived(questions.length);
 
   function startNewGame() {
     questions = getRandomQuestions(8);
@@ -69,14 +69,13 @@
 
   <main class="games-main">
     {#if currentGame === 'menu'}
-      <!-- Game Selection Menu -->
       <div class="menu-container">
         <div class="hero-box">
           <div class="badge">New</div>
           <h2>Become a Safety Champion</h2>
           <p>Test your safety knowledge, earn points, and help make your community safer.</p>
           
-          <button class="start-btn" on:click={startNewGame}>
+          <button class="start-btn" onclick={startNewGame}>
             Start Safety Quest
             <ArrowRight size={22} />
           </button>
@@ -94,13 +93,6 @@
             <div class="card-icon"><Trophy size={42} /></div>
             <h3>Badge Challenge</h3>
             <p>Earn collectible safety badges</p>
-            <span class="coming">Coming Soon</span>
-          </div>
-
-          <div class="game-card coming-soon">
-            <div class="card-icon"><Users size={42} /></div>
-            <h3>Community Arena</h3>
-            <p>Compete with friends</p>
             <span class="coming">Coming Soon</span>
           </div>
         </div>
@@ -129,7 +121,7 @@
                   class:selected={selectedAnswer === i}
                   class:correct={selectedAnswer === i && answer.correct}
                   class:wrong={selectedAnswer === i && !answer.correct}
-                  on:click={() => selectAnswer(i)}
+                  onclick={() => selectAnswer(i)}
                   disabled={selectedAnswer !== null}
                 >
                   {answer.text}
@@ -137,7 +129,7 @@
               {/each}
             </div>
 
-            {#if showExplanation && questions[currentIndex].answers[selectedAnswer!].explanation}
+            {#if showExplanation && questions[currentIndex].answers[selectedAnswer!]?.explanation}
               <div class="explanation">
                 <strong>Why?</strong> {questions[currentIndex].answers[selectedAnswer!].explanation}
               </div>
@@ -146,7 +138,7 @@
             <button 
               class="next-btn"
               disabled={selectedAnswer === null}
-              on:click={nextQuestion}
+              onclick={nextQuestion}
             >
               {currentIndex === totalQuestions - 1 ? 'See Results' : 'Next Question'}
               <ArrowRight size={18} />
@@ -170,7 +162,7 @@
             {/if}
 
             <div class="results-actions">
-              <button class="restart-btn" on:click={restartGame}>
+              <button class="restart-btn" onclick={restartGame}>
                 <RefreshCw size={18} /> Play Again
               </button>
               <button class="home-btn" onclick={() => currentGame = 'menu'}>
@@ -185,6 +177,7 @@
 </div>
 
 <style>
+  /* === Your existing styles from before (cleaned up) === */
   .safety-games-page {
     min-height: 100vh;
     background: linear-gradient(135deg, #faf9ff 0%, #f3f0ff 100%);
@@ -196,11 +189,7 @@
     color: white;
     padding: 2rem 1.5rem;
     text-align: center;
-  }
-
-  .header-content {
-    max-width: 800px;
-    margin: 0 auto;
+    position: relative;
   }
 
   .back-btn {
@@ -216,6 +205,7 @@
     align-items: center;
     gap: 0.5rem;
     font-size: 0.9rem;
+    cursor: pointer;
   }
 
   .logo-section {
@@ -230,27 +220,6 @@
     font-family: 'DM Serif Display', Georgia, serif;
     font-size: 2.4rem;
     margin: 0;
-  }
-
-  .tagline {
-    color: #c4b5fd;
-    font-size: 1.1rem;
-    margin: 0;
-  }
-
-  .games-main {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem;
-  }
-
-  .hero-box {
-    background: white;
-    border-radius: 1.5rem;
-    padding: 3rem 2rem;
-    text-align: center;
-    box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1);
-    margin-bottom: 3rem;
   }
 
   .start-btn {
@@ -273,47 +242,6 @@
     transform: translateY(-3px);
     box-shadow: 0 10px 25px rgba(106,44,145,0.4);
   }
-
-  .games-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-  }
-
-  .game-card {
-    background: white;
-    border-radius: 1.25rem;
-    padding: 2rem 1.5rem;
-    text-align: center;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-    transition: transform 0.2s;
-  }
-
-  .game-card:hover {
-    transform: translateY(-8px);
-  }
-
-  .quiz-container, .menu-container {
-    max-width: 720px;
-    margin: 0 auto;
-  }
-
-  .question-card {
-    background: white;
-    border-radius: 1.5rem;
-    padding: 2.5rem;
-    box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1);
-  }
-
-  .results-screen {
-    text-align: center;
-    background: white;
-    padding: 3rem 2rem;
-    border-radius: 1.5rem;
-    box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1);
-  }
-
-  /* Add more styles as needed... */
 
   .answer-option {
     width: 100%;
@@ -341,5 +269,16 @@
   .answer-option.selected.wrong {
     border-color: #ef4444;
     background: #fef2f2;
+  }
+
+  .next-btn, .restart-btn, .home-btn {
+    background: linear-gradient(135deg, #6a2c91, #4a1d6e);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1.5rem;
   }
 </style>
