@@ -244,7 +244,6 @@
         <h4>Resources</h4>
         <a href="/faq"               class="foot-link">FAQ</a>
         <a href="/safety-guidelines" class="foot-link">Safety Guidelines</a>
-        <a href="/safety-quest"      class="foot-link">Safety Quest</a>
       </div>
       <div class="foot-col">
         <h4>Legal</h4>
