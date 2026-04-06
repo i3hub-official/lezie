@@ -632,7 +632,6 @@
   </main>
 
 </div>
-
 <style>
   :global(.su-page *) { 
     font-family: 'DM Sans', system-ui, sans-serif; 
@@ -1280,18 +1279,6 @@
   }
 
   .su-phone-input { 
-    padding-left: 0.875rem !important; 
-  }
-
-  .su-eye { 
-    position: absolute; 
-    right: 0.75rem; 
-    top: 50%; 
-    transform: translateY(-50%); 
-    background: none; 
-    border: none; 
-    cursor: pointer; 
-    .su-phone-input { 
     padding-left: 0.875rem !important; 
   }
 
