@@ -557,13 +557,13 @@
   }
 
   .cp-info-box { 
-   background: #9b4fcc
+   background: #9b4fcc;
     border: 1.5px solid #bae6fd; 
     color: #0369a1; 
   }
 
   .cp-warning-box { 
-    background: #9b4fcc
+    background: #9b4fcc;
     border: 1.5px solid #fde68a; 
     color: #92400e; 
   }
