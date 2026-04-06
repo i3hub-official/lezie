@@ -1,8 +1,18 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import {
-    ArrowRight, ArrowLeft, CheckCircle, AlertCircle,
-    User, Mail, MessageCircle, Home, ChevronLeft, ShieldCheck
+    ArrowRight,
+    ArrowLeft,
+    CheckCircle,
+    AlertCircle,
+    User,
+    Mail,
+    MessageCircle,
+    Home,
+    ChevronLeft,
+    ShieldCheck,
+    Users,
+    PhoneCall
   } from 'lucide-svelte';
 
   let isLoading = $state(false);
@@ -41,7 +51,7 @@
     errors = {};
 
     try {
-      // TODO: Replace with your actual backend endpoint
+      // Replace with your actual backend endpoint
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -67,7 +77,7 @@
 
 <div class="su-page">
 
-  <!-- LEFT PANEL -->
+  <!-- LEFT PANEL (Branding) -->
   <aside class="su-panel">
     <div class="su-panel-inner">
       <a href="/" class="su-logo-link">
@@ -90,9 +100,9 @@
 
       <div class="su-features">
         {#each [
-          { icon:CheckCircle, title:'Fast Response', desc:'We typically reply within 24 hours' },
-          { icon:User,        title:'Real People',   desc:'Talk to a dedicated team member' },
-          { icon:ShieldCheck, title:'Safety First',  desc:'Your privacy and security matter' },
+          { icon:ShieldCheck, title:'Fast Response', desc:'We typically reply within 24 hours' },
+          { icon:Users,       title:'Real People',   desc:'Talk to a dedicated team member' },
+          { icon:PhoneCall,   title:'Safety First',  desc:'Your privacy and security matter' },
         ] as f}
           <div class="su-feature-card">
             <div class="su-feature-icon"><f.icon size={17} /></div>
@@ -115,7 +125,7 @@
   <main class="su-main">
     <div class="su-form-shell">
 
-      <!-- Back to home -->
+      <!-- Back to Home -->
       <button class="su-back-home" onclick={() => goto('/')}>
         <ChevronLeft size={16} />
         <Home size={13} />
@@ -141,100 +151,102 @@
           <form onsubmit={handleSubmit}>
 
             {#if errors.submit}
-              <div class="su-alert-error">
+              <div class="auth-alert-error">
                 <AlertCircle size={17} />
                 <span>{errors.submit}</span>
               </div>
             {/if}
 
-            <div class="su-field">
-              <label class="su-label" for="name">Full Name <span class="su-req">*</span></label>
-              <div class="su-input-wrap">
-                <span class="su-ico"><User size={15} /></span>
+            <div class="auth-form-group">
+              <label class="auth-label" for="name">Full Name <span class="su-req">*</span></label>
+              <div class="auth-input-wrapper">
+                <span class="auth-input-icon"><User size={15} /></span>
                 <input 
                   id="name" 
                   type="text" 
                   placeholder="Your full name"
                   bind:value={formData.name}
-                  class="su-input {errors.name ? 'su-input--err' : ''}" 
+                  class="auth-input {errors.name ? 'input-error' : ''}" 
                 />
               </div>
-              {#if errors.name}<p class="su-err">{errors.name}</p>{/if}
+              {#if errors.name}<p class="auth-error-message">{errors.name}</p>{/if}
             </div>
 
-            <div class="su-field">
-              <label class="su-label" for="email">Email Address <span class="su-req">*</span></label>
-              <div class="su-input-wrap">
-                <span class="su-ico"><Mail size={15} /></span>
+            <div class="auth-form-group">
+              <label class="auth-label" for="email">Email Address <span class="su-req">*</span></label>
+              <div class="auth-input-wrapper">
+                <span class="auth-input-icon"><Mail size={15} /></span>
                 <input 
                   id="email" 
                   type="email" 
                   placeholder="you@example.com"
                   bind:value={formData.email}
-                  class="su-input {errors.email ? 'su-input--err' : ''}" 
+                  class="auth-input {errors.email ? 'input-error' : ''}" 
                 />
               </div>
-              {#if errors.email}<p class="su-err">{errors.email}</p>{/if}
+              {#if errors.email}<p class="auth-error-message">{errors.email}</p>{/if}
             </div>
 
-            <div class="su-field">
-              <label class="su-label" for="subject">Subject <span class="su-req">*</span></label>
-              <div class="su-input-wrap">
+            <div class="auth-form-group">
+              <label class="auth-label" for="subject">Subject <span class="su-req">*</span></label>
+              <div class="auth-input-wrapper">
                 <input 
                   id="subject" 
                   type="text" 
                   placeholder="How can we help you?"
                   bind:value={formData.subject}
-                  class="su-input {errors.subject ? 'su-input--err' : ''}" 
+                  class="auth-input {errors.subject ? 'input-error' : ''}" 
                 />
               </div>
-              {#if errors.subject}<p class="su-err">{errors.subject}</p>{/if}
+              {#if errors.subject}<p class="auth-error-message">{errors.subject}</p>{/if}
             </div>
 
-            <div class="su-field">
-              <label class="su-label" for="message">Message <span class="su-req">*</span></label>
+            <div class="auth-form-group">
+              <label class="auth-label" for="message">Message <span class="su-req">*</span></label>
               <textarea 
                 id="message" 
                 rows="6" 
                 placeholder="Write your message here..."
                 bind:value={formData.message}
-                class="su-textarea {errors.message ? 'su-input--err' : ''}"
+                class="auth-input {errors.message ? 'input-error' : ''}"
               ></textarea>
-              {#if errors.message}<p class="su-err">{errors.message}</p>{/if}
+              {#if errors.message}<p class="auth-error-message">{errors.message}</p>{/if}
             </div>
 
-            <button type="submit" disabled={isLoading} class="su-btn-next">
+            <button type="submit" disabled={isLoading} class="auth-btn-submit">
               {#if isLoading}
-                <span class="su-spinner"></span> Sending message...
+                <span class="auth-spinner"></span> Sending message...
               {:else}
-                Send Message <ArrowRight size={14} />
+                Send Message <ArrowRight size={16} />
               {/if}
             </button>
           </form>
         {/if}
       </div>
 
-      <p class="su-footer-text">
-        Prefer email? <a href="mailto:support@lezie.com" class="su-link">support@lezie.com</a>
+      <p class="auth-footer">
+        Prefer email? <a href="mailto:support@lezie.com" class="auth-link">support@lezie.com</a>
       </p>
     </div>
   </main>
 </div>
 
 <style>
-  /* Reuse your signup styles for consistency */
-  :global(.su-page) { display: flex; min-height: 100vh; background: var(--light-color, #f9fafb); }
-  
-  /* Add these if not already present in your global styles */
+  /* Reuse your existing auth styles from the provided CSS */
+  /* All classes like .su-page, .su-panel, .su-main, .su-card, .su-form-header, 
+     .auth-form-group, .auth-label, .auth-input, .auth-btn-submit, .auth-alert-error, 
+     .su-success-message, etc. are already defined in your global stylesheet. */
+
+  /* Minor overrides for Contact page if needed */
   .su-textarea {
     width: 100%;
-    padding: .75rem .875rem;
-    border: 1.5px solid #e5e7eb;
-    border-radius: .75rem;
-    font-size: .875rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
     resize: vertical;
     min-height: 140px;
-    font-family: 'DM Sans', sans-serif;
+    font-family: inherit;
   }
 
   .su-success-message {
@@ -243,11 +255,7 @@
   }
 
   .su-success-message h3 {
-    margin: 1rem 0 .5rem 0;
-    color: var(--success-color, #10b981);
+    margin: 1rem 0 0.5rem;
+    color: var(--success-color);
   }
-
-  /* Reuse existing error, input, button styles from signup */
-  .su-input--err { border-color: #f87171; }
-  .su-err { color: #ef4444; font-size: .75rem; margin-top: .25rem; }
 </style>
