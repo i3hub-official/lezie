@@ -4240,7 +4240,7 @@ export const safetyQuestions: SafetyQuestion[] = [
 {
   "id": "q320",
   "category": "health-wellness",
-  "question": "What is the significance of the "ABCDE" rule for checking moles and skin spots?",
+  "question": "What is the significance of the 'ABCDE' rule for checking moles and skin spots?",
   "answers": [
     { "text": "It's a mnemonic for remembering sunscreen application", "correct": false },
     { "text": "It helps determine if a mole is growing hair", "correct": false },
