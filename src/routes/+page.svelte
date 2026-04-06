@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-
   import { 
     ShieldCheck, 
     ArrowRight, 
@@ -22,25 +21,24 @@
     PhoneCall,
     MessageCircle,
     X,
-    Menu
+    Menu,
+    Clock,
+    Upload,
+    CheckCircle,
+Siren,
   } from 'lucide-svelte';
 
+  // Fix: Use $state() for reactive variable
   let isMenuOpen = $state(false);
 
   onMount(() => {
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-          }
-        });
-      },
+      (entries) => entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')),
       { threshold: 0.1 }
     );
-
-    document.querySelectorAll('.animate-on-scroll').forEach((el) => observer.observe(el));
-
+    document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+    
+    // Cleanup
     return () => observer.disconnect();
   });
 
@@ -56,26 +54,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </svelte:head>
 
-<!-- FLOATING ACTION BUTTON -->
-<a href="/report" class="lz-fab" aria-label="Report an incident">
+<!-- ── FLOATING ACTION BUTTON (LIKE CHAT BUTTON) ── -->
+<a href="/auth/signin" class="lz-fab" aria-label="Report an incident">
   <FlagTriangleRight size={20} />
   <span>Report incident</span>
 </a>
 
-<!-- NAV -->
+<!-- ── NAV ─────────────────────────────────────────────────── -->
 <nav class="lz-nav">
   <div class="lz-nav-inner">
     <button type="button" class="lz-logo" onclick={() => scrollToSection('home')}>
-      <img src="/icons/lz_ico.png" alt="Lezie" class="lz-logo-img" width="32" height="32" />
+      <div class="lz-logo-mark">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 1L1 4.5L8 8L15 4.5L8 1Z" fill="white" fill-opacity=".9"/>
+          <path d="M1 4.5V11.5L8 15L15 11.5V4.5" stroke="white" stroke-opacity=".6" stroke-width="1.2" fill="none"/>
+        </svg>
+      </div>
       <span class="lz-logo-text">Lezie</span>
     </button>
 
-    <button 
-      type="button" 
-      class="lz-hamburger" 
-      onclick={() => isMenuOpen = !isMenuOpen} 
-      aria-label="Toggle menu"
-    >
+    <button class="lz-hamburger" onclick={() => isMenuOpen = !isMenuOpen} aria-label="Toggle menu">
       {#if isMenuOpen}
         <X size={22} />
       {:else}
@@ -87,12 +85,12 @@
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('features')}>Features</button>
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('how-it-works')}>How it works</button>
       <button type="button" class="lz-nav-link" onclick={() => scrollToSection('safety-tips')}>Safety tips</button>
-      <a href="/dashboard" class="lz-nav-cta">Dashboard</a>
+      <a href="/auth/signin" class="lz-nav-cta">Report an incident</a>
     </div>
   </div>
 </nav>
 
-<!-- HERO -->
+<!-- ── HERO ────────────────────────────────────────────────── -->
 <section id="home" class="lz-hero">
   <div class="lz-hero-content">
     <div class="lz-badge animate-on-scroll">
@@ -111,15 +109,11 @@
     </p>
 
     <div class="lz-hero-btns animate-on-scroll">
-      <a href="/signup" class="lz-btn-primary">
+      <a href="/auth/signup" class="lz-btn-primary">
         Get started free
         <ArrowRight size={16} />
       </a>
-      <button 
-        type="button" 
-        class="lz-btn-secondary" 
-        onclick={() => scrollToSection('how-it-works')}
-      >
+      <button type="button" class="lz-btn-secondary" onclick={() => scrollToSection('how-it-works')}>
         <PlayCircle size={16} />
         See how it works
       </button>
@@ -149,7 +143,7 @@
         <MapPin size={14} style="color:var(--primary-color)" />
         <span>Live incident map</span>
         <span class="lz-live-dot"></span>
-        <span style="font-size:0.75rem;color:var(--primary-color);font-weight:600">Live</span>
+        <span style="font-size:.75rem;color:var(--primary-color);font-weight:600">Live</span>
       </div>
       <div class="lz-map-grid">
         {#each Array(54) as _, i}
@@ -167,7 +161,7 @@
         <div class="lz-leg-item"><span class="lz-leg-dot" style="background:var(--primary-bg)"></span>Monitored</div>
       </div>
       <div style="margin-top: 1rem; text-align: center;">
-        <a href="/report" style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--primary-color); text-decoration: none;">
+        <a href="/auth/signin" style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--primary-color); text-decoration: none;">
           <FlagTriangleRight size={14} />
           Report incident on this map
         </a>
@@ -176,7 +170,7 @@
   </div>
 </section>
 
-<!-- FEATURES -->
+<!-- ── FEATURES ───────────────────────────────────────────── -->
 <section id="features" class="lz-section lz-section-alt">
   <div class="lz-container">
     <div class="lz-sec-head animate-on-scroll">
@@ -190,7 +184,7 @@
         <div class="lz-feat-icon"><Radio size={22} style="color:var(--primary-color)" /></div>
         <h3>Real-time incident reporting</h3>
         <p>Report incidents instantly with photos, videos, and precise location tracking. Get immediate alerts to nearby community members.</p>
-        <a href="/report" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report now →</a>
+        <a href="/auth/signin" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report now →</a>
       </div>
       <div class="lz-feat-card animate-on-scroll">
         <div class="lz-feat-icon"><Cpu size={22} style="color:var(--primary-color)" /></div>
@@ -211,7 +205,7 @@
         <div class="lz-feat-icon"><EyeOff size={22} style="color:var(--primary-color)" /></div>
         <h3>Anonymous reporting</h3>
         <p>Report safely and securely with optional anonymity. Your identity remains protected while helping your community stay safe.</p>
-        <a href="/report" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report anonymously →</a>
+        <a href="/auth/signin" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report anonymously →</a>
       </div>
       <div class="lz-feat-card animate-on-scroll">
         <div class="lz-feat-icon"><BellRing size={22} style="color:var(--primary-color)" /></div>
@@ -222,7 +216,7 @@
   </div>
 </section>
 
-<!-- HOW IT WORKS -->
+<!-- ── HOW IT WORKS ───────────────────────────────────────── -->
 <section id="how-it-works" class="lz-section">
   <div class="lz-container">
     <div class="lz-sec-head animate-on-scroll">
@@ -240,7 +234,7 @@
         <div class="lz-bdg-row">
           <span class="lz-bdg">"Suspicious activity on Main St"</span>
         </div>
-        <a href="/report" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Start reporting →</a>
+        <a href="/auth/signin" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Start reporting →</a>
       </div>
       <div class="lz-step animate-on-scroll">
         <div class="lz-step-num">2</div>
@@ -265,7 +259,7 @@
   </div>
 </section>
 
-<!-- SAFETY TIPS -->
+<!-- ── SAFETY TIPS ────────────────────────────────────────── -->
 <section id="safety-tips" class="lz-section lz-section-alt">
   <div class="lz-container">
     <div class="lz-sec-head animate-on-scroll">
@@ -299,7 +293,7 @@
         <div class="lz-tip-ico"><FlagTriangleRight size={24} style="color:var(--primary-color)" /></div>
         <h3>Report suspicious activity</h3>
         <p>Don't hesitate to report suspicious behaviour. Your report could prevent a crime and help others.</p>
-        <a href="/report" style="display: inline-block; margin-top: 0.75rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report now →</a>
+        <a href="/auth/signin" style="display: inline-block; margin-top: 0.75rem; font-size: 0.8rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Report now →</a>
       </div>
       <div class="lz-tip animate-on-scroll">
         <div class="lz-tip-ico"><PhoneCall size={24} style="color:var(--primary-color)" /></div>
@@ -310,18 +304,18 @@
   </div>
 </section>
 
-<!-- CTA -->
+<!-- ── CTA ─────────────────────────────────────────────────── -->
 <section class="lz-section">
   <div class="lz-container">
     <div class="lz-cta animate-on-scroll">
       <h2>Ready to make your community safer?</h2>
       <p>Join thousands of users already using Lezie to protect their neighbourhoods.</p>
       <div class="lz-cta-btns">
-        <a href="/signup" class="lz-btn-primary lz-btn-lg">
+        <a href="/auth/signup" class="lz-btn-primary lz-btn-lg">
           Get started for free
           <ArrowRight size={16} />
         </a>
-        <a href="/report" class="lz-btn-outline-lg">
+        <a href="/auth/signin" class="lz-btn-outline-lg">
           <FlagTriangleRight size={16} />
           Report an incident
         </a>
@@ -330,7 +324,7 @@
   </div>
 </section>
 
-<!-- FOOTER -->
+<!-- ── FOOTER ─────────────────────────────────────────────── -->
 <footer class="lz-footer">
   <div class="lz-container">
     <div class="lz-foot-grid">
@@ -360,7 +354,7 @@
         <button type="button" class="lz-foot-link" onclick={() => scrollToSection('features')}>Features</button>
         <button type="button" class="lz-foot-link" onclick={() => scrollToSection('how-it-works')}>How it works</button>
         <a href="/dashboard" class="lz-foot-link">Dashboard</a>
-        <a href="/report" class="lz-foot-link">Report incident</a>
+        <a href="/auth/signin" class="lz-foot-link">Report incident</a>
       </div>
 
       <div class="lz-foot-col">
