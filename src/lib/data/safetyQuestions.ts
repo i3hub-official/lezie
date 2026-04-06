@@ -1866,6 +1866,341 @@ export const safetyQuestions: SafetyQuestion[] = [
     difficulty: "easy",
     tags: ["intuition", "decision-making", "personal-safety"]
   },
+  // ====================== ONLINE SAFETY ======================
+  {
+    id: "q141",
+    category: "online",
+    question: "Someone you know sends you a message asking for a verification code that was just texted to your phone. What should you do?",
+    answers: [
+      { text: "Send it if you trust them", correct: false },
+      { text: "Never share verification codes with anyone", correct: true, explanation: "Verification codes are meant only for you. Sharing them can let someone access your account." },
+      { text: "Post it in the chat so others can confirm", correct: false },
+      { text: "Send half the code first", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["verification-codes", "account-security", "scams"]
+  },
+  {
+    id: "q142",
+    category: "online",
+    question: "A social media account with very few followers and no real photos starts asking personal questions. What is the safest response?",
+    answers: [
+      { text: "Answer honestly to be polite", correct: false },
+      { text: "Avoid sharing personal details and consider blocking the account", correct: true, explanation: "Fake or suspicious accounts may be trying to gather information for scams or manipulation." },
+      { text: "Send them your address to prove you're real", correct: false },
+      { text: "Ask them for money first", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["social-media", "privacy", "fake-accounts"]
+  },
+  {
+    id: "q143",
+    category: "online",
+    question: "Why is two-factor authentication useful on important accounts?",
+    answers: [
+      { text: "It makes your password shorter", correct: false },
+      { text: "It adds an extra layer of security if your password is stolen", correct: true, explanation: "Two-factor authentication helps protect your account even if someone learns your password." },
+      { text: "It removes the need for passwords forever", correct: false },
+      { text: "It makes scam emails easier to trust", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["2fa", "account-security", "cybersecurity"]
+  },
+  {
+    id: "q144",
+    category: "online",
+    question: "You receive a friend request from someone with the same name and photos as a person you already know. What should you do?",
+    answers: [
+      { text: "Accept immediately because you recognize them", correct: false },
+      { text: "Verify with your real contact through another trusted method first", correct: true, explanation: "Scammers often clone real profiles to trick people into sharing money or personal information." },
+      { text: "Send them your phone number to confirm", correct: false },
+      { text: "Ignore your doubts because it is probably fine", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["impersonation", "social-media", "verification"]
+  },
+  {
+    id: "q145",
+    category: "online",
+    question: "A file attachment arrives unexpectedly from someone you know. What is the safest first step?",
+    answers: [
+      { text: "Open it right away since you know them", correct: false },
+      { text: "Confirm they really sent it before opening", correct: true, explanation: "Accounts can be hacked. Verifying first helps avoid malware or phishing attacks." },
+      { text: "Download it to every device you own", correct: false },
+      { text: "Forward it to others to test it", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["attachments", "malware", "email-safety"]
+  },
+
+  // ====================== STREET SAFETY ======================
+  {
+    id: "q146",
+    category: "street",
+    question: "You notice someone trying to distract you while another person moves close to your bag. What should you do?",
+    answers: [
+      { text: "Focus only on the conversation", correct: false },
+      { text: "Secure your belongings and move away from both people", correct: true, explanation: "Distraction is a common theft tactic. Protect your items and create distance." },
+      { text: "Hand them your bag so they stop", correct: false },
+      { text: "Set your phone down to free your hands", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["theft", "distraction", "pickpocketing"]
+  },
+  {
+    id: "q147",
+    category: "street",
+    question: "What is generally the safest way to carry a bag in a crowded public place?",
+    answers: [
+      { text: "Leave it open for easy access", correct: false },
+      { text: "Keep it zipped and close to your body", correct: true, explanation: "A closed bag kept close is harder for thieves to access without you noticing." },
+      { text: "Swing it behind you", correct: false },
+      { text: "Set it down whenever you stop walking", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["bags", "crowds", "theft-prevention"]
+  },
+  {
+    id: "q148",
+    category: "street",
+    question: "A driver pulls over and insists on giving you a ride even after you said no. What should you do?",
+    answers: [
+      { text: "Get in because they insist", correct: false },
+      { text: "Keep distance, say no clearly, and head toward other people or a business", correct: true, explanation: "Persistent unwanted offers can be dangerous. Move toward safety and visibility." },
+      { text: "Stand closer to hear them better", correct: false },
+      { text: "Give them your home address instead", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["strangers", "transport", "boundaries"]
+  },
+  {
+    id: "q149",
+    category: "street",
+    question: "If you must walk alone at night, which route is usually safer?",
+    answers: [
+      { text: "The darkest shortcut with no people around", correct: false },
+      { text: "A well-lit route with more people and open businesses", correct: true, explanation: "Visibility and access to help make well-lit, populated routes generally safer." },
+      { text: "A route through alleys to save time", correct: false },
+      { text: "Any route as long as you walk fast", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["night-safety", "routes", "awareness"]
+  },
+  {
+    id: "q150",
+    category: "street",
+    question: "Someone bumps into you hard and apologizes while another person gets very close. Why should you be cautious?",
+    answers: [
+      { text: "Because crowded spaces are always friendly", correct: false },
+      { text: "Because it may be a distraction technique for theft", correct: true, explanation: "Some thieves work in pairs, using accidental contact to distract targets." },
+      { text: "Because you should automatically accuse everyone nearby", correct: false },
+      { text: "Because it means you should hand over your wallet", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["pickpocketing", "crowds", "awareness"]
+  },
+
+  // ====================== HOME SAFETY ======================
+  {
+    id: "q151",
+    category: "home",
+    question: "What should you do before using a ladder at home?",
+    answers: [
+      { text: "Place it on an uneven surface to reach farther", correct: false },
+      { text: "Make sure it is stable and used according to safety instructions", correct: true, explanation: "Falls from ladders are common. Stability and proper use are essential." },
+      { text: "Lean sideways as far as possible", correct: false },
+      { text: "Climb with both hands full", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["ladder", "falls", "home-maintenance"]
+  },
+  {
+    id: "q152",
+    category: "home",
+    question: "A pan handle sticks out over the edge of the stove while cooking. Why is that unsafe?",
+    answers: [
+      { text: "It cools the food too fast", correct: false },
+      { text: "Someone could bump it and spill hot contents", correct: true, explanation: "Turning handles inward helps prevent burns and kitchen accidents." },
+      { text: "It makes the stove louder", correct: false },
+      { text: "It saves too much space", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["kitchen", "burns", "cooking-safety"]
+  },
+  {
+    id: "q153",
+    category: "home",
+    question: "You are using a space heater in winter. What is an important safety rule?",
+    answers: [
+      { text: "Place it right next to curtains or bedding", correct: false },
+      { text: "Keep it away from flammable materials and never leave it unattended", correct: true, explanation: "Space heaters can start fires if placed too close to fabric or left running unattended." },
+      { text: "Cover it to keep the heat in", correct: false },
+      { text: "Plug it into any overloaded power strip", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["heater", "fire-safety", "winter"]
+  },
+  {
+    id: "q154",
+    category: "home",
+    question: "Why is it unsafe to overload electrical outlets?",
+    answers: [
+      { text: "It makes the room look messy", correct: false },
+      { text: "It can cause overheating and fire risk", correct: true, explanation: "Too many devices on one outlet can overheat wiring and increase fire danger." },
+      { text: "It makes Wi-Fi slower", correct: false },
+      { text: "It weakens phone batteries only", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["electricity", "fire-safety", "outlets"]
+  },
+  {
+    id: "q155",
+    category: "home",
+    question: "You leave home for several days. What is a safer practice?",
+    answers: [
+      { text: "Post publicly that your house will be empty", correct: false },
+      { text: "Keep doors and windows secured and avoid advertising your absence", correct: true, explanation: "Publicly sharing that no one is home can increase burglary risk." },
+      { text: "Leave a spare key outside as usual", correct: false },
+      { text: "Leave packages piling up at the door on purpose", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["burglary-prevention", "travel", "home-security"]
+  },
+
+  // ====================== TRAVEL SAFETY ======================
+  {
+    id: "q156",
+    category: "travel",
+    question: "When using an ATM in an unfamiliar place, what is the safest habit?",
+    answers: [
+      { text: "Use the first isolated machine you find at night", correct: false },
+      { text: "Choose a well-lit ATM in a secure, visible location and shield your PIN", correct: true, explanation: "Safer ATM use includes visibility, awareness, and protecting your PIN from others." },
+      { text: "Let strangers help you enter your code", correct: false },
+      { text: "Count your cash while walking away", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["atm", "money", "travel-security"]
+  },
+  {
+    id: "q157",
+    category: "travel",
+    question: "Your passport goes missing while abroad. What should you do first?",
+    answers: [
+      { text: "Do nothing and hope it turns up later", correct: false },
+      { text: "Report it and contact your embassy or consulate for guidance", correct: true, explanation: "Lost passports should be reported quickly so you can get official help and reduce misuse risk." },
+      { text: "Post the passport number publicly online", correct: false },
+      { text: "Borrow someone else's passport", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["passport", "embassy", "emergency"]
+  },
+  {
+    id: "q158",
+    category: "travel",
+    question: "What is the safest choice if you arrive in a new city late at night and feel unsure of the area?",
+    answers: [
+      { text: "Walk around randomly until you understand the neighborhood", correct: false },
+      { text: "Use a verified transport option and go directly to your accommodation", correct: true, explanation: "Reducing unnecessary exposure in unfamiliar places late at night is safer." },
+      { text: "Follow any stranger who offers help", correct: false },
+      { text: "Leave your luggage somewhere and explore first", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["arrival", "night-safety", "transport"]
+  },
+  {
+    id: "q159",
+    category: "travel",
+    question: "Why is it safer to avoid displaying large amounts of cash while traveling?",
+    answers: [
+      { text: "Because cash expires outdoors", correct: false },
+      { text: "Because it can make you a target for theft", correct: true, explanation: "Visible money can attract pickpockets or scammers." },
+      { text: "Because shops dislike cash", correct: false },
+      { text: "Because it makes passports heavier", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["cash", "theft", "awareness"]
+  },
+  {
+    id: "q160",
+    category: "travel",
+    question: "A stranger at a station offers to 'upgrade' your ticket for cash. What should you do?",
+    answers: [
+      { text: "Accept because it sounds cheaper", correct: false },
+      { text: "Use only official counters, machines, or app services", correct: true, explanation: "Unofficial ticket offers are often scams and may leave you with invalid travel documents." },
+      { text: "Give them your passport to hold while they arrange it", correct: false },
+      { text: "Pay first and ask questions later", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["tickets", "scams", "transport"]
+  },
+
+  // ====================== GENERAL SAFETY ======================
+  {
+    id: "q161",
+    category: "general",
+    question: "If an emergency happens, why is it helpful to know your location or address?",
+    answers: [
+      { text: "So you can impress people nearby", correct: false },
+      { text: "So you can tell emergency responders where help is needed", correct: true, explanation: "Clear location information helps emergency services reach you faster." },
+      { text: "So you can avoid all questions", correct: false },
+      { text: "Because phones never lose signal", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["emergency", "location", "preparedness"]
+  },
+  {
+    id: "q162",
+    category: "general",
+    question: "What is the safest general approach when using unfamiliar equipment or machinery?",
+    answers: [
+      { text: "Guess how it works and start quickly", correct: false },
+      { text: "Read instructions and use proper safety precautions first", correct: true, explanation: "Understanding how equipment works helps prevent injuries and damage." },
+      { text: "Let children experiment with it", correct: false },
+      { text: "Use it faster than recommended", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["equipment", "instructions", "injury-prevention"]
+  },
+  {
+    id: "q163",
+    category: "general",
+    question: "Why is it important to keep basic first aid supplies available?",
+    answers: [
+      { text: "Only to decorate a shelf", correct: false },
+      { text: "So you can respond more quickly to minor injuries", correct: true, explanation: "Having supplies ready can help manage cuts, burns, or other minor issues until more help is available if needed." },
+      { text: "Because it prevents all accidents", correct: false },
+      { text: "So you never need professional help", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["first-aid", "preparedness", "medical"]
+  },
+  {
+    id: "q164",
+    category: "general",
+    question: "If you witness a serious emergency, what information is most useful to give responders?",
+    answers: [
+      { text: "Random guesses and rumors", correct: false },
+      { text: "Clear facts like location, what happened, and whether anyone is injured", correct: true, explanation: "Accurate, simple details help responders act quickly and appropriately." },
+      { text: "Your entire life story", correct: false },
+      { text: "Only your opinion about whose fault it was", correct: false }
+    ],
+    difficulty: "medium",
+    tags: ["emergency-response", "communication", "preparedness"]
+  },
+  {
+    id: "q165",
+    category: "general",
+    question: "What is a smart safety habit before going somewhere new alone?",
+    answers: [
+      { text: "Tell no one and keep your phone dead", correct: false },
+      { text: "Charge your phone, plan your route, and let someone you trust know your plans", correct: true, explanation: "Basic preparation improves communication, navigation, and emergency support." },
+      { text: "Carry all your cash in one hand", correct: false },
+      { text: "Rely only on luck", correct: false }
+    ],
+    difficulty: "easy",
+    tags: ["planning", "solo-safety", "preparedness"]
+  },
+
 ];
 
 export const getQuestionsByCategory = (category: SafetyQuestion['category']) => {
