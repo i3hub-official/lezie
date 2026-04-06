@@ -17,7 +17,14 @@
     Shield,
     MapPin,
     Users,
-    Bell
+    Bell,
+    ChevronLeft,
+    Home,
+    Sparkles,
+    ShieldCheck,
+    Clock,
+    Smartphone,
+    Fingerprint
   } from 'lucide-svelte';
   
   let currentStep = $state(1);
@@ -35,11 +42,12 @@
   let isLoading = $state(false);
   let showPassword = $state(false);
   let showConfirmPassword = $state(false);
+  let touched = $state<Record<string, boolean>>({});
 
   const steps = [
-    { number: 1, label: 'Personal', icon: UserRound },
-    { number: 2, label: 'Contact', icon: Mail },
-    { number: 3, label: 'Security', icon: Shield },
+    { number: 1, label: 'Personal', icon: UserRound, description: 'Tell us about yourself' },
+    { number: 2, label: 'Contact', icon: Mail, description: 'How to reach you' },
+    { number: 3, label: 'Security', icon: Shield, description: 'Protect your account' },
   ];
 
   const validateStep1 = () => {
@@ -52,6 +60,7 @@
     else {
       const age = calculateAge(new Date(formData.dateOfBirth));
       if (age < 13) newErrors.dateOfBirth = 'You must be at least 13 years old';
+      else if (age > 120) newErrors.dateOfBirth = 'Please enter a valid date';
     }
     return newErrors;
   };
@@ -92,19 +101,31 @@
     if (Object.keys(stepErrors).length === 0) {
       currentStep++;
       errors = {};
+      // Scroll to top on step change
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       errors = stepErrors;
+      // Mark all fields as touched to show errors
+      Object.keys(stepErrors).forEach(key => { touched[key] = true; });
     }
   };
   
   const handlePreviousStep = () => {
-    if (currentStep > 1) { currentStep--; errors = {}; }
+    if (currentStep > 1) { 
+      currentStep--; 
+      errors = {};
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
   
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     const validationErrors = validateStep3();
-    if (Object.keys(validationErrors).length > 0) { errors = validationErrors; return; }
+    if (Object.keys(validationErrors).length > 0) { 
+      errors = validationErrors;
+      Object.keys(validationErrors).forEach(key => { touched[key] = true; });
+      return; 
+    }
     isLoading = true;
     errors = {};
     try {
@@ -131,6 +152,10 @@
     }
   };
 
+  const goBackToHome = () => {
+    goto('/');
+  };
+
   const passwordStrength = $derived(() => {
     if (!formData.password) return 0;
     let score = 0;
@@ -144,11 +169,23 @@
 
   const strengthLabel = $derived(() => {
     const s = passwordStrength();
-    if (s <= 1) return { text: 'Weak', color: 'var(--danger-color)' };
-    if (s <= 2) return { text: 'Fair', color: '#f59e0b' };
-    if (s <= 3) return { text: 'Good', color: '#3b82f6' };
-    return { text: 'Strong', color: 'var(--success-color)' };
+    if (s <= 1) return { text: 'Weak', color: 'var(--danger-color)', width: '25%' };
+    if (s <= 2) return { text: 'Fair', color: '#f59e0b', width: '50%' };
+    if (s <= 3) return { text: 'Good', color: '#3b82f6', width: '75%' };
+    return { text: 'Strong', color: 'var(--success-color)', width: '100%' };
   });
+
+  const formatPhoneNumber = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length <= 3) return cleaned;
+    if (cleaned.length <= 6) return `(${cleaned.slice(0,3)}) ${cleaned.slice(3)}`;
+    return `(${cleaned.slice(0,3)}) ${cleaned.slice(3,6)}-${cleaned.slice(6,10)}`;
+  };
+
+  const handlePhoneInput = (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    formData.phone = formatPhoneNumber(input.value);
+  };
 </script>
 
 <svelte:head>
@@ -167,7 +204,10 @@
       </a>
 
       <div class="su-panel-hero">
-        <p class="su-panel-eyebrow">Community Safety Platform</p>
+        <div class="su-panel-badge">
+          <Sparkles size={14} />
+          <span>Join 12,400+ members</span>
+        </div>
         <h2 class="su-panel-headline">
           Safer streets start<br/>
           <em>with you.</em>
@@ -177,43 +217,45 @@
         </p>
       </div>
 
-      <ul class="su-features">
-        <li class="su-feature">
+      <div class="su-features">
+        <div class="su-feature-card">
           <div class="su-feature-icon">
-            <MapPin size={16} />
+            <MapPin size={18} />
           </div>
           <div>
             <strong>Live Incident Map</strong>
             <span>See what's happening near you right now</span>
           </div>
-        </li>
-        <li class="su-feature">
+        </div>
+        <div class="su-feature-card">
           <div class="su-feature-icon">
-            <Bell size={16} />
+            <Bell size={18} />
           </div>
           <div>
             <strong>Instant Alerts</strong>
             <span>Get notified when safety events occur nearby</span>
           </div>
-        </li>
-        <li class="su-feature">
+        </div>
+        <div class="su-feature-card">
           <div class="su-feature-icon">
-            <Users size={16} />
+            <ShieldCheck size={18} />
           </div>
           <div>
             <strong>Trusted Community</strong>
             <span>Verified neighbours, reliable reports</span>
           </div>
-        </li>
-      </ul>
-
-      <div class="su-social-proof">
-        <div class="su-avatars">
-          {#each ['var(--secondary-color)','#a78bfa','#8b5cf6','var(--primary-color)'] as color}
-            <div class="su-avatar" style="background:{color}"></div>
-          {/each}
         </div>
-        <p><strong>12,400+</strong> members keeping communities safe</p>
+      </div>
+
+      <div class="su-panel-footer">
+        <div class="su-avatars">
+          <div class="su-avatar" style="background: var(--secondary-color)"></div>
+          <div class="su-avatar" style="background: #a78bfa"></div>
+          <div class="su-avatar" style="background: #8b5cf6"></div>
+          <div class="su-avatar" style="background: var(--primary-color)"></div>
+          <div class="su-avatar-count">+12k</div>
+        </div>
+        <p>Trusted by communities worldwide</p>
       </div>
     </div>
     <div class="su-panel-glow"></div>
@@ -223,7 +265,14 @@
   <main class="su-main">
     <div class="su-form-shell">
 
-      <!-- Logo -->
+      <!-- Back button to home -->
+      <button class="su-back-home" onclick={goBackToHome}>
+        <ChevronLeft size={18} />
+        <Home size={14} />
+        <span>Back to Home</span>
+      </button>
+
+      <!-- Mobile logo -->
       <div class="su-mobile-brand">
         <a href="/" class="su-logo-link">
           <img src="/icons/lz_ico.png" alt="Lezie" class="su-logo-img" />
@@ -233,22 +282,26 @@
       <!-- Header -->
       <div class="su-form-header">
         <h1 class="su-form-title">Create your account</h1>
-        <p class="su-form-subtitle">Step {currentStep} of 3 — {steps[currentStep - 1].label} details</p>
+        <p class="su-form-subtitle">
+          {steps[currentStep - 1].description}
+        </p>
       </div>
 
       <!-- Progress -->
       <div class="su-progress-track">
-        {#each steps as step}
-          <div class="su-progress-step {currentStep >= step.number ? 'active' : ''} {currentStep > step.number ? 'done' : ''}">
-            <div class="su-step-bubble">
-              {#if currentStep > step.number}
-                <Check size={14} strokeWidth={3} />
-              {:else}
-                <svelte:component this={step.icon} size={14} />
-              {/if}
+        {#each steps as step, idx}
+          <div class="su-progress-step-wrapper">
+            <div class="su-progress-step {currentStep >= step.number ? 'active' : ''} {currentStep > step.number ? 'done' : ''}">
+              <div class="su-step-bubble">
+                {#if currentStep > step.number}
+                  <Check size={14} strokeWidth={3} />
+                {:else}
+                  <svelte:component this={step.icon} size={14} />
+                {/if}
+              </div>
+              <span class="su-step-label">{step.label}</span>
             </div>
-            <span class="su-step-label">{step.label}</span>
-            {#if step.number < 3}
+            {#if idx < steps.length - 1}
               <div class="su-step-connector {currentStep > step.number ? 'filled' : ''}"></div>
             {/if}
           </div>
@@ -266,12 +319,22 @@
 
         <form onsubmit={currentStep === 3 ? handleSubmit : handleNextStep}>
 
-          <!-- STEP 1 -->
+          <!-- STEP 1 - Personal Info -->
           {#if currentStep === 1}
-            <div class="su-step-body" style="animation: stepIn .35s ease both">
+            <div class="su-step-body">
+              <div class="su-welcome-message">
+                <UserRound size={20} />
+                <div>
+                  <strong>Welcome!</strong>
+                  <span>Let's start with your basic information</span>
+                </div>
+              </div>
+
               <div class="su-field-row">
                 <div class="su-field">
-                  <label class="su-label" for="firstName">First Name <span class="su-req">*</span></label>
+                  <label class="su-label" for="firstName">
+                    First Name <span class="su-req">*</span>
+                  </label>
                   <div class="su-input-wrap">
                     <User size={16} class="su-input-icon" />
                     <input
@@ -279,13 +342,18 @@
                       id="firstName"
                       placeholder="John"
                       bind:value={formData.firstName}
-                      class="su-input {errors.firstName ? 'su-input--err' : ''}"
+                      onblur={() => { touched.firstName = true; errors.firstName = validateStep1().firstName; }}
+                      class="su-input {errors.firstName && touched.firstName ? 'su-input--err' : ''}"
                     />
                   </div>
-                  {#if errors.firstName}<p class="su-err">{errors.firstName}</p>{/if}
+                  {#if errors.firstName && touched.firstName}
+                    <p class="su-err">{errors.firstName}</p>
+                  {/if}
                 </div>
                 <div class="su-field">
-                  <label class="su-label" for="lastName">Last Name <span class="su-req">*</span></label>
+                  <label class="su-label" for="lastName">
+                    Last Name <span class="su-req">*</span>
+                  </label>
                   <div class="su-input-wrap">
                     <User size={16} class="su-input-icon" />
                     <input
@@ -293,51 +361,78 @@
                       id="lastName"
                       placeholder="Doe"
                       bind:value={formData.lastName}
-                      class="su-input {errors.lastName ? 'su-input--err' : ''}"
+                      onblur={() => { touched.lastName = true; errors.lastName = validateStep1().lastName; }}
+                      class="su-input {errors.lastName && touched.lastName ? 'su-input--err' : ''}"
                     />
                   </div>
-                  {#if errors.lastName}<p class="su-err">{errors.lastName}</p>{/if}
+                  {#if errors.lastName && touched.lastName}
+                    <p class="su-err">{errors.lastName}</p>
+                  {/if}
                 </div>
               </div>
 
               <div class="su-field">
-                <label class="su-label" for="dateOfBirth">Date of Birth <span class="su-req">*</span></label>
+                <label class="su-label" for="dateOfBirth">
+                  Date of Birth <span class="su-req">*</span>
+                </label>
                 <div class="su-input-wrap">
                   <Calendar size={16} class="su-input-icon" />
                   <input
                     type="date"
                     id="dateOfBirth"
                     bind:value={formData.dateOfBirth}
-                    class="su-input su-input--date {errors.dateOfBirth ? 'su-input--err' : ''}"
+                    onblur={() => { touched.dateOfBirth = true; errors.dateOfBirth = validateStep1().dateOfBirth; }}
+                    class="su-input su-input--date {errors.dateOfBirth && touched.dateOfBirth ? 'su-input--err' : ''}"
+                    max={new Date().toISOString().split('T')[0]}
                   />
                 </div>
-                {#if errors.dateOfBirth}<p class="su-err">{errors.dateOfBirth}</p>
-                {:else}<p class="su-hint">You must be at least 13 years old to join</p>{/if}
+                {#if errors.dateOfBirth && touched.dateOfBirth}
+                  <p class="su-err">{errors.dateOfBirth}</p>
+                {:else}
+                  <p class="su-hint">You must be at least 13 years old to join</p>
+                {/if}
               </div>
             </div>
           {/if}
 
-          <!-- STEP 2 -->
+          <!-- STEP 2 - Contact Info -->
           {#if currentStep === 2}
-            <div class="su-step-body" style="animation: stepIn .35s ease both">
+            <div class="su-step-body">
+              <div class="su-welcome-message">
+                <Smartphone size={20} />
+                <div>
+                  <strong>Contact Details</strong>
+                  <span>How we'll reach you for important alerts</span>
+                </div>
+              </div>
+
               <div class="su-field">
-                <label class="su-label" for="phone">Phone Number <span class="su-req">*</span></label>
+                <label class="su-label" for="phone">
+                  Phone Number <span class="su-req">*</span>
+                </label>
                 <div class="su-input-wrap">
                   <Phone size={16} class="su-input-icon" />
                   <input
                     type="tel"
                     id="phone"
-                    placeholder="+1 (234) 567-8900"
+                    placeholder="(555) 123-4567"
                     bind:value={formData.phone}
-                    class="su-input {errors.phone ? 'su-input--err' : ''}"
+                    oninput={handlePhoneInput}
+                    onblur={() => { touched.phone = true; errors.phone = validateStep2().phone; }}
+                    class="su-input {errors.phone && touched.phone ? 'su-input--err' : ''}"
                   />
                 </div>
-                {#if errors.phone}<p class="su-err">{errors.phone}</p>
-                {:else}<p class="su-hint">Used for critical safety alerts in your area</p>{/if}
+                {#if errors.phone && touched.phone}
+                  <p class="su-err">{errors.phone}</p>
+                {:else}
+                  <p class="su-hint">Used for critical safety alerts in your area</p>
+                {/if}
               </div>
 
               <div class="su-field">
-                <label class="su-label" for="email">Email Address <span class="su-req">*</span></label>
+                <label class="su-label" for="email">
+                  Email Address <span class="su-req">*</span>
+                </label>
                 <div class="su-input-wrap">
                   <Mail size={16} class="su-input-icon" />
                   <input
@@ -345,20 +440,34 @@
                     id="email"
                     placeholder="you@example.com"
                     bind:value={formData.email}
-                    class="su-input {errors.email ? 'su-input--err' : ''}"
+                    onblur={() => { touched.email = true; errors.email = validateStep2().email; }}
+                    class="su-input {errors.email && touched.email ? 'su-input--err' : ''}"
                   />
                 </div>
-                {#if errors.email}<p class="su-err">{errors.email}</p>
-                {:else}<p class="su-hint">We'll send a verification link to this address</p>{/if}
+                {#if errors.email && touched.email}
+                  <p class="su-err">{errors.email}</p>
+                {:else}
+                  <p class="su-hint">We'll send a verification link to this address</p>
+                {/if}
               </div>
             </div>
           {/if}
 
-          <!-- STEP 3 -->
+          <!-- STEP 3 - Security -->
           {#if currentStep === 3}
-            <div class="su-step-body" style="animation: stepIn .35s ease both">
+            <div class="su-step-body">
+              <div class="su-welcome-message">
+                <Fingerprint size={20} />
+                <div>
+                  <strong>Secure Your Account</strong>
+                  <span>Create a strong password to keep your account safe</span>
+                </div>
+              </div>
+
               <div class="su-field">
-                <label class="su-label" for="password">Password <span class="su-req">*</span></label>
+                <label class="su-label" for="password">
+                  Password <span class="su-req">*</span>
+                </label>
                 <div class="su-input-wrap">
                   <Lock size={16} class="su-input-icon" />
                   <input
@@ -366,36 +475,43 @@
                     id="password"
                     placeholder="Create a strong password"
                     bind:value={formData.password}
-                    class="su-input su-input--toggle {errors.password ? 'su-input--err' : ''}"
+                    onblur={() => { touched.password = true; errors.password = validateStep3().password; }}
+                    class="su-input su-input--toggle {errors.password && touched.password ? 'su-input--err' : ''}"
                   />
-                  <button type="button" class="su-eye-btn" onclick={() => showPassword = !showPassword} aria-label="Toggle password">
+                  <button type="button" class="su-eye-btn" onclick={() => showPassword = !showPassword}>
                     {#if showPassword}<EyeOff size={16} />{:else}<Eye size={16} />{/if}
                   </button>
                 </div>
-                {#if errors.password}
+                {#if errors.password && touched.password}
                   <p class="su-err">{errors.password}</p>
                 {:else if formData.password}
                   <div class="su-strength">
-                    <div class="su-strength-bars">
-                      {#each [1,2,3,4] as n}
-                        <div class="su-strength-bar {passwordStrength() >= n ? 'lit' : ''}"
-                          style={passwordStrength() >= n ? `background:${strengthLabel().color}` : ''}
-                        ></div>
-                      {/each}
+                    <div class="su-strength-track">
+                      <div class="su-strength-fill" style="width: {strengthLabel().width}; background: {strengthLabel().color}"></div>
                     </div>
                     <span class="su-strength-label" style="color:{strengthLabel().color}">{strengthLabel().text}</span>
                   </div>
                   <div class="su-hints">
-                    <span class={formData.password.length >= 8 ? 'su-hint-ok' : 'su-hint-no'}>8+ chars</span>
-                    <span class={/(?=.*[A-Z])/.test(formData.password) ? 'su-hint-ok' : 'su-hint-no'}>Uppercase</span>
-                    <span class={/(?=.*[a-z])/.test(formData.password) ? 'su-hint-ok' : 'su-hint-no'}>Lowercase</span>
-                    <span class={/(?=.*\d)/.test(formData.password) ? 'su-hint-ok' : 'su-hint-no'}>Number</span>
+                    <span class={formData.password.length >= 8 ? 'su-hint-ok' : 'su-hint-no'}>
+                      {#if formData.password.length >= 8}<Check size={10} />{/if} 8+ chars
+                    </span>
+                    <span class={/(?=.*[A-Z])/.test(formData.password) ? 'su-hint-ok' : 'su-hint-no'}>
+                      {#if /(?=.*[A-Z])/.test(formData.password)}<Check size={10} />{/if} Uppercase
+                    </span>
+                    <span class={/(?=.*[a-z])/.test(formData.password) ? 'su-hint-ok' : 'su-hint-no'}>
+                      {#if /(?=.*[a-z])/.test(formData.password)}<Check size={10} />{/if} Lowercase
+                    </span>
+                    <span class={/(?=.*\d)/.test(formData.password) ? 'su-hint-ok' : 'su-hint-no'}>
+                      {#if /(?=.*\d)/.test(formData.password)}<Check size={10} />{/if} Number
+                    </span>
                   </div>
                 {/if}
               </div>
 
               <div class="su-field">
-                <label class="su-label" for="confirmPassword">Confirm Password <span class="su-req">*</span></label>
+                <label class="su-label" for="confirmPassword">
+                  Confirm Password <span class="su-req">*</span>
+                </label>
                 <div class="su-input-wrap">
                   <Lock size={16} class="su-input-icon" />
                   <input
@@ -403,15 +519,16 @@
                     id="confirmPassword"
                     placeholder="Repeat your password"
                     bind:value={formData.confirmPassword}
-                    class="su-input su-input--toggle {errors.confirmPassword ? 'su-input--err' : ''}"
+                    onblur={() => { touched.confirmPassword = true; errors.confirmPassword = validateStep3().confirmPassword; }}
+                    class="su-input su-input--toggle {errors.confirmPassword && touched.confirmPassword ? 'su-input--err' : ''}"
                   />
-                  <button type="button" class="su-eye-btn" onclick={() => showConfirmPassword = !showConfirmPassword} aria-label="Toggle confirm password">
+                  <button type="button" class="su-eye-btn" onclick={() => showConfirmPassword = !showConfirmPassword}>
                     {#if showConfirmPassword}<EyeOff size={16} />{:else}<Eye size={16} />{/if}
                   </button>
                 </div>
-                {#if errors.confirmPassword}
+                {#if errors.confirmPassword && touched.confirmPassword}
                   <p class="su-err">{errors.confirmPassword}</p>
-                {:else if formData.confirmPassword && formData.password === formData.confirmPassword}
+                {:else if formData.confirmPassword && formData.password === formData.confirmPassword && formData.password}
                   <p class="su-hint su-hint--ok">
                     <Check size={13} /> Passwords match
                   </p>
@@ -459,22 +576,23 @@
   /* ── Fonts ── */
   :global(.su-page *) {
     font-family: 'DM Sans', system-ui, sans-serif;
+    box-sizing: border-box;
   }
 
   /* ── Layout ── */
   .su-page {
     display: flex;
     min-height: 100vh;
-    background: var(--light-color);
+    background: linear-gradient(135deg, #faf9ff 0%, #f3f0ff 100%);
   }
 
   /* ── LEFT PANEL ── */
   .su-panel {
     display: none;
     position: relative;
-    width: 420px;
+    width: 440px;
     flex-shrink: 0;
-    background: linear-gradient(160deg, var(--primary-dark) 0%, var(--primary-dark) 40%, var(--primary-dark) 100%);
+    background: linear-gradient(160deg, #1a0b2e 0%, #2d1b4e 50%, #1a0b2e 100%);
     overflow: hidden;
   }
 
@@ -495,9 +613,7 @@
     position: absolute;
     inset: 0;
     z-index: 1;
-    background:
-      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(167,139,250,0.25) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 60% at 20% 80%, rgba(109,40,217,0.4) 0%, transparent 60%);
+    background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(139,92,246,0.15) 0%, transparent 70%);
     pointer-events: none;
   }
 
@@ -506,10 +622,10 @@
     display: inline-block;
     line-height: 0;
     margin-bottom: 2.5rem;
-    transition: opacity 0.2s;
+    transition: transform 0.2s, opacity 0.2s;
   }
 
-  .su-logo-link:hover { opacity: 0.85; }
+  .su-logo-link:hover { opacity: 0.85; transform: scale(1.02); }
 
   .su-logo-img {
     width: 80px;
@@ -518,113 +634,130 @@
     display: block;
   }
 
-  /* Panel copy */
-  .su-panel-eyebrow {
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: rgba(196,181,253,0.9);
-    margin-bottom: 0.875rem;
+  /* Panel content */
+  .su-panel-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.875rem;
+    background: rgba(139,92,246,0.2);
+    border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 100px;
+    font-size: 0.75rem;
+    color: #c4b5fd;
+    margin-bottom: 1.5rem;
   }
 
   .su-panel-headline {
     font-family: 'DM Serif Display', Georgia, serif;
     font-size: 2.5rem;
-    line-height: 1.15;
+    line-height: 1.2;
     color: white;
     margin-bottom: 1rem;
   }
 
   .su-panel-headline em {
-    color: var(--secondary-color);
+    color: #c4b5fd;
     font-style: italic;
   }
 
   .su-panel-desc {
     font-size: 0.875rem;
-    line-height: 1.7;
-    color: rgba(221,214,254,0.85);
-    margin-bottom: 2.5rem;
+    line-height: 1.6;
+    color: rgba(196,181,253,0.85);
+    margin-bottom: 2rem;
   }
 
-  /* Features */
+  /* Feature cards */
   .su-features {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 1.125rem;
+    gap: 1rem;
+    margin-bottom: auto;
   }
 
-  .su-feature {
+  .su-feature-card {
     display: flex;
     align-items: flex-start;
     gap: 0.875rem;
+    padding: 0.875rem;
+    background: rgba(255,255,255,0.05);
+    border-radius: 1rem;
+    backdrop-filter: blur(10px);
+    transition: background 0.2s;
+  }
+
+  .su-feature-card:hover {
+    background: rgba(255,255,255,0.08);
   }
 
   .su-feature-icon {
-    width: 32px;
-    height: 32px;
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.18);
-    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    background: rgba(139,92,246,0.2);
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--primary-border);
+    color: #c4b5fd;
     flex-shrink: 0;
-    margin-top: 1px;
   }
 
-  .su-feature strong {
+  .su-feature-card strong {
     display: block;
     font-size: 0.813rem;
     font-weight: 600;
     color: white;
-    margin-bottom: 0.125rem;
+    margin-bottom: 0.25rem;
   }
 
-  .su-feature span {
+  .su-feature-card span {
     font-size: 0.75rem;
     color: rgba(196,181,253,0.8);
-    line-height: 1.5;
+    line-height: 1.4;
   }
 
-  /* Social proof */
-  .su-social-proof {
-    display: flex;
-    align-items: center;
-    gap: 0.875rem;
-    margin-top: 2.5rem;
-    padding-top: 2rem;
-    border-top: 1px solid rgba(255,255,255,0.12);
+  /* Panel footer */
+  .su-panel-footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
   }
 
   .su-avatars {
     display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
   }
 
   .su-avatar {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    border: 2px solid var(--primary-dark);
+    border: 2px solid #2d1b4e;
     margin-left: -8px;
   }
 
   .su-avatar:first-child { margin-left: 0; }
 
-  .su-social-proof p {
-    font-size: 0.75rem;
-    color: rgba(221,214,254,0.9);
-    line-height: 1.4;
+  .su-avatar-count {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(139,92,246,0.3);
+    border: 2px solid #2d1b4e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.688rem;
+    font-weight: 600;
+    color: white;
+    margin-left: -8px;
   }
 
-  .su-social-proof strong {
-    color: white;
-    font-weight: 600;
+  .su-panel-footer p {
+    font-size: 0.688rem;
+    color: rgba(196,181,253,0.7);
   }
 
   /* ── RIGHT / MAIN ── */
@@ -639,13 +772,39 @@
 
   .su-form-shell {
     width: 100%;
-    max-width: 480px;
+    max-width: 500px;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
   }
 
-  /* Logo (hidden on desktop — panel has it) */
+  /* Back button */
+  .su-back-home {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 100px;
+    padding: 0.5rem 1rem;
+    font-size: 0.813rem;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    width: fit-content;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+
+  .su-back-home:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: var(--primary-bg);
+    transform: translateX(-2px);
+  }
+
+  /* Mobile brand */
   .su-mobile-brand {
     display: flex;
     justify-content: center;
@@ -656,8 +815,8 @@
   }
 
   .su-mobile-brand .su-logo-img {
-    width: 96px;
-    height: 96px;
+    width: 80px;
+    height: 80px;
   }
 
   @media (min-width: 1024px) {
@@ -690,21 +849,24 @@
     gap: 0;
   }
 
+  .su-progress-step-wrapper {
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+
   .su-progress-step {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.375rem;
-    position: relative;
+    gap: 0.5rem;
   }
 
   .su-step-connector {
-    position: absolute;
-    top: 18px;
-    left: calc(100% + 1px);
-    width: 72px;
+    width: 60px;
     height: 2px;
     background: #e2e8f0;
+    margin: 0 0.5rem;
     transition: background 0.4s ease;
   }
 
@@ -713,8 +875,8 @@
   }
 
   .su-step-bubble {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -722,10 +884,7 @@
     background: #f1f5f9;
     border: 2px solid #e2e8f0;
     color: #94a3b8;
-    font-size: 0.813rem;
-    font-weight: 600;
-    transition: all 0.35s ease;
-    z-index: 1;
+    transition: all 0.3s ease;
   }
 
   .su-progress-step.active .su-step-bubble {
@@ -739,23 +898,22 @@
     background: var(--success-color);
     border-color: var(--success-color);
     color: white;
-    box-shadow: none;
   }
 
   .su-step-label {
     font-size: 0.688rem;
     font-weight: 500;
     color: #94a3b8;
-    letter-spacing: 0.02em;
     transition: color 0.3s;
   }
 
-  .su-progress-step.active .su-step-label { color: var(--primary-color); font-weight: 600; }
-  .su-progress-step.done .su-step-label { color: var(--success-color); }
+  .su-progress-step.active .su-step-label {
+    color: var(--primary-color);
+    font-weight: 600;
+  }
 
-  /* Spacing around connector */
-  .su-progress-step:not(:last-child) {
-    margin-right: 74px;
+  .su-progress-step.done .su-step-label {
+    color: var(--success-color);
   }
 
   /* Card */
@@ -764,10 +922,35 @@
     border-radius: 1.5rem;
     border: 1px solid #e2e8f0;
     padding: clamp(1.25rem, 5vw, 2rem);
-    box-shadow:
-      0 1px 2px rgba(0,0,0,0.04),
-      0 4px 16px rgba(0,0,0,0.06),
-      0 16px 48px rgba(0,0,0,0.04);
+    box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1);
+  }
+
+  /* Welcome message */
+  .su-welcome-message {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    background: linear-gradient(135deg, var(--primary-bg) 0%, #f5f0ff 100%);
+    border-radius: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .su-welcome-message svg {
+    color: var(--primary-color);
+    flex-shrink: 0;
+  }
+
+  .su-welcome-message strong {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--dark-color);
+  }
+
+  .su-welcome-message span {
+    font-size: 0.75rem;
+    color: #64748b;
   }
 
   /* Alert */
@@ -811,7 +994,6 @@
     font-size: 0.813rem;
     font-weight: 600;
     color: #374151;
-    letter-spacing: 0.01em;
   }
 
   .su-req { color: var(--primary-color); }
@@ -820,7 +1002,7 @@
     position: relative;
   }
 
-  :global(.su-input-icon) {
+  .su-input-icon {
     position: absolute;
     left: 0.875rem;
     top: 50%;
@@ -837,16 +1019,14 @@
     font-size: 0.875rem;
     font-family: 'DM Sans', sans-serif;
     color: var(--dark-color);
-    background: var(--light-color);
-    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    background: white;
+    transition: all 0.2s;
     outline: none;
-    -webkit-appearance: none;
   }
 
-  .su-input:hover { border-color: var(--secondary-color); background: white; }
+  .su-input:hover { border-color: #c4b5fd; }
   .su-input:focus {
     border-color: var(--primary-color);
-    background: white;
     box-shadow: 0 0 0 3px rgba(106,44,145,0.1);
   }
   .su-input--err {
@@ -874,14 +1054,14 @@
 
   .su-err {
     font-size: 0.75rem;
-    color: var(--danger-color);
+    color: #dc2626;
     display: flex;
     align-items: center;
     gap: 0.25rem;
   }
 
   .su-hint {
-    font-size: 0.75rem;
+    font-size: 0.688rem;
     color: #94a3b8;
   }
 
@@ -896,45 +1076,48 @@
   .su-strength {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
-    margin-top: 0.25rem;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
   }
 
-  .su-strength-bars {
-    display: flex;
-    gap: 3px;
-    flex: 1;
-  }
-
-  .su-strength-bar {
+  .su-strength-track {
     flex: 1;
     height: 4px;
-    border-radius: 2px;
     background: #e5e7eb;
-    transition: background 0.3s ease;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .su-strength-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease, background 0.3s ease;
   }
 
   .su-strength-label {
     font-size: 0.688rem;
     font-weight: 600;
-    min-width: 38px;
+    min-width: 42px;
     text-align: right;
   }
 
-  /* Hints row */
+  /* Hints */
   .su-hints {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-top: 0.375rem;
+    margin-top: 0.5rem;
   }
 
   .su-hint-ok,
   .su-hint-no {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
     font-size: 0.688rem;
     font-weight: 500;
-    padding: 0.2rem 0.5rem;
-    border-radius: 20px;
+    padding: 0.2rem 0.625rem;
+    border-radius: 100px;
     transition: all 0.2s;
   }
 
@@ -955,7 +1138,7 @@
     display: flex;
     align-items: flex-start;
     gap: 0.625rem;
-    margin-top: 0.25rem;
+    margin-top: 0.5rem;
     font-size: 0.813rem;
     color: #4b5563;
     line-height: 1.5;
@@ -975,7 +1158,6 @@
     display: flex;
     gap: 0.75rem;
     margin-top: 1.75rem;
-    align-items: center;
   }
 
   .su-btn-back {
@@ -988,18 +1170,17 @@
     border-radius: 0.75rem;
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--gray-color);
+    color: #64748b;
     cursor: pointer;
     font-family: 'DM Sans', sans-serif;
     transition: all 0.2s;
-    white-space: nowrap;
-    flex-shrink: 0;
   }
 
   .su-btn-back:hover {
     border-color: var(--primary-color);
     color: var(--primary-color);
     background: var(--primary-bg);
+    transform: translateX(-2px);
   }
 
   .su-btn-next {
@@ -1022,7 +1203,7 @@
   }
 
   .su-btn-next:hover:not(:disabled) {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(106,44,145,0.4);
   }
 
@@ -1059,30 +1240,16 @@
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  @keyframes stepIn {
-    from { opacity: 0; transform: translateX(16px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
-
-  /* ── Responsive tweaks ── */
+  /* Responsive */
   @media (max-width: 640px) {
     .su-main { padding: 1.5rem 1rem; align-items: flex-start; }
     .su-form-shell { gap: 1.25rem; }
-    .su-card { border-radius: 1.25rem; }
-
-    /* Compact progress on small screens */
-    .su-step-connector { width: 44px; }
-    .su-progress-step:not(:last-child) { margin-right: 46px; }
-    .su-step-bubble { width: 34px; height: 34px; }
-
+    .su-card { border-radius: 1.25rem; padding: 1.25rem; }
+    .su-step-connector { width: 40px; }
+    .su-step-bubble { width: 36px; height: 36px; }
     .su-actions { flex-direction: column-reverse; }
     .su-btn-back { width: 100%; justify-content: center; }
     .su-btn-next { width: 100%; }
-  }
-
-  @media (max-width: 380px) {
-    .su-step-connector { width: 28px; }
-    .su-progress-step:not(:last-child) { margin-right: 30px; }
-    .su-step-label { font-size: 0.625rem; }
+    .su-back-home { font-size: 0.75rem; padding: 0.375rem 0.875rem; }
   }
 </style>
