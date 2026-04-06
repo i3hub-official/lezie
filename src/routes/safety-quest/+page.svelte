@@ -142,7 +142,7 @@
       available = safetyQuestions;
     }
 
-    questions = getRandomQuestions(8);
+    questions = getRandomQuestions(10);
     currentIndex = 0;
     score = 0;
     selectedAnswer = null;
