@@ -7,6 +7,8 @@
   // Toast & Confirmation Imports
   import ToastContainer from '$lib/ToastContainer.svelte';
   import ConfirmationModal from '$lib/ConfirmationModal.svelte';
+import CookieNotice from '$lib/components/CookieNotice.svelte';
+
 
   let { children } = $props();
   let isAuthenticated = $state(false);
@@ -91,4 +93,5 @@
   <!-- Global Notifications -->
   <ToastContainer />
   <ConfirmationModal />
+<CookieNotice />
 </main>
