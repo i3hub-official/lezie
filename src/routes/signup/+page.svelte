@@ -220,7 +220,7 @@
     isLoading = true;
     errors = {};
     try {
-      const res = await fetch('/api/auth/signup', {
+      const res = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -626,7 +626,7 @@
       </div>
 
       <p class="su-footer-text">
-        Already have an account? <a href="/auth/signin" class="su-link">Sign in</a>
+        Already have an account? <a href="/signin" class="su-link">Sign in</a>
       </p>
     </div>
   </main>
