@@ -3,11 +3,11 @@
   import { pwaInfo } from 'virtual:pwa-info';
   import { goto } from '$app/navigation';
   import { authStore } from '$lib/stores/auth';
-  
+  import CookieNotice from '$lib/components/CookieNotice.svelte';
+
   // Toast & Confirmation Imports
   import ToastContainer from '$lib/ToastContainer.svelte';
   import ConfirmationModal from '$lib/ConfirmationModal.svelte';
-import CookieNotice from '$lib/components/CookieNotice.svelte';
 
 
   let { children } = $props();
@@ -91,7 +91,8 @@ import CookieNotice from '$lib/components/CookieNotice.svelte';
   {/if}
 
   <!-- Global Notifications -->
+<CookieNotice />
   <ToastContainer />
   <ConfirmationModal />
-<CookieNotice />
+
 </main>
