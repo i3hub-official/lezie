@@ -4,9 +4,9 @@ import { env } from '$env/dynamic/public';
   import { pwaInfo } from 'virtual:pwa-info';
   import { goto } from '$app/navigation';
 import ShutdownPage from '$lib/components/ShutdownPage.svelte';
+import MaintenancePage from '$lib/components/MaintenancePage.svelte';
 
 
-const MAINTENANCE_MODE = env.PUBLIC_MAINTENANCE_MODE === 'true';
 const SHUTDOWN_MODE    = env.PUBLIC_SHUTDOWN_MODE === 'true';
 
 const MAINTENANCE_MODE = env.PUBLIC_MAINTENANCE_MODE === 'true';
