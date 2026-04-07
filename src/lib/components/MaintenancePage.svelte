@@ -119,13 +119,10 @@
     0%   { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; }
     100% { transform: translate(-50%, -50%) scale(2);   opacity: 0; }
   }
-  @keyframes fillBar {
-    0%   { width: 0%; }
-    15%  { width: 22%; }
-    40%  { width: 51%; }
-    65%  { width: 74%; }
-    80%  { width: 83%; }
-    100% { width: 89%; }
+  @keyframes marquee {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
   }
   @keyframes wrenchWiggle {
     0%, 100% { transform: rotate(0deg); }
@@ -297,12 +294,13 @@
     border-radius: 99px;
     overflow: hidden;
   }
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--violet), var(--viol-l));
-    border-radius: 99px;
-    animation: fillBar 8s ease forwards;
-  }
+ .progress-fill {
+  height: 100%;
+  width: 30%;
+  background: linear-gradient(90deg, transparent, var(--violet), var(--viol-l), transparent);
+  border-radius: 99px;
+  animation: marquee 1.6s ease-in-out infinite;
+}
 
   /* ── CHIPS ─────────────────────────────────────────────────────────── */
   .chips {
