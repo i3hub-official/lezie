@@ -122,7 +122,6 @@
   @keyframes marquee {
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(400%); }
-}
   }
   @keyframes wrenchWiggle {
     0%, 100% { transform: rotate(0deg); }
