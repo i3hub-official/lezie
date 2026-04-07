@@ -1,721 +1,1019 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
+  import { authStore } from '$lib/stores/auth';
+  import {
+    Mail, Lock, Eye, EyeOff, User, Phone, Calendar,
+    AlertCircle, ArrowRight, ArrowLeft, Check, UserRound,
+    Shield, MapPin, Bell, ChevronLeft, Home,
+    Sparkles, ShieldCheck, Smartphone, Fingerprint,
+    ChevronRight
+  } from 'lucide-svelte';
 
-  let isMenuOpen = $state(false);
+  let currentStep        = $state(1);
+  let isLoading          = $state(false);
+  let showPassword       = $state(false);
+  let showConfirmPassword= $state(false);
+  let acceptedTerms = $state(false);
+let touchedTerms  = $state(false);
+  let touched            = $state<Record<string, boolean>>({});
+  let errors             = $state<Record<string, string>>({});
 
-  onMount(() => {
-    const observer = new IntersectionObserver(
-      (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); }),
-      { threshold: 0.08 }
-    );
-    document.querySelectorAll('.aos').forEach(el => observer.observe(el));
-    return () => observer.disconnect();
+  let formData = $state({
+    firstName: '', lastName: '', dateOfBirth: '',
+    dialCode: '+234', phone: '', email: '', password: '', confirmPassword: ''
   });
 
-  const scroll = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-    isMenuOpen = false;
-  };
-
-  const features = [
-    { title: 'Live Incident Map',    desc: 'Watch incidents appear in real-time on an interactive map. Pinpoint alerts the moment they are reported.' },
-    { title: 'Instant Alerts',       desc: 'Push notifications delivered in seconds. Never miss a critical event in your neighbourhood.' },
-    { title: 'AI Threat Detection',  desc: 'Pattern analysis across all reports to detect emerging threats before they escalate.' },
-    { title: 'Community Network',    desc: 'Connect with verified neighbours and local responders. Build a genuine safety net.' },
-    { title: 'Anonymous Reporting',  desc: 'Report incidents without fear. Your identity stays protected while your community stays informed.' },
-    { title: 'Privacy First',        desc: 'End-to-end encryption and zero data selling. Your safety data belongs to you.' },
+  // ── Country list ────────────────────────────────────────
+  const countries = [
+    { code:'NG', name:'Nigeria',              dial:'+234' },
+    { code:'US', name:'United States',        dial:'+1'   },
+    { code:'GB', name:'United Kingdom',       dial:'+44'  },
+    { code:'GH', name:'Ghana',                dial:'+233' },
+    { code:'KE', name:'Kenya',                dial:'+254' },
+    { code:'ZA', name:'South Africa',         dial:'+27'  },
+    { code:'EG', name:'Egypt',                dial:'+20'  },
+    { code:'ET', name:'Ethiopia',             dial:'+251' },
+    { code:'TZ', name:'Tanzania',             dial:'+255' },
+    { code:'UG', name:'Uganda',               dial:'+256' },
+    { code:'RW', name:'Rwanda',               dial:'+250' },
+    { code:'SN', name:'Senegal',              dial:'+221' },
+    { code:'CI', name:"Côte d'Ivoire",        dial:'+225' },
+    { code:'CM', name:'Cameroon',             dial:'+237' },
+    { code:'AO', name:'Angola',               dial:'+244' },
+    { code:'MZ', name:'Mozambique',           dial:'+258' },
+    { code:'ZM', name:'Zambia',               dial:'+260' },
+    { code:'ZW', name:'Zimbabwe',             dial:'+263' },
+    { code:'BJ', name:'Benin',                dial:'+229' },
+    { code:'TG', name:'Togo',                 dial:'+228' },
+    { code:'NE', name:'Niger',                dial:'+227' },
+    { code:'ML', name:'Mali',                 dial:'+223' },
+    { code:'BF', name:'Burkina Faso',         dial:'+226' },
+    { code:'GN', name:'Guinea',               dial:'+224' },
+    { code:'SL', name:'Sierra Leone',         dial:'+232' },
+    { code:'LR', name:'Liberia',              dial:'+231' },
+    { code:'GM', name:'Gambia',               dial:'+220' },
+    { code:'MR', name:'Mauritania',           dial:'+222' },
+    { code:'MA', name:'Morocco',              dial:'+212' },
+    { code:'DZ', name:'Algeria',              dial:'+213' },
+    { code:'TN', name:'Tunisia',              dial:'+216' },
+    { code:'LY', name:'Libya',                dial:'+218' },
+    { code:'SD', name:'Sudan',                dial:'+249' },
+    { code:'SO', name:'Somalia',              dial:'+252' },
+    { code:'DJ', name:'Djibouti',             dial:'+253' },
+    { code:'ER', name:'Eritrea',              dial:'+291' },
+    { code:'IN', name:'India',                dial:'+91'  },
+    { code:'PK', name:'Pakistan',             dial:'+92'  },
+    { code:'BD', name:'Bangladesh',           dial:'+880' },
+    { code:'CN', name:'China',                dial:'+86'  },
+    { code:'JP', name:'Japan',                dial:'+81'  },
+    { code:'KR', name:'South Korea',          dial:'+82'  },
+    { code:'PH', name:'Philippines',          dial:'+63'  },
+    { code:'ID', name:'Indonesia',            dial:'+62'  },
+    { code:'MY', name:'Malaysia',             dial:'+60'  },
+    { code:'SG', name:'Singapore',            dial:'+65'  },
+    { code:'TH', name:'Thailand',             dial:'+66'  },
+    { code:'VN', name:'Vietnam',              dial:'+84'  },
+    { code:'AU', name:'Australia',            dial:'+61'  },
+    { code:'NZ', name:'New Zealand',          dial:'+64'  },
+    { code:'CA', name:'Canada',               dial:'+1'   },
+    { code:'MX', name:'Mexico',               dial:'+52'  },
+    { code:'BR', name:'Brazil',               dial:'+55'  },
+    { code:'AR', name:'Argentina',            dial:'+54'  },
+    { code:'CO', name:'Colombia',             dial:'+57'  },
+    { code:'DE', name:'Germany',              dial:'+49'  },
+    { code:'FR', name:'France',               dial:'+33'  },
+    { code:'IT', name:'Italy',                dial:'+39'  },
+    { code:'ES', name:'Spain',                dial:'+34'  },
+    { code:'PT', name:'Portugal',             dial:'+351' },
+    { code:'NL', name:'Netherlands',          dial:'+31'  },
+    { code:'BE', name:'Belgium',              dial:'+32'  },
+    { code:'SE', name:'Sweden',               dial:'+46'  },
+    { code:'NO', name:'Norway',               dial:'+47'  },
+    { code:'DK', name:'Denmark',              dial:'+45'  },
+    { code:'FI', name:'Finland',              dial:'+358' },
+    { code:'PL', name:'Poland',               dial:'+48'  },
+    { code:'UA', name:'Ukraine',              dial:'+380' },
+    { code:'RU', name:'Russia',               dial:'+7'   },
+    { code:'TR', name:'Turkey',               dial:'+90'  },
+    { code:'SA', name:'Saudi Arabia',         dial:'+966' },
+    { code:'AE', name:'UAE',                  dial:'+971' },
+    { code:'QA', name:'Qatar',                dial:'+974' },
+    { code:'KW', name:'Kuwait',               dial:'+965' },
+    { code:'IL', name:'Israel',               dial:'+972' },
+    { code:'JO', name:'Jordan',               dial:'+962' },
+    { code:'LB', name:'Lebanon',              dial:'+961' },
+    { code:'IQ', name:'Iraq',                 dial:'+964' },
+    { code:'IR', name:'Iran',                 dial:'+98'  },
   ];
 
+  // ── Geolocation → dial code ─────────────────────────────
+  onMount(async () => {
+    try {
+      const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
+      if (!res.ok) return;
+      const data = await res.json();
+      const countryCode = data.country_code as string;
+      const match = countries.find(c => c.code === countryCode);
+      if (match) formData.dialCode = match.dial;
+    } catch {
+      // silently ignore — Nigeria stays as default
+    }
+  });
+
+  // ── Custom date picker state ────────────────────────────
+  let showDatePicker = $state(false);
+  let pickerView     = $state<'day' | 'month' | 'year'>('day');
+
+  const today   = new Date();
+  const minYear = today.getFullYear() - 120;
+  const maxYear = today.getFullYear() - 13; // must be 13+
+
+  // Parse stored value or default to a reasonable start
+  const parsedInit = formData.dateOfBirth ? new Date(formData.dateOfBirth) : new Date(2000, 0, 1);
+
+  let pickerYear  = $state(parsedInit.getFullYear());
+  let pickerMonth = $state(parsedInit.getMonth()); // 0-based
+  let pickerDay   = $state(parsedInit.getDate());
+
+  const MONTHS = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+  const DAYS_SHORT = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+  function getDaysInMonth(y: number, m: number) {
+    return new Date(y, m + 1, 0).getDate();
+  }
+
+  function getFirstDayOfMonth(y: number, m: number) {
+    return new Date(y, m, 1).getDay();
+  }
+
+  const calendarCells = $derived(() => {
+    const first = getFirstDayOfMonth(pickerYear, pickerMonth);
+    const days  = getDaysInMonth(pickerYear, pickerMonth);
+    const cells: (number | null)[] = [];
+    for (let i = 0; i < first; i++) cells.push(null);
+    for (let d = 1; d <= days; d++) cells.push(d);
+    // pad to full rows
+    while (cells.length % 7 !== 0) cells.push(null);
+    return cells;
+  });
+
+  function isDayDisabled(d: number) {
+    const date = new Date(pickerYear, pickerMonth, d);
+    const maxDate = new Date();
+    maxDate.setFullYear(maxDate.getFullYear() - 13);
+    return date > maxDate;
+  }
+
+  function selectDay(d: number | null) {
+    if (!d || isDayDisabled(d)) return;
+    pickerDay = d;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    formData.dateOfBirth = `${pickerYear}-${pad(pickerMonth + 1)}-${pad(d)}`;
+    showDatePicker = false;
+    touched.dateOfBirth = true;
+    errors.dateOfBirth = validateStep1().dateOfBirth || '';
+  }
+
+  function prevMonth() {
+    if (pickerMonth === 0) { pickerMonth = 11; pickerYear--; }
+    else pickerMonth--;
+  }
+  function nextMonth() {
+    if (pickerMonth === 11) { pickerMonth = 0; pickerYear++; }
+    else pickerMonth++;
+  }
+
+  // Generate year range for year picker
+  const yearRange = $derived(() => {
+    const years: number[] = [];
+    for (let y = maxYear; y >= minYear; y--) years.push(y);
+    return years;
+  });
+
+  // Format display
+  const dobDisplay = $derived(() => {
+    if (!formData.dateOfBirth) return '';
+    const [y, m, d] = formData.dateOfBirth.split('-').map(Number);
+    return `${MONTHS[m - 1]} ${d}, ${y}`;
+  });
+
+  // ── Steps ───────────────────────────────────────────────
   const steps = [
-    { n: '01', title: 'Spot & Report',     desc: 'See something? Tap report. Add photos, location, and details in under 60 seconds.' },
-    { n: '02', title: 'AI Analyses',        desc: 'Instant classification by severity, cross-referencing patterns across your area.' },
-    { n: '03', title: 'Community Responds', desc: 'Verified neighbours and responders receive targeted alerts and coordinate in real time.' },
+    { number:1, label:'Personal', icon:UserRound, description:'Tell us about yourself'       },
+    { number:2, label:'Contact',  icon:Mail,      description:'How to reach you'             },
+    { number:3, label:'Security', icon:Shield,    description:'Protect your account'         },
   ];
+
+  // ── Validation ──────────────────────────────────────────
+  function validateStep1() {
+    const e: Record<string,string> = {};
+    if (!formData.firstName.trim())          e.firstName   = 'First name is required';
+    else if (formData.firstName.length < 2)  e.firstName   = 'At least 2 characters';
+    if (!formData.lastName.trim())           e.lastName    = 'Last name is required';
+    else if (formData.lastName.length < 2)   e.lastName    = 'At least 2 characters';
+    if (!formData.dateOfBirth)               e.dateOfBirth = 'Date of birth is required';
+    else {
+      const age = calcAge(new Date(formData.dateOfBirth));
+      if (age < 13)  e.dateOfBirth = 'You must be at least 13 years old';
+      if (age > 120) e.dateOfBirth = 'Please enter a valid date';
+    }
+    return e;
+  }
+
+  function validateStep2() {
+    const e: Record<string,string> = {};
+    const digits = formData.phone.replace(/\D/g,'');
+    if (!formData.phone.trim())                         e.phone = 'Phone number is required';
+    else if (digits.length < 5 || digits.length > 15)  e.phone = 'Enter a valid local number (5–15 digits)';
+    if (!formData.email.trim())                         e.email = 'Email is required';
+    else if (!/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(formData.email))
+      e.email = 'Please enter a valid email address';
+    return e;
+  }
+
+  function validateStep3() {
+    const e: Record<string,string> = {};
+    if (!formData.password)                 e.password = 'Password is required';
+    else if (formData.password.length < 8)  e.password = 'At least 8 characters';
+    else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password))
+      e.password = 'Must contain uppercase, lowercase, and number';
+    if (formData.password !== formData.confirmPassword)
+      e.confirmPassword = 'Passwords do not match';
+      if (!acceptedTerms) e.terms = 'You must accept the terms to continue';
+    return e;
+  }
+
+  function calcAge(d: Date) {
+    const t = new Date();
+    let age = t.getFullYear() - d.getFullYear();
+    const m = t.getMonth() - d.getMonth();
+    if (m < 0 || (m === 0 && t.getDate() < d.getDate())) age--;
+    return age;
+  }
+
+  // ── Country dropdown ────────────────────────────────────
+  let showCountryDrop = $state(false);
+  let countrySearch   = $state('');
+
+  const filteredCountries = $derived(
+    countrySearch.trim()
+      ? countries.filter(c =>
+          c.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
+          c.dial.includes(countrySearch)
+        )
+      : countries
+  );
+
+  function selectCountry(dial: string) {
+    formData.dialCode = dial;
+    showCountryDrop = false;
+    countrySearch = '';
+  }
+
+  function handlePhoneInput(e: Event) {
+    formData.phone = (e.target as HTMLInputElement).value.replace(/[^\d\s\-\(\)]/g, '');
+  }
+
+  function getFlag(code: string) {
+    return [...code].map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)).join('');
+  }
+
+  const selectedCountry = $derived(
+    countries.find(c => c.dial === formData.dialCode) ?? countries[0]
+  );
+
+  // ── Navigation ──────────────────────────────────────────
+  function handleNextStep(e: Event) {
+    e.preventDefault();
+    const errs = currentStep === 1 ? validateStep1() : validateStep2();
+    if (Object.keys(errs).length === 0) {
+      currentStep++;
+      errors = {};
+      window.scrollTo({ top:0, behavior:'smooth' });
+    } else {
+      errors = errs;
+      Object.keys(errs).forEach(k => { touched[k] = true; });
+    }
+  }
+
+  function handlePreviousStep() {
+    if (currentStep > 1) { currentStep--; errors = {}; window.scrollTo({ top:0, behavior:'smooth' }); }
+  }
+
+  async function handleSubmit(e: Event) {
+    e.preventDefault();
+    const errs = validateStep3();
+    if (Object.keys(errs).length > 0) {
+      errors = errs;
+      Object.keys(errs).forEach(k => { touched[k] = true; });
+      return;
+    }
+    touchedTerms = true;
+    isLoading = true; errors = {};
+    try {
+      const res = await fetch('/api/signup', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          firstName:   formData.firstName.trim(),
+          lastName:    formData.lastName.trim(),
+          dateOfBirth: formData.dateOfBirth,
+          phone:       `${formData.dialCode}${formData.phone}`,
+          email:       formData.email.trim().toLowerCase(),
+          password:    formData.password,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Signup failed');
+      await authStore.login(formData.email, formData.password);
+      goto('/dashboard');
+    } catch (err: unknown) {
+      errors.submit = err instanceof Error ? err.message : 'An error occurred';
+    } finally { isLoading = false; }
+  }
+
+  // ── Password strength ───────────────────────────────────
+  const passwordStrength = $derived(() => {
+    if (!formData.password) return 0;
+    let s = 0;
+    if (formData.password.length >= 8)                     s++;
+    if (/(?=.*[a-z])/.test(formData.password))             s++;
+    if (/(?=.*[A-Z])/.test(formData.password))             s++;
+    if (/(?=.*\d)/.test(formData.password))                s++;
+    if (/(?=.*[^a-zA-Z0-9])/.test(formData.password))     s++;
+    return s;
+  });
+
+  const strengthLabel = $derived(() => {
+    const s = passwordStrength();
+    if (s <= 1) return { text:'Weak',   color:'#dc2626', width:'20%'  };
+    if (s <= 2) return { text:'Fair',   color:'#f59e0b', width:'45%'  };
+    if (s <= 3) return { text:'Good',   color:'#6a2c91', width:'70%'  };
+    return            { text:'Strong', color:'#4b1d68', width:'100%' };
+  });
+
+  function blurField(field: string, validator: () => Record<string,string>) {
+    touched[field] = true;
+    errors[field] = validator()[field] || '';
+  }
 </script>
 
 <svelte:head>
-  <title>Lezie — Real-Time Community Safety</title>
-  <meta name="description" content="Real-time incident reporting, AI-powered alerts, and fun safety games." />
+  <title>Sign Up – Lezie</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
 </svelte:head>
 
-<!-- FAB -->
-<a href="/report" class="fab">Report Incident</a>
+<div class="su-page">
 
-<!-- NAV -->
-<nav class="nav">
-  <div class="nav-inner">
-    <button class="nav-logo" onclick={() => scroll('home')} type="button">
-      <img src="/icons/lz_ico.png" alt="Lezie" width="30" height="30" />
-      <span>Lezie</span>
-    </button>
-
-    <button class="hamburger" onclick={() => isMenuOpen = !isMenuOpen} type="button" aria-label="Toggle menu">
-      {isMenuOpen ? '✕' : '☰'}
-    </button>
-
-    <div class="nav-links" class:open={isMenuOpen}>
-      <button class="nav-link" onclick={() => scroll('features')}  type="button">Features</button>
-      <button class="nav-link" onclick={() => scroll('how')}       type="button">How it Works</button>
-      <button class="nav-link" onclick={() => scroll('quest')}     type="button">Safety Games</button>
-      <a href="/dashboard" class="nav-cta">Dashboard</a>
-    </div>
-  </div>
-</nav>
-
-<!-- ═══════════════════════════════════ HERO ═══════════════════════════════════ -->
-<section id="home" class="hero">
-  <div class="hero-bg-shape"></div>
-  <div class="hero-bg-shape s2"></div>
-
-  <div class="container hero-container">
-    <div class="hero-content">
-      <div class="eyebrow aos">Community safety platform</div>
-
-      <h1 class="hero-title aos" style="transition-delay:.1s">
-        Keep your community<br><em>safe &amp; connected</em>
-      </h1>
-
-      <p class="hero-desc aos" style="transition-delay:.2s">
-        Real-time incident reporting, AI-powered threat detection, and instant community
-        alerts — with safety games that actually build skills.
-      </p>
-
-      <div class="hero-btns aos" style="transition-delay:.3s">
-        <a href="/signup" class="btn-primary">Get started free</a>
-        <button onclick={() => scroll('quest')} class="btn-outline" type="button">
-          Play Safety Quest
-        </button>
+  <!-- LEFT PANEL -->
+  <aside class="su-panel">
+    <div class="su-panel-inner">
+      <a href="/" class="su-logo-link">
+        <img src="/icons/lz_logo_t.png" alt="Lezie" class="su-logo-img" />
+      </a>
+      <div class="su-panel-hero">
+        <div class="su-panel-badge"><Sparkles size={14} /><span>Join 12,400+ members</span></div>
+        <h2 class="su-panel-headline">Safer streets start<br/><em>with you.</em></h2>
+        <p class="su-panel-desc">Join thousands of neighbours already using Lezie to report incidents, share alerts, and protect their communities in real-time.</p>
       </div>
-
-      <div class="hero-stats aos" style="transition-delay:.4s">
-        <div class="stat"><span class="stat-n">12K+</span><span class="stat-l">Active users</span></div>
-        <div class="stat-sep"></div>
-        <div class="stat"><span class="stat-n">500+</span><span class="stat-l">Communities</span></div>
-        <div class="stat-sep"></div>
-        <div class="stat"><span class="stat-n">98.4%</span><span class="stat-l">Response rate</span></div>
+      <div class="su-features">
+        {#each [
+          { icon:MapPin,      title:'Live Incident Map',  desc:"See what's happening near you right now" },
+          { icon:Bell,        title:'Instant Alerts',     desc:'Get notified when safety events occur nearby' },
+          { icon:ShieldCheck, title:'Trusted Community',  desc:'Verified neighbours, reliable reports' },
+        ] as f}
+          <div class="su-feature-card">
+            <div class="su-feature-icon"><f.icon size={18} /></div>
+            <div><strong>{f.title}</strong><span>{f.desc}</span></div>
+          </div>
+        {/each}
       </div>
-    </div>
-
-    <!-- Map card -->
-    <div class="hero-visual aos" style="transition-delay:.35s">
-      <div class="alert-card ac1">
-        <div class="ac-dot" style="background:#ef4444"></div>
-        <div><strong>New incident reported</strong><span>2 min ago · Elm Street</span></div>
-      </div>
-
-      <div class="map-card">
-        <div class="map-topbar">
-          <span>Live incident map</span>
-          <span class="live-badge"><span class="live-dot"></span>LIVE</span>
-        </div>
-        <div class="map-grid">
-          {#each Array(63) as _, i}
-            <div class="mc {i % 7 === 0 ? 'mh' : (i % 5 === 0 ? 'mw' : '')}"></div>
+      <div class="su-panel-footer">
+        <div class="su-avatars">
+          {#each ['#c4b5fd','#a78bfa','#8b5cf6','#6a2c91'] as bg}
+            <div class="su-avatar" style="background:{bg}"></div>
           {/each}
+          <div class="su-avatar-count">+12k</div>
         </div>
-        <div class="map-pins">
-          <div class="pin p1"></div>
-          <div class="pin p2"></div>
-          <div class="pin p3"></div>
-        </div>
-        <div class="map-legend">
-          <span class="leg"><span class="leg-dot" style="background:#6a2c91"></span>Active</span>
-          <span class="leg"><span class="leg-dot" style="background:#ef4444"></span>Critical</span>
-          <span class="leg"><span class="leg-dot" style="background:#f59e0b"></span>Recent</span>
-        </div>
-      </div>
-
-      <div class="alert-card ac2">
-        <div class="ac-dot" style="background:#22c55e"></div>
-        <div><strong>Responder en route</strong><span>3 min ETA · Unit 7</span></div>
+        <p>Trusted by communities worldwide</p>
       </div>
     </div>
-  </div>
-</section>
+    <div class="su-panel-glow"></div>
+  </aside>
 
-<!-- ══════════════════════════ FEATURES ══════════════════════════════════ -->
-<section id="features" class="section section-white">
-  <div class="container">
-    <div class="sec-head aos">
-      <span class="sec-tag">Features</span>
-      <h2>Powerful tools for safer communities</h2>
-      <p>Everything your neighbourhood needs to stay informed, connected, and protected.</p>
-    </div>
+  <!-- RIGHT / FORM -->
+  <main class="su-main">
+    <div class="su-form-shell">
 
-    <div class="feat-grid">
-      {#each features as f, i}
-        <div class="feat-card aos" style="transition-delay:{i * 0.08}s">
-          <div class="feat-num">{String(i + 1).padStart(2, '0')}</div>
-          <h3>{f.title}</h3>
-          <p>{f.desc}</p>
-        </div>
-      {/each}
-    </div>
-  </div>
-</section>
+      <button class="su-back-home" onclick={() => goto('/')}>
+        <ChevronLeft size={18} /><Home size={14} /><span>Back to Home</span>
+      </button>
 
-<!-- ═══════════════════════════ SAFETY QUEST ═════════════════════════════════ -->
-<section id="quest" class="section quest-section">
-  <div class="container">
-    <div class="quest-grid">
+      <div class="su-mobile-brand">
+        <a href="/"><img src="/icons/lz_ico.png" alt="Lezie" class="su-logo-img-mobile" /></a>
+      </div>
 
-      <div class="quest-left aos">
-        <span class="sec-tag">Learn by Playing</span>
-        <h2 class="quest-heading">Safety skills that<br><em>stick with you</em></h2>
-        <p class="quest-desc">
-          Safety Quest turns real emergency scenarios into engaging games. Make critical decisions,
-          earn badges, and compete — while building skills that genuinely matter.
-        </p>
-        <a href="/safety-quest" class="btn-primary">Start Playing</a>
+      <div class="su-form-header">
+        <h1 class="su-form-title">Create your account</h1>
+        <p class="su-form-subtitle">{steps[currentStep - 1].description}</p>
+      </div>
 
-        <div class="quest-cards">
-          <div class="quest-card">
-            <div class="qc-label">Real-Life Scenarios</div>
-            <p>Face realistic emergencies and practice your response under pressure.</p>
+      <!-- Stepper -->
+      <div class="su-progress-track">
+        {#each steps as step, idx}
+          <div class="su-progress-step-wrap">
+            <div class="su-progress-step {currentStep >= step.number ? 'active' : ''} {currentStep > step.number ? 'done' : ''}">
+              <div class="su-step-bubble">
+                {#if currentStep > step.number}
+                  <Check size={14} strokeWidth={3} />
+                {:else}
+                  <svelte:component this={step.icon} size={14} />
+                {/if}
+              </div>
+              <span class="su-step-label">{step.label}</span>
+            </div>
+            {#if idx < steps.length - 1}
+              <div class="su-step-connector {currentStep > step.number ? 'filled' : ''}"></div>
+            {/if}
           </div>
-          <div class="quest-card">
-            <div class="qc-label">Daily Quests</div>
-            <p>Quick 3-minute missions to sharpen your safety instincts every day.</p>
+        {/each}
+      </div>
+
+      <!-- Form card -->
+      <div class="su-card">
+        {#if errors.submit}
+          <div class="su-alert-error"><AlertCircle size={18} /><span>{errors.submit}</span></div>
+        {/if}
+
+        <form onsubmit={currentStep === 3 ? handleSubmit : handleNextStep}>
+
+          <!-- STEP 1 -->
+          {#if currentStep === 1}
+            <div class="su-step-body" style="animation:stepIn .3s ease both">
+              <div class="su-welcome-msg">
+                <UserRound size={20} />
+                <div><strong>Welcome!</strong><span>Let's start with your basic information</span></div>
+              </div>
+
+              <div class="su-field-row">
+                <div class="su-field">
+                  <label class="su-label" for="firstName">First Name <span class="su-req">*</span></label>
+                  <div class="su-input-wrap">
+                    <span class="su-ico"><User size={16} /></span>
+                    <input id="firstName" type="text" placeholder="John"
+                      bind:value={formData.firstName}
+                      onblur={() => blurField('firstName', validateStep1)}
+                      class="su-input {errors.firstName && touched.firstName ? 'su-input--err' : ''}" />
+                  </div>
+                  {#if errors.firstName && touched.firstName}<p class="su-err">{errors.firstName}</p>{/if}
+                </div>
+                <div class="su-field">
+                  <label class="su-label" for="lastName">Last Name <span class="su-req">*</span></label>
+                  <div class="su-input-wrap">
+                    <span class="su-ico"><User size={16} /></span>
+                    <input id="lastName" type="text" placeholder="Doe"
+                      bind:value={formData.lastName}
+                      onblur={() => blurField('lastName', validateStep1)}
+                      class="su-input {errors.lastName && touched.lastName ? 'su-input--err' : ''}" />
+                  </div>
+                  {#if errors.lastName && touched.lastName}<p class="su-err">{errors.lastName}</p>{/if}
+                </div>
+              </div>
+
+              <!-- Custom Date Picker -->
+              <div class="su-field">
+                <label class="su-label" for="dob-trigger">Date of Birth <span class="su-req">*</span></label>
+
+                <button type="button" id="dob-trigger"
+                  class="dob-trigger {errors.dateOfBirth && touched.dateOfBirth ? 'dob-trigger--err' : ''}"
+                  onclick={() => { showDatePicker = !showDatePicker; pickerView = 'day'; }}>
+                  <span class="dob-trigger-ico"><Calendar size={16} /></span>
+                  <span class="dob-trigger-value {formData.dateOfBirth ? '' : 'dob-placeholder'}">
+                    {formData.dateOfBirth ? dobDisplay() : 'Select your date of birth'}
+                  </span>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" class="dob-chevron {showDatePicker ? 'open' : ''}">
+                    <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                </button>
+
+                {#if showDatePicker}
+                  <div class="dp-overlay" onclick={() => showDatePicker = false}></div>
+                  <div class="dp-panel">
+
+                    <!-- Header nav -->
+                    <div class="dp-header">
+                      {#if pickerView === 'day'}
+                        <button type="button" class="dp-nav-btn" onclick={prevMonth}>
+                          <ArrowLeft size={14} />
+                        </button>
+                        <div class="dp-header-labels">
+                          <button type="button" class="dp-header-btn" onclick={() => pickerView = 'month'}>
+                            {MONTHS[pickerMonth]}
+                          </button>
+                          <button type="button" class="dp-header-btn" onclick={() => pickerView = 'year'}>
+                            {pickerYear}
+                          </button>
+                        </div>
+                        <button type="button" class="dp-nav-btn" onclick={nextMonth}>
+                          <ArrowRight size={14} />
+                        </button>
+                      {:else if pickerView === 'month'}
+                        <button type="button" class="dp-nav-btn" onclick={() => pickerYear--}>
+                          <ArrowLeft size={14} />
+                        </button>
+                        <button type="button" class="dp-header-btn dp-header-btn--solo" onclick={() => pickerView = 'year'}>
+                          {pickerYear}
+                        </button>
+                        <button type="button" class="dp-nav-btn" onclick={() => pickerYear++}>
+                          <ArrowRight size={14} />
+                        </button>
+                      {:else}
+                        <button type="button" class="dp-header-btn dp-header-btn--solo" onclick={() => pickerView = 'day'}>
+                          Select Year
+                        </button>
+                      {/if}
+                    </div>
+
+                    <!-- Day view -->
+                    {#if pickerView === 'day'}
+                      <div class="dp-weekdays">
+                        {#each DAYS_SHORT as d}<span>{d}</span>{/each}
+                      </div>
+                      <div class="dp-days">
+                        {#each calendarCells() as cell}
+                          {#if cell === null}
+                            <div class="dp-cell dp-cell--empty"></div>
+                          {:else}
+                            <button type="button"
+                              class="dp-cell dp-cell--day
+                                {isDayDisabled(cell) ? 'dp-cell--disabled' : ''}
+                                {pickerDay === cell && pickerMonth === (formData.dateOfBirth ? parseInt(formData.dateOfBirth.split('-')[1]) - 1 : -1) && pickerYear === (formData.dateOfBirth ? parseInt(formData.dateOfBirth.split('-')[0]) : -1) ? 'dp-cell--selected' : ''}"
+                              onclick={() => selectDay(cell)}
+                              disabled={isDayDisabled(cell)}>
+                              {cell}
+                            </button>
+                          {/if}
+                        {/each}
+                      </div>
+                    {/if}
+
+                    <!-- Month view -->
+                    {#if pickerView === 'month'}
+                      <div class="dp-month-grid">
+                        {#each MONTHS as m, mi}
+                          <button type="button"
+                            class="dp-month-cell {pickerMonth === mi ? 'dp-cell--selected' : ''}"
+                            onclick={() => { pickerMonth = mi; pickerView = 'day'; }}>
+                            {m.slice(0, 3)}
+                          </button>
+                        {/each}
+                      </div>
+                    {/if}
+
+                    <!-- Year view -->
+                    {#if pickerView === 'year'}
+                      <div class="dp-year-list">
+                        {#each yearRange() as y}
+                          <button type="button"
+                            class="dp-year-item {pickerYear === y ? 'dp-cell--selected' : ''}"
+                            onclick={() => { pickerYear = y; pickerView = 'month'; }}>
+                            {y}
+                          </button>
+                        {/each}
+                      </div>
+                    {/if}
+
+                  </div>
+                {/if}
+
+                {#if errors.dateOfBirth && touched.dateOfBirth}
+                  <p class="su-err">{errors.dateOfBirth}</p>
+                {:else}
+                  <p class="su-hint">You must be at least 13 years old to join</p>
+                {/if}
+              </div>
+            </div>
+          {/if}
+
+          <!-- STEP 2 -->
+          {#if currentStep === 2}
+            <div class="su-step-body" style="animation:stepIn .3s ease both">
+              <div class="su-welcome-msg">
+                <Smartphone size={20} />
+                <div><strong>Contact Details</strong><span>How we'll reach you for important alerts</span></div>
+              </div>
+
+              <div class="su-field">
+                <label class="su-label" for="phone">Phone Number <span class="su-req">*</span></label>
+                <div class="su-phone-row">
+                  <div class="su-dial-wrap">
+                    <button type="button" class="su-dial-btn" onclick={() => showCountryDrop = !showCountryDrop}>
+                      <span class="su-flag">{getFlag(selectedCountry.code)}</span>
+                      <span class="su-dial-code">{formData.dialCode}</span>
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" class={showCountryDrop ? 'su-chevron-open' : ''}>
+                        <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                    {#if showCountryDrop}
+                      <div class="su-country-drop-overlay" onclick={() => showCountryDrop = false}></div>
+                      <div class="su-country-drop">
+                        <div class="su-country-search-wrap">
+                          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" class="su-csearch-ico"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                          <input type="text" placeholder="Search country or code…"
+                            bind:value={countrySearch} class="su-country-search" autofocus />
+                        </div>
+                        <ul class="su-country-list">
+                          {#each filteredCountries as c}
+                            <li>
+                              <button type="button"
+                                class="su-country-opt {formData.dialCode === c.dial && selectedCountry.code === c.code ? 'su-country-opt--active' : ''}"
+                                onclick={() => selectCountry(c.dial)}>
+                                <span class="su-flag">{getFlag(c.code)}</span>
+                                <span class="su-country-name">{c.name}</span>
+                                <span class="su-country-dial">{c.dial}</span>
+                              </button>
+                            </li>
+                          {/each}
+                          {#if filteredCountries.length === 0}
+                            <li class="su-country-empty">No countries found</li>
+                          {/if}
+                        </ul>
+                      </div>
+                    {/if}
+                  </div>
+                  <div class="su-input-wrap su-phone-input-wrap">
+                    <input id="phone" type="tel" placeholder="0 801 234 5678"
+                      bind:value={formData.phone}
+                      oninput={handlePhoneInput}
+                      onblur={() => blurField('phone', validateStep2)}
+                      class="su-input su-phone-input {errors.phone && touched.phone ? 'su-input--err' : ''}" />
+                  </div>
+                </div>
+                {#if errors.phone && touched.phone}
+                  <p class="su-err">{errors.phone}</p>
+                {:else}
+                  <p class="su-hint">Full number: <strong>{formData.dialCode} {formData.phone}</strong> · Used for critical safety alerts</p>
+                {/if}
+              </div>
+
+              <div class="su-field">
+                <label class="su-label" for="email">Email Address <span class="su-req">*</span></label>
+                <div class="su-input-wrap">
+                  <span class="su-ico"><Mail size={16} /></span>
+                  <input id="email" type="email" placeholder="you@example.com"
+                    bind:value={formData.email}
+                    onblur={() => blurField('email', validateStep2)}
+                    class="su-input {errors.email && touched.email ? 'su-input--err' : ''}" />
+                </div>
+                {#if errors.email && touched.email}
+                  <p class="su-err">{errors.email}</p>
+                {:else}
+                  <p class="su-hint">We'll send a verification link to this address</p>
+                {/if}
+              </div>
+            </div>
+          {/if}
+
+          <!-- STEP 3 -->
+          {#if currentStep === 3}
+            <div class="su-step-body" style="animation:stepIn .3s ease both">
+              <div class="su-welcome-msg">
+                <Fingerprint size={20} />
+                <div><strong>Secure Your Account</strong><span>Create a strong password to stay safe</span></div>
+              </div>
+
+              <div class="su-field">
+                <label class="su-label" for="password">Password <span class="su-req">*</span></label>
+                <div class="su-input-wrap">
+                  <span class="su-ico"><Lock size={16} /></span>
+                  <input id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Create a strong password"
+                    bind:value={formData.password}
+                    onblur={() => blurField('password', validateStep3)}
+                    class="su-input su-input--toggle {errors.password && touched.password ? 'su-input--err' : ''}" />
+                  <button type="button" class="su-eye" onclick={() => showPassword = !showPassword}>
+                    {#if showPassword}<EyeOff size={16} />{:else}<Eye size={16} />{/if}
+                  </button>
+                </div>
+                {#if errors.password && touched.password}
+                  <p class="su-err">{errors.password}</p>
+                {:else if formData.password}
+                  <div class="su-strength">
+                    <div class="su-strength-track">
+                      <div class="su-strength-fill" style="width:{strengthLabel().width};background:{strengthLabel().color}"></div>
+                    </div>
+                    <span style="color:{strengthLabel().color};font-size:.688rem;font-weight:700;min-width:44px;text-align:right">{strengthLabel().text}</span>
+                  </div>
+                  <div class="su-hints">
+                    {#each [
+                      [formData.password.length >= 8,         '8+ characters'],
+                      [/(?=.*[A-Z])/.test(formData.password), 'Uppercase'    ],
+                      [/(?=.*[a-z])/.test(formData.password), 'Lowercase'    ],
+                      [/(?=.*\d)/.test(formData.password),    'Number'       ],
+                    ] as [ok, lbl]}
+                      <span class={ok ? 'su-hint-ok' : 'su-hint-no'}>
+                        {#if ok}<Check size={9} />{/if}{lbl}
+                      </span>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+
+              <div class="su-field">
+                <label class="su-label" for="confirmPw">Confirm Password <span class="su-req">*</span></label>
+                <div class="su-input-wrap">
+                  <span class="su-ico"><Lock size={16} /></span>
+                  <input id="confirmPw"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="Repeat your password"
+                    bind:value={formData.confirmPassword}
+                    onblur={() => blurField('confirmPassword', validateStep3)}
+                    class="su-input su-input--toggle {errors.confirmPassword && touched.confirmPassword ? 'su-input--err' : ''}" />
+                  <button type="button" class="su-eye" onclick={() => showConfirmPassword = !showConfirmPassword}>
+                    {#if showConfirmPassword}<EyeOff size={16} />{:else}<Eye size={16} />{/if}
+                  </button>
+                </div>
+                {#if errors.confirmPassword && touched.confirmPassword}
+                  <p class="su-err">{errors.confirmPassword}</p>
+                {:else if formData.confirmPassword && formData.password === formData.confirmPassword}
+                  <p class="su-hint su-hint--ok"><Check size={12} /> Passwords match</p>
+                {/if}
+              </div>
+<label class="su-terms">
+  <input type="checkbox" class="su-checkbox" bind:checked={acceptedTerms}
+    onchange={() => { touchedTerms = true; errors.terms = acceptedTerms ? '' : 'You must accept the terms to continue'; }} />
+  I agree to the <a href="/terms" class="su-link">Terms of Service</a> and
+  <a href="/privacy" class="su-link">Privacy Policy</a>
+</label>
+{#if errors.terms && touchedTerms}
+  <p class="su-err"><AlertCircle size={13} />{errors.terms}</p>
+{/if}
+            </div>
+          {/if}
+
+          <!-- Actions -->
+          <div class="su-actions">
+            {#if currentStep > 1}
+              <button type="button" class="su-btn-back" onclick={handlePreviousStep}>
+                <ArrowLeft size={15} /> Back
+              </button>
+            {/if}
+            <button type="submit" disabled={isLoading} class="su-btn-next {currentStep === 1 ? 'su-btn-next--full' : ''}">
+              {#if isLoading}
+                <span class="su-spinner"></span> Creating account…
+              {:else if currentStep === 3}
+                Create Account <ArrowRight size={15} />
+              {:else}
+                Continue <ArrowRight size={15} />
+              {/if}
+            </button>
           </div>
-          <div class="quest-card">
-            <div class="qc-label">Leaderboards &amp; Badges</div>
-            <p>Compete with neighbours and show off your safety achievements.</p>
-          </div>
-        </div>
+        </form>
       </div>
-    </div>
-  </div>
-</section>
 
-<!-- ══════════════════════════ HOW IT WORKS ══════════════════════════════════ -->
-<section id="how" class="section section-fog">
-  <div class="container">
-    <div class="sec-head aos">
-      <span class="sec-tag">How it Works</span>
-      <h2>Safety in three simple steps</h2>
-      <p>From spotting an incident to community response — Lezie makes it effortless.</p>
+      <p class="su-footer-text">Already have an account? <a href="/signin" class="su-link">Sign in</a></p>
     </div>
-
-    <div class="steps">
-      {#each steps as s, i}
-        <div class="step aos" style="transition-delay:{i * 0.12}s">
-          <div class="step-num">{s.n}</div>
-          <h3>{s.title}</h3>
-          <p>{s.desc}</p>
-        </div>
-      {/each}
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════ CTA ══════════════════════════════════════ -->
-<section class="cta-section">
-  <div class="cta-inner aos">
-    <span class="sec-tag">Get Started Today</span>
-    <h2>Ready to protect<br><em>your community?</em></h2>
-    <p>Join thousands already making their neighbourhoods safer. Free to get started, no credit card needed.</p>
-    <div class="cta-btns">
-      <a href="/signup" class="btn-primary">Get started free</a>
-      <a href="/report" class="btn-outline">Report an Incident</a>
-    </div>
-  </div>
-</section>
-
-<!-- ════════════════════════════ FOOTER ══════════════════════════════════════ -->
-<footer class="footer">
-  <div class="container">
-    <div class="foot-grid">
-      <div class="foot-brand">
-        <div class="foot-logo">
-          <img src="/icons/lz_ico.png" alt="Lezie" width="28" height="28" />
-          <span>Lezie</span>
-        </div>
-        <p>Real-time incident reporting, AI threat detection, and safety games for safer communities.</p>
-      </div>
-      <div class="foot-col">
-        <h4>Company</h4>
-        <a href="/about"     class="foot-link">About Us</a>
-        <a href="/contact"   class="foot-link">Contact</a>
-      </div>
-      <div class="foot-col">
-        <h4>Resources</h4>
-        <a href="/faq"               class="foot-link">FAQ</a>
-        <a href="/safety-guidelines" class="foot-link">Safety Guidelines</a>
-      </div>
-      <div class="foot-col">
-        <h4>Legal</h4>
-        <a href="/privacy" class="foot-link">Privacy Policy</a>
-        <a href="/terms"   class="foot-link">Terms of Service</a>
-      </div>
-    </div>
-    <div class="foot-divider"></div>
-    <div class="foot-bottom">
-      <p>&copy; 2026 Lezie. All rights reserved.</p>
-      <div class="foot-badge">Keeping communities safe</div>
-    </div>
-  </div>
-</footer>
+  </main>
+</div>
 
 <style>
-  /* ─── RESET & TOKENS ──────────────────────────────────────────────────── */
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :global(.su-page *) { font-family:'DM Sans',system-ui,sans-serif; box-sizing:border-box; }
 
-  :global(body) {
-    font-family: 'DM Sans', system-ui, sans-serif;
-    background: #ffffff;
-    color: #1a0b2e;
-    overflow-x: hidden;
-  }
-  :global(html) { scroll-behavior: smooth; }
-  :global(::-webkit-scrollbar)       { width: 5px; }
-  :global(::-webkit-scrollbar-track) { background: #f8f7ff; }
-  :global(::-webkit-scrollbar-thumb) { background: #6a2c91; border-radius: 99px; }
+  .su-page { display:flex; min-height:100vh; background:linear-gradient(135deg,#faf9ff 0%,#f3f0ff 100%); }
 
-  :global(:root) {
-    --ink:    #1a0b2e;
-    --violet: #6a2c91;
-    --viol-l: #8b5cf6;
-    --lilac:  #c4b5fd;
-    --white:  #ffffff;
-    --cream:  #faf9ff;
-    --fog:    #f4f2fb;
-    --mist:   #ece9f8;
-    --serif:  'DM Serif Display', Georgia, serif;
-  }
+  /* ─── LEFT PANEL ─── */
+  .su-panel { display:none; position:relative; width:440px; flex-shrink:0; background:linear-gradient(160deg,#1a0b2e 0%,#2d1b4e 50%,#1a0b2e 100%); overflow:hidden; }
+  @media (min-width:1024px) { .su-panel { display:flex; } }
+  .su-panel-inner { position:relative; z-index:2; display:flex; flex-direction:column; padding:2.5rem; height:100%; }
+  .su-panel-glow  { position:absolute; inset:0; z-index:1; background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(139,92,246,.15) 0%,transparent 70%); pointer-events:none; }
+  .su-logo-link   { display:inline-block; line-height:0; margin-bottom:2.5rem; transition:transform .2s,opacity .2s; }
+  .su-logo-link:hover { opacity:.85; transform:scale(1.02); }
+  .su-logo-img    { width:80px; height:80px; object-fit:contain; display:block; }
+  .su-panel-badge { display:inline-flex; align-items:center; gap:.5rem; padding:.375rem .875rem; background:rgba(139,92,246,.2); border:1px solid rgba(139,92,246,.3); border-radius:100px; font-size:.75rem; color:#c4b5fd; margin-bottom:1.5rem; }
+  .su-panel-headline { font-family:'DM Serif Display',Georgia,serif; font-size:2.5rem; line-height:1.2; color:white; margin-bottom:1rem; }
+  .su-panel-headline em { color:#c4b5fd; font-style:italic; }
+  .su-panel-desc { font-size:.875rem; line-height:1.6; color:rgba(196,181,253,.85); margin-bottom:2rem; }
+  .su-features { display:flex; flex-direction:column; gap:1rem; margin-bottom:auto; }
+  .su-feature-card { display:flex; align-items:flex-start; gap:.875rem; padding:.875rem; background:rgba(255,255,255,.05); border-radius:1rem; backdrop-filter:blur(10px); transition:background .2s; }
+  .su-feature-card:hover { background:rgba(255,255,255,.08); }
+  .su-feature-icon { width:36px; height:36px; background:rgba(139,92,246,.2); border-radius:10px; display:flex; align-items:center; justify-content:center; color:#c4b5fd; flex-shrink:0; }
+  .su-feature-card strong { display:block; font-size:.813rem; font-weight:600; color:white; margin-bottom:.25rem; }
+  .su-feature-card span { font-size:.75rem; color:rgba(196,181,253,.8); line-height:1.4; }
+  .su-panel-footer { margin-top:2rem; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,.1); }
+  .su-avatars { display:flex; align-items:center; margin-bottom:.75rem; }
+  .su-avatar { width:32px; height:32px; border-radius:50%; border:2px solid #2d1b4e; margin-left:-8px; }
+  .su-avatar:first-child { margin-left:0; }
+  .su-avatar-count { width:32px; height:32px; border-radius:50%; background:rgba(139,92,246,.3); border:2px solid #2d1b4e; display:flex; align-items:center; justify-content:center; font-size:.688rem; font-weight:600; color:white; margin-left:-8px; }
+  .su-panel-footer p { font-size:.688rem; color:rgba(196,181,253,.7); }
 
-  /* ─── ANIMATIONS ──────────────────────────────────────────────────────── */
-  @keyframes pulse  { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.4);opacity:.5} }
-  @keyframes drift  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-18px)} }
-  @keyframes ringOut{ 0%{transform:translate(-50%,-50%) scale(.7);opacity:.5} 100%{transform:translate(-50%,-50%) scale(2.2);opacity:0} }
-  @keyframes blob   { 0%,100%{border-radius:60% 40% 70% 30%/50% 60% 40% 70%} 50%{border-radius:40% 60% 30% 70%/60% 40% 70% 30%} }
+  /* ─── RIGHT / FORM ─── */
+  .su-main { flex:1; display:flex; align-items:center; justify-content:center; padding:2rem 1.25rem; min-height:100vh; }
+  .su-form-shell { width:100%; max-width:500px; display:flex; flex-direction:column; gap:1.5rem; }
+  .su-back-home { display:inline-flex; align-items:center; gap:.5rem; background:white; border:1px solid #e5e7eb; border-radius:100px; padding:.5rem 1rem; font-size:.813rem; font-weight:500; color:#64748b; cursor:pointer; transition:all .2s; width:fit-content; box-shadow:0 1px 2px rgba(0,0,0,.05); }
+  .su-back-home:hover { border-color:#6a2c91; color:#6a2c91; background:#f3e8ff; transform:translateX(-2px); }
+  .su-mobile-brand { display:flex; justify-content:center; }
+  .su-logo-img-mobile { width:80px; height:80px; object-fit:contain; }
+  @media (min-width:1024px) { .su-mobile-brand { display:none; } }
+  .su-form-header { text-align:center; }
+  .su-form-title { font-family:'DM Serif Display',Georgia,serif; font-size:clamp(1.625rem,4vw,2rem); color:#1e1b4b; margin-bottom:.25rem; letter-spacing:-.02em; }
+  .su-form-subtitle { font-size:.875rem; color:#64748b; }
 
-  :global(.aos)     { opacity:0; transform:translateY(24px); transition: opacity .75s ease, transform .75s ease; }
-  :global(.aos.vis) { opacity:1; transform:translateY(0); }
+  /* Stepper */
+  .su-progress-track { display:flex; align-items:center; justify-content:center; gap:.5rem; }
+  .su-progress-step-wrap { display:flex; align-items:center; }
+  .su-progress-step { display:flex; flex-direction:column; align-items:center; gap:.4rem; }
+  .su-step-connector { width:64px; height:2px; margin:0 .375rem; background:#e2e8f0; transition:background .35s; margin-bottom:1.125rem; }
+  .su-step-connector.filled { background:#1a0b2e; }
+  .su-step-bubble { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(245,158,11,.12); border:2px solid #F59E0B; color:#F59E0B; transition:all .3s; }
+.su-progress-step.active .su-step-bubble {
+  background: #f59e0b; /* amber */
+  border-color: #f59e0b;
+  color: white;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+}
 
-  /* ─── NAV ─────────────────────────────────────────────────────────────── */
-  .nav {
-    position: fixed; top:0; left:0; right:0; z-index:100;
-    background: rgba(255,255,255,.92);
-    backdrop-filter: blur(20px) saturate(150%);
-    border-bottom: 1px solid rgba(106,44,145,.07);
-  }
-  .nav-inner {
-    max-width: 1220px; margin: 0 auto;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 1rem 2.5rem;
-  }
-  .nav-logo {
-    display:flex; align-items:center; gap:.625rem;
-    background:none; border:none; cursor:pointer;
-    font-family: var(--serif); font-size:1.375rem; color:var(--ink);
-    letter-spacing:-.02em;
-  }
-  .nav-logo img { border-radius:8px; }
+.su-progress-step.active .su-step-label {
+  color: #f59e0b;
+  font-weight: 500;
+}
+.su-progress-step.done .su-step-bubble   { background:#6a2c91; border-color:#6a2c91; color:white; box-shadow:0 0 0 4px rgba(106,44,145,.15); }
+.su-progress-step.done .su-step-label    { color:#6a2c91; font-weight:700; }
+  /* Card */
+  .su-card { background:white; border-radius:1.5rem; border:1px solid #e2e8f0; padding:clamp(1.25rem,5vw,2rem); box-shadow:0 20px 35px -12px rgba(0,0,0,.1); }
+  .su-alert-error { display:flex; align-items:center; gap:.625rem; padding:.75rem 1rem; background:#fef2f2; border:1px solid #fecaca; border-radius:.75rem; color:#dc2626; font-size:.813rem; margin-bottom:1.5rem; }
+  .su-step-body { display:flex; flex-direction:column; gap:1.125rem; }
+  .su-welcome-msg { display:flex; align-items:center; gap:.75rem; padding:.875rem 1rem; background:linear-gradient(135deg,#f3e8ff 0%,#f5f0ff 100%); border-radius:1rem; margin-bottom:1.5rem; }
+  .su-welcome-msg :global(svg) { color:#6a2c91; flex-shrink:0; }
+  .su-welcome-msg strong { display:block; font-size:.875rem; font-weight:700; color:#1e1b4b; }
+  .su-welcome-msg span { font-size:.75rem; color:#64748b; }
+  .su-field-row { display:grid; grid-template-columns:1fr 1fr; gap:.875rem; }
+  @media (max-width:480px) { .su-field-row { grid-template-columns:1fr; } }
+  .su-field { display:flex; flex-direction:column; gap:.375rem; position:relative; }
+  .su-label { font-size:.813rem; font-weight:600; color:#374151; }
+  .su-req { color:#6a2c91; }
+  .su-input-wrap { position:relative; }
+  .su-ico { position:absolute; left:.875rem; top:50%; transform:translateY(-50%); color:#9ca3af; display:flex; align-items:center; pointer-events:none; }
+  .su-input { width:100%; padding:.75rem .875rem .75rem 2.625rem; border:1.5px solid #e5e7eb; border-radius:.75rem; font-size:.875rem; font-family:'DM Sans',sans-serif; color:#1e1b4b; background:white; transition:all .2s; outline:none; }
+  .su-input:hover { border-color:#c4b5fd; }
+  .su-input:focus { border-color:#6a2c91; box-shadow:0 0 0 3px rgba(106,44,145,.1); }
+  .su-input--err { border-color:#f87171; background:#fff5f5; }
+  .su-input--toggle { padding-right:2.75rem; }
 
-  .hamburger {
-    display:none; background:none; border:none;
-    cursor:pointer; color:var(--ink); font-size:1.1rem; padding:.25rem;
+  /* ─── CUSTOM DATE PICKER ─── */
+  .dob-trigger {
+    width:100%; display:flex; align-items:center; gap:.625rem;
+    padding:.75rem .875rem; border:1.5px solid #e5e7eb; border-radius:.75rem;
+    background:white; cursor:pointer; font-family:'DM Sans',sans-serif;
+    font-size:.875rem; transition:all .2s; text-align:left;
   }
+  .dob-trigger:hover { border-color:#c4b5fd; }
+  .dob-trigger:focus { outline:none; border-color:#6a2c91; box-shadow:0 0 0 3px rgba(106,44,145,.1); }
+  .dob-trigger--err { border-color:#f87171; background:#fff5f5; }
+  .dob-trigger-ico { color:#9ca3af; display:flex; flex-shrink:0; }
+  .dob-trigger-value { flex:1; color:#1e1b4b; font-size:.875rem; }
+  .dob-placeholder { color:#9ca3af; }
+  .dob-chevron { color:#9ca3af; transition:transform .2s; flex-shrink:0; }
+  .dob-chevron.open { transform:rotate(180deg); }
 
-  .nav-links { display:flex; align-items:center; gap:.25rem; }
-  .nav-link {
-    background:none; border:none; font-family:'DM Sans',sans-serif;
-    font-size:.875rem; font-weight:500; color:#64748b;
-    padding:.5rem .875rem; border-radius:99px; cursor:pointer;
-    transition: color .2s, background .2s;
-  }
-  .nav-link:hover { color:var(--violet); background:rgba(106,44,145,.06); }
-  .nav-cta {
-    display:inline-flex; align-items:center; gap:.375rem;
-    background: linear-gradient(135deg,#6a2c91,#4a1d6e);
-    color:white; font-size:.8125rem; font-weight:600;
-    padding:.5rem 1.25rem; border-radius:99px; text-decoration:none;
-    box-shadow:0 2px 12px rgba(106,44,145,.3);
-    transition: transform .2s, box-shadow .2s;
-  }
-  .nav-cta:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(106,44,145,.42); }
-
-  /* ─── FAB ─────────────────────────────────────────────────────────────── */
-  .fab {
-    position:fixed; bottom:2rem; right:2rem; z-index:200;
-    background: linear-gradient(135deg,#6a2c91,#4a1d6e);
-    color:white; font-size:.8rem; font-weight:700;
-    padding:.75rem 1.375rem; border-radius:99px; text-decoration:none;
-    box-shadow:0 6px 24px rgba(106,44,145,.4);
-    transition: transform .25s, box-shadow .25s;
-    font-family:'DM Sans',sans-serif;
-  }
-  .fab:hover { transform:translateY(-3px); box-shadow:0 10px 32px rgba(106,44,145,.55); }
-
-  /* ─── HERO ────────────────────────────────────────────────────────────── */
-  .hero {
-    background: #ffffff;
-    padding: 10rem 0 7rem;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .hero-bg-shape {
-    position: absolute;
-    width: 700px; height: 700px;
-    background: radial-gradient(ellipse, rgba(196,181,253,.22) 0%, transparent 70%);
-    border-radius: 50%;
-    top: -200px; right: -150px;
-    pointer-events: none;
-    animation: drift 12s ease-in-out infinite;
-  }
-  .hero-bg-shape.s2 {
-    width: 400px; height: 400px;
-    background: radial-gradient(ellipse, rgba(106,44,145,.09) 0%, transparent 70%);
-    top: auto; bottom: -100px; right: auto; left: -100px;
-    animation-delay: -5s;
+  .dp-overlay { position:fixed; inset:0; z-index:40; }
+  .dp-panel {
+    position:absolute; top:calc(100% + .5rem); left:0; right:0;
+    background:white; border:1.5px solid #e5e7eb; border-radius:1rem;
+    box-shadow:0 16px 40px rgba(0,0,0,.12); z-index:50; overflow:hidden;
+    padding:.75rem;
   }
 
-  .container { max-width: 1180px; margin: 0 auto; padding: 0 2.5rem; }
+  .dp-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:.75rem; }
+  .dp-nav-btn {
+    width:32px; height:32px; border-radius:.5rem; border:1px solid #e5e7eb;
+    background:white; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    color:#64748b; transition:all .15s; flex-shrink:0;
+  }
+  .dp-nav-btn:hover { border-color:#6a2c91; color:#6a2c91; background:#f3e8ff; }
+  .dp-header-labels { display:flex; gap:.25rem; align-items:center; }
+  .dp-header-btn {
+    border:none; background:none; cursor:pointer; font-family:'DM Sans',sans-serif;
+    font-size:.9rem; font-weight:700; color:#1e1b4b; padding:.25rem .5rem;
+    border-radius:.5rem; transition:all .15s;
+  }
+  .dp-header-btn:hover { background:#f3e8ff; color:#6a2c91; }
+  .dp-header-btn--solo { font-size:.9rem; }
 
-  .hero-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 5rem;
-    align-items: center;
-  }
+  .dp-weekdays { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:.375rem; }
+  .dp-weekdays span { text-align:center; font-size:.6875rem; font-weight:600; color:#94a3b8; padding:.25rem 0; }
 
-  .hero-content { position: relative; z-index: 1; }
+  .dp-days { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+  .dp-cell { width:100%; aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:.5rem; font-size:.8125rem; }
+  .dp-cell--empty { pointer-events:none; }
+  .dp-cell--day {
+    border:none; background:none; cursor:pointer; font-family:'DM Sans',sans-serif;
+    color:#374151; font-size:.8125rem; transition:all .15s;
+  }
+  .dp-cell--day:hover:not(:disabled) { background:#f3e8ff; color:#6a2c91; }
+  .dp-cell--selected { background:#6a2c91 !important; color:white !important; font-weight:700; }
+  .dp-cell--disabled { color:#d1d5db !important; cursor:not-allowed; background:none !important; }
 
-  .eyebrow {
-    display:inline-block;
-    background: rgba(106,44,145,.07);
-    border: 1px solid rgba(106,44,145,.14);
-    border-radius: 99px; padding: .375rem .875rem;
-    font-size: .75rem; font-weight: 700; color: var(--violet);
-    letter-spacing: .07em; text-transform: uppercase;
-    margin-bottom: 1.75rem;
+  .dp-month-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:.375rem; padding:.25rem 0; }
+  .dp-month-cell {
+    padding:.625rem .25rem; border:1px solid #e5e7eb; border-radius:.625rem;
+    background:white; cursor:pointer; font-family:'DM Sans',sans-serif;
+    font-size:.8125rem; font-weight:500; color:#374151; transition:all .15s;
+    text-align:center;
   }
+  .dp-month-cell:hover { border-color:#6a2c91; color:#6a2c91; background:#f3e8ff; }
 
-  .hero-title {
-    font-family: var(--serif);
-    font-size: clamp(2.75rem,4vw,4rem);
-    line-height: 1.08; color: var(--ink);
-    margin-bottom: 1.625rem;
+  .dp-year-list { max-height:220px; overflow-y:auto; display:grid; grid-template-columns:repeat(3,1fr); gap:.375rem; padding:.25rem 0; }
+  .dp-year-list::-webkit-scrollbar { width:4px; }
+  .dp-year-list::-webkit-scrollbar-track { background:transparent; }
+  .dp-year-list::-webkit-scrollbar-thumb { background:#e5e7eb; border-radius:2px; }
+  .dp-year-item {
+    padding:.625rem .25rem; border:1px solid #e5e7eb; border-radius:.625rem;
+    background:white; cursor:pointer; font-family:'DM Sans',sans-serif;
+    font-size:.8125rem; font-weight:500; color:#374151; transition:all .15s; text-align:center;
   }
-  .hero-title em { color: var(--violet); font-style: italic; }
+  .dp-year-item:hover { border-color:#6a2c91; color:#6a2c91; background:#f3e8ff; }
 
-  .hero-desc {
-    font-size: .9375rem; line-height: 1.8;
-    color: #64748b; max-width: 430px;
-    margin-bottom: 2.5rem;
-  }
+  /* Phone */
+  .su-phone-row { display:flex; gap:.5rem; align-items:stretch; }
+  .su-dial-wrap { position:relative; flex-shrink:0; }
+  .su-dial-btn { display:flex; align-items:center; gap:.375rem; height:100%; padding:0 .75rem; background:white; border:1.5px solid #e5e7eb; border-radius:.75rem; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:.8125rem; font-weight:600; color:#1e1b4b; white-space:nowrap; transition:all .2s; min-height:44px; }
+  .su-dial-btn:hover { border-color:#6a2c91; background:#f3e8ff; }
+  .su-flag { font-size:1.125rem; line-height:1; }
+  .su-dial-code { font-size:.8rem; }
+  .su-dial-btn svg { color:#64748b; transition:transform .2s; }
+  :global(.su-chevron-open) { transform:rotate(180deg); }
+  .su-country-drop-overlay { position:fixed; inset:0; z-index:40; }
+  .su-country-drop { position:absolute; top:calc(100% + .375rem); left:0; width:280px; background:white; border:1.5px solid #e5e7eb; border-radius:1rem; box-shadow:0 12px 32px rgba(0,0,0,.12); z-index:50; overflow:hidden; }
+  .su-country-search-wrap { display:flex; align-items:center; gap:.5rem; padding:.625rem .875rem; border-bottom:1px solid #f1f5f9; }
+  .su-csearch-ico { color:#94a3b8; flex-shrink:0; }
+  .su-country-search { flex:1; border:none; outline:none; background:none; font-size:.8125rem; font-family:'DM Sans',sans-serif; color:#1e1b4b; }
+  .su-country-search::placeholder { color:#94a3b8; }
+  .su-country-list { list-style:none; max-height:220px; overflow-y:auto; padding:.375rem; }
+  .su-country-list::-webkit-scrollbar { width:4px; }
+  .su-country-list::-webkit-scrollbar-track { background:transparent; }
+  .su-country-list::-webkit-scrollbar-thumb { background:#e5e7eb; border-radius:2px; }
+  .su-country-opt { display:flex; align-items:center; gap:.625rem; width:100%; padding:.5rem .625rem; background:none; border:none; border-radius:.625rem; cursor:pointer; text-align:left; font-family:'DM Sans',sans-serif; transition:background .15s; }
+  .su-country-opt:hover { background:#f3e8ff; }
+  .su-country-opt--active { background:#f3e8ff; color:#6a2c91; }
+  .su-country-name { flex:1; font-size:.8rem; color:#1e1b4b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .su-country-dial { font-size:.75rem; font-weight:700; color:#6a2c91; flex-shrink:0; }
+  .su-country-opt--active .su-country-name { color:#6a2c91; }
+  .su-country-empty { padding:.75rem; font-size:.8rem; color:#64748b; text-align:center; }
+  .su-phone-input-wrap { flex:1; }
+  .su-phone-input { padding-left:.875rem !important; }
 
-  .hero-btns {
-    display: flex; gap: .875rem; flex-wrap: wrap;
-    margin-bottom: 3.5rem;
-  }
+  /* Password */
+  .su-eye { position:absolute; right:.75rem; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:#9ca3af; display:flex; padding:.25rem; transition:color .2s; }
+  .su-eye:hover { color:#6a2c91; }
+  .su-err { font-size:.75rem; color:#dc2626; display:flex; align-items:center; gap:.25rem; }
+  .su-hint { font-size:.688rem; color:#94a3b8; }
+  .su-hint--ok { color:#6a2c91; display:flex; align-items:center; gap:.25rem; font-weight:500; }
+  .su-strength { display:flex; align-items:center; gap:.625rem; margin-top:.375rem; }
+  .su-strength-track { flex:1; height:4px; background:#e5e7eb; border-radius:2px; overflow:hidden; }
+  .su-strength-fill { height:100%; border-radius:2px; transition:width .3s ease,background .3s ease; }
+  .su-hints { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.5rem; }
+  .su-hint-ok, .su-hint-no { display:inline-flex; align-items:center; gap:.3rem; font-size:.7rem; font-weight:500; padding:.25rem .7rem; border-radius:100px; transition:all .2s; }
+  .su-hint-ok { background:#f3e8ff; color:#4b1d68; border:1px solid #ddd6fe; }
+  .su-hint-no { background:#f8fafc; color:#94a3b8; border:1px solid #e2e8f0; }
 
-  .hero-stats { display:flex; gap:2.25rem; }
-  .stat { display:flex; flex-direction:column; gap:.2rem; }
-  .stat-n { font-family:var(--serif); font-size:1.875rem; color:var(--ink); }
-  .stat-l { font-size:.75rem; color:#94a3b8; font-weight:500; letter-spacing:.04em; }
-  .stat-sep { width:1px; background:var(--mist); align-self:stretch; }
+  /* Terms */
+  .su-terms { display:flex; align-items:flex-start; gap:.625rem; font-size:.8125rem; color:#4b5563; line-height:1.5; cursor:pointer; margin-top:.5rem; }
+  .su-checkbox { width:16px; height:16px; margin-top:2px; flex-shrink:0; accent-color:#6a2c91; cursor:pointer; }
 
-  /* hero visual */
-  .hero-visual {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  /* Actions */
+  .su-actions { display:flex; gap:.75rem; align-items:center; margin-top:1.75rem; }
+  .su-btn-back { display:inline-flex; align-items:center; gap:.375rem; padding:.75rem 1.125rem; background:white; border:1.5px solid #e5e7eb; border-radius:.75rem; font-size:.875rem; font-weight:500; color:#64748b; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .2s; flex-shrink:0; }
+  .su-btn-back:hover { border-color:#6a2c91; color:#6a2c91; background:#f3e8ff; transform:translateX(-2px); }
+  .su-btn-next { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.8125rem 1.25rem; background:linear-gradient(135deg,#6a2c91 0%,#4a1d6e 100%); color:white; border:none; border-radius:.75rem; font-size:.9375rem; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; box-shadow:0 4px 14px rgba(106,44,145,.3); transition:all .2s; }
+  .su-btn-next:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 6px 20px rgba(106,44,145,.4); }
+  .su-btn-next:active:not(:disabled) { transform:translateY(0); }
+  .su-btn-next:disabled { opacity:.65; cursor:not-allowed; }
+  .su-btn-next--full { flex:1; }
+  .su-link { color:#6a2c91; font-weight:500; text-decoration:none; }
+  .su-link:hover { text-decoration:underline; }
+  .su-footer-text { text-align:center; font-size:.875rem; color:#64748b; }
 
-  .alert-card {
-    position:absolute; background:white;
-    border:1px solid rgba(106,44,145,.1); border-radius:1rem;
-    box-shadow:0 8px 28px rgba(106,44,145,.1);
-    padding:.875rem 1.125rem;
-    display:flex; align-items:center; gap:.75rem;
-    font-size:.8rem; z-index:3;
-  }
-  .alert-card strong { display:block; font-weight:700; color:var(--ink); }
-  .alert-card span   { color:#94a3b8; font-size:.75rem; }
-  .ac-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-  .ac1 { top:0; left:-1.5rem; }
-  .ac2 { bottom:0; right:-1.5rem; }
+  /* Spinner */
+  .su-spinner { width:16px; height:16px; border:2px solid rgba(255,255,255,.3); border-top-color:white; border-radius:50%; animation:spin .6s linear infinite; flex-shrink:0; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @keyframes stepIn { from{opacity:0;transform:translateX(14px)} to{opacity:1;transform:translateX(0)} }
 
-  .map-card {
-    background:white; border-radius:1.5rem;
-    border:1px solid rgba(106,44,145,.1);
-    box-shadow:0 24px 60px rgba(106,44,145,.14), 0 4px 12px rgba(0,0,0,.04);
-    width:100%; max-width:360px;
-    overflow:hidden; position:relative; z-index:2;
-  }
-  .map-topbar {
-    display:flex; align-items:center; gap:.5rem;
-    padding:.875rem 1rem; font-size:.8125rem; font-weight:600; color:var(--ink);
-    border-bottom:1px solid rgba(106,44,145,.07);
-  }
-  .live-badge {
-    margin-left:auto; display:flex; align-items:center; gap:.375rem;
-    font-size:.7rem; font-weight:700; color:var(--violet);
-    letter-spacing:.06em; text-transform:uppercase;
-  }
-  .live-dot { width:7px; height:7px; border-radius:50%; background:#22c55e; animation:pulse 2s ease-in-out infinite; }
-
-  .map-grid { display:grid; grid-template-columns:repeat(9,1fr); gap:3px; padding:1rem; }
-  .mc  { height:20px; border-radius:3px; background:#ede8f7; }
-  .mh  { background:rgba(106,44,145,.32); }
-  .mw  { background:rgba(196,181,253,.55); }
-
-  .map-pins { position:relative; height:56px; margin:0 1rem; }
-  .pin {
-    position:absolute; width:20px; height:20px; border-radius:50%;
-    border:2px solid white; box-shadow:0 2px 8px rgba(0,0,0,.15);
-  }
-  .pin::after {
-    content:''; position:absolute; top:50%; left:50%;
-    width:30px; height:30px; border-radius:50%;
-    background:inherit; opacity:.2;
-    animation:ringOut 2.2s ease-out infinite;
-  }
-  .p1 { background:#6a2c91; top:10px; left:18%; }
-  .p2 { background:#ef4444; top:20px; left:52%; animation-delay:.8s; }
-  .p3 { background:#f59e0b; top:6px;  left:74%; animation-delay:1.6s; }
-
-  .map-legend {
-    display:flex; gap:1rem; padding:.75rem 1rem;
-    border-top:1px solid rgba(106,44,145,.07);
-  }
-  .leg { display:flex; align-items:center; gap:.375rem; font-size:.75rem; color:#64748b; font-weight:500; }
-  .leg-dot { width:8px; height:8px; border-radius:50%; }
-
-  /* ─── SECTIONS ────────────────────────────────────────────────────────── */
-  .section       { padding: 8rem 0; }
-  .section-white { background: #ffffff; }
-  .section-fog   { background: var(--fog); }
-
-  .sec-head { text-align:center; margin-bottom:5rem; }
-  .sec-tag {
-    display:inline-block;
-    background:rgba(106,44,145,.07); border:1px solid rgba(106,44,145,.14);
-    border-radius:99px; padding:.3rem .875rem;
-    font-size:.7rem; font-weight:700; color:var(--violet);
-    letter-spacing:.07em; text-transform:uppercase; margin-bottom:1.25rem;
-  }
-  .sec-tag-light {
-    background:rgba(196,181,253,.15); border-color:rgba(196,181,253,.3); color:#c4b5fd;
-  }
-  .sec-head h2 {
-    font-family:var(--serif); font-size:clamp(2rem,4vw,3rem);
-    color:var(--ink); margin-bottom:1rem; line-height:1.15;
-  }
-  .sec-head p { font-size:1rem; color:#64748b; max-width:500px; margin:0 auto; line-height:1.75; }
-
-  /* ─── FEATURES ────────────────────────────────────────────────────────── */
-  .feat-grid {
-    display:grid; grid-template-columns:repeat(3,1fr); gap:1.75rem;
-  }
-  .feat-card {
-    border-radius:1.25rem; padding:2.25rem 2rem;
-    border:1px solid var(--mist); background:var(--cream);
-    transition: transform .3s, box-shadow .3s, border-color .3s;
-    position:relative; overflow:hidden;
-  }
-  .feat-card::before {
-    content:''; position:absolute; top:0; left:0; right:0; height:3px;
-    background:linear-gradient(90deg,var(--violet),var(--viol-l));
-    opacity:0; transition:opacity .3s;
-  }
-  .feat-card:hover { transform:translateY(-5px); box-shadow:0 16px 40px rgba(106,44,145,.1); border-color:rgba(106,44,145,.18); }
-  .feat-card:hover::before { opacity:1; }
-  .feat-num {
-    display:inline-flex; align-items:center; justify-content:center;
-    width:36px; height:36px; border-radius:10px;
-    background:linear-gradient(135deg,#6a2c91,#8b5cf6);
-    color:white; font-family:'DM Sans',sans-serif;
-    font-size:.8125rem; font-weight:700; letter-spacing:.02em;
-    margin-bottom:1.25rem;
-  }
-  .feat-card h3 { font-family:var(--serif); font-size:1.125rem; color:var(--ink); margin-bottom:.625rem; }
-  .feat-card p  { font-size:.875rem; color:#64748b; line-height:1.7; }
-
-  /* ─── SAFETY QUEST ────────────────────────────────────────────────────── */
-  .quest-section {
-    background: var(--fog);
-    position:relative; overflow:hidden;
-  }
-  .quest-section::before {
-    content:''; position:absolute; inset:0;
-    background:radial-gradient(ellipse 55% 50% at 70% 50%, rgba(196,181,253,.25), transparent 70%);
-    pointer-events:none;
-  }
-  .quest-grid {
-    display:grid; grid-template-columns:1fr 1fr;
-    gap:6rem; align-items:center; position:relative; z-index:1;
-  }
-
-  .quest-heading {
-    font-family:var(--serif); font-size:clamp(2rem,3.5vw,3rem);
-    color:var(--ink); line-height:1.12; margin:1rem 0 1.25rem;
-  }
-  .quest-heading em { color:var(--violet); font-style:italic; }
-  .quest-desc { font-size:.9375rem; line-height:1.8; color:#64748b; margin-bottom:2rem; }
-
-  .quest-cards { display:flex; flex-direction:column; gap:.875rem; margin-top:2rem; }
-  .quest-card {
-    background:white; border:1px solid var(--mist);
-    border-radius:1rem; padding:1.25rem 1.5rem;
-    transition: box-shadow .25s, border-color .25s;
-  }
-  .quest-card:hover { box-shadow:0 6px 20px rgba(106,44,145,.08); border-color:rgba(106,44,145,.2); }
-  .qc-label { font-size:.9375rem; font-weight:700; color:var(--ink); margin-bottom:.3rem; }
-  .quest-card p { font-size:.8125rem; color:#64748b; line-height:1.6; }
-
-  /* score panel */
-  .score-panel {
-    background:white; border:1px solid var(--mist);
-    border-radius:1.5rem; padding:2.25rem;
-    box-shadow:0 8px 32px rgba(106,44,145,.08);
-  }
-  .score-header { margin-bottom:2rem; }
-  .score-label  { font-size:.7rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:#94a3b8; }
-  .score-user {
-    display:flex; align-items:center; gap:1rem; margin-bottom:1.75rem;
-    padding:1.125rem; background:var(--fog); border-radius:1rem;
-  }
-  .score-avatar {
-    width:48px; height:48px; border-radius:50%;
-    background:linear-gradient(135deg,#c4b5fd,#8b5cf6);
-    display:flex; align-items:center; justify-content:center;
-    font-family:var(--serif); font-size:1.25rem; color:white; flex-shrink:0;
-  }
-  .score-name { font-weight:700; color:var(--ink); font-size:.9375rem; }
-  .score-pts  { font-size:.8125rem; color:#64748b; }
-  .score-pts strong { color:var(--violet); }
-  .score-bars { display:flex; flex-direction:column; gap:1rem; }
-  .sb-label   { display:flex; justify-content:space-between; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:.4rem; }
-  .sb-track   { height:7px; background:var(--mist); border-radius:99px; overflow:hidden; }
-  .sb-fill    { height:100%; border-radius:99px; background:linear-gradient(90deg,#6a2c91,#8b5cf6); }
-  .score-chips{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:1.5rem; }
-  .chip {
-    background:rgba(106,44,145,.07); border:1px solid rgba(106,44,145,.15);
-    border-radius:99px; padding:.3rem .75rem;
-    font-size:.75rem; font-weight:600; color:var(--violet);
-  }
-
-  /* ─── HOW IT WORKS ────────────────────────────────────────────────────── */
-  .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:3rem; position:relative; }
-  .steps::before {
-    content:''; position:absolute; top:44px; left:16%; right:16%;
-    height:1px; background:linear-gradient(90deg,transparent,rgba(106,44,145,.25),transparent);
-  }
-  .step { text-align:center; padding:1rem; }
-  .step-num {
-    width:60px; height:60px; border-radius:50%;
-    background:linear-gradient(135deg,#6a2c91,#8b5cf6);
-    color:white; font-family:var(--serif); font-size:1.25rem;
-    display:flex; align-items:center; justify-content:center;
-    margin:0 auto 2rem; box-shadow:0 4px 18px rgba(106,44,145,.28);
-  }
-  .step h3 { font-family:var(--serif); font-size:1.25rem; color:var(--ink); margin-bottom:.75rem; }
-  .step p  { font-size:.9rem; color:#64748b; line-height:1.7; }
-
-  /* ─── CTA ─────────────────────────────────────────────────────────────── */
-  .cta-section {
-    background: white;
-    text-align:center; padding:9rem 2rem;
-    position:relative; overflow:hidden;
-    border-top: 1px solid var(--mist);
-  }
-  .cta-section::before {
-    content:''; position:absolute; inset:0;
-    background:radial-gradient(ellipse 55% 55% at 50% 100%, rgba(196,181,253,.2), transparent 70%);
-    pointer-events:none;
-  }
-  .cta-inner { position:relative; z-index:1; }
-  .cta-inner h2 {
-    font-family:var(--serif); font-size:clamp(2rem,5vw,3.75rem);
-    color:var(--ink); margin:1rem 0 1.25rem; line-height:1.12;
-  }
-  .cta-inner h2 em { color:var(--violet); font-style:italic; }
-  .cta-inner p { font-size:1rem; color:#64748b; max-width:480px; margin:0 auto 2.75rem; line-height:1.75; }
-  .cta-btns { display:flex; justify-content:center; gap:1rem; flex-wrap:wrap; }
-  .btn-cta-white {
-    display:inline-flex; align-items:center; gap:.5rem;
-    background:white; color:var(--ink); font-size:.9375rem; font-weight:700;
-    padding:.9375rem 2.125rem; border-radius:99px; text-decoration:none;
-    box-shadow:0 4px 20px rgba(0,0,0,.18);
-    transition:all .25s; font-family:'DM Sans',sans-serif;
-  }
-  .btn-cta-white:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,0,0,.28); }
-  .btn-cta-ghost {
-    display:inline-flex; align-items:center; gap:.5rem;
-    background:transparent; border:1.5px solid rgba(106,44,145,.25);
-    color:var(--violet); font-size:.9375rem; font-weight:600;
-    padding:.9375rem 2.125rem; border-radius:99px; text-decoration:none;
-    transition:all .25s; font-family:'DM Sans',sans-serif;
-  }
-  .btn-cta-ghost:hover { border-color:var(--violet); background:rgba(106,44,145,.05); }
-
-  /* ─── SHARED BUTTONS ──────────────────────────────────────────────────── */
-  .btn-primary {
-    display:inline-flex; align-items:center; gap:.5rem;
-    background:linear-gradient(135deg,#6a2c91,#4a1d6e);
-    color:white; font-size:.9rem; font-weight:700;
-    padding:.875rem 1.75rem; border-radius:99px; text-decoration:none;
-    box-shadow:0 4px 18px rgba(106,44,145,.32);
-    transition:all .25s; border:none; cursor:pointer; font-family:'DM Sans',sans-serif;
-  }
-  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 26px rgba(106,44,145,.48); }
-  .btn-outline {
-    display:inline-flex; align-items:center; gap:.5rem;
-    background:transparent; border:1.5px solid rgba(106,44,145,.25);
-    color:var(--violet); font-size:.9rem; font-weight:600;
-    padding:.875rem 1.75rem; border-radius:99px;
-    transition:all .25s; cursor:pointer; font-family:'DM Sans',sans-serif;
-  }
-  .btn-outline:hover { border-color:var(--violet); background:rgba(106,44,145,.05); }
-
-  /* ─── FOOTER ──────────────────────────────────────────────────────────── */
-  .footer { background: var(--fog); border-top: 1px solid var(--mist); padding:5rem 0 2.5rem; }
-  .foot-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:3rem; margin-bottom:3.5rem; }
-  .foot-brand { display:flex; flex-direction:column; }
-  .foot-logo  { display:flex; align-items:center; gap:.5rem; margin-bottom:1.125rem; }
-  .foot-logo span { font-family:var(--serif); font-size:1.25rem; color:var(--ink); }
-  .foot-logo img  { border-radius:7px; }
-  .foot-brand p { font-size:.8rem; color:#94a3b8; line-height:1.75; max-width:230px; }
-  .foot-col h4  { font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#94a3b8; margin-bottom:1.25rem; }
-  .foot-link    { display:block; font-size:.875rem; color:#475569; text-decoration:none; margin-bottom:.75rem; transition:color .2s; }
-  .foot-link:hover { color:var(--violet); }
-  .foot-divider { height:1px; background:var(--mist); margin-bottom:2rem; }
-  .foot-bottom  { display:flex; justify-content:space-between; align-items:center; }
-  .foot-bottom p { font-size:.8rem; color:#94a3b8; }
-  .foot-badge   { font-size:.75rem; color:#94a3b8; }
-
-  /* ─── RESPONSIVE ──────────────────────────────────────────────────────── */
-  @media (max-width:1024px) {
-    .hero-container { grid-template-columns:1fr; gap:4rem; }
-    .hero { padding:9rem 0 6rem; }
-    .feat-grid  { grid-template-columns:1fr 1fr; }
-    .quest-grid { grid-template-columns:1fr; gap:4rem; }
-    .foot-grid  { grid-template-columns:1fr 1fr; gap:2.5rem; }
-    .nav-inner  { padding:1rem 1.5rem; }
-    .hamburger  { display:block; }
-    .nav-links  { display:none; }
-    .nav-links.open {
-      display:flex; flex-direction:column; align-items:flex-start;
-      position:absolute; top:100%; left:0; right:0;
-      background:rgba(255,255,255,.97); backdrop-filter:blur(20px);
-      padding:1.25rem 1.5rem; gap:.25rem;
-      border-bottom:1px solid rgba(106,44,145,.08);
-    }
-    .ac1, .ac2 { display:none; }
-  }
   @media (max-width:640px) {
-    .feat-grid   { grid-template-columns:1fr; }
-    .steps       { grid-template-columns:1fr; gap:2rem; }
-    .steps::before { display:none; }
-    .foot-grid   { grid-template-columns:1fr; gap:2rem; }
-    .foot-bottom { flex-direction:column; gap:1rem; text-align:center; }
-    .section     { padding:5rem 0; }
-    .cta-section { padding:6rem 1.5rem; }
+    .su-main { padding:1.5rem 1rem; align-items:flex-start; }
+    .su-form-shell { gap:1.125rem; }
+    .su-card { border-radius:1.25rem; }
+    .su-step-connector { width:36px; }
+    .su-step-bubble { width:34px; height:34px; }
+    .su-actions { flex-direction:column-reverse; }
+    .su-btn-back { width:100%; justify-content:center; }
+    .su-btn-next { width:100%; }
+    .dp-panel { left:0; right:0; }
+  }
+  @media (max-width:380px) {
+    .su-step-connector { width:20px; }
+    .su-step-label { font-size:.5625rem; }
   }
 </style>
