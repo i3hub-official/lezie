@@ -1,11 +1,13 @@
 <script lang="ts">
   import './layout.css';
+import { env } from '$env/dynamic/public';
   import { pwaInfo } from 'virtual:pwa-info';
   import { goto } from '$app/navigation';
 import MaintenancePage from '$lib/components/MaintenancePage.svelte';
-import { PUBLIC_MAINTENANCE_MODE } from '$env/static/public';
 
-const MAINTENANCE_MODE = PUBLIC_MAINTENANCE_MODE === 'true';
+
+const MAINTENANCE_MODE = env.PUBLIC_MAINTENANCE_MODE === 'true';
+
   import { authStore } from '$lib/stores/auth';
   import CookieNotice from '$lib/components/CookieNotice.svelte';
 
