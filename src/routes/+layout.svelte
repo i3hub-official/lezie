@@ -1,10 +1,13 @@
 <script lang="ts">
   import './layout.css';
-import { env } from '$env/dynamic/public';
+import { env as pubEnv } from '$env/dynamic/public';
   import { pwaInfo } from 'virtual:pwa-info';
   import { goto } from '$app/navigation';
-import MaintenancePage from '$lib/components/MaintenancePage.svelte';
+import ShutdownPage from '$lib/components/ShutdownPage.svelte';
 
+
+const MAINTENANCE_MODE = pubEnv.PUBLIC_MAINTENANCE_MODE === 'true';
+const SHUTDOWN_MODE    = pubEnv.PUBLIC_SHUTDOWN_MODE === 'true';
 
 const MAINTENANCE_MODE = env.PUBLIC_MAINTENANCE_MODE === 'true';
 
@@ -92,7 +95,9 @@ const MAINTENANCE_MODE = env.PUBLIC_MAINTENANCE_MODE === 'true';
   {/if}
 
   <!-- Page Content -->
-  {#if MAINTENANCE_MODE}
+  {#if SHUTDOWN_MODE}
+  <ShutdownPage />
+{:else if MAINTENANCE_MODE}
   <MaintenancePage />
 {:else if children}
   {@render children()}
