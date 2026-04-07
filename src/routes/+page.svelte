@@ -74,7 +74,7 @@
       <div class="eyebrow aos">Community safety platform</div>
 
       <h1 class="hero-title aos" style="transition-delay:.1s">
-        DIVINE, I AM THE OWNER OF THIS SITE NOW
+        Keep your community<br><em>safe &amp; connected</em>
       </h1>
 
       <p class="hero-desc aos" style="transition-delay:.2s">
