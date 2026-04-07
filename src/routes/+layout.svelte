@@ -2,6 +2,10 @@
   import './layout.css';
   import { pwaInfo } from 'virtual:pwa-info';
   import { goto } from '$app/navigation';
+import MaintenancePage from '$lib/components/MaintenancePage.svelte';
+import { PUBLIC_MAINTENANCE_MODE } from '$env/static/public';
+
+const MAINTENANCE_MODE = PUBLIC_MAINTENANCE_MODE === 'true';
   import { authStore } from '$lib/stores/auth';
   import CookieNotice from '$lib/components/CookieNotice.svelte';
 
@@ -86,9 +90,11 @@
   {/if}
 
   <!-- Page Content -->
-  {#if children}
-    {@render children()}
-  {/if}
+  {#if MAINTENANCE_MODE}
+  <MaintenancePage />
+{:else if children}
+  {@render children()}
+{/if}
 
   <!-- Global Notifications -->
 <CookieNotice />
