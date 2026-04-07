@@ -64,7 +64,7 @@
   </div>
 </nav>
 
-<!-- ═══════════════════════════════════ HERO ═══════════════════════════════════ -->
+<!-- HERO -->
 <section id="home" class="hero">
   <div class="hero-bg-shape"></div>
   <div class="hero-bg-shape s2"></div>
@@ -135,7 +135,7 @@
   </div>
 </section>
 
-<!-- ══════════════════════════ FEATURES ══════════════════════════════════ -->
+<!-- FEATURES -->
 <section id="features" class="section section-white">
   <div class="container">
     <div class="sec-head aos">
@@ -147,7 +147,8 @@
     <div class="feat-grid">
       {#each features as f, i}
         <div class="feat-card aos" style="transition-delay:{i * 0.08}s">
-          <div class="feat-num">{String(i + 1).padStart(2, '0')}</div>
+          <!-- New numbering design -->
+          <div class="feat-num-new">{String(i + 1).padStart(2, '0')}</div>
           <h3>{f.title}</h3>
           <p>{f.desc}</p>
         </div>
@@ -156,11 +157,10 @@
   </div>
 </section>
 
-<!-- ═══════════════════════════ SAFETY QUEST ═════════════════════════════════ -->
+<!-- SAFETY QUEST -->
 <section id="quest" class="section quest-section">
   <div class="container">
     <div class="quest-grid">
-
       <div class="quest-left aos">
         <span class="sec-tag">Learn by Playing</span>
         <h2 class="quest-heading">Safety skills that<br><em>stick with you</em></h2>
@@ -189,7 +189,7 @@
   </div>
 </section>
 
-<!-- ══════════════════════════ HOW IT WORKS ══════════════════════════════════ -->
+<!-- HOW IT WORKS -->
 <section id="how" class="section section-fog">
   <div class="container">
     <div class="sec-head aos">
@@ -201,7 +201,8 @@
     <div class="steps">
       {#each steps as s, i}
         <div class="step aos" style="transition-delay:{i * 0.12}s">
-          <div class="step-num">{s.n}</div>
+          <!-- New numbering design -->
+          <div class="step-num-new">{s.n}</div>
           <h3>{s.title}</h3>
           <p>{s.desc}</p>
         </div>
@@ -210,7 +211,7 @@
   </div>
 </section>
 
-<!-- ═══════════════════════════════ CTA ══════════════════════════════════════ -->
+<!-- CTA -->
 <section class="cta-section">
   <div class="cta-inner aos">
     <span class="sec-tag">Get Started Today</span>
@@ -223,7 +224,7 @@
   </div>
 </section>
 
-<!-- ════════════════════════════ FOOTER ══════════════════════════════════════ -->
+<!-- FOOTER -->
 <footer class="footer">
   <div class="container">
     <div class="foot-grid">
@@ -257,6 +258,8 @@
     </div>
   </div>
 </footer>
+
+
 
 <style>
   /* ─── RESET & TOKENS ──────────────────────────────────────────────────── */
@@ -500,9 +503,6 @@
     font-size:.7rem; font-weight:700; color:var(--violet);
     letter-spacing:.07em; text-transform:uppercase; margin-bottom:1.25rem;
   }
-  .sec-tag-light {
-    background:rgba(196,181,253,.15); border-color:rgba(196,181,253,.3); color:#c4b5fd;
-  }
   .sec-head h2 {
     font-family:var(--serif); font-size:clamp(2rem,4vw,3rem);
     color:var(--ink); margin-bottom:1rem; line-height:1.15;
@@ -526,14 +526,41 @@
   }
   .feat-card:hover { transform:translateY(-5px); box-shadow:0 16px 40px rgba(106,44,145,.1); border-color:rgba(106,44,145,.18); }
   .feat-card:hover::before { opacity:1; }
-  .feat-num {
-    display:inline-flex; align-items:center; justify-content:center;
-    width:36px; height:36px; border-radius:10px;
-    background:linear-gradient(135deg,#6a2c91,#8b5cf6);
-    color:white; font-family:'DM Sans',sans-serif;
-    font-size:.8125rem; font-weight:700; letter-spacing:.02em;
-    margin-bottom:1.25rem;
+
+  /* New Features Numbering */
+  .feat-num-new {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: white;
+    color: var(--violet);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    border: 2px solid var(--viol-l);
+    box-shadow: 0 3px 12px rgba(106, 44, 145, 0.15);
+    margin-bottom: 1.5rem;
+    position: relative;
+    transition: transform .3s ease;
   }
+
+  .feat-num-new::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    pointer-events: none;
+  }
+
+  .feat-card:hover .feat-num-new {
+    transform: scale(1.08);
+    box-shadow: 0 6px 20px rgba(106, 44, 145, 0.25);
+  }
+
   .feat-card h3 { font-family:var(--serif); font-size:1.125rem; color:var(--ink); margin-bottom:.625rem; }
   .feat-card p  { font-size:.875rem; color:#64748b; line-height:1.7; }
 
@@ -569,51 +596,40 @@
   .qc-label { font-size:.9375rem; font-weight:700; color:var(--ink); margin-bottom:.3rem; }
   .quest-card p { font-size:.8125rem; color:#64748b; line-height:1.6; }
 
-  /* score panel */
-  .score-panel {
-    background:white; border:1px solid var(--mist);
-    border-radius:1.5rem; padding:2.25rem;
-    box-shadow:0 8px 32px rgba(106,44,145,.08);
-  }
-  .score-header { margin-bottom:2rem; }
-  .score-label  { font-size:.7rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:#94a3b8; }
-  .score-user {
-    display:flex; align-items:center; gap:1rem; margin-bottom:1.75rem;
-    padding:1.125rem; background:var(--fog); border-radius:1rem;
-  }
-  .score-avatar {
-    width:48px; height:48px; border-radius:50%;
-    background:linear-gradient(135deg,#c4b5fd,#8b5cf6);
-    display:flex; align-items:center; justify-content:center;
-    font-family:var(--serif); font-size:1.25rem; color:white; flex-shrink:0;
-  }
-  .score-name { font-weight:700; color:var(--ink); font-size:.9375rem; }
-  .score-pts  { font-size:.8125rem; color:#64748b; }
-  .score-pts strong { color:var(--violet); }
-  .score-bars { display:flex; flex-direction:column; gap:1rem; }
-  .sb-label   { display:flex; justify-content:space-between; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:.4rem; }
-  .sb-track   { height:7px; background:var(--mist); border-radius:99px; overflow:hidden; }
-  .sb-fill    { height:100%; border-radius:99px; background:linear-gradient(90deg,#6a2c91,#8b5cf6); }
-  .score-chips{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:1.5rem; }
-  .chip {
-    background:rgba(106,44,145,.07); border:1px solid rgba(106,44,145,.15);
-    border-radius:99px; padding:.3rem .75rem;
-    font-size:.75rem; font-weight:600; color:var(--violet);
-  }
-
   /* ─── HOW IT WORKS ────────────────────────────────────────────────────── */
-  .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:3rem; position:relative; }
+  .steps { 
+    display:grid; 
+    grid-template-columns:repeat(3,1fr); 
+    gap:3rem; 
+    position:relative; 
+  }
   .steps::before {
     content:''; position:absolute; top:44px; left:16%; right:16%;
     height:1px; background:linear-gradient(90deg,transparent,rgba(106,44,145,.25),transparent);
   }
-  .step { text-align:center; padding:1rem; }
-  .step-num {
-    width:60px; height:60px; border-radius:50%;
-    background:linear-gradient(135deg,#6a2c91,#8b5cf6);
-    color:white; font-family:var(--serif); font-size:1.25rem;
-    display:flex; align-items:center; justify-content:center;
-    margin:0 auto 2rem; box-shadow:0 4px 18px rgba(106,44,145,.28);
+
+  /* New How It Works Numbering */
+  .step-num-new {
+    width: 68px;
+    height: 68px;
+    border-radius: 9999px;
+    border: 2.5px solid var(--viol-l);
+    color: var(--violet);
+    font-family: var(--serif);
+    font-size: 1.45rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    background: white;
+    box-shadow: 0 4px 20px rgba(106, 44, 145, 0.12);
+    transition: all .3s ease;
+  }
+
+  .step {
+    text-align:center; 
+    padding:1rem;
   }
   .step h3 { font-family:var(--serif); font-size:1.25rem; color:var(--ink); margin-bottom:.75rem; }
   .step p  { font-size:.9rem; color:#64748b; line-height:1.7; }
@@ -638,22 +654,6 @@
   .cta-inner h2 em { color:var(--violet); font-style:italic; }
   .cta-inner p { font-size:1rem; color:#64748b; max-width:480px; margin:0 auto 2.75rem; line-height:1.75; }
   .cta-btns { display:flex; justify-content:center; gap:1rem; flex-wrap:wrap; }
-  .btn-cta-white {
-    display:inline-flex; align-items:center; gap:.5rem;
-    background:white; color:var(--ink); font-size:.9375rem; font-weight:700;
-    padding:.9375rem 2.125rem; border-radius:99px; text-decoration:none;
-    box-shadow:0 4px 20px rgba(0,0,0,.18);
-    transition:all .25s; font-family:'DM Sans',sans-serif;
-  }
-  .btn-cta-white:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,0,0,.28); }
-  .btn-cta-ghost {
-    display:inline-flex; align-items:center; gap:.5rem;
-    background:transparent; border:1.5px solid rgba(106,44,145,.25);
-    color:var(--violet); font-size:.9375rem; font-weight:600;
-    padding:.9375rem 2.125rem; border-radius:99px; text-decoration:none;
-    transition:all .25s; font-family:'DM Sans',sans-serif;
-  }
-  .btn-cta-ghost:hover { border-color:var(--violet); background:rgba(106,44,145,.05); }
 
   /* ─── SHARED BUTTONS ──────────────────────────────────────────────────── */
   .btn-primary {
@@ -665,6 +665,7 @@
     transition:all .25s; border:none; cursor:pointer; font-family:'DM Sans',sans-serif;
   }
   .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 26px rgba(106,44,145,.48); }
+
   .btn-outline {
     display:inline-flex; align-items:center; gap:.5rem;
     background:transparent; border:1.5px solid rgba(106,44,145,.25);
