@@ -64,7 +64,7 @@
   </div>
 </nav>
 
-<!-- ═══════════════════════════════════ HERO ═══════════════════════════════════ -->
+<!-- HERO -->
 <section id="home" class="hero">
   <div class="hero-bg-shape"></div>
   <div class="hero-bg-shape s2"></div>
@@ -135,7 +135,7 @@
   </div>
 </section>
 
-<!-- ══════════════════════════ FEATURES ══════════════════════════════════ -->
+<!-- FEATURES -->
 <section id="features" class="section section-white">
   <div class="container">
     <div class="sec-head aos">
@@ -147,7 +147,8 @@
     <div class="feat-grid">
       {#each features as f, i}
         <div class="feat-card aos" style="transition-delay:{i * 0.08}s">
-          <div class="feat-num">{String(i + 1).padStart(2, '0')}</div>
+          <!-- Updated numbering -->
+          <div class="feat-num-new">{String(i + 1).padStart(2, '0')}</div>
           <h3>{f.title}</h3>
           <p>{f.desc}</p>
         </div>
@@ -156,11 +157,10 @@
   </div>
 </section>
 
-<!-- ═══════════════════════════ SAFETY QUEST ═════════════════════════════════ -->
+<!-- SAFETY QUEST -->
 <section id="quest" class="section quest-section">
   <div class="container">
     <div class="quest-grid">
-
       <div class="quest-left aos">
         <span class="sec-tag">Learn by Playing</span>
         <h2 class="quest-heading">Safety skills that<br><em>stick with you</em></h2>
@@ -189,7 +189,7 @@
   </div>
 </section>
 
-<!-- ══════════════════════════ HOW IT WORKS ══════════════════════════════════ -->
+<!-- HOW IT WORKS -->
 <section id="how" class="section section-fog">
   <div class="container">
     <div class="sec-head aos">
@@ -201,7 +201,8 @@
     <div class="steps">
       {#each steps as s, i}
         <div class="step aos" style="transition-delay:{i * 0.12}s">
-          <div class="step-num">{s.n}</div>
+          <!-- Updated numbering -->
+          <div class="step-num-new">{s.n}</div>
           <h3>{s.title}</h3>
           <p>{s.desc}</p>
         </div>
@@ -210,7 +211,7 @@
   </div>
 </section>
 
-<!-- ═══════════════════════════════ CTA ══════════════════════════════════════ -->
+<!-- CTA -->
 <section class="cta-section">
   <div class="cta-inner aos">
     <span class="sec-tag">Get Started Today</span>
@@ -223,7 +224,7 @@
   </div>
 </section>
 
-<!-- ════════════════════════════ FOOTER ══════════════════════════════════════ -->
+<!-- FOOTER -->
 <footer class="footer">
   <div class="container">
     <div class="foot-grid">
@@ -258,8 +259,7 @@
   </div>
 </footer>
 
-
- <style>
+<style>
   /* ─── RESET & TOKENS ──────────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -490,7 +490,7 @@
   /* ─── SECTIONS ────────────────────────────────────────────────────────── */
   .section       { padding: 8rem 0; }
   .section-white { background: #ffffff; }
-  .section-fog   { background: #f8f7ff; }
+  .section-fog   { background: #ffffff; }   /* Changed to solid white */
 
   .sec-head { text-align:center; margin-bottom:5rem; }
   .sec-tag {
@@ -525,7 +525,7 @@
   .feat-card:hover { transform:translateY(-5px); box-shadow:0 16px 40px rgba(106,44,145,.1); border-color:rgba(106,44,145,.18); }
   .feat-card:hover::before { opacity:1; }
 
-  /* New Features Numbering - Pure white friendly */
+  /* New Features Numbering */
   .feat-num-new {
     display: inline-flex;
     align-items: center;
@@ -564,7 +564,7 @@
 
   /* ─── SAFETY QUEST ────────────────────────────────────────────────────── */
   .quest-section {
-    background: #f8f7ff;
+    background: #ffffff;   /* Solid white */
     position:relative; overflow:hidden;
   }
   .quest-grid {
@@ -664,7 +664,7 @@
   .btn-outline:hover { border-color:var(--violet); background:rgba(106,44,145,.05); }
 
   /* ─── FOOTER ──────────────────────────────────────────────────────────── */
-  .footer { background: #f8f7ff; border-top: 1px solid var(--mist); padding:5rem 0 2.5rem; }
+  .footer { background: #ffffff; border-top: 1px solid var(--mist); padding:5rem 0 2.5rem; }
   .foot-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:3rem; margin-bottom:3.5rem; }
   .foot-brand { display:flex; flex-direction:column; }
   .foot-logo  { display:flex; align-items:center; gap:.5rem; margin-bottom:1.125rem; }
