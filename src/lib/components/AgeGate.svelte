@@ -207,12 +207,16 @@
   }
 
   .wrap {
-    min-height:100vh;
-    display:flex; align-items:center; justify-content:center;
-    background:#faf9ff;
-    position:relative; overflow:hidden;
-    padding:2rem;
-  }
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;   /* stack content vertically */
+  justify-content: flex-start; /* top align, allows scrolling */
+  align-items: center;      /* horizontal centering */
+  background: #faf9ff;
+  position: relative;
+  padding: 2rem;
+  overflow: auto;           /* allow scrolling */
+}
 
   .bg-shape { position:absolute; border-radius:50%; pointer-events:none; }
   .bg-shape.s1 {
