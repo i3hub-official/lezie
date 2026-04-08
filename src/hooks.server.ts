@@ -1,12 +1,11 @@
 import type { Handle } from '@sveltejs/kit';
-import { handleAuth } from '@better-auth/core';
-import { sequence } from '@sveltejs/kit/hooks';
 
-const cacheHandle: Handle = async ({ event, resolve }) => {
+export const handle: Handle = async ({ event, resolve }) => {
   const response = await resolve(event);
 
   const url = event.url.pathname;
 
+  // Pages that MUST always load fresh (no caching)
   const noCachePaths = [
     '/dashboard',
     '/signup',
@@ -14,12 +13,12 @@ const cacheHandle: Handle = async ({ event, resolve }) => {
     '/report',
     '/profile',
     '/settings',
-    '/contact',
-    '/safety-guidelines',
-    '/faq'
+  '/contact', '/safety-guidelines', '/faq'
+    // Add any other dynamic or private pages here
   ];
 
   if (noCachePaths.some(path => url === path || url.startsWith(path + '/'))) {
+    // Force real-time refresh - no browser or proxy caching
     response.headers.set(
       'Cache-Control',
       'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0'
@@ -28,12 +27,14 @@ const cacheHandle: Handle = async ({ event, resolve }) => {
     response.headers.set('Expires', '0');
   } 
   else if (url === '/' || url === '/home') {
+    // Homepage can be cached (good for performance)
     response.headers.set(
       'Cache-Control',
       'public, max-age=3600, stale-while-revalidate=86400'
     );
   } 
   else {
+    // All other pages - moderate caching (you can adjust)
     response.headers.set(
       'Cache-Control',
       'public, max-age=300, stale-while-revalidate=600'
@@ -42,17 +43,3 @@ const cacheHandle: Handle = async ({ event, resolve }) => {
 
   return response;
 };
-
-// Wrap caching handle and Better Auth together
-export const handle: Handle = sequence(
-  handleAuth({
-    // Optional Better Auth hooks
-    onLogin: async ({ user }) => {
-      console.log('User logged in:', user.id);
-    },
-    onLogout: async ({ session }) => {
-      console.log('User logged out');
-    }
-  }),
-  cacheHandle
-);
