@@ -1,26 +1,34 @@
 <script lang="ts">
-  import './layout.css';
+import './layout.css';
 import { env } from '$env/dynamic/public';
-  import { pwaInfo } from 'virtual:pwa-info';
-  import { goto } from '$app/navigation';
+import { pwaInfo } from 'virtual:pwa-info';
+import { goto } from '$app/navigation';
+import { authStore } from '$lib/stores/auth';
+
 import ShutdownPage from '$lib/components/ShutdownPage.svelte';
 import MaintenancePage from '$lib/components/MaintenancePage.svelte';
+import SuspendedPage    from '$lib/components/SuspendedPage.svelte';
+import AgeGate          from '$lib/components/AgeGate.svelte';
+import RegionBlockedPage from '$lib/components/RegionBlockedPage.svelte';
 
-
-const SHUTDOWN_MODE    = env.PUBLIC_SHUTDOWN_MODE === 'true';
-
-const MAINTENANCE_MODE = env.PUBLIC_MAINTENANCE_MODE === 'true';
-
-  import { authStore } from '$lib/stores/auth';
-  import CookieNotice from '$lib/components/CookieNotice.svelte';
+import CookieNotice from '$lib/components/CookieNotice.svelte';
 
   // Toast & Confirmation Imports
-  import ToastContainer from '$lib/ToastContainer.svelte';
-  import ConfirmationModal from '$lib/ConfirmationModal.svelte';
+import ToastContainer from '$lib/ToastContainer.svelte';
+import ConfirmationModal from '$lib/ConfirmationModal.svelte';
+
+const SHUTDOWN_MODE     = env.PUBLIC_SHUTDOWN_MODE     === 'true';
+const MAINTENANCE_MODE  = env.PUBLIC_MAINTENANCE_MODE  === 'true';
+const REGION_BLOCKED    = env.PUBLIC_REGION_BLOCKED    === 'true';
 
 
   let { children } = $props();
   let isAuthenticated = $state(false);
+// For account suspension, pull from your auth store
+let isSuspended   = $state(false);
+let ageVerified   = $state(false);
+let userEmail     = $state('');
+
 
   // Auth check
   $effect(() => {
@@ -29,6 +37,13 @@ const MAINTENANCE_MODE = env.PUBLIC_MAINTENANCE_MODE === 'true';
     });
     return unsubscribe;
   });
+
+$effect(() => {
+  authStore.subscribe(s => {
+    isSuspended = s.user?.suspended ?? false;
+    userEmail   = s.user?.email ?? '';
+  });
+});
 
   function handleLogout() {
     authStore.logout();
@@ -99,6 +114,12 @@ const MAINTENANCE_MODE = env.PUBLIC_MAINTENANCE_MODE === 'true';
   <ShutdownPage />
 {:else if MAINTENANCE_MODE}
   <MaintenancePage />
+{:else if REGION_BLOCKED}
+  <RegionBlockedPage />
+{:else if isSuspended}
+  <SuspendedPage email={userEmail} />
+{:else if !ageVerified}
+  <AgeGate onVerified={() => ageVerified = true} />
 {:else if children}
   {@render children()}
 {/if}
