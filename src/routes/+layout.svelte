@@ -116,12 +116,12 @@ let userEmail     = $state('');
   <SuspendedPage email={userEmail} />
 
 <!-- {:else if regionAllowed === null}
-  <RegionBlockedPage onAllowed={() => regionAllowed = true} />
+  <RegionBlockedPage onAllowed={() => regionAllowed = true} /> -->
 
-{:else if regionAllowed === false}
-  <RegionBlockedPage />
+<!-- {:else if regionAllowed === false}
+  <RegionBlockedPage /> -->
 
-{:else if regionAllowed === true && children} -->
+<!-- {:else if regionAllowed === true && children} -->
   {@render children()}
 {/if}
 
