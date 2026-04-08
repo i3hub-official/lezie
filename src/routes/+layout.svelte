@@ -8,7 +8,7 @@ import { authStore } from '$lib/stores/auth';
 import ShutdownPage from '$lib/components/ShutdownPage.svelte';
 import MaintenancePage from '$lib/components/MaintenancePage.svelte';
 import SuspendedPage    from '$lib/components/SuspendedPage.svelte';
-import AgeGate          from '$lib/components/AgeGate.svelte';
+//import AgeGate          from '$lib/components/AgeGate.svelte';
 import RegionBlockedPage from '$lib/components/RegionBlockedPage.svelte';
 
 import CookieNotice from '$lib/components/CookieNotice.svelte';
@@ -27,7 +27,7 @@ const REGION_BLOCKED    = env.PUBLIC_REGION_BLOCKED    === 'true';
 // For account suspension, pull from your auth store
 let regionAllowed = $state<null | boolean>(null);
 let isSuspended   = $state(false);
-let ageVerified   = $state(false);
+//let ageVerified   = $state(false);
 let userEmail     = $state('');
 
 
@@ -117,8 +117,8 @@ let userEmail     = $state('');
 {:else if isSuspended}
   <SuspendedPage email={userEmail} />
 
-{:else if !ageVerified}
-  <AgeGate onVerified={() => ageVerified = true} />
+//{:else if !ageVerified}
+  //<AgeGate onVerified={() => ageVerified = true} />
 
 {:else if regionAllowed === null}
   <!-- Let RegionBlockedPage handle checking UI -->
