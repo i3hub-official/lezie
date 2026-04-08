@@ -5,13 +5,32 @@
 
   type Status = 'checking' | 'allowed' | 'blocked' | 'error';
 
-let STORAGE: Storage; // browser-only
-const CACHE_KEY = 'lz_region_cache';
-  
+  let STORAGE: Storage;          // browser-only storage
+  const CACHE_KEY = 'lz_region_cache';
+
+  let status       = $state<Status>('checking');
+  let countryCode  = $state('');
+  let countryName  = $state('');
+  let isVpn        = $state(false);
+  let displayName  = $state('');
+
+  let locationDetails = $state({
+    street: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: '',
+    displayName: ''
+  });
+
+  let { onAllowed }: { onAllowed?: () => void } = $props();
+
+  // TTL logic: VPN users get very short cache
   function getTTL(isVpn: boolean) {
-    return isVpn ? 1000 * 60 : 1000 * 60 * 5; // 1min VPN, 5min normal
+    return isVpn ? 1000 * 60 : 1000 * 60 * 5; // 1 min VPN, 5 min normal
   }
 
+  // Fetch with timeout to prevent hanging
   function fetchWithTimeout(url: string, timeout = 5000) {
     return Promise.race([
       fetch(url),
@@ -21,23 +40,7 @@ const CACHE_KEY = 'lz_region_cache';
     ]);
   }
 
-  let status       = $state<Status>('checking');
-let countryCode  = $state('');
-let countryName  = $state('');
-let isVpn        = $state(false);
-let displayName  = $state('');
-
-let locationDetails = $state({
-  street: '',
-  city: '',
-  state: '',
-  postalCode: '',
-  country: '',
-  displayName: ''
-});
-
-
-  // ✅ Reverse geocode (non-blocking)
+  // Non-blocking reverse geocode
   async function getFullAddressFromCoords(lat: number, lng: number) {
     try {
       const res = await fetch(
@@ -48,8 +51,7 @@ let locationDetails = $state({
       if (data.address) {
         const a = data.address;
         locationDetails = {
-          street: [a.road, a.house_number].filter(Boolean).join(' ') ||
-                  a.suburb || a.neighbourhood || '',
+          street: [a.road, a.house_number].filter(Boolean).join(' ') || a.suburb || a.neighbourhood || '',
           city: a.city || a.town || a.village || '',
           state: a.state || '',
           postalCode: a.postcode || '',
@@ -59,27 +61,25 @@ let locationDetails = $state({
         displayName = data.display_name || '';
       }
     } catch {
-      // silently fail
+      // silent fail
     }
   }
 
   async function checkRegion() {
+    if (typeof window === 'undefined') return; // SSR safety
     status = 'checking';
 
     try {
-      // ✅ 1. CACHE CHECK
+      // 1️⃣ Check cache
       const cached = STORAGE.getItem(CACHE_KEY);
       if (cached) {
         const parsed = JSON.parse(cached);
-        const valid = Date.now() - parsed.timestamp < parsed.ttl;
-
-        if (valid) {
+        if (Date.now() - parsed.timestamp < parsed.ttl) {
           countryCode = parsed.countryCode;
           countryName = parsed.countryName;
           isVpn       = parsed.isVpn;
           displayName = parsed.displayName;
           locationDetails = parsed.locationDetails;
-
           status = parsed.allowed ? 'allowed' : 'blocked';
           if (parsed.allowed) onAllowed?.();
           return;
@@ -88,29 +88,26 @@ let locationDetails = $state({
 
       let data: any = null;
 
-      // 🌍 2. PRIMARY: ipapi
+      // 2️⃣ Primary: ipapi.co
       try {
         const res = await fetchWithTimeout('https://ipapi.co/json/');
         const d = await res.json();
-
         data = {
           countryCode: d.country_code,
           country: d.country_name,
-          proxy: false,
-          hosting: false,
+          proxy: d.proxy ?? false,
+          hosting: d.hosting ?? false,
           lat: d.latitude,
           lon: d.longitude
         };
       } catch {}
 
-      // 🔁 3. FALLBACK: ipinfo
+      // 3️⃣ Fallback: ipinfo.io
       if (!data) {
         try {
           const res = await fetchWithTimeout('https://ipinfo.io/json');
           const d = await res.json();
-
           const [lat, lon] = (d.loc || '').split(',');
-
           data = {
             countryCode: d.country,
             country: d.country,
@@ -122,15 +119,13 @@ let locationDetails = $state({
         } catch {}
       }
 
-      // 🔁 4. FALLBACK: Cloudflare
+      // 4️⃣ Fallback: Cloudflare trace
       if (!data) {
         try {
           const res = await fetchWithTimeout('https://www.cloudflare.com/cdn-cgi/trace');
           const text = await res.text();
-
           const match = text.match(/loc=(.*)/);
           const code = match?.[1];
-
           data = {
             countryCode: code,
             country: code,
@@ -140,33 +135,32 @@ let locationDetails = $state({
         } catch {}
       }
 
-      // ❗ 5. SAFE FALLBACK (NEVER CRASH)
+      // 5️⃣ Safe fallback default
       if (!data || !data.countryCode) {
         countryCode = 'NG';
         countryName = 'Nigeria';
         isVpn = false;
-
         status = ALLOWED_CODES.has(countryCode) ? 'allowed' : 'blocked';
         if (status === 'allowed') onAllowed?.();
         return;
       }
 
-      // ✅ Normalize
+      // Normalize
       countryCode = (data.countryCode || '').toUpperCase();
       countryName = data.country || 'Unknown Location';
       isVpn = !!(data.proxy || data.hosting);
 
-      // 📍 Non-blocking reverse lookup
+      // Non-blocking reverse lookup
       if (data.lat && data.lon) {
         getFullAddressFromCoords(data.lat, data.lon);
       }
 
       const allowed = ALLOWED_CODES.has(countryCode);
 
-      // 🔥 VPN = don't trust cache long
+      // VPN users: remove cache for security
       if (isVpn) STORAGE.removeItem(CACHE_KEY);
 
-      // ✅ SAVE CACHE
+      // Save to cache
       STORAGE.setItem(
         CACHE_KEY,
         JSON.stringify({
@@ -181,7 +175,7 @@ let locationDetails = $state({
         })
       );
 
-      // 🎯 FINAL STATE
+      // Final status
       if (allowed) {
         status = 'allowed';
         onAllowed?.();
@@ -191,20 +185,16 @@ let locationDetails = $state({
 
     } catch (err) {
       console.error(err);
-
-      // ❗ Soft fallback (never trap user)
       countryCode = 'NG';
       countryName = 'Nigeria';
-      status = 'allowed';
-      onAllowed?.();
+      status = 'error';
     }
   }
 
   onMount(() => {
-  STORAGE = sessionStorage; // assign in browser
-  checkRegion();             // now safe to access storage
-});
-
+    if (typeof window !== 'undefined') STORAGE = sessionStorage;
+    checkRegion();
+  });
 </script>
 
   
