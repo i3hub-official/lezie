@@ -26,8 +26,8 @@
   async function getFullAddressFromCoords(lat: number, lng: number) {
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=\( {lat}&lon= \){lng}&zoom=18&addressdetails=1`
-      );
+  `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+);
       const data = await res.json();
 
       if (data.address) {
@@ -48,37 +48,131 @@
     }
   }
 
-  async function checkRegion() {
-    status = 'checking';
+   async function checkRegion() {
+  status = 'checking';
 
-    try {
-      const res = await fetch('https://ip-api.com/json/?fields=status,countryCode,country,proxy,hosting,lat,lon');
-      const data = await res.json();
+  try {
+    // ✅ 1. Check cache
+    const cached = STORAGE.getItem(CACHE_KEY);
 
-      if (data.status !== 'success') {
-        status = 'error';
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      const isValid = Date.now() - parsed.timestamp < parsed.ttl;
+
+      if (isValid) {
+        countryCode    = parsed.countryCode;
+        countryName    = parsed.countryName;
+        isVpn          = parsed.isVpn;
+        displayName    = parsed.displayName;
+        locationDetails = parsed.locationDetails;
+
+        status = parsed.allowed ? 'allowed' : 'blocked';
+
+        if (parsed.allowed) onAllowed?.();
         return;
       }
-
-      countryCode = (data.countryCode ?? '').toUpperCase();
-      countryName = data.country ?? 'Unknown Location';
-      isVpn = !!(data.proxy || data.hosting);
-
-      // Get detailed address if coordinates are available
-      if (data.lat && data.lon) {
-        await getFullAddressFromCoords(data.lat, data.lon);
-      }
-
-      if (ALLOWED_CODES.has(countryCode)) {
-        status = 'allowed';
-        onAllowed?.();
-      } else {
-        status = 'blocked';
-      }
-    } catch {
-      status = 'error';
     }
+
+    // 🌍 2. PRIMARY: ip-api
+    let data: any = null;
+
+    try {
+      const res = await fetch(
+        'https://ip-api.com/json/?fields=status,countryCode,country,proxy,hosting,lat,lon'
+      );
+      const d = await res.json();
+
+      if (d.status === 'success') {
+        data = d;
+      }
+    } catch {}
+
+    // 🔁 3. FALLBACK: ipinfo
+    if (!data) {
+      try {
+        const res = await fetch('https://ipinfo.io/json');
+        const d = await res.json();
+
+        data = {
+          countryCode: d.country,
+          country: d.country,
+          proxy: false,
+          hosting: false,
+          lat: d.loc?.split(',')[0],
+          lon: d.loc?.split(',')[1]
+        };
+      } catch {}
+    }
+
+    // 🔁 4. FALLBACK: Cloudflare
+    if (!data) {
+      try {
+        const res = await fetch('https://www.cloudflare.com/cdn-cgi/trace');
+        const text = await res.text();
+
+        const countryMatch = text.match(/loc=(.*)/);
+        const code = countryMatch?.[1];
+
+        data = {
+          countryCode: code,
+          country: code,
+          proxy: false,
+          hosting: false
+        };
+      } catch {}
+    }
+
+    // ❌ Total failure
+    if (!data) {
+      status = 'error';
+      return;
+    }
+
+    // ✅ Normalize
+    countryCode = (data.countryCode ?? '').toUpperCase();
+    countryName = data.country ?? 'Unknown Location';
+    isVpn = !!(data.proxy || data.hosting);
+
+    // 📍 Reverse geocode (optional, don't block UX)
+    if (data.lat && data.lon) {
+      getFullAddressFromCoords(data.lat, data.lon);
+    }
+
+    const allowed = ALLOWED_CODES.has(countryCode);
+
+    // 🔥 5. VPN handling (no long caching)
+    if (isVpn) {
+      STORAGE.removeItem(CACHE_KEY);
+    }
+
+    // ✅ 6. Cache result
+    STORAGE.setItem(
+      CACHE_KEY,
+      JSON.stringify({
+        countryCode,
+        countryName,
+        isVpn,
+        displayName,
+        locationDetails,
+        allowed,
+        timestamp: Date.now(),
+        ttl: getTTL(isVpn)
+      })
+    );
+
+    // 🎯 7. Final state
+    if (allowed) {
+      status = 'allowed';
+      onAllowed?.();
+    } else {
+      status = 'blocked';
+    }
+
+  } catch (err) {
+    console.error(err);
+    status = 'error';
   }
+}
 
   onMount(() => {
     checkRegion();
