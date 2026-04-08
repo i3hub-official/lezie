@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { AlertTriangle, AlertCircle, Loader2, MapPin, Globe } from 'lucide-svelte';
   import { ALLOWED_CODES, ALLOWED_NAMES } from '$lib/config/allowedRegions';
 
-  // ── State ──────────────────────────────────────────────────────────────
   type Status = 'checking' | 'allowed' | 'blocked' | 'error';
 
   let status      = $state<Status>('checking');
@@ -12,12 +12,10 @@
 
   let { onAllowed }: { onAllowed?: () => void } = $props();
 
-  // ── Geo check ──────────────────────────────────────────────────────────
   async function checkRegion() {
     status = 'checking';
 
     try {
-      // ip-api.com free tier — no API key needed, 45 req/min
       const res  = await fetch('https://ip-api.com/json/?fields=status,countryCode,country,proxy,hosting');
       const data = await res.json();
 
@@ -27,9 +25,8 @@
       }
 
       countryCode = (data.countryCode ?? '').toUpperCase();
-      countryName = data.country ?? countryCode;
+      countryName = data.country ?? 'Unknown Location';
 
-      // Heuristic: ip-api flags known VPN/proxy/hosting IPs
       isVpn = !!(data.proxy || data.hosting);
 
       if (ALLOWED_CODES.has(countryCode)) {
@@ -59,20 +56,29 @@
   <div class="bg-shape s2"></div>
   <div class="grid-overlay" aria-hidden="true"></div>
 
-  <!-- ── CHECKING ──────────────────────────────────────────────────────── -->
+  <!-- CHECKING -->
   {#if status === 'checking'}
     <div class="card checking-card">
       <div class="logo">
         <img src="/icons/lz_ico.png" alt="Lezie" width="40" height="40" />
         <span>Lezie</span>
       </div>
-      <div class="spinner-wrap" aria-label="Checking your location">
-        <div class="spinner"></div>
+      
+      <div class="spinner-wrap">
+        <Loader2 size={48} class="spinner" />
       </div>
+      
       <p class="checking-label">Verifying your location…</p>
+      
+      {#if countryName}
+        <div class="detected-location">
+          <MapPin size={16} />
+          <span>Detected: <strong>{countryName}</strong></span>
+        </div>
+      {/if}
     </div>
 
-  <!-- ── BLOCKED ────────────────────────────────────────────────────────── -->
+  <!-- BLOCKED -->
   {:else if status === 'blocked'}
     <div class="card">
       <div class="logo">
@@ -80,13 +86,8 @@
         <span>Lezie</span>
       </div>
 
-      <div class="icon-wrap" aria-hidden="true">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="2" y1="12" x2="22" y2="12"/>
-          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-          <line x1="4.22" y1="4.22" x2="19.78" y2="19.78"/>
-        </svg>
+      <div class="icon-wrap">
+        <Globe size={48} strokeWidth={1.5} />
         <div class="icon-ring r1"></div>
         <div class="icon-ring r2"></div>
       </div>
@@ -95,82 +96,19 @@
 
       <h1>Service only available<br /><em>in {ALLOWED_NAMES}</em></h1>
 
-      {#if countryName}
-        <div class="detected-location">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
-          Your location: <strong>{countryName}</strong>
-        </div>
-      {/if}
+      <!-- Current Location -->
+      <div class="detected-location prominent">
+        <MapPin size={18} />
+        Your current location: <strong>{countryName}</strong>
+        {#if isVpn}
+          <span class="vpn-tag">• VPN / Proxy detected</span>
+        {/if}
+      </div>
 
       <p class="subtitle">
         Lezie is a community safety platform built specifically for
         {ALLOWED_NAMES}. It is not currently available in your region.
       </p>
-
-      {#if isVpn}
-        <div class="notice vpn-notice">
-          <div class="notice-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-          </div>
-          <p>
-            A <strong>VPN or proxy</strong> was detected on your connection. If you are in
-            {ALLOWED_NAMES}, please disable it and try again.
-          </p>
-        </div>
-      {:else}
-        <div class="notice">
-          <div class="notice-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-          </div>
-          <p>
-            If you are in {ALLOWED_NAMES} and seeing this message, your network may be
-            routing through a VPN or proxy server. Please disable it and try again.
-          </p>
-        </div>
-      {/if}
-
-      <div class="info-grid">
-        <div class="info-block">
-          <div class="info-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-          </div>
-          <div>
-            <div class="info-title">Why is Lezie region-restricted?</div>
-            <div class="info-body">
-              Our incident data, community networks, and emergency response integrations
-              are built for {ALLOWED_NAMES}. Access from other regions is not supported at this time.
-            </div>
-          </div>
-        </div>
-
-        <div class="info-block">
-          <div class="info-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
-          </div>
-          <div>
-            <div class="info-title">Expanding soon?</div>
-            <div class="info-body">
-              We plan to expand to more regions. Register your interest at
-              <a href="mailto:hello@lezie.app" class="link">hello@lezie.app</a>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <button class="btn" onclick={checkRegion} type="button">Try Again</button>
 
@@ -179,7 +117,7 @@
       </p>
     </div>
 
-  <!-- ── ERROR ──────────────────────────────────────────────────────────── -->
+  <!-- ERROR -->
   {:else if status === 'error'}
     <div class="card error-card">
       <div class="logo">
@@ -187,18 +125,21 @@
         <span>Lezie</span>
       </div>
 
-      <div class="icon-wrap error-icon-wrap" aria-hidden="true">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
+      <div class="icon-wrap error-icon-wrap">
+        <AlertCircle size={48} strokeWidth={1.5} />
         <div class="icon-ring r1"></div>
         <div class="icon-ring r2"></div>
       </div>
 
       <div class="tag error-tag">Location Error</div>
       <h1 class="error-h1">Could not verify<br /><em>your location</em></h1>
+
+      {#if countryName}
+        <div class="detected-location">
+          <MapPin size={16} />
+          Last detected: <strong>{countryName}</strong>
+        </div>
+      {/if}
 
       <p class="subtitle">
         We were unable to determine your location. Please check your internet
@@ -245,7 +186,6 @@
   }
   @keyframes spin { to { transform:rotate(360deg); } }
 
-  /* ── WRAP ───────────────────────────────────────────────────────────────── */
   .wrap {
     min-height:100vh;
     display:flex; align-items:center; justify-content:center;
@@ -276,7 +216,6 @@
     pointer-events:none;
   }
 
-  /* ── CARD ───────────────────────────────────────────────────────────────── */
   .card {
     position:relative; z-index:1;
     background:#ffffff;
@@ -288,12 +227,12 @@
     box-shadow:0 32px 80px rgba(245,158,11,.07), 0 4px 16px rgba(0,0,0,.04);
     animation:fadeUp .8s ease both;
   }
+
   .checking-card, .error-card {
     border-color:rgba(106,44,145,.12);
     box-shadow:0 32px 80px rgba(106,44,145,.1), 0 4px 16px rgba(0,0,0,.04);
   }
 
-  /* ── LOGO ───────────────────────────────────────────────────────────────── */
   .logo {
     display:inline-flex; align-items:center; gap:.625rem;
     margin-bottom:2.25rem;
@@ -302,27 +241,29 @@
   }
   .logo img { border-radius:8px; }
 
-  /* ── SPINNER ────────────────────────────────────────────────────────────── */
   .spinner-wrap {
     width:72px; height:72px; margin:0 auto 1.5rem;
     display:flex; align-items:center; justify-content:center;
   }
   .spinner {
-    width:48px; height:48px; border-radius:50%;
-    border:3px solid var(--mist);
-    border-top-color:var(--violet);
-    animation:spin .9s linear infinite;
+    color: var(--violet);
+    animation: spin 1s linear infinite;
   }
-  .checking-label { font-size:.9375rem; color:#94a3b8; font-weight:500; }
 
-  /* ── ICON ───────────────────────────────────────────────────────────────── */
+  .checking-label { 
+    font-size:.9375rem; 
+    color:#94a3b8; 
+    font-weight:500; 
+    margin-bottom: 1rem;
+  }
+
   .icon-wrap {
     position:relative; width:80px; height:80px;
     margin:0 auto 1.75rem;
     display:flex; align-items:center; justify-content:center;
+    color: var(--amber);
   }
-  .icon-wrap svg { color:var(--amber); position:relative; z-index:1; }
-  .error-icon-wrap svg { color:var(--violet); }
+  .error-icon-wrap { color: var(--violet); }
 
   .icon-ring {
     position:absolute; top:50%; left:50%;
@@ -334,7 +275,6 @@
   .icon-ring.r1 { width:56px; height:56px; animation-delay:0s; }
   .icon-ring.r2 { width:72px; height:72px; animation-delay:1.5s; }
 
-  /* ── TAGS ───────────────────────────────────────────────────────────────── */
   .tag {
     display:inline-block;
     background:rgba(245,158,11,.08);
@@ -350,17 +290,33 @@
     color:var(--violet);
   }
 
-  /* ── DETECTED LOCATION PILL ─────────────────────────────────────────────── */
   .detected-location {
-    display:inline-flex; align-items:center; gap:.4rem;
-    background:var(--mist); border-radius:99px;
-    padding:.375rem .875rem; margin-bottom:1rem;
-    font-size:.8rem; color:#475569;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f8f7ff;
+    border: 1px solid var(--mist);
+    border-radius: 9999px;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.875rem;
+    color: #475569;
+    margin: 1rem auto 1.75rem;
   }
-  .detected-location strong { color:var(--ink); }
-  .detected-location svg { color:#94a3b8; flex-shrink:0; }
 
-  /* ── HEADINGS ───────────────────────────────────────────────────────────── */
+  .detected-location.prominent {
+    background: #fef3c7;
+    border-color: #fcd34d;
+    color: #92400e;
+    font-weight: 500;
+    padding: 0.7rem 1.25rem;
+  }
+
+  .vpn-tag {
+    font-size: 0.75rem;
+    color: #f59e0b;
+    font-weight: 600;
+  }
+
   h1 {
     font-family:var(--serif);
     font-size:clamp(1.75rem,4vw,2.5rem);
@@ -376,42 +332,6 @@
     max-width:400px; margin-left:auto; margin-right:auto;
   }
 
-  /* ── NOTICE ─────────────────────────────────────────────────────────────── */
-  .notice {
-    display:flex; align-items:flex-start; gap:.75rem;
-    background:#fffbeb; border:1px solid rgba(245,158,11,.25);
-    border-radius:1rem; padding:1rem 1.25rem;
-    margin-bottom:1.75rem; text-align:left;
-  }
-  .vpn-notice { background:#fff7ed; border-color:rgba(234,88,12,.25); }
-  .notice-icon {
-    flex-shrink:0; width:28px; height:28px;
-    border-radius:7px; background:rgba(245,158,11,.12);
-    display:flex; align-items:center; justify-content:center;
-    color:var(--amber); margin-top:.1rem;
-  }
-  .notice p { font-size:.8125rem; color:#92400e; line-height:1.6; }
-  .notice p strong { font-weight:700; }
-
-  /* ── INFO GRID ──────────────────────────────────────────────────────────── */
-  .info-grid { display:flex; flex-direction:column; gap:.75rem; margin-bottom:2rem; text-align:left; }
-  .info-block {
-    display:flex; align-items:flex-start; gap:.875rem;
-    background:#faf9ff; border:1px solid var(--mist);
-    border-radius:1rem; padding:1rem 1.25rem;
-  }
-  .info-icon {
-    flex-shrink:0; width:32px; height:32px;
-    border-radius:8px; background:var(--mist);
-    display:flex; align-items:center; justify-content:center;
-    color:var(--violet); margin-top:.1rem;
-  }
-  .info-title { font-size:.8125rem; font-weight:700; color:var(--ink); margin-bottom:.2rem; }
-  .info-body  { font-size:.8rem; color:#64748b; line-height:1.6; }
-  .link { color:var(--violet); font-weight:600; text-decoration:none; }
-  .link:hover { text-decoration:underline; }
-
-  /* ── BUTTON ─────────────────────────────────────────────────────────────── */
   .btn {
     display:inline-flex; align-items:center; justify-content:center;
     background:#6a2c91; color:white;
@@ -425,7 +345,11 @@
   }
   .btn:hover { transform:translateY(-2px); box-shadow:0 8px 26px rgba(106,44,145,.35); }
 
-  .footer-note { font-size:.75rem; color:#94a3b8; line-height:1.6; }
+  .footer-note { 
+    font-size:.75rem; 
+    color:#94a3b8; 
+    line-height:1.6; 
+  }
 
   @media (max-width:480px) {
     .card { padding:2.5rem 1.75rem; border-radius:1.5rem; }
