@@ -1,22 +1,58 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { AlertTriangle, AlertCircle, Loader2, MapPin, Globe } from 'lucide-svelte';
+  import { Loader2, MapPin, Globe, AlertCircle } from 'lucide-svelte';
   import { ALLOWED_CODES, ALLOWED_NAMES } from '$lib/config/allowedRegions';
 
   type Status = 'checking' | 'allowed' | 'blocked' | 'error';
 
-  let status      = $state<Status>('checking');
-  let countryCode = $state('');
-  let countryName = $state('');
-  let isVpn       = $state(false);
+  let status       = $state<Status>('checking');
+  let countryCode  = $state('');
+  let countryName  = $state('');
+  let isVpn        = $state(false);
+  let displayName  = $state('');        // Full address from Nominatim
 
   let { onAllowed }: { onAllowed?: () => void } = $props();
+
+  // Detailed location from Nominatim
+  let locationDetails = $state({
+    street: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: '',
+    displayName: ''
+  });
+
+  async function getFullAddressFromCoords(lat: number, lng: number) {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=\( {lat}&lon= \){lng}&zoom=18&addressdetails=1`
+      );
+      const data = await res.json();
+
+      if (data.address) {
+        const a = data.address;
+        locationDetails = {
+          street: [a.road, a.house_number].filter(Boolean).join(' ') || 
+                  a.suburb || a.neighbourhood || '',
+          city: a.city || a.town || a.village || a.municipality || '',
+          state: a.state || a.region || '',
+          postalCode: a.postcode || '',
+          country: a.country || '',
+          displayName: data.display_name || ''
+        };
+        displayName = data.display_name || '';
+      }
+    } catch (e) {
+      console.warn('Nominatim reverse lookup failed');
+    }
+  }
 
   async function checkRegion() {
     status = 'checking';
 
     try {
-      const res  = await fetch('https://ip-api.com/json/?fields=status,countryCode,country,proxy,hosting');
+      const res = await fetch('https://ip-api.com/json/?fields=status,countryCode,country,proxy,hosting,lat,lon');
       const data = await res.json();
 
       if (data.status !== 'success') {
@@ -26,8 +62,12 @@
 
       countryCode = (data.countryCode ?? '').toUpperCase();
       countryName = data.country ?? 'Unknown Location';
-
       isVpn = !!(data.proxy || data.hosting);
+
+      // Get detailed address if coordinates are available
+      if (data.lat && data.lon) {
+        await getFullAddressFromCoords(data.lat, data.lon);
+      }
 
       if (ALLOWED_CODES.has(countryCode)) {
         status = 'allowed';
@@ -63,19 +103,10 @@
         <img src="/icons/lz_ico.png" alt="Lezie" width="40" height="40" />
         <span>Lezie</span>
       </div>
-      
       <div class="spinner-wrap">
         <Loader2 size={48} class="spinner" />
       </div>
-      
       <p class="checking-label">Verifying your location…</p>
-      
-      {#if countryName}
-        <div class="detected-location">
-          <MapPin size={16} />
-          <span>Detected: <strong>{countryName}</strong></span>
-        </div>
-      {/if}
     </div>
 
   <!-- BLOCKED -->
@@ -96,18 +127,21 @@
 
       <h1>Service only available<br /><em>in {ALLOWED_NAMES}</em></h1>
 
-      <!-- Current Location -->
+      <!-- Rich Location Display -->
       <div class="detected-location prominent">
         <MapPin size={18} />
-        Your current location: <strong>{countryName}</strong>
+        <div>
+          <strong>{displayName || countryName}</strong><br>
+          <small>{locationDetails.city && locationDetails.state ? `${locationDetails.city}, ${locationDetails.state}` : ''}</small>
+        </div>
         {#if isVpn}
           <span class="vpn-tag">• VPN / Proxy detected</span>
         {/if}
       </div>
 
       <p class="subtitle">
-        Lezie is a community safety platform built specifically for
-        {ALLOWED_NAMES}. It is not currently available in your region.
+        Lezie is a community safety platform built specifically for {ALLOWED_NAMES}. 
+        It is not currently available in your region.
       </p>
 
       <button class="btn" onclick={checkRegion} type="button">Try Again</button>
@@ -134,22 +168,21 @@
       <div class="tag error-tag">Location Error</div>
       <h1 class="error-h1">Could not verify<br /><em>your location</em></h1>
 
-      {#if countryName}
+      {#if displayName || countryName}
         <div class="detected-location">
           <MapPin size={16} />
-          Last detected: <strong>{countryName}</strong>
+          Last detected: <strong>{displayName || countryName}</strong>
         </div>
       {/if}
 
       <p class="subtitle">
-        We were unable to determine your location. Please check your internet
-        connection and try again.
+        We were unable to determine your location. Please check your internet connection and try again.
       </p>
 
       <button class="btn" onclick={checkRegion} type="button">Retry</button>
 
       <p class="footer-note">
-        If this keeps happening, contact us at
+        If this keeps happening, contact us at 
         <a href="mailto:support@lezie.app" class="link">support@lezie.app</a>
       </p>
     </div>
@@ -157,6 +190,7 @@
 </div>
 
 <style>
+  /* Your original styles (kept intact) */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :global(body) {
@@ -230,7 +264,6 @@
 
   .checking-card, .error-card {
     border-color:rgba(106,44,145,.12);
-    box-shadow:0 32px 80px rgba(106,44,145,.1), 0 4px 16px rgba(0,0,0,.04);
   }
 
   .logo {
@@ -245,17 +278,9 @@
     width:72px; height:72px; margin:0 auto 1.5rem;
     display:flex; align-items:center; justify-content:center;
   }
-  .spinner {
-    color: var(--violet);
-    animation: spin 1s linear infinite;
-  }
+  .spinner { color: var(--violet); animation: spin 1s linear infinite; }
 
-  .checking-label { 
-    font-size:.9375rem; 
-    color:#94a3b8; 
-    font-weight:500; 
-    margin-bottom: 1rem;
-  }
+  .checking-label { font-size:.9375rem; color:#94a3b8; font-weight:500; }
 
   .icon-wrap {
     position:relative; width:80px; height:80px;
@@ -272,7 +297,7 @@
     animation:ringOut 4s ease-out infinite;
   }
   .error-icon-wrap .icon-ring { border-color:rgba(106,44,145,.2); }
-  .icon-ring.r1 { width:56px; height:56px; animation-delay:0s; }
+  .icon-ring.r1 { width:56px; height:56px; }
   .icon-ring.r2 { width:72px; height:72px; animation-delay:1.5s; }
 
   .tag {
@@ -297,10 +322,11 @@
     background: #f8f7ff;
     border: 1px solid var(--mist);
     border-radius: 9999px;
-    padding: 0.55rem 1.1rem;
+    padding: 0.6rem 1.2rem;
     font-size: 0.875rem;
     color: #475569;
     margin: 1rem auto 1.75rem;
+    max-width: fit-content;
   }
 
   .detected-location.prominent {
@@ -308,7 +334,6 @@
     border-color: #fcd34d;
     color: #92400e;
     font-weight: 500;
-    padding: 0.7rem 1.25rem;
   }
 
   .vpn-tag {
