@@ -5,8 +5,8 @@ import { pwaInfo } from 'virtual:pwa-info';
 import { goto } from '$app/navigation';
 import { authStore } from '$lib/stores/auth';
 
-import ShutdownPage from '$lib/components/ShutdownPage.svelte';
-import MaintenancePage from '$lib/components/MaintenancePage.svelte';
+//import ShutdownPage from '$lib/components/ShutdownPage.svelte';
+//import MaintenancePage from '$lib/components/MaintenancePage.svelte';
 //import SuspendedPage    from '$lib/components/SuspendedPage.svelte';
 //import RegionBlockedPage from '$lib/components/RegionBlockedPage.svelte';
 
@@ -106,23 +106,23 @@ let userEmail     = $state('');
 
   <!-- Page Content -->
  <!-- Page Content -->
-{#if SHUTDOWN_MODE}
-  <ShutdownPage />
+<!-- {#if SHUTDOWN_MODE}
+  <ShutdownPage /> -->
 
-{:else if MAINTENANCE_MODE}
-  <MaintenancePage />
+<!-- {:else if MAINTENANCE_MODE}
+  <MaintenancePage /> -->
 
 <!-- {:else if isSuspended}
-  <SuspendedPage email={userEmail} />
+  <SuspendedPage email={userEmail} /> -->
 
-{:else if regionAllowed === null}
+<!-- {:else if regionAllowed === null}
   <!-- Let RegionBlockedPage handle checking UI -->
-  <RegionBlockedPage onAllowed={() => regionAllowed = true} />
+  <RegionBlockedPage onAllowed={() => regionAllowed = true} /> -->
 
-{:else if regionAllowed === false}
-  <RegionBlockedPage />
+<!-- {:else if regionAllowed === false}
+  <RegionBlockedPage /> -->
 
-{:else if regionAllowed === true && children}
+<!-- {:else if regionAllowed === true && children}
   {@render children()}
 {/if} -->
 
