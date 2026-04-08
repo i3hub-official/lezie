@@ -25,6 +25,8 @@
   let result = $state<any>(null);
   let error = $state('');
   let selectedScenario = $state(0);
+  let session = $state<any>(null);
+  let isCheckingAuth = $state(true);
 
   // Sample categories
   const categories = $state([
@@ -74,6 +76,23 @@
     }
   ]);
 
+  // Check authentication status
+  async function checkAuth() {
+    try {
+      const res = await fetch('/api/auth/session');
+      const data = await res.json();
+      session = data.session;
+      if (!session) {
+        error = 'Not authenticated. Please log in first.';
+      }
+    } catch (err) {
+      console.error('Auth check failed:', err);
+      error = 'Failed to check authentication status';
+    } finally {
+      isCheckingAuth = false;
+    }
+  }
+
   function autoFillTest(index: number) {
     const scenario = testScenarios[index];
     title = scenario.title;
@@ -96,6 +115,11 @@
       return;
     }
 
+    if (!session) {
+      error = 'Please log in first to create reports';
+      return;
+    }
+
     isLoading = true;
     error = '';
     result = null;
@@ -103,7 +127,11 @@
     try {
       const res = await fetch('/api/reports', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          // The cookie will be sent automatically
+        },
+        credentials: 'include', // Important: include cookies
         body: JSON.stringify({
           title,
           description,
@@ -117,13 +145,18 @@
         })
       });
 
+      if (res.status === 401) {
+        throw new Error('Unauthorized. Please log in again.');
+      }
+
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.error || 'Failed to create report');
+      if (!res.ok) throw new Error(data.error || `Failed with status ${res.status}`);
 
       result = data;
       console.log('Report created with AI analysis:', data);
     } catch (err: any) {
+      console.error('Fetch error:', err);
       error = err.message;
     } finally {
       isLoading = false;
@@ -141,6 +174,7 @@
   }
 
   onMount(() => {
+    checkAuth();
     autoFillTest(0);
   });
 </script>
@@ -151,6 +185,27 @@
     <h1>AI Report Analysis Test Page</h1>
   </div>
   <p class="subtitle">Test your AI middleware and report creation flow</p>
+
+  <!-- Auth Status -->
+  {#if isCheckingAuth}
+    <div class="info-box">
+      <RefreshCw size={18} class="spinning" />
+      Checking authentication...
+    </div>
+  {:else if !session}
+    <div class="warning-box">
+      <AlertCircle size={20} />
+      <div>
+        <strong>Not authenticated!</strong>
+        <p>Please <a href="/auth/signin">log in</a> to create reports.</p>
+      </div>
+    </div>
+  {:else}
+    <div class="success-box">
+      <CheckCircle size={18} />
+      <span>Authenticated as: <strong>{session.user?.email || session.user?.id}</strong></span>
+    </div>
+  {/if}
 
   <!-- Quick Fill Section -->
   <div class="quick-fill-section">
@@ -163,12 +218,13 @@
         <button 
           class="scenario-btn {selectedScenario === index ? 'active' : ''}"
           onclick={() => autoFillTest(index)}
+          disabled={!session}
         >
           {scenario.name}
         </button>
       {/each}
     </div>
-    <button onclick={randomFill} class="random-btn">
+    <button onclick={randomFill} class="random-btn" disabled={!session}>
       <RefreshCw size={16} />
       Random Fill
     </button>
@@ -184,6 +240,7 @@
         type="text" 
         bind:value={title} 
         placeholder="E.g., Suspicious person near school"
+        disabled={!session}
       />
     </div>
 
@@ -196,6 +253,7 @@
         bind:value={description} 
         rows="5" 
         placeholder="Describe the incident in detail..."
+        disabled={!session}
       ></textarea>
     </div>
 
@@ -204,7 +262,7 @@
         <List size={16} />
         Category
       </label>
-      <select bind:value={categoryId}>
+      <select bind:value={categoryId} disabled={!session}>
         <option value="">Select Category</option>
         {#each categories as cat}
           <option value={cat.id}>{cat.name}</option>
@@ -221,11 +279,12 @@
         type="text" 
         bind:value={locationName} 
         placeholder="E.g., GRA Phase 2"
+        disabled={!session}
       />
     </div>
 
     <div class="actions">
-      <button onclick={testReport} disabled={isLoading} class="btn-primary">
+      <button onclick={testReport} disabled={isLoading || !session} class="btn-primary">
         {#if isLoading}
           <RefreshCw size={18} class="spinning" />
           Analyzing with AI...
@@ -234,7 +293,7 @@
           Create Report + AI Analysis
         {/if}
       </button>
-      <button onclick={resetForm} class="btn-secondary">
+      <button onclick={resetForm} class="btn-secondary" disabled={!session}>
         <Trash2 size={18} />
         Reset
       </button>
@@ -334,6 +393,38 @@
     font-size: 0.875rem;
   }
 
+  .info-box, .warning-box, .success-box {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .info-box {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+  }
+
+  .warning-box {
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    color: #92400e;
+  }
+
+  .warning-box a {
+    color: #6a2c91;
+    text-decoration: underline;
+  }
+
+  .success-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+  }
+
   .quick-fill-section {
     background: #f9fafb;
     border: 1px solid #e5e7eb;
@@ -371,7 +462,7 @@
     color: #374151;
   }
 
-  .scenario-btn:hover {
+  .scenario-btn:hover:not(:disabled) {
     background: #f3f4f6;
     border-color: #6a2c91;
   }
@@ -380,6 +471,11 @@
     background: #6a2c91;
     color: white;
     border-color: #6a2c91;
+  }
+
+  .scenario-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .random-btn {
@@ -395,8 +491,13 @@
     color: #6a2c91;
   }
 
-  .random-btn:hover {
+  .random-btn:hover:not(:disabled) {
     background: #f3f4f6;
+  }
+
+  .random-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .form-card {
@@ -435,6 +536,11 @@
     outline: none;
     border-color: #6a2c91;
     box-shadow: 0 0 0 3px rgba(106, 44, 145, 0.1);
+  }
+
+  input:disabled, textarea:disabled, select:disabled {
+    background: #f9fafb;
+    cursor: not-allowed;
   }
 
   textarea {
@@ -482,10 +588,15 @@
     color: #374151;
   }
 
-  .btn-secondary:hover {
+  .btn-secondary:hover:not(:disabled) {
     background: #f9fafb;
     border-color: #6a2c91;
     color: #6a2c91;
+  }
+
+  .btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .spinning {
