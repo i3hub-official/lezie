@@ -8,7 +8,7 @@ import { authStore } from '$lib/stores/auth';
 import ShutdownPage from '$lib/components/ShutdownPage.svelte';
 import MaintenancePage from '$lib/components/MaintenancePage.svelte';
 import SuspendedPage    from '$lib/components/SuspendedPage.svelte';
-import RegionBlockedPage from '$lib/components/RegionBlockedPage.svelte';
+//import RegionBlockedPage from '$lib/components/RegionBlockedPage.svelte';
 
 import CookieNotice from '$lib/components/CookieNotice.svelte';
 
@@ -115,14 +115,13 @@ let userEmail     = $state('');
 {:else if isSuspended}
   <SuspendedPage email={userEmail} />
 
-{:else if regionAllowed === null}
-  <!-- Let RegionBlockedPage handle checking UI -->
+<!-- {:else if regionAllowed === null}
   <RegionBlockedPage onAllowed={() => regionAllowed = true} />
 
 {:else if regionAllowed === false}
   <RegionBlockedPage />
 
-{:else if regionAllowed === true && children}
+{:else if regionAllowed === true && children} -->
   {@render children()}
 {/if}
 
