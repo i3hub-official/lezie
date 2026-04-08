@@ -5,10 +5,10 @@ import { pwaInfo } from 'virtual:pwa-info';
 import { goto } from '$app/navigation';
 import { authStore } from '$lib/stores/auth';
 
-import ShutdownPage from '$lib/components/ShutdownPage.svelte';
+//import ShutdownPage from '$lib/components/ShutdownPage.svelte';
 //import MaintenancePage from '$lib/components/MaintenancePage.svelte';
 //import SuspendedPage    from '$lib/components/SuspendedPage.svelte';
-//import RegionBlockedPage from '$lib/components/RegionBlockedPage.svelte';
+import RegionBlockedPage from '$lib/components/RegionBlockedPage.svelte';
 
 import CookieNotice from '$lib/components/CookieNotice.svelte';
 
@@ -109,8 +109,8 @@ let userEmail     = $state('');
   <!-- Page Content -->
 
 
-{#if SHUTDOWN_MODE}
-  <ShutdownPage />
+<!-- {#if SHUTDOWN_MODE}
+  <ShutdownPage /> -->
 
 <!-- {:else if MAINTENANCE_MODE}
   <MaintenancePage /> -->
@@ -118,17 +118,17 @@ let userEmail     = $state('');
 <!-- {:else if isSuspended}
   <SuspendedPage email={userEmail} /> -->
 
-<!-- {:else if regionAllowed === null}
-  <RegionBlockedPage onAllowed={() => regionAllowed = true} /> -->
+ {:else if regionAllowed === null}
+  <RegionBlockedPage onAllowed={() => regionAllowed = true} /> 
 
-<!-- {:else if regionAllowed === false}
-  <RegionBlockedPage /> -->
+ {:else if regionAllowed === false}
+  <RegionBlockedPage /> 
 
-<!-- {:else if regionAllowed === true && children}
-  {@render children()} -->
+ {:else if regionAllowed === true && children}
+  {@render children()}
 {/if} 
 
-{@render children()}
+<!-- {@render children()} -->
 
  <!-- Global Notifications -->
 <CookieNotice />
