@@ -96,7 +96,7 @@
   :global(body) {
     font-family: 'DM Sans', system-ui, sans-serif;
     background: #ffffff;
-    overflow: hidden;
+    overflow: auto;
   }
 
   :root {
