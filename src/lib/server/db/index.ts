@@ -1,21 +1,14 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/libsql';
+import { createClient } from '@libsql/client/web'; // Use /web to bypass native driver issues in Termux
 import * as schema from './schema';
 import * as authSchema from './auth-schema';
-import { DATABASE_URL } from '$env/static/private'; // Built-in SvelteKit env handling
+import { DATABASE_URL, DATABASE_AUTH_TOKEN } from '$env/static/private';
 
-// The client instance
-const client = postgres(DATABASE_URL, {
-  ssl: { rejectUnauthorized: false },
-  prepare: false,
-  max: 10,
-  idle_timeout: 20,
-  connect_timeout: 10,
+const client = createClient({
+  url: DATABASE_URL,
+  authToken: DATABASE_AUTH_TOKEN,
 });
 
 export const db = drizzle(client, { 
-  schema: {
-    ...schema,
-    ...authSchema,
-  } 
+  schema: { ...schema, ...authSchema } 
 });
