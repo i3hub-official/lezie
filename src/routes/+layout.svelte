@@ -8,7 +8,7 @@ import { authStore } from '$lib/stores/auth';
 import ShutdownPage from '$lib/components/ShutdownPage.svelte';
 import MaintenancePage from '$lib/components/MaintenancePage.svelte';
 import SuspendedPage    from '$lib/components/SuspendedPage.svelte';
-//import RegionBlockedPage from '$lib/components/RegionBlockedPage.svelte';
+import RegionBlockedPage from '$lib/components/RegionBlockedPage.svelte';
 
 import CookieNotice from '$lib/components/CookieNotice.svelte';
 
@@ -104,7 +104,7 @@ let userEmail     = $state('');
     </nav>
   {/if}
 
-  <!-- Page Content -->
+
  <!-- Page Content -->
 {#if SHUTDOWN_MODE}
   <ShutdownPage />
