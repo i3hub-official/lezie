@@ -118,7 +118,7 @@ let userEmail     = $state('');
 <!-- {:else if isSuspended}
   <SuspendedPage email={userEmail} /> -->
 
- {:else if regionAllowed === null}
+ {#if regionAllowed === null}
   <RegionBlockedPage onAllowed={() => regionAllowed = true} /> 
 
  {:else if regionAllowed === false}
