@@ -1,5 +1,6 @@
 // src/lib/server/auth/index.ts
 import { betterAuth } from 'better-auth';
+import 'dotenv/config';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '$lib/server/db';
 import * as authSchema from '$lib/server/db/auth-schema';
