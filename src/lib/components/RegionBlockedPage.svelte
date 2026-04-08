@@ -5,7 +5,7 @@
 
   type Status = 'checking' | 'allowed' | 'blocked' | 'error';
 
-  let STORAGE: Storage;          // browser-only storage
+  let STORAGE: Storage;          // sessionStorage or fallback
   const CACHE_KEY = 'lz_region_cache';
 
   let status       = $state<Status>('checking');
@@ -25,12 +25,10 @@
 
   let { onAllowed }: { onAllowed?: () => void } = $props();
 
-  // TTL logic: VPN users get very short cache
   function getTTL(isVpn: boolean) {
-    return isVpn ? 1000 * 60 : 1000 * 60 * 5; // 1 min VPN, 5 min normal
+    return isVpn ? 1000 * 60 : 1000 * 60 * 60 * 24; // 1 min VPN, 24h normal
   }
 
-  // Fetch with timeout to prevent hanging
   function fetchWithTimeout(url: string, timeout = 5000) {
     return Promise.race([
       fetch(url),
@@ -40,7 +38,6 @@
     ]);
   }
 
-  // Non-blocking reverse geocode
   async function getFullAddressFromCoords(lat: number, lng: number) {
     try {
       const res = await fetch(
@@ -60,20 +57,18 @@
         };
         displayName = data.display_name || '';
       }
-    } catch {
-      // silent fail
-    }
+    } catch {}
   }
 
   async function checkRegion() {
-    if (typeof window === 'undefined') return; // SSR safety
+    if (typeof window === 'undefined') return; // SSR safe
     status = 'checking';
 
     try {
-      // 1️⃣ Check cache
-      const cached = STORAGE.getItem(CACHE_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached);
+      // 1️⃣ Read cache (sessionStorage first, fallback to localStorage)
+      const cachedRaw = (sessionStorage.getItem(CACHE_KEY) || localStorage.getItem(CACHE_KEY));
+      if (cachedRaw) {
+        const parsed = JSON.parse(cachedRaw);
         if (Date.now() - parsed.timestamp < parsed.ttl) {
           countryCode = parsed.countryCode;
           countryName = parsed.countryName;
@@ -135,7 +130,7 @@
         } catch {}
       }
 
-      // 5️⃣ Safe fallback default
+      // 5️⃣ Safe fallback
       if (!data || !data.countryCode) {
         countryCode = 'NG';
         countryName = 'Nigeria';
@@ -150,7 +145,6 @@
       countryName = data.country || 'Unknown Location';
       isVpn = !!(data.proxy || data.hosting);
 
-      // Non-blocking reverse lookup
       if (data.lat && data.lon) {
         getFullAddressFromCoords(data.lat, data.lon);
       }
@@ -158,30 +152,29 @@
       const allowed = ALLOWED_CODES.has(countryCode);
 
       // VPN users: remove cache for security
-      if (isVpn) STORAGE.removeItem(CACHE_KEY);
-
-      // Save to cache
-      STORAGE.setItem(
-        CACHE_KEY,
-        JSON.stringify({
-          countryCode,
-          countryName,
-          isVpn,
-          displayName,
-          locationDetails,
-          allowed,
-          timestamp: Date.now(),
-          ttl: getTTL(isVpn)
-        })
-      );
-
-      // Final status
-      if (allowed) {
-        status = 'allowed';
-        onAllowed?.();
-      } else {
-        status = 'blocked';
+      if (isVpn) {
+        sessionStorage.removeItem(CACHE_KEY);
+        localStorage.removeItem(CACHE_KEY);
       }
+
+      // Save cache to both storages
+      const cachePayload = JSON.stringify({
+        countryCode,
+        countryName,
+        isVpn,
+        displayName,
+        locationDetails,
+        allowed,
+        timestamp: Date.now(),
+        ttl: getTTL(isVpn)
+      });
+
+      sessionStorage.setItem(CACHE_KEY, cachePayload);
+      localStorage.setItem(CACHE_KEY, cachePayload);
+
+      // Final state
+      status = allowed ? 'allowed' : 'blocked';
+      if (allowed) onAllowed?.();
 
     } catch (err) {
       console.error(err);
