@@ -5,9 +5,9 @@
 
   type Status = 'checking' | 'allowed' | 'blocked' | 'error';
 
-  const STORAGE = sessionStorage;
-  const CACHE_KEY = 'lz_region_cache';
-
+let STORAGE: Storage; // browser-only
+const CACHE_KEY = 'lz_region_cache';
+  
   function getTTL(isVpn: boolean) {
     return isVpn ? 1000 * 60 : 1000 * 60 * 5; // 1min VPN, 5min normal
   }
@@ -22,21 +22,20 @@
   }
 
   let status       = $state<Status>('checking');
-  let countryCode  = $state('');
-  let countryName  = $state('');
-  let isVpn        = $state(false);
-  let displayName  = $state('');
+let countryCode  = $state('');
+let countryName  = $state('');
+let isVpn        = $state(false);
+let displayName  = $state('');
 
-  let { onAllowed }: { onAllowed?: () => void } = $props();
+let locationDetails = $state({
+  street: '',
+  city: '',
+  state: '',
+  postalCode: '',
+  country: '',
+  displayName: ''
+});
 
-  let locationDetails = $state({
-    street: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    country: '',
-    displayName: ''
-  });
 
   // ✅ Reverse geocode (non-blocking)
   async function getFullAddressFromCoords(lat: number, lng: number) {
@@ -202,8 +201,10 @@
   }
 
   onMount(() => {
-    checkRegion();
-  });
+  STORAGE = sessionStorage; // assign in browser
+  checkRegion();             // now safe to access storage
+});
+
 </script>
 
   
