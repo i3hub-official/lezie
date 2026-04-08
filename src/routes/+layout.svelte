@@ -114,8 +114,8 @@ $effect(() => {
   <ShutdownPage />
 {:else if MAINTENANCE_MODE}
   <MaintenancePage />
-{:else if REGION_BLOCKED}
-  <RegionBlockedPage />
+{:else if !regionAllowed}
+  <RegionBlockedPage onAllowed={() => regionAllowed = true} />
 {:else if isSuspended}
   <SuspendedPage email={userEmail} />
 {:else if !ageVerified}
