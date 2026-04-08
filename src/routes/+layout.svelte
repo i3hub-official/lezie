@@ -7,8 +7,8 @@ import { authStore } from '$lib/stores/auth';
 
 import ShutdownPage from '$lib/components/ShutdownPage.svelte';
 import MaintenancePage from '$lib/components/MaintenancePage.svelte';
-import SuspendedPage    from '$lib/components/SuspendedPage.svelte';
-import RegionBlockedPage from '$lib/components/RegionBlockedPage.svelte';
+//import SuspendedPage    from '$lib/components/SuspendedPage.svelte';
+//import RegionBlockedPage from '$lib/components/RegionBlockedPage.svelte';
 
 import CookieNotice from '$lib/components/CookieNotice.svelte';
 
@@ -112,7 +112,7 @@ let userEmail     = $state('');
 {:else if MAINTENANCE_MODE}
   <MaintenancePage />
 
-{:else if isSuspended}
+<!-- {:else if isSuspended}
   <SuspendedPage email={userEmail} />
 
 {:else if regionAllowed === null}
@@ -124,7 +124,9 @@ let userEmail     = $state('');
 
 {:else if regionAllowed === true && children}
   {@render children()}
-{/if}
+{/if} -->
+
+{@render children()}
 
  <!-- Global Notifications -->
 <CookieNotice />
