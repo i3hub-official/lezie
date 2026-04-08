@@ -4,22 +4,31 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '$lib/server/db';
 import * as authSchema from '$lib/server/db/auth-schema';
 
-import 'dotenv/config';
-import { config } from 'dotenv';
+// Try multiple ways to get the secret
+let BETTER_AUTH_SECRET: string;
 
-// Force reload .env file
-config({ path: '.env', override: true });
-
-// Debug logging
-console.log('🔍 Checking environment...');
-console.log('BETTER_AUTH_SECRET from process.env:', process.env.BETTER_AUTH_SECRET ? '✅ EXISTS' : '❌ MISSING');
-
-if (!process.env.BETTER_AUTH_SECRET) {
-    throw new Error('❌ Missing BETTER_AUTH_SECRET in environment variables');
+// Method 1: Check process.env
+if (process.env.BETTER_AUTH_SECRET) {
+  BETTER_AUTH_SECRET = process.env.BETTER_AUTH_SECRET;
+  console.log('✅ Using BETTER_AUTH_SECRET from process.env');
+}
+// Method 2: Check globalThis for Vite injected vars
+else if ((globalThis as any).BETTER_AUTH_SECRET) {
+  BETTER_AUTH_SECRET = (globalThis as any).BETTER_AUTH_SECRET;
+  console.log('✅ Using BETTER_AUTH_SECRET from globalThis');
+}
+// Method 3: Use a development fallback (ONLY FOR TESTING)
+else if (process.env.NODE_ENV !== 'production') {
+  console.warn('⚠️ WARNING: Using development fallback secret!');
+  console.warn('⚠️ Set BETTER_AUTH_SECRET in production!');
+  BETTER_AUTH_SECRET = 'dev-secret-key-minimum-32-characters-long!!!!!';
+}
+else {
+  throw new Error('❌ Missing BETTER_AUTH_SECRET in environment variables');
 }
 
 export const auth = betterAuth({
-  secret: process.env.BETTER_AUTH_SECRET,  // ← FIXED: Added process.env.
+  secret: BETTER_AUTH_SECRET,
 
   database: drizzleAdapter(db, {
     provider: 'pg',
@@ -33,21 +42,15 @@ export const auth = betterAuth({
 
   trustedOrigins: [
     'http://localhost:5173',
-    // Add your production domain here later, e.g.:
-    'https://lezie.vercel.app'
+    'http://localhost:3000',
   ],
 
   emailAndPassword: {
     enabled: true,
-    // You can add password reset email logic here later
-    // sendResetPassword: async (url, user) => { ... }
   },
 
-  // Removed Google OAuth since you're using API key only
-  // socialProviders: {}  ← Not needed now
-
   session: {
-    expiresIn: 60 * 60 * 24 * 30, // 30 days
+    expiresIn: 60 * 60 * 24 * 30,
   },
 
   advanced: {
