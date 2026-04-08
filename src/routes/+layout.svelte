@@ -23,7 +23,6 @@ const REGION_BLOCKED    = env.PUBLIC_REGION_BLOCKED    === 'true';
 
   let { children } = $props();
   let isAuthenticated = $state(false);
-// For account suspension, pull from your auth store
 let regionAllowed = $state<null | boolean>(null);
 let isSuspended   = $state(false);
 let userEmail     = $state('');
@@ -104,8 +103,12 @@ let userEmail     = $state('');
     </nav>
   {/if}
 
+
+
+
   <!-- Page Content -->
- <!-- Page Content -->
+
+
 <!-- {#if SHUTDOWN_MODE}
   <ShutdownPage /> -->
 
