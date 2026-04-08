@@ -1,3 +1,4 @@
+
 // lib/server/services/report.service.ts
 import { db } from '$lib/server/db';
 import { 
@@ -21,7 +22,7 @@ export interface CreateReportDto {
   description: string;
   location: {
     type: 'Point';
-    coordinates: [number, number]; // [longitude, latitude]
+    coordinates: [number, number];
   };
   locationName?: string;
   address?: string;
@@ -35,37 +36,20 @@ export interface CreateReportDto {
   }[];
 }
 
-export interface ReportAnalysis {
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  threatScore: number;
-  categories: string[];
-  summary: string;
-  recommendedAction: string;
-  confidence: number;
-  needsImmediateAttention: boolean;
-}
-
 export class ReportService {
-  /**
-   * Create a new incident report with AI analysis
-   */
   static async createReport(data: CreateReportDto) {
-    // Validate category
     const category = await db.query.categories.findFirst({
       where: eq(categories.id, data.categoryId),
     });
-
     if (!category) throw new Error('Invalid category');
 
-    // Get default status
     const defaultStatus = await db.query.statuses.findFirst({
       where: eq(statuses.name, 'reported'),
     });
-
     if (!defaultStatus) throw new Error('Default status not found');
 
-    // === AI ANALYSIS ===
-    let analysis: ReportAnalysis;
+    // AI Analysis via Middleware
+    let analysis;
     try {
       analysis = await aiMiddleware.analyzeReport(
         data.title,
@@ -73,13 +57,13 @@ export class ReportService {
         category.name
       );
     } catch (err) {
-      console.warn('AI analysis failed, using fallback:', err);
+      console.warn('AI analysis failed, using fallback');
       analysis = {
-        severity: 'medium',
+        severity: 'medium' as const,
         threatScore: 50,
         categories: [category.name],
-        summary: 'AI analysis temporarily unavailable. Manual review required.',
-        recommendedAction: 'Assign to moderation team',
+        summary: 'AI analysis temporarily unavailable.',
+        recommendedAction: 'Manual review recommended',
         confidence: 0.4,
         needsImmediateAttention: false,
       };
@@ -87,7 +71,7 @@ export class ReportService {
 
     const reportId = randomUUID();
 
-    // Insert main report
+    // Create Report
     await db.insert(reports).values({
       id: reportId,
       userId: data.userId,
@@ -107,8 +91,8 @@ export class ReportService {
       updatedAt: new Date(),
     });
 
-    // Insert media if provided
-    if (data.media && data.media.length > 0) {
+    // Insert Media
+    if (data.media?.length) {
       for (const media of data.media) {
         await db.insert(reportMedia).values({
           id: randomUUID(),
@@ -125,15 +109,12 @@ export class ReportService {
       }
     }
 
-    // Create alerts for nearby users
+    // Send nearby alerts
     await this.createNearbyAlerts(reportId, data.location.coordinates, analysis.severity);
 
-    // Increase reporter's trust score
+    // Increase reporter trust score
     await db.update(users)
-      .set({
-        trustScore: sql`${users.trustScore} + 5`,
-        updatedAt: new Date(),
-      })
+      .set({ trustScore: sql`${users.trustScore} + 5`, updatedAt: new Date() })
       .where(eq(users.id, data.userId));
 
     return {
@@ -141,25 +122,18 @@ export class ReportService {
       severity: analysis.severity,
       threatScore: analysis.threatScore,
       needsImmediateAttention: analysis.needsImmediateAttention,
-      summary: analysis.summary,
+      summary: analysis.summary
     };
   }
 
-  /**
-   * Create real-time alerts for users near the incident
-   */
   static async createNearbyAlerts(
     reportId: string, 
     coordinates: [number, number], 
     severity: string
   ) {
     const radiusMap: Record<string, number> = {
-      low: 1000,
-      medium: 3000,
-      high: 5000,
-      critical: 10000,
+      low: 1000, medium: 3000, high: 5000, critical: 10000
     };
-
     const radius = radiusMap[severity] || 3000;
 
     const nearbyUsers = await db.execute(sql`
@@ -177,7 +151,7 @@ export class ReportService {
 
     const report = await db.query.reports.findFirst({
       where: eq(reports.id, reportId),
-      with: { category: true },
+      with: { category: true }
     });
 
     if (!report) return;
@@ -190,17 +164,12 @@ export class ReportService {
         userId,
         type: 'alert',
         title: `Alert: ${report.category?.name} nearby`,
-        body: `${report.title} • ${severity.toUpperCase()} severity • ${radius / 1000}km away`,
-        data: {
-          reportId,
-          severity,
-          coordinates,
-        },
+        body: `${report.title} • ${severity.toUpperCase()} • ${Math.round(radius/1000)}km away`,
+        data: { reportId, severity, coordinates },
         isRead: false,
         createdAt: new Date(),
       });
 
-      // Real-time WebSocket alert
       emitAlertToArea(coordinates[1], coordinates[0], {
         reportId,
         title: report.title,
@@ -211,23 +180,19 @@ export class ReportService {
     }
   }
 
-  /**
-   * Get reports near a location
-   */
   static async getNearbyReports(
     latitude: number,
     longitude: number,
     radius: number = 5000,
     limit: number = 50
   ) {
-    const nearbyReports = await db.execute(sql`
+    const result = await db.execute(sql`
       SELECT 
         r.*,
         c.name as category_name,
         c.icon as category_icon,
         c.color as category_color,
         s.name as status_name,
-        s.color as status_color,
         ST_Distance(
           r.location::geography,
           ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
@@ -244,8 +209,7 @@ export class ReportService {
       ORDER BY r.severity DESC, distance ASC
       LIMIT ${limit}
     `);
-
-    return nearbyReports;
+    return result;
   }
 
   static async getReportWithDetails(reportId: string) {
