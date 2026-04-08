@@ -5,7 +5,7 @@ import { pwaInfo } from 'virtual:pwa-info';
 import { goto } from '$app/navigation';
 import { authStore } from '$lib/stores/auth';
 
-//import ShutdownPage from '$lib/components/ShutdownPage.svelte';
+import ShutdownPage from '$lib/components/ShutdownPage.svelte';
 //import MaintenancePage from '$lib/components/MaintenancePage.svelte';
 //import SuspendedPage    from '$lib/components/SuspendedPage.svelte';
 //import RegionBlockedPage from '$lib/components/RegionBlockedPage.svelte';
@@ -109,8 +109,8 @@ let userEmail     = $state('');
   <!-- Page Content -->
 
 
-<!-- {#if SHUTDOWN_MODE}
-  <ShutdownPage /> -->
+{#if SHUTDOWN_MODE}
+  <ShutdownPage />
 
 <!-- {:else if MAINTENANCE_MODE}
   <MaintenancePage /> -->
@@ -125,8 +125,8 @@ let userEmail     = $state('');
   <RegionBlockedPage /> -->
 
 <!-- {:else if regionAllowed === true && children}
-  {@render children()}
-{/if} -->
+  {@render children()} -->
+{/if} 
 
 {@render children()}
 
