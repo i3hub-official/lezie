@@ -78,20 +78,22 @@
 
   // Check authentication status
   async function checkAuth() {
-    try {
-      const res = await fetch('/api/auth/session');
-      const data = await res.json();
-      session = data.session;
-      if (!session) {
-        error = 'Not authenticated. Please log in first.';
-      }
-    } catch (err) {
-      console.error('Auth check failed:', err);
-      error = 'Failed to check authentication status';
-    } finally {
-      isCheckingAuth = false;
+  try {
+    const res = await fetch('/api/auth/session', {
+      credentials: 'include' // ← Add this
+    });
+    const data = await res.json();
+    session = data.session;
+    if (!session) {
+      error = 'Not authenticated. Please log in first.';
     }
+  } catch (err) {
+    console.error('Auth check failed:', err);
+    error = 'Failed to check authentication status';
+  } finally {
+    isCheckingAuth = false;
   }
+}
 
   function autoFillTest(index: number) {
     const scenario = testScenarios[index];
@@ -109,59 +111,47 @@
     autoFillTest(randomIndex);
   }
 
-  async function testReport() {
-    if (!title || !description || !categoryId) {
-      error = 'Please fill title, description and category';
-      return;
-    }
-
-    if (!session) {
-      error = 'Please log in first to create reports';
-      return;
-    }
-
-    isLoading = true;
-    error = '';
-    result = null;
-
-    try {
-      const res = await fetch('/api/reports', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          // The cookie will be sent automatically
-        },
-        credentials: 'include', // Important: include cookies
-        body: JSON.stringify({
-          title,
-          description,
-          categoryId,
-          location: {
-            type: 'Point',
-            coordinates: [7.0498, 4.8242]
-          },
-          locationName: locationName || 'Test Location',
-          isAnonymous: false
-        })
-      });
-
-      if (res.status === 401) {
-        throw new Error('Unauthorized. Please log in again.');
-      }
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || `Failed with status ${res.status}`);
-
-      result = data;
-      console.log('Report created with AI analysis:', data);
-    } catch (err: any) {
-      console.error('Fetch error:', err);
-      error = err.message;
-    } finally {
-      isLoading = false;
-    }
+ async function testReport() {
+  if (!title || !description || !categoryId) {
+    error = 'Please fill title, description and category';
+    return;
   }
+
+  isLoading = true;
+  error = '';
+  result = null;
+
+  try {
+    const res = await fetch('/api/reports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // ← THIS IS CRITICAL - sends cookies
+      body: JSON.stringify({
+        title,
+        description,
+        categoryId,
+        location: {
+          type: 'Point',
+          coordinates: [7.0498, 4.8242]
+        },
+        locationName: locationName || 'Test Location',
+        isAnonymous: false
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || data.message || 'Failed to create report');
+
+    result = data;
+    console.log('✅ Report created with AI analysis:', data);
+  } catch (err: any) {
+    console.error('Fetch error:', err);
+    error = err.message;
+  } finally {
+    isLoading = false;
+  }
+} 
 
   function resetForm() {
     title = '';
