@@ -187,7 +187,7 @@
       <AlertCircle size={20} />
       <div>
         <strong>Not authenticated!</strong>
-        <p>Please <a href="/auth/signin">log in</a> to create reports.</p>
+        <p>Please <a href="/signin">log in</a> to create reports.</p>
       </div>
     </div>
   {:else}
