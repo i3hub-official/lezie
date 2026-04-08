@@ -19,7 +19,7 @@ if (!process.env.BETTER_AUTH_SECRET) {
 }
 
 export const auth = betterAuth({
-  secret: BETTER_AUTH_SECRET,
+  secret: process.env.BETTER_AUTH_SECRET,  // ← FIXED: Added process.env.
 
   database: drizzleAdapter(db, {
     provider: 'pg',
@@ -33,9 +33,8 @@ export const auth = betterAuth({
 
   trustedOrigins: [
     'http://localhost:5173',
-    'http://localhost:3000',
     // Add your production domain here later, e.g.:
-    // 'https://lezie.app'
+    'https://lezie.vercel.app'
   ],
 
   emailAndPassword: {
