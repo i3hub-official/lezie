@@ -25,6 +25,7 @@ const REGION_BLOCKED    = env.PUBLIC_REGION_BLOCKED    === 'true';
   let { children } = $props();
   let isAuthenticated = $state(false);
 // For account suspension, pull from your auth store
+let regionAllowed = $state(false);
 let isSuspended   = $state(false);
 let ageVerified   = $state(false);
 let userEmail     = $state('');
@@ -112,14 +113,19 @@ $effect(() => {
   <!-- Page Content -->
   {#if SHUTDOWN_MODE}
   <ShutdownPage />
+
 {:else if MAINTENANCE_MODE}
   <MaintenancePage />
-{:else if REGION_BLOCKED}
-  <RegionBlockedPage />
+
 {:else if isSuspended}
   <SuspendedPage email={userEmail} />
+
 {:else if !ageVerified}
   <AgeGate onVerified={() => ageVerified = true} />
+
+{:else if !regionAllowed}
+  <RegionBlockedPage onAllowed={() => regionAllowed = true} />
+
 {:else if children}
   {@render children()}
 {/if}
