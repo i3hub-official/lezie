@@ -1,3 +1,5 @@
+//api/reports/+server.ts
+
 import { json } from '@sveltejs/kit';
 import { ReportService } from '$lib/server/services/report.service';
 import { auth } from '$lib/server/auth';
