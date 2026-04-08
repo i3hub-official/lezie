@@ -33,17 +33,13 @@ let userEmail     = $state('');
 
   // Auth check
   $effect(() => {
-    const unsubscribe = authStore.subscribe((state) => {
-      isAuthenticated = !!state.user;
-    });
-    return unsubscribe;
+  const unsubscribe = authStore.subscribe(s => {
+    isAuthenticated = !!s.user;
+    isSuspended     = s.user?.suspended ?? false;
+    userEmail       = s.user?.email ?? '';
   });
 
-$effect(() => {
-  authStore.subscribe(s => {
-    isSuspended = s.user?.suspended ?? false;
-    userEmail   = s.user?.email ?? '';
-  });
+  return unsubscribe;
 });
 
   function handleLogout() {
