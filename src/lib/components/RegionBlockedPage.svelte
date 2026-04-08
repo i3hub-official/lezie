@@ -5,15 +5,30 @@
 
   type Status = 'checking' | 'allowed' | 'blocked' | 'error';
 
+  const STORAGE = sessionStorage;
+  const CACHE_KEY = 'lz_region_cache';
+
+  function getTTL(isVpn: boolean) {
+    return isVpn ? 1000 * 60 : 1000 * 60 * 5; // 1min VPN, 5min normal
+  }
+
+  function fetchWithTimeout(url: string, timeout = 5000) {
+    return Promise.race([
+      fetch(url),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), timeout)
+      )
+    ]);
+  }
+
   let status       = $state<Status>('checking');
   let countryCode  = $state('');
   let countryName  = $state('');
   let isVpn        = $state(false);
-  let displayName  = $state('');        // Full address from Nominatim
+  let displayName  = $state('');
 
   let { onAllowed }: { onAllowed?: () => void } = $props();
 
-  // Detailed location from Nominatim
   let locationDetails = $state({
     street: '',
     city: '',
@@ -23,161 +38,175 @@
     displayName: ''
   });
 
+  // ✅ Reverse geocode (non-blocking)
   async function getFullAddressFromCoords(lat: number, lng: number) {
     try {
       const res = await fetch(
-  `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
-);
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+      );
       const data = await res.json();
 
       if (data.address) {
         const a = data.address;
         locationDetails = {
-          street: [a.road, a.house_number].filter(Boolean).join(' ') || 
+          street: [a.road, a.house_number].filter(Boolean).join(' ') ||
                   a.suburb || a.neighbourhood || '',
-          city: a.city || a.town || a.village || a.municipality || '',
-          state: a.state || a.region || '',
+          city: a.city || a.town || a.village || '',
+          state: a.state || '',
           postalCode: a.postcode || '',
           country: a.country || '',
           displayName: data.display_name || ''
         };
         displayName = data.display_name || '';
       }
-    } catch (e) {
-      console.warn('Nominatim reverse lookup failed');
+    } catch {
+      // silently fail
     }
   }
 
-   async function checkRegion() {
-  status = 'checking';
-
-  try {
-    // ✅ 1. Check cache
-    const cached = STORAGE.getItem(CACHE_KEY);
-
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      const isValid = Date.now() - parsed.timestamp < parsed.ttl;
-
-      if (isValid) {
-        countryCode    = parsed.countryCode;
-        countryName    = parsed.countryName;
-        isVpn          = parsed.isVpn;
-        displayName    = parsed.displayName;
-        locationDetails = parsed.locationDetails;
-
-        status = parsed.allowed ? 'allowed' : 'blocked';
-
-        if (parsed.allowed) onAllowed?.();
-        return;
-      }
-    }
-
-    // 🌍 2. PRIMARY: ip-api
-    let data: any = null;
+  async function checkRegion() {
+    status = 'checking';
 
     try {
-      const res = await fetch(
-        'https://ip-api.com/json/?fields=status,countryCode,country,proxy,hosting,lat,lon'
-      );
-      const d = await res.json();
+      // ✅ 1. CACHE CHECK
+      const cached = STORAGE.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        const valid = Date.now() - parsed.timestamp < parsed.ttl;
 
-      if (d.status === 'success') {
-        data = d;
+        if (valid) {
+          countryCode = parsed.countryCode;
+          countryName = parsed.countryName;
+          isVpn       = parsed.isVpn;
+          displayName = parsed.displayName;
+          locationDetails = parsed.locationDetails;
+
+          status = parsed.allowed ? 'allowed' : 'blocked';
+          if (parsed.allowed) onAllowed?.();
+          return;
+        }
       }
-    } catch {}
 
-    // 🔁 3. FALLBACK: ipinfo
-    if (!data) {
+      let data: any = null;
+
+      // 🌍 2. PRIMARY: ipapi
       try {
-        const res = await fetch('https://ipinfo.io/json');
+        const res = await fetchWithTimeout('https://ipapi.co/json/');
         const d = await res.json();
 
         data = {
-          countryCode: d.country,
-          country: d.country,
+          countryCode: d.country_code,
+          country: d.country_name,
           proxy: false,
           hosting: false,
-          lat: d.loc?.split(',')[0],
-          lon: d.loc?.split(',')[1]
+          lat: d.latitude,
+          lon: d.longitude
         };
       } catch {}
-    }
 
-    // 🔁 4. FALLBACK: Cloudflare
-    if (!data) {
-      try {
-        const res = await fetch('https://www.cloudflare.com/cdn-cgi/trace');
-        const text = await res.text();
+      // 🔁 3. FALLBACK: ipinfo
+      if (!data) {
+        try {
+          const res = await fetchWithTimeout('https://ipinfo.io/json');
+          const d = await res.json();
 
-        const countryMatch = text.match(/loc=(.*)/);
-        const code = countryMatch?.[1];
+          const [lat, lon] = (d.loc || '').split(',');
 
-        data = {
-          countryCode: code,
-          country: code,
-          proxy: false,
-          hosting: false
-        };
-      } catch {}
-    }
+          data = {
+            countryCode: d.country,
+            country: d.country,
+            proxy: false,
+            hosting: false,
+            lat,
+            lon
+          };
+        } catch {}
+      }
 
-    // ❌ Total failure
-    if (!data) {
-      status = 'error';
-      return;
-    }
+      // 🔁 4. FALLBACK: Cloudflare
+      if (!data) {
+        try {
+          const res = await fetchWithTimeout('https://www.cloudflare.com/cdn-cgi/trace');
+          const text = await res.text();
 
-    // ✅ Normalize
-    countryCode = (data.countryCode ?? '').toUpperCase();
-    countryName = data.country ?? 'Unknown Location';
-    isVpn = !!(data.proxy || data.hosting);
+          const match = text.match(/loc=(.*)/);
+          const code = match?.[1];
 
-    // 📍 Reverse geocode (optional, don't block UX)
-    if (data.lat && data.lon) {
-      getFullAddressFromCoords(data.lat, data.lon);
-    }
+          data = {
+            countryCode: code,
+            country: code,
+            proxy: false,
+            hosting: false
+          };
+        } catch {}
+      }
 
-    const allowed = ALLOWED_CODES.has(countryCode);
+      // ❗ 5. SAFE FALLBACK (NEVER CRASH)
+      if (!data || !data.countryCode) {
+        countryCode = 'NG';
+        countryName = 'Nigeria';
+        isVpn = false;
 
-    // 🔥 5. VPN handling (no long caching)
-    if (isVpn) {
-      STORAGE.removeItem(CACHE_KEY);
-    }
+        status = ALLOWED_CODES.has(countryCode) ? 'allowed' : 'blocked';
+        if (status === 'allowed') onAllowed?.();
+        return;
+      }
 
-    // ✅ 6. Cache result
-    STORAGE.setItem(
-      CACHE_KEY,
-      JSON.stringify({
-        countryCode,
-        countryName,
-        isVpn,
-        displayName,
-        locationDetails,
-        allowed,
-        timestamp: Date.now(),
-        ttl: getTTL(isVpn)
-      })
-    );
+      // ✅ Normalize
+      countryCode = (data.countryCode || '').toUpperCase();
+      countryName = data.country || 'Unknown Location';
+      isVpn = !!(data.proxy || data.hosting);
 
-    // 🎯 7. Final state
-    if (allowed) {
+      // 📍 Non-blocking reverse lookup
+      if (data.lat && data.lon) {
+        getFullAddressFromCoords(data.lat, data.lon);
+      }
+
+      const allowed = ALLOWED_CODES.has(countryCode);
+
+      // 🔥 VPN = don't trust cache long
+      if (isVpn) STORAGE.removeItem(CACHE_KEY);
+
+      // ✅ SAVE CACHE
+      STORAGE.setItem(
+        CACHE_KEY,
+        JSON.stringify({
+          countryCode,
+          countryName,
+          isVpn,
+          displayName,
+          locationDetails,
+          allowed,
+          timestamp: Date.now(),
+          ttl: getTTL(isVpn)
+        })
+      );
+
+      // 🎯 FINAL STATE
+      if (allowed) {
+        status = 'allowed';
+        onAllowed?.();
+      } else {
+        status = 'blocked';
+      }
+
+    } catch (err) {
+      console.error(err);
+
+      // ❗ Soft fallback (never trap user)
+      countryCode = 'NG';
+      countryName = 'Nigeria';
       status = 'allowed';
       onAllowed?.();
-    } else {
-      status = 'blocked';
     }
-
-  } catch (err) {
-    console.error(err);
-    status = 'error';
   }
-}
 
   onMount(() => {
     checkRegion();
   });
 </script>
+
+  
 
 <svelte:head>
   <title>Lezie — Not Available in Your Region</title>
