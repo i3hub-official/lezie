@@ -107,7 +107,8 @@ let userEmail     = $state('');
   {/if}
 
   <!-- Page Content -->
-  {#if SHUTDOWN_MODE}
+ <!-- Page Content -->
+{#if SHUTDOWN_MODE}
   <ShutdownPage />
 
 {:else if MAINTENANCE_MODE}
@@ -119,12 +120,20 @@ let userEmail     = $state('');
 {:else if !ageVerified}
   <AgeGate onVerified={() => ageVerified = true} />
 
+{:else if regionAllowed === null}
+  <!-- Let RegionBlockedPage handle checking UI -->
+  <RegionBlockedPage onAllowed={() => regionAllowed = true} />
+
+{:else if regionAllowed === false}
+  <RegionBlockedPage />
+
 {:else if regionAllowed === true && children}
   {@render children()}
+{/if}
 
-  <!-- Global Notifications -->
+ <!-- Global Notifications -->
 <CookieNotice />
-  <ToastContainer />
-  <ConfirmationModal />
+<ToastContainer />
+<ConfirmationModal />
 
 </main>
