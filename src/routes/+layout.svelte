@@ -1,31 +1,66 @@
 <script lang="ts">
 import './layout.css';
-import { authStore } from '$lib/stores/auth';
+import { env } from '$env/dynamic/public';
+import { pwaInfo } from 'virtual:pwa-info';
 import { goto } from '$app/navigation';
+import { authStore } from '$lib/stores/auth';
 
-let { children } = $props();
-let isAuthenticated = $state(false);
-let userEmail = $state('');
+import ShutdownPage from '$lib/components/ShutdownPage.svelte';
+import MaintenancePage from '$lib/components/MaintenancePage.svelte';
+import SuspendedPage    from '$lib/components/SuspendedPage.svelte';
+import RegionBlockedPage from '$lib/components/RegionBlockedPage.svelte';
 
-// Auth check
-$effect(() => {
+import CookieNotice from '$lib/components/CookieNotice.svelte';
+
+  // Toast & Confirmation Imports
+import ToastContainer from '$lib/ToastContainer.svelte';
+import ConfirmationModal from '$lib/ConfirmationModal.svelte';
+
+const SHUTDOWN_MODE     = env.PUBLIC_SHUTDOWN_MODE     === 'true';
+const MAINTENANCE_MODE  = env.PUBLIC_MAINTENANCE_MODE  === 'true';
+const REGION_BLOCKED    = env.PUBLIC_REGION_BLOCKED    === 'true';
+
+
+  let { children } = $props();
+  let isAuthenticated = $state(false);
+// For account suspension, pull from your auth store
+let regionAllowed = $state<null | boolean>(null);
+let isSuspended   = $state(false);
+let userEmail     = $state('');
+
+
+  // Auth check
+  $effect(() => {
   const unsubscribe = authStore.subscribe(s => {
     isAuthenticated = !!s.user;
-    userEmail = s.user?.email ?? '';
+    isSuspended     = s.user?.suspended ?? false;
+    userEmail       = s.user?.email ?? '';
   });
 
   return unsubscribe;
 });
 
-function handleLogout() {
-  authStore.logout();
-  goto('/signin');
-}
+  function handleLogout() {
+    authStore.logout();
+    goto('/signin');
+  }
 </script>
 
 <svelte:head>
   <link rel="icon" href="/icons/lz_ico.png" />
+  <meta name="theme-color" content="#6d28d9" />
+
+  {#if pwaInfo}
+    {@html pwaInfo.webManifest.linkTag}
+  {/if}
+
+  <link rel="apple-touch-icon" href="/icons/lz_ico.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Lezie" />
+
   <title>Lezie | Real-Time Safety & Monitoring</title>
+  <meta name="description" content="Proactive community safety and identity protection." />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 </svelte:head>
 
@@ -37,7 +72,7 @@ function handleLogout() {
       <div class="nav-container">
         <div class="nav-brand" onclick={() => goto('/dashboard')}>
           <button type="button" class="lz-logo">
-            <img src="/icons/lz_ico.png" alt="Lezie" width="32" height="32"/>
+            <img src="/icons/lz_ico.png" alt="Lezie" class="lz-logo-img" width="32" height="32"/>
             <span class="lz-logo-text">Lezie</span>
           </button>
         </div>
@@ -70,6 +105,30 @@ function handleLogout() {
   {/if}
 
   <!-- Page Content -->
+ <!-- Page Content -->
+{#if SHUTDOWN_MODE}
+  <ShutdownPage />
+
+{:else if MAINTENANCE_MODE}
+  <MaintenancePage />
+
+{:else if isSuspended}
+  <SuspendedPage email={userEmail} />
+
+{:else if regionAllowed === null}
+  <!-- Let RegionBlockedPage handle checking UI -->
+  <RegionBlockedPage onAllowed={() => regionAllowed = true} />
+
+{:else if regionAllowed === false}
+  <RegionBlockedPage />
+
+{:else if regionAllowed === true && children}
   {@render children()}
+{/if}
+
+ <!-- Global Notifications -->
+<CookieNotice />
+<ToastContainer />
+<ConfirmationModal />
 
 </main>
