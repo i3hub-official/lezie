@@ -1,15 +1,21 @@
 // src/lib/server/auth/index.ts
 import { betterAuth } from 'better-auth';
-import 'dotenv/config';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '$lib/server/db';
 import * as authSchema from '$lib/server/db/auth-schema';
 
-// ✅ Early validation
-const BETTER_AUTH_SECRET = process.env.BETTER_AUTH_SECRET;
+import 'dotenv/config';
+import { config } from 'dotenv';
 
-if (!BETTER_AUTH_SECRET) {
-  throw new Error('❌ Missing BETTER_AUTH_SECRET in environment variables');
+// Force reload .env file
+config({ path: '.env', override: true });
+
+// Debug logging
+console.log('🔍 Checking environment...');
+console.log('BETTER_AUTH_SECRET from process.env:', process.env.BETTER_AUTH_SECRET ? '✅ EXISTS' : '❌ MISSING');
+
+if (!process.env.BETTER_AUTH_SECRET) {
+    throw new Error('❌ Missing BETTER_AUTH_SECRET in environment variables');
 }
 
 export const auth = betterAuth({
