@@ -4,44 +4,47 @@ import postgres from 'postgres';
 import * as schema from './schema';
 import * as authSchema from './auth-schema';
 
-// Get database URL from environment
-let databaseUrl = process.env.DATABASE_URL;
+import 'dotenv/config';
+import { config } from 'dotenv';
 
-// If not found, try to load from .env manually
-if (!databaseUrl) {
-  console.warn('⚠️ DATABASE_URL not in process.env, trying to load .env');
-  const dotenv = await import('dotenv');
-  const { config } = dotenv;
-  const result = config({ path: '.env' });
-  
-  if (result.parsed?.DATABASE_URL) {
-    databaseUrl = result.parsed.DATABASE_URL;
-    console.log('✅ Loaded DATABASE_URL from .env file');
-  }
+// Force reload .env file (same as auth/index.ts)
+config({ path: '.env', override: true });
+
+// Debug logging (same pattern as auth)
+console.log('🔍 Checking database environment...');
+console.log('DATABASE_URL from process.env:', process.env.DATABASE_URL ? '✅ EXISTS' : '❌ MISSING');
+
+// Get database URL with same validation pattern
+let DATABASE_URL: string;
+
+if (process.env.DATABASE_URL) {
+  DATABASE_URL = process.env.DATABASE_URL;
+  console.log('✅ Using DATABASE_URL from process.env');
+}
+// Fallback for development (same pattern as auth)
+else if (process.env.NODE_ENV !== 'production') {
+  console.warn('⚠️ WARNING: Using development fallback database!');
+  console.warn('⚠️ Set DATABASE_URL in production!');
+  // You can add a local SQLite fallback or throw error
+  throw new Error('DATABASE_URL is required even in development');
+}
+else {
+  throw new Error('❌ Missing DATABASE_URL in environment variables');
 }
 
-// Final validation
-if (!databaseUrl) {
-  console.error('❌ DATABASE_URL is not set');
-  console.error('Available env keys:', Object.keys(process.env).filter(k => k.includes('DATABASE')));
-  throw new Error('DATABASE_URL environment variable is required');
-}
-
-// Mask password for logging
-const maskedUrl = databaseUrl.replace(/:[^:@]*@/, ':****@');
+// Mask the URL for logging (hide password)
+const maskedUrl = DATABASE_URL.replace(/:[^:@]*@/, ':****@');
 console.log('📊 Connecting to database:', maskedUrl);
 
-// Create postgres connection with proper SSL for cloud databases
-const client = postgres(databaseUrl, {
-  ssl: {
-    rejectUnauthorized: false, // Required for some cloud databases
-  },
+// Create postgres connection
+const client = postgres(DATABASE_URL, {
+  ssl: process.env.NODE_ENV === 'production' ? 'require' : false,
   max: 10,
   idle_timeout: 20,
   connect_timeout: 10,
 });
 
-// Create drizzle instance
+// Create drizzle instance with both schemas
 export const db = drizzle(client, { 
   schema: {
     ...schema,
