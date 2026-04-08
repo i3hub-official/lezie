@@ -5,9 +5,9 @@ import { pwaInfo } from 'virtual:pwa-info';
 import { goto } from '$app/navigation';
 import { authStore } from '$lib/stores/auth';
 
-//import ShutdownPage from '$lib/components/ShutdownPage.svelte';
-//import MaintenancePage from '$lib/components/MaintenancePage.svelte';
-//import SuspendedPage    from '$lib/components/SuspendedPage.svelte';
+import ShutdownPage from '$lib/components/ShutdownPage.svelte';
+import MaintenancePage from '$lib/components/MaintenancePage.svelte';
+import SuspendedPage    from '$lib/components/SuspendedPage.svelte';
 import RegionBlockedPage from '$lib/components/RegionBlockedPage.svelte';
 
 import CookieNotice from '$lib/components/CookieNotice.svelte';
@@ -23,6 +23,7 @@ const REGION_BLOCKED    = env.PUBLIC_REGION_BLOCKED    === 'true';
 
   let { children } = $props();
   let isAuthenticated = $state(false);
+// For account suspension, pull from your auth store
 let regionAllowed = $state<null | boolean>(null);
 let isSuspended   = $state(false);
 let userEmail     = $state('');
@@ -103,32 +104,27 @@ let userEmail     = $state('');
     </nav>
   {/if}
 
-
-
-
   <!-- Page Content -->
+ <!-- Page Content -->
+{#if SHUTDOWN_MODE}
+  <ShutdownPage />
 
+{:else if MAINTENANCE_MODE}
+  <MaintenancePage />
 
-<!-- {#if SHUTDOWN_MODE}
-  <ShutdownPage /> -->
+{:else if isSuspended}
+  <SuspendedPage email={userEmail} />
 
-<!-- {:else if MAINTENANCE_MODE}
-  <MaintenancePage /> -->
+{:else if regionAllowed === null}
+  <!-- Let RegionBlockedPage handle checking UI -->
+  <RegionBlockedPage onAllowed={() => regionAllowed = true} />
 
-<!-- {:else if isSuspended}
-  <SuspendedPage email={userEmail} /> -->
+{:else if regionAllowed === false}
+  <RegionBlockedPage />
 
- {#if regionAllowed === null}
-  <RegionBlockedPage onAllowed={() => regionAllowed = true} /> 
-
- {:else if regionAllowed === false}
-  <RegionBlockedPage /> 
-
- {:else if regionAllowed === true && children}
+{:else if regionAllowed === true && children}
   {@render children()}
-{/if} 
-
-<!-- {@render children()} -->
+{/if}
 
  <!-- Global Notifications -->
 <CookieNotice />
