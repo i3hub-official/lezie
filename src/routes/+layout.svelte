@@ -1,44 +1,42 @@
 <script lang="ts">
-import './layout.css';
-import { env } from '$env/dynamic/public';
-import { pwaInfo } from 'virtual:pwa-info';
-import { goto } from '$app/navigation';
-import { authStore } from '$lib/stores/auth';
+  import './layout.css';
+  import { env } from '$env/dynamic/public';
+  import { pwaInfo } from 'virtual:pwa-info';
+  import { goto } from '$app/navigation';
+  import { authStore } from '$lib/stores/auth';
 
-import ShutdownPage from '$lib/components/ShutdownPage.svelte';
-import MaintenancePage from '$lib/components/MaintenancePage.svelte';
-import SuspendedPage    from '$lib/components/SuspendedPage.svelte';
-import RegionBlockedPage from '$lib/components/RegionBlockedPage.svelte';
+  import ShutdownPage from '$lib/components/ShutdownPage.svelte';
+  import MaintenancePage from '$lib/components/MaintenancePage.svelte';
+  import SuspendedPage from '$lib/components/SuspendedPage.svelte';
+  import RegionBlockedPage from '$lib/components/RegionBlockedPage.svelte';
 
-import CookieNotice from '$lib/components/CookieNotice.svelte';
+  import CookieNotice from '$lib/components/CookieNotice.svelte';
 
   // Toast & Confirmation Imports
-import ToastContainer from '$lib/ToastContainer.svelte';
-import ConfirmationModal from '$lib/ConfirmationModal.svelte';
+  import ToastContainer from '$lib/ToastContainer.svelte';
+  import ConfirmationModal from '$lib/ConfirmationModal.svelte';
 
-const SHUTDOWN_MODE     = env.PUBLIC_SHUTDOWN_MODE     === 'true';
-const MAINTENANCE_MODE  = env.PUBLIC_MAINTENANCE_MODE  === 'true';
-const REGION_BLOCKED    = env.PUBLIC_REGION_BLOCKED    === 'true';
-
+  const SHUTDOWN_MODE    = env.PUBLIC_SHUTDOWN_MODE    === 'true';
+  const MAINTENANCE_MODE = env.PUBLIC_MAINTENANCE_MODE === 'true';
+  // const REGION_BLOCKED   = env.PUBLIC_REGION_BLOCKED   === 'true';   // Currently not used
 
   let { children } = $props();
   let isAuthenticated = $state(false);
-// For account suspension, pull from your auth store
-let regionAllowed = $state<null | boolean>(null);
-let isSuspended   = $state(false);
-let userEmail     = $state('');
 
+  // For account suspension, pulled from auth store
+  let isSuspended = $state(false);
+  let userEmail   = $state('');
 
   // Auth check
   $effect(() => {
-  const unsubscribe = authStore.subscribe(s => {
-    isAuthenticated = !!s.user;
-    isSuspended     = s.user?.suspended ?? false;
-    userEmail       = s.user?.email ?? '';
-  });
+    const unsubscribe = authStore.subscribe(s => {
+      isAuthenticated = !!s.user;
+      isSuspended     = s.user?.suspended ?? false;
+      userEmail       = s.user?.email ?? '';
+    });
 
-  return unsubscribe;
-});
+    return unsubscribe;
+  });
 
   function handleLogout() {
     authStore.logout();
@@ -104,30 +102,35 @@ let userEmail     = $state('');
     </nav>
   {/if}
 
+  <!-- Page Content -->
+  {#if SHUTDOWN_MODE}
+    <ShutdownPage />
 
- <!-- Page Content -->
-{#if SHUTDOWN_MODE}
-  <ShutdownPage />
+  {:else if MAINTENANCE_MODE}
+    <MaintenancePage />
 
-{:else if MAINTENANCE_MODE}
-  <MaintenancePage />
+  {:else if isSuspended}
+    <SuspendedPage email={userEmail} />
 
-{:else if isSuspended}
-  <SuspendedPage email={userEmail} />
+  <!-- 
+    Region blocking logic is currently disabled 
+    Uncomment the lines below when you want to re-enable region restriction
+  -->
+  <!-- 
+  {:else if regionAllowed === null}
+    <RegionBlockedPage onAllowed={() => regionAllowed = true} />
 
-<!-- {:else if regionAllowed === null}
-  <RegionBlockedPage onAllowed={() => regionAllowed = true} /> -->
+  {:else if regionAllowed === false}
+    <RegionBlockedPage />
+  -->
 
-<!-- {:else if regionAllowed === false}
-  <RegionBlockedPage /> -->
+  {:else}
+    {@render children()}
+  {/if}
 
-<!-- {:else if regionAllowed === true && children} -->
-  {@render children()}
-{/if}
-
- <!-- Global Notifications -->
-<CookieNotice />
-<ToastContainer />
-<ConfirmationModal />
+  <!-- Global Notifications -->
+  <CookieNotice />
+  <ToastContainer />
+  <ConfirmationModal />
 
 </main>
