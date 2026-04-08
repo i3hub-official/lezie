@@ -16,6 +16,7 @@
     Activity
   } from 'lucide-svelte';
 
+  // Using runes for state
   let title = $state('');
   let description = $state('');
   let categoryId = $state('');
@@ -23,9 +24,19 @@
   let isLoading = $state(false);
   let result = $state<any>(null);
   let error = $state('');
+  let selectedScenario = $state(0);
+
+  // Sample categories
+  const categories = $state([
+    { id: 'cat1', name: 'Suspicious Activity' },
+    { id: 'cat2', name: 'Theft' },
+    { id: 'cat3', name: 'Assault' },
+    { id: 'cat4', name: 'Noise Complaint' },
+    { id: 'cat5', name: 'Traffic Incident' },
+  ]);
 
   // Sample test data for auto-fill
-  const testScenarios = [
+  const testScenarios = $state([
     {
       name: 'Suspicious Activity',
       title: 'Suspicious person loitering near school gate',
@@ -61,9 +72,7 @@
       categoryId: 'cat5',
       locationName: 'Waterlines Junction'
     }
-  ];
-
-  let selectedScenario = $state(0);
+  ]);
 
   function autoFillTest(index: number) {
     const scenario = testScenarios[index];
@@ -101,7 +110,7 @@
           categoryId,
           location: {
             type: 'Point',
-            coordinates: [7.0498, 4.8242] // Example: Port Harcourt
+            coordinates: [7.0498, 4.8242]
           },
           locationName: locationName || 'Test Location',
           isAnonymous: false
@@ -132,7 +141,6 @@
   }
 
   onMount(() => {
-    // Auto-fill first scenario on mount for quick testing
     autoFillTest(0);
   });
 </script>
@@ -260,19 +268,19 @@
           <div class="analysis-item">
             <Shield size={16} />
             <span class="label">Severity:</span>
-            <span class="severity {result.severity}">{result.severity.toUpperCase()}</span>
+            <span class="severity {result.severity}">{result.severity?.toUpperCase() || 'N/A'}</span>
           </div>
           
           <div class="analysis-item">
             <Target size={16} />
             <span class="label">Threat Score:</span>
-            <span class="threat-score">{result.threatScore}/100</span>
+            <span class="threat-score">{result.threatScore || 0}/100</span>
           </div>
           
           <div class="analysis-item full-width">
             <FileText size={16} />
             <span class="label">Summary:</span>
-            <p>{result.summary}</p>
+            <p>{result.summary || 'No summary available'}</p>
           </div>
           
           <div class="analysis-item full-width">
@@ -426,7 +434,7 @@
   input:focus, textarea:focus, select:focus {
     outline: none;
     border-color: #6a2c91;
-    ring: 2px solid #6a2c91;
+    box-shadow: 0 0 0 3px rgba(106, 44, 145, 0.1);
   }
 
   textarea {
