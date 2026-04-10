@@ -284,20 +284,41 @@
               </div>
             </form>
 
-            {#if window.PublicKeyCredential}
-              <div class="si-passkey-divider"><span>or continue with</span></div>
-              <button type="button" class="si-passkey-btn" onclick={async () => {
-                  if (!formData.identifier) { errors.submit = 'Please enter your email, username, or phone first'; return; }
-                  isLoading = true;
-                  try {
-                    await authStore.loginWithPasskey(formData.identifier, formData.rememberMe);
-                    goto('/dashboard');
-                  } catch (error) { errors.submit = error instanceof Error ? error.message : 'Passkey authentication failed';
-                  } finally { isLoading = false; }
-                }}>
-                <Fingerprint size={18} /><span>Sign in with Passkey</span>
-              </button>
-            {/if}
+           {#if typeof window !== 'undefined' && window.PublicKeyCredential}
+  <div class="si-passkey-divider"><span>or continue with</span></div>
+  
+  <button 
+    type="button" 
+    class="si-passkey-btn" 
+    disabled={isLoading}
+    onclick={async () => {
+      isLoading = true;
+      errors = {}; // Clear previous errors
+      
+      try {
+        const { data, error } = await authClient.signIn.passkey();
+        
+        if (error) {
+          errors.submit = error.message || 'Passkey authentication failed';
+        } else {
+          goto('/dashboard');
+        }
+      } catch (err) {
+        errors.submit = 'An unexpected error occurred during passkey login';
+      } finally {
+        isLoading = false;
+      }
+    }}
+  >
+    {#if isLoading}
+      <span class="si-spinner"></span>
+    {:else}
+      <Fingerprint size={18} />
+      <span>Sign in with Passkey</span>
+    {/if}
+  </button>
+{/if}
+
           </div>
         {/if}
 
