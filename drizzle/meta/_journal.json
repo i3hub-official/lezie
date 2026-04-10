@@ -36,6 +36,13 @@
       "when": 1775814804851,
       "tag": "0004_chubby_madelyne_pryor",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1775846960467,
+      "tag": "0005_overconfident_zodiak",
+      "breakpoints": true
     }
   ]
 }
