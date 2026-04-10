@@ -7,13 +7,18 @@ import {
   reports, 
   notifications, 
   savedLocations, 
-  identityFlags 
+  identityFlags,
+  categories, // Import these for the joins
+  statuses
 } from '$lib/server/db/schema';
 
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, sql, and } from 'drizzle-orm';
 import { getProfile, getKycData } from '$lib/server/services/profileService';
 
 export const load: PageServerLoad = async ({ locals }) => {
+  // Guard against unauthenticated access
+  if (!locals.user) throw error(401, 'Unauthorized');
+  
   const userId = locals.user.id;
 
   try {
@@ -22,13 +27,13 @@ export const load: PageServerLoad = async ({ locals }) => {
       profile,
       kycData,
       recentReports,
-      reportSummary,
+      reportSummaryRows,
       unreadCountResult,
       recentNotifications,
       savedLocationsData,
       activeFlags,
     ] = await Promise.all([
-      // Account data
+      // 1. Account data
       db
         .select({
           tier: users.tier,
@@ -42,13 +47,11 @@ export const load: PageServerLoad = async ({ locals }) => {
         .limit(1)
         .then((rows) => rows[0] ?? null),
 
-      // Profile (decrypted)
+      // 2. Profile & KYC (Decrypted via your service)
       getProfile(userId),
-
-      // KYC (decrypted)
       getKycData(userId),
 
-      // Recent reports (last 10) with category & status
+      // 3. Recent reports (Join with table objects, not strings)
       db
         .select({
           id: reports.id,
@@ -56,75 +59,64 @@ export const load: PageServerLoad = async ({ locals }) => {
           severity: reports.severity,
           verificationStatus: reports.verificationStatus,
           createdAt: reports.createdAt,
-          categoryName: sql<string>`categories.name`,
-          statusName: sql<string>`statuses.name`,
+          categoryName: categories.name,
+          statusName: statuses.name,
         })
         .from(reports)
-        .leftJoin('categories', eq(reports.categoryId, sql`categories.id`))
-        .leftJoin('statuses', eq(reports.statusId, sql`statuses.id`))
+        .leftJoin(categories, eq(reports.categoryId, categories.id))
+        .leftJoin(statuses, eq(reports.statusId, statuses.id))
         .where(eq(reports.userId, userId))
         .orderBy(desc(reports.createdAt))
         .limit(10),
 
-      // Report summary
+      // 4. Report summary (Cast counts to numbers)
       db
         .select({
-          total: sql<number>`COUNT(*)`,
-          low: sql<number>`SUM(CASE WHEN severity = 'low' THEN 1 ELSE 0 END)`,
-          medium: sql<number>`SUM(CASE WHEN severity = 'medium' THEN 1 ELSE 0 END)`,
-          high: sql<number>`SUM(CASE WHEN severity = 'high' THEN 1 ELSE 0 END)`,
-          critical: sql<number>`SUM(CASE WHEN severity = 'critical' THEN 1 ELSE 0 END)`,
+          total: sql<number>`count(*)::int`,
+          low: sql<number>`count(*) filter (where ${reports.severity} = 'low')::int`,
+          medium: sql<number>`count(*) filter (where ${reports.severity} = 'medium')::int`,
+          high: sql<number>`count(*) filter (where ${reports.severity} = 'high')::int`,
+          critical: sql<number>`count(*) filter (where ${reports.severity} = 'critical')::int`,
         })
         .from(reports)
         .where(eq(reports.userId, userId)),
 
-      // Unread count
+      // 5. Unread count
       db
-        .select({ count: sql<number>`COUNT(*)` })
+        .select({ count: sql<number>`count(*)::int` })
         .from(notifications)
-        .where(eq(notifications.userId, userId))
-        .where(eq(notifications.isRead, false))
+        .where(
+          and(
+            eq(notifications.userId, userId),
+            eq(notifications.isRead, false)
+          )
+        )
         .then((rows) => rows[0]),
 
-      // Recent notifications
+      // 6. Recent notifications
       db
-        .select({
-          id: notifications.id,
-          type: notifications.type,
-          title: notifications.title,
-          body: notifications.body,
-          isRead: notifications.isRead,
-          createdAt: notifications.createdAt,
-        })
+        .select()
         .from(notifications)
         .where(eq(notifications.userId, userId))
         .orderBy(desc(notifications.createdAt))
         .limit(20),
 
-      // Saved locations
+      // 7. Saved locations
       db
-        .select({
-          id: savedLocations.id,
-          name: savedLocations.name,
-          location: savedLocations.location,
-          address: savedLocations.address,
-          isHome: savedLocations.isHome,
-          isWork: savedLocations.isWork,
-        })
+        .select()
         .from(savedLocations)
         .where(eq(savedLocations.userId, userId)),
 
-      // Active flags
+      // 8. Active flags
       db
-        .select({
-          id: identityFlags.id,
-          flagType: identityFlags.flagType,
-          description: identityFlags.description,
-          createdAt: identityFlags.createdAt,
-        })
+        .select()
         .from(identityFlags)
-        .where(eq(identityFlags.userId, userId))
-        .where(eq(identityFlags.resolved, false)),
+        .where(
+          and(
+            eq(identityFlags.userId, userId),
+            eq(identityFlags.resolved, false)
+          )
+        ),
     ]);
 
     return {
@@ -133,7 +125,7 @@ export const load: PageServerLoad = async ({ locals }) => {
       profile,
       kycData,
       recentReports,
-      reportSummary,
+      reportSummary: reportSummaryRows[0] ?? { total: 0, low: 0, medium: 0, high: 0, critical: 0 },
       unreadCount: unreadCountResult?.count ?? 0,
       recentNotifications,
       savedLocations: savedLocationsData,
@@ -141,6 +133,6 @@ export const load: PageServerLoad = async ({ locals }) => {
     };
   } catch (err) {
     console.error(`[DASHBOARD LOAD] Failed for user ${userId}:`, err);
-    throw error(500, 'Unable to load your dashboard. Please try again later.');
+    throw error(500, 'Internal Server Error');
   }
 };
