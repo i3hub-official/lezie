@@ -24,10 +24,7 @@ export const auth = betterAuth({
   },
 
   // FIXED: Better Auth v1.x uses databaseHooks for syncing
-  databaseHooks: {
-    user: {
-      create: {
-        after: async (user) => {
+  q (user) => {
           try {
             await db.insert(users).values({
               id: user.id,
