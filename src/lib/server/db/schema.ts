@@ -1,16 +1,14 @@
-
-
 // src/lib/server/db/schema.ts
 
-import { 
-  pgTable, 
+import {
+  pgTable,
   pgEnum,
-  uuid, 
-  varchar, 
-  text, 
-  timestamp, 
-  boolean, 
-  integer, 
+  uuid,
+  varchar,
+  text,
+  timestamp,
+  boolean,
+  integer,
   jsonb,
   index,
   uniqueIndex
@@ -80,13 +78,12 @@ export const userProfiles = pgTable('user_profiles', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 }, (table) => [
-  // Indexes for search and filtering
-  index('user_profiles_user_id_idx').on(table.userId),
+  // user_profiles_user_id_idx removed — .unique() on userId already creates this index
   index('user_profiles_name_idx').on(table.firstName, table.lastName),
   index('user_profiles_city_idx').on(table.city),
   index('user_profiles_country_idx').on(table.country),
 
-  // GiST index for geospatial queries on location - Fixed :: syntax
+  // GiST index for geospatial queries
   index('user_profiles_location_idx').using('gist', sql`${table.location}::text`),
 ]);
 
@@ -156,10 +153,10 @@ export const reports = pgTable('reports', {
   index('reports_status_created_idx').on(table.statusId, table.createdAt),
   index('reports_category_severity_idx').on(table.categoryId, table.severity),
 
-  // GiST index for geospatial queries - Fixed :: syntax
+  // GiST index for geospatial queries
   index('reports_location_idx').using('gist', sql`${table.location}::text`),
 
-  // Full-text search index - Fixed :: syntax
+  // Full-text search indexes
   index('reports_title_search_idx').using('gin', sql`to_tsvector('english', ${table.title})`),
   index('reports_description_search_idx').using('gin', sql`to_tsvector('english', ${table.description})`),
 ]);
@@ -214,7 +211,7 @@ export const notifications = pgTable('notifications', {
   isRead: boolean('is_read').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull()
 }, (table) => [
-  index('notifications_user_id_idx').on(table.userId),
+  // notifications_user_id_idx removed — notifications_user_unread_idx leads with userId
   index('notifications_type_idx').on(table.type),
   index('notifications_is_read_idx').on(table.isRead),
   index('notifications_created_at_idx').on(table.createdAt),
@@ -239,7 +236,7 @@ export const userPreferences = pgTable('user_preferences', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 }, (table) => [
-  index('user_preferences_user_id_idx').on(table.userId),
+  // user_preferences_user_id_idx removed — .unique() on userId already creates this index
   index('user_preferences_language_idx').on(table.language),
 ]);
 
@@ -257,7 +254,8 @@ export const identityFlags = pgTable('identity_flags', {
 }, (table) => [
   index('identity_flags_user_id_idx').on(table.userId),
   index('identity_flags_flag_type_idx').on(table.flagType),
-  index('identity_flags_resolved_idx').on(table.resolved),
+  // identity_flags_resolved_idx removed — superseded by identity_flags_user_resolved_idx
+  // Keep if you frequently query WHERE resolved = false without a userId filter
   index('identity_flags_created_at_idx').on(table.createdAt),
   index('identity_flags_user_resolved_idx').on(table.userId, table.resolved),
   index('identity_flags_type_created_idx').on(table.flagType, table.createdAt),
@@ -297,7 +295,7 @@ export const sessions = pgTable('sessions', {
   lastActive: timestamp('last_active').defaultNow().notNull()
 }, (table) => [
   uniqueIndex('sessions_token_idx').on(table.token),
-  index('sessions_user_id_idx').on(table.userId),
+  // sessions_user_id_idx removed — sessions_user_active_idx leads with userId
   index('sessions_expires_at_idx').on(table.expiresAt),
   index('sessions_last_active_idx').on(table.lastActive),
   index('sessions_user_active_idx').on(table.userId, table.lastActive),
@@ -317,12 +315,12 @@ export const savedLocations = pgTable('saved_locations', {
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 }, (table) => [
   index('saved_locations_user_id_idx').on(table.userId),
-  index('saved_locations_is_home_idx').on(table.isHome),
-  index('saved_locations_is_work_idx').on(table.isWork),
+  // saved_locations_is_home_idx removed — saved_locations_user_home_idx covers it
+  // saved_locations_is_work_idx removed — saved_locations_user_work_idx covers it
   index('saved_locations_user_home_idx').on(table.userId, table.isHome),
   index('saved_locations_user_work_idx').on(table.userId, table.isWork),
 
-  // GiST index for geospatial queries - Fixed :: syntax
+  // GiST index for geospatial queries
   index('saved_locations_location_idx').using('gist', sql`${table.location}::text`),
 ]);
 
