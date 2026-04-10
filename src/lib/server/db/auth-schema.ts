@@ -1,13 +1,12 @@
 // src/lib/server/db/auth-schema.ts
 
-
-import { 
-  pgTable, 
-  text, 
-  timestamp, 
-  boolean, 
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
   index,
-  uniqueIndex 
+  uniqueIndex
 } from 'drizzle-orm/pg-core';
 
 // ==================== BETTER AUTH TABLES ====================
