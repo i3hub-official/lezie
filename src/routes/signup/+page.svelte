@@ -2,6 +2,8 @@
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { authStore } from '$lib/stores/auth';
+import { authClient } from '$lib/auth-client';
+
   import {
     Mail, Lock, Eye, EyeOff, User, Phone, Calendar,
     AlertCircle, ArrowRight, ArrowLeft, Check, UserRound,
@@ -306,44 +308,44 @@ let touchedTerms  = $state(false);
 async function handleSubmit(e: Event) {
     e.preventDefault();
     
-    // 1. Validation Logic
     const errs = validateStep3();
-    if (Object.keys(errs).length > 0) {
+    if (Object.keys(errs).length > 0 || !acceptedTerms) {
       errors = errs;
+      if (!acceptedTerms) errors.terms = "Please accept the terms";
       Object.keys(errs).forEach(k => { touched[k] = true; });
       return;
     }
 
-    touchedTerms = true;
     isLoading = true; 
     errors = {};
 
-    // 2. The Better Auth Sign-Up Call
-    // This replaces BOTH the fetch('/api/signup') AND the authStore.login()
-    const { data, error } = await authClient.signUp.email({
-      email: formData.email.trim().toLowerCase(),
-      password: formData.password,
-      name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
-      // Extra data for your sync hook
-      data: {
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        phone: `${formData.dialCode}${formData.phone}`,
-        dateOfBirth: formData.dateOfBirth,
+    try {
+      const { data, error } = await authClient.signUp.email({
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+        name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
+        // These fields will be available in the 'user' object in your server hook
+        data: {
+          phone: `${formData.dialCode}${formData.phone}`,
+          dateOfBirth: formData.dateOfBirth,
+        }
+      });
+
+      if (error) {
+        // Better Auth errors often have a 'message' property
+        errors.submit = error.message || "An unexpected error occurred";
+        isLoading = false;
+        return;
       }
-    });
 
-    if (error) {
-      errors.submit = error.message;
+      // If successful, the cookie is already set by the browser
+      goto('/dashboard');
+    } catch (err) {
+      errors.submit = "Connection failed. Please check your internet.";
       isLoading = false;
-      return;
     }
-
-    // 3. Success Redirection
-    // Better Auth automatically creates the session, so no need to call 'login' manually.
-    goto('/dashboard');
-    isLoading = false;
 }
+
 
 
   // ── Password strength ───────────────────────────────────
