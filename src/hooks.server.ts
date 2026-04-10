@@ -71,11 +71,11 @@ const authSession: Handle = async ({ event, resolve }) => {
 
   if (isProtectedRoute && !event.locals.session) {
     if (dev) console.log(`[AUTH] 🛡️ Blocked guest from ${path}`);
-    throw redirect(303, '/login');
+    throw redirect(303, '/signin');
   }
 
   // 5. REDIRECT: Prevent logged-in users from seeing login/signup
-  if (event.locals.session && (path === '/login' || path === '/signup')) {
+  if (event.locals.session && (path === '/signin' || path === '/signup')) {
     throw redirect(303, '/dashboard');
   }
 
