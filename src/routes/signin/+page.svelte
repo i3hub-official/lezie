@@ -78,8 +78,8 @@
       if (error) {
         errors.submit = error.message;
       } else {
-        goto('/dashboard');
-      }
+  window.location.href = '/dashboard';
+}
     } catch (err) {
       errors.submit = "Login failed. Check your connection.";
     } finally {
