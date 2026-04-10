@@ -26,7 +26,23 @@ export const authUsers = pgTable('user', {
 }, (table) => [
   uniqueIndex('auth_users_email_idx').on(table.email),
   uniqueIndex('auth_users_username_idx').on(table.username),
-  uniqueIndex('auth_users_phone_idx').on(table.phoneNumber),
+  uniqueIndex('auth_users_phone_number_idx').on(table.phoneNumber),
+]);
+
+// Sessions table
+export const sessions = pgTable('session', {
+  id: text('id').primaryKey(),
+  expiresAt: timestamp('expires_at').notNull(),
+  token: text('token').notNull(),
+  createdAt: timestamp('created_at').notNull(),
+  updatedAt: timestamp('updated_at').notNull(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  userId: text('user_id').notNull().references(() => authUsers.id, { onDelete: 'cascade' })
+}, (table) => [
+  uniqueIndex('auth_sessions_token_idx').on(table.token),
+  index('auth_sessions_user_id_idx').on(table.userId),
+  index('auth_sessions_expires_at_idx').on(table.expiresAt)
 ]);
 
 // Accounts table (for OAuth providers)
@@ -41,7 +57,7 @@ export const accounts = pgTable('account', {
   accessTokenExpiresAt: timestamp('access_token_expires_at'),
   refreshTokenExpiresAt: timestamp('refresh_token_expires_at'),
   scope: text('scope'),
-  password: text('password'), // For email/password accounts
+  password: text('password'),
   createdAt: timestamp('created_at').notNull(),
   updatedAt: timestamp('updated_at').notNull()
 }, (table) => [
@@ -63,7 +79,7 @@ export const verifications = pgTable('verification', {
   index('auth_verifications_expires_at_idx').on(table.expiresAt)
 ]);
 
-// Rate limiting table (optional, for Better Auth rate limiting)
+// Rate limiting table
 export const rateLimits = pgTable('rate_limit', {
   id: text('id').primaryKey(),
   key: text('key').notNull(),
