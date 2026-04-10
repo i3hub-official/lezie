@@ -2,6 +2,7 @@ import { redirect, type Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { auth } from '$lib/server/auth';
 import { dev } from '$app/environment';
+import { svelteKitHandler } from 'better-auth/svelte-kit';
 
 // ==================== 1. RATE LIMITER ====================
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
@@ -30,7 +31,7 @@ function checkRateLimit(ip: string, pathname: string): boolean {
 // ==================== 2. MIDDLEWARE HANDLERS ====================
 
 /**
- * LOGGING: Only active in Dev (Termux)
+ * LOGGING: Only active in Dev (Termux/Local)
  */
 const requestLogging: Handle = async ({ event, resolve }) => {
   const start = Date.now();
@@ -44,45 +45,48 @@ const requestLogging: Handle = async ({ event, resolve }) => {
 };
 
 /**
- * SECURITY: Authentication & Route Protection
+ * AUTHENTICATION: Powered by Better Auth
  */
 const authSession: Handle = async ({ event, resolve }) => {
-  // 1. Better Auth API Handler
-  if (event.url.pathname.startsWith('/api/auth')) {
-    return auth.handler(event.request);
-  }
+  /**
+   * 1. The svelteKitHandler handles all /api/auth/* requests automatically.
+   * It takes care of CSRF, cookies, and provider redirects.
+   */
+  return svelteKitHandler({
+    event,
+    resolve,
+    auth,
+    onSessionResolve: async (session) => {
+      // Pass the session into locals for use in +page.server.ts and +layout.server.ts
+      event.locals.user = session?.user ?? null;
+      event.locals.session = session?.session ?? null;
 
-  // 2. Resolve session
-  const session = await auth.api.getSession({
-    headers: event.request.headers
+      const path = event.url.pathname;
+
+      // 2. AUTH GUARD: Protect dashboard and app sub-routes
+      const isProtectedRoute = [
+        '/dashboard',
+        '/alerts',
+        '/map',
+        '/report',
+        '/incident',
+        '/community',
+        '/profile',
+        '/settings'
+      ].some(route => path.startsWith(route));
+
+      if (isProtectedRoute && !event.locals.session) {
+        if (dev) console.log(`[AUTH] 🛡️ Redirecting guest to /signin`);
+        throw redirect(303, '/signin');
+      }
+
+      // 3. LOGGED-IN REDIRECT: Prevent authenticated users from seeing auth forms
+      const isAuthForm = path === '/signin' || path === '/signup' || path === '/';
+      if (event.locals.session && isAuthForm) {
+        throw redirect(303, '/dashboard');
+      }
+    }
   });
-
-  // 3. Set Locals for use in load functions/components
-  event.locals.user = session?.user ?? null;
-  event.locals.session = session?.session ?? null;
-
-  const path = event.url.pathname;
-
-  // 4. AUTH GUARD: Protect dashboard and sub-routes
-  const isProtectedRoute =
-  path.startsWith('/dashboard') ||
-  path.startsWith('/alerts') ||
-  path.startsWith('/map') ||
-  path.startsWith('/report') ||
-  path.startsWith('/incident') ||
-  path.startsWith('/safety-quest');
-
-  if (isProtectedRoute && !event.locals.session) {
-    if (dev) console.log(`[AUTH] 🛡️ Blocked guest from ${path}`);
-    throw redirect(303, '/signin');
-  }
-
-  // 5. REDIRECT: Prevent logged-in users from seeing login/signup
-  if (event.locals.session && (path === '/signin' || path === '/signup')) {
-    throw redirect(303, '/dashboard');
-  }
-
-  return resolve(event);
 };
 
 /**
@@ -90,7 +94,7 @@ const authSession: Handle = async ({ event, resolve }) => {
  */
 const rateLimiting: Handle = async ({ event, resolve }) => {
   let ip = '127.0.0.1';
-  try { ip = event.getClientAddress(); } catch { /* Termux fallback */ }
+  try { ip = event.getClientAddress(); } catch { /* Termux/Proxy fallback */ }
 
   if (!checkRateLimit(ip, event.url.pathname)) {
     return new Response(JSON.stringify({ error: 'Too many requests. Please wait.' }), {
@@ -102,15 +106,17 @@ const rateLimiting: Handle = async ({ event, resolve }) => {
 };
 
 /**
- * CACHE CONTROL: Ensure sensitive pages aren't cached by browsers
+ * CACHE CONTROL: Security header to prevent caching sensitive data
  */
 const cacheControl: Handle = async ({ event, resolve }) => {
   const response = await resolve(event);
   const path = event.url.pathname;
 
+  // Prevent browser from caching dashboard data or API responses
   if (path.startsWith('/dashboard') || path.startsWith('/api')) {
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
   }
   return response;
 };
