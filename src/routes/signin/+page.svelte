@@ -47,26 +47,45 @@
     step = 'password';
   };
   
-   import { json } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { authUsers } from '$lib/server/db/auth-schema';
-import { or, eq } from 'drizzle-orm';
 
-export const POST = async ({ request }) => {
-  const { identifier } = await request.json();
+  const handlePasswordSubmit = async (e: Event) => {
+    e.preventDefault();
+    isLoading = true;
+    errors = {};
 
-  // Search by email only in authUsers (Better Auth's table)
-  const user = await db.query.authUsers.findFirst({
-    where: eq(authUsers.email, identifier)
-  });
+    try {
+      // 1. Resolve the identifier to an actual email
+      const resolveRes = await fetch('/api/login-resolver', {
+        method: 'POST',
+        body: JSON.stringify({ identifier: formData.identifier })
+      });
+      const resolved = await resolveRes.json();
 
-  if (!user) {
-    return json({ error: 'Account not found' }, { status: 404 });
-  }
+      if (!resolveRes.ok) {
+        errors.submit = "Account not found";
+        isLoading = false;
+        return;
+      }
 
-  return json({ email: user.email });
-};
+      // 2. Sign in using the resolved email
+      // This works for both Passwords and PINs (stored as the password)
+      const { data, error } = await authClient.signIn.email({
+        email: resolved.email,
+        password: formData.password,
+        dontRememberMe: !formData.rememberMe,
+      });
 
+      if (error) {
+        errors.submit = error.message;
+      } else {
+        goto('/dashboard');
+      }
+    } catch (err) {
+      errors.submit = "Login failed. Check your connection.";
+    } finally {
+      isLoading = false;
+    }
+  };
 
   const handlePasskeyLogin = async () => {
     isLoading = true;
