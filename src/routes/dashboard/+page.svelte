@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { authClient } from '$lib/auth-client'; // Integrated Better Auth Client
+  import { authClient } from '$lib/auth-client';
   import {
     Bell, MapPin, AlertTriangle, TrendingUp, Shield, Clock,
     ChevronRight, FlagTriangleRight, Users, CheckCircle,
@@ -12,7 +12,6 @@
     Award, Activity, Eye, EyeOff
   } from 'lucide-svelte';
 
-  // Import all page components
   import MapPage        from './MapPage.svelte';
   import AlertsPage     from './AlertsPage.svelte';
   import StatisticsPage from './StatisticsPage.svelte';
@@ -21,13 +20,14 @@
   import ProfilePage    from './ProfilePage.svelte';
   import SettingsPage   from './SettingsPage.svelte';
 
-  // 1. Receive data from +page.server.ts
+  // ── Props from +page.server.ts ──
   let { data } = $props();
 
-  // 2. Reactive User & Name Formatting
+  // ── Reactive user ──
   const user = $derived(data.user);
-  
-  const formattedName = $derived(() => {
+
+  // ── Formatted name (fixed: derived value, not derived function) ──
+  const formattedName = $derived((() => {
     if (!user?.name) return 'User';
     const parts = user.name.trim().split(' ');
     const firstName = parts[0];
@@ -36,33 +36,58 @@
       return `${firstName} ${initial}.`;
     }
     return firstName;
+  })());
+
+  // ── State ──
+  let isLoading          = $state(false); // false so SSR doesn't show spinner forever
+  let recentIncidents    = $state<any[]>([]);
+  let stats              = $state({
+    totalReports: 0,
+    activeAlerts: 0,
+    communityMembers: 0,
+    safetyScore: 0,
+    verifiedReports: 0,
+    pendingReviews: 0
   });
-
-  let isLoading        = $state(true);
-  let recentIncidents  = $state<any[]>([]);
-  let stats            = $state({ totalReports:0, activeAlerts:0, communityMembers:0, safetyScore:0, verifiedReports:0, pendingReviews:0 });
-  let notifications    = $state<any[]>([]);
-  let safetyTips       = $state<string[]>([]);
-  let isMobileMenuOpen = $state(false);
-  let activePage       = $state('dashboard');
+  let notifications      = $state<any[]>([]);
+  let safetyTips         = $state<string[]>([]);
+  let isMobileMenuOpen   = $state(false);
+  let activePage         = $state('dashboard');
   let isSidebarCollapsed = $state(false);
-  let isMobile         = $state(false);
+  let isMobile           = $state(false);
 
+  // ── Page component map ──
   const pages: Record<string, any> = {
-    dashboard: null,
-    map: MapPage,
-    alerts: AlertsPage,
+    dashboard:  null,
+    map:        MapPage,
+    alerts:     AlertsPage,
     statistics: StatisticsPage,
-    reports: ReportsPage,
-    community: CommunityPage,
-    profile: ProfilePage,
-    settings: SettingsPage
+    reports:    ReportsPage,
+    community:  CommunityPage,
+    profile:    ProfilePage,
+    settings:   SettingsPage
   };
 
   let CurrentPageComponent = $derived(pages[activePage]);
 
+  // ── Nav items ──
+  const navItems = [
+    { path: 'dashboard',  icon: Home,      label: 'Dashboard'  },
+    { path: 'map',        icon: MapPin,    label: 'Map View'   },
+    { path: 'alerts',     icon: Bell,      label: 'Alerts'     },
+    { path: 'statistics', icon: BarChart3, label: 'Statistics' },
+    { path: 'reports',    icon: FileText,  label: 'My Reports' },
+    { path: 'community',  icon: Users,     label: 'Community'  },
+    { path: 'profile',    icon: User,      label: 'Profile'    },
+    { path: 'settings',   icon: Settings,  label: 'Settings'   },
+  ];
+
+  // ── Derived ──
+  const unreadCount = $derived(notifications.filter(n => !n.read).length);
+
+  // ── Mount ──
   onMount(() => {
-    // Safety check: if hooks.server failed, redirect client-side
+    // Client-side auth safety net (hooks.server.ts is the real guard)
     if (!user) {
       goto('/signin');
       return;
@@ -70,102 +95,155 @@
 
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    loadData();
-    
+
     const handleHashChange = () => {
       const hash = window.location.hash.slice(1);
-      if (hash && pages[hash]) {
+      if (hash && pages[hash] !== undefined) {
         activePage = hash;
       } else if (!hash) {
         activePage = 'dashboard';
       }
     };
-    
+
     window.addEventListener('hashchange', handleHashChange);
-    handleHashChange();
-    
+    handleHashChange(); // run once on load
+
+    loadData();
+
     return () => {
       window.removeEventListener('resize', checkMobile);
       window.removeEventListener('hashchange', handleHashChange);
     };
   });
 
+  // ── Functions ──
   function checkMobile() {
     isMobile = window.innerWidth < 768;
-    if (isMobile) { isMobileMenuOpen = false; isSidebarCollapsed = true; }
+    if (isMobile) {
+      isMobileMenuOpen   = false;
+      isSidebarCollapsed = true;
+    }
   }
 
   async function loadData() {
     isLoading = true;
-    // Simulate fetching dashboard data
     await new Promise(r => setTimeout(r, 600));
-    
-    stats = { totalReports:47, activeAlerts:3, communityMembers:1250, safetyScore:86, verifiedReports:32, pendingReviews:8 };
+
+    stats = {
+      totalReports:     47,
+      activeAlerts:     3,
+      communityMembers: 1250,
+      safetyScore:      86,
+      verifiedReports:  32,
+      pendingReviews:   8
+    };
+
     recentIncidents = [
-      { id:1, title:'Suspicious person near school', category:'suspicious', severity:'high',
-        time: new Date(Date.now()-2*3600000).toISOString(), location:'Maple Street Elementary',
-        status:'verified', verificationCount:15, commentCount:8 },
-      { id:2, title:'Car break-in on Main St', category:'theft', severity:'medium',
-        time: new Date(Date.now()-5*3600000).toISOString(), location:'Main Street',
-        status:'investigating', verificationCount:12, commentCount:5 },
-      { id:3, title:'Vandalism at community park', category:'vandalism', severity:'low',
-        time: new Date(Date.now()-86400000).toISOString(), location:'Oak Park',
-        status:'resolved', verificationCount:8, commentCount:3 }
+      {
+        id: 1, title: 'Suspicious person near school',
+        category: 'suspicious', severity: 'high',
+        time: new Date(Date.now() - 2 * 3600000).toISOString(),
+        location: 'Maple Street Elementary',
+        status: 'verified', verificationCount: 15, commentCount: 8
+      },
+      {
+        id: 2, title: 'Car break-in on Main St',
+        category: 'theft', severity: 'medium',
+        time: new Date(Date.now() - 5 * 3600000).toISOString(),
+        location: 'Main Street',
+        status: 'investigating', verificationCount: 12, commentCount: 5
+      },
+      {
+        id: 3, title: 'Vandalism at community park',
+        category: 'vandalism', severity: 'low',
+        time: new Date(Date.now() - 86400000).toISOString(),
+        location: 'Oak Park',
+        status: 'resolved', verificationCount: 8, commentCount: 3
+      }
     ];
+
     notifications = [
-      { id:1, message:'Suspicious activity reported on Maple Street', time: new Date(Date.now()-600000).toISOString(), read:false, type:'alert' },
-      { id:2, message:'Community members confirmed your report', time: new Date(Date.now()-3600000).toISOString(), read:false, type:'success' },
-      { id:3, message:'Your neighborhood safety score improved', time: new Date(Date.now()-86400000).toISOString(), read:true, type:'info' }
+      {
+        id: 1, type: 'alert', read: false,
+        message: 'Suspicious activity reported on Maple Street',
+        time: new Date(Date.now() - 600000).toISOString()
+      },
+      {
+        id: 2, type: 'success', read: false,
+        message: 'Community members confirmed your report',
+        time: new Date(Date.now() - 3600000).toISOString()
+      },
+      {
+        id: 3, type: 'info', read: true,
+        message: 'Your neighbourhood safety score improved',
+        time: new Date(Date.now() - 86400000).toISOString()
+      }
     ];
+
     safetyTips = [
       'Always be aware of your surroundings',
       'Report suspicious activity immediately',
       'Share your location with trusted contacts',
       'Keep emergency numbers saved'
     ];
+
     isLoading = false;
   }
 
-  // Helper functions unchanged
   function getCategoryIcon(cat: string) {
-    return { suspicious:AlertTriangle, theft:AlertOctagon, vandalism:Building, fire:Flame, accident:Car, noise:Volume2 }[cat] ?? AlertTriangle;
+    const map: Record<string, any> = {
+      suspicious: AlertTriangle,
+      theft:      AlertOctagon,
+      vandalism:  Building,
+      fire:       Flame,
+      accident:   Car,
+      noise:      Volume2
+    };
+    return map[cat] ?? AlertTriangle;
   }
 
-  function formatTime(d: string) {
+  function getSeverityColor(severity: string): string {
+    const map: Record<string, string> = {
+      critical: '#7C3AED',
+      high:     '#EF4444',
+      medium:   '#F59E0B',
+      low:      '#10B981'
+    };
+    return map[severity] ?? '#6B7280';
+  }
+
+  function getStatusColor(status: string): string {
+    const map: Record<string, string> = {
+      verified:     '#10B981',
+      investigating:'#F59E0B',
+      resolved:     '#3B82F6',
+      false_report: '#EF4444'
+    };
+    return map[status] ?? '#6B7280';
+  }
+
+  function formatTime(d: string): string {
     const diff = Date.now() - new Date(d).getTime();
-    const m = Math.floor(diff/60000), h = Math.floor(diff/3600000), day = Math.floor(diff/86400000);
-    if (m < 1) return 'Just now';
-    if (h < 1) return `${m}m ago`;
+    const m   = Math.floor(diff / 60000);
+    const h   = Math.floor(diff / 3600000);
+    const day = Math.floor(diff / 86400000);
+    if (m < 1)  return 'Just now';
+    if (h < 1)  return `${m}m ago`;
     if (h < 24) return `${h}h ago`;
     return `${day}d ago`;
   }
 
-  const unreadCount = $derived(notifications.filter(n => !n.read).length);
-
   function navigate(page: string) {
-    activePage = page;
+    activePage       = page;
     isMobileMenuOpen = false;
     window.location.hash = page === 'dashboard' ? '' : page;
   }
 
-  // Updated Logout Logic
   async function handleLogout() {
     await authClient.signOut();
     goto('/signin');
   }
-
-  const navItems = [
-    { path:'dashboard', icon:Home,         label:'Dashboard' },
-    { path:'map',       icon:MapPin,        label:'Map View' },
-    { path:'alerts',    icon:Bell,          label:'Alerts' },
-    { path:'statistics',icon:BarChart3,     label:'Statistics' },
-    { path:'reports',   icon:FileText,      label:'My Reports' },
-    { path:'community', icon:Users,         label:'Community' },
-    { path:'profile',   icon:User,          label:'Profile' },
-    { path:'settings',  icon:Settings,      label:'Settings' },
-  ];
 </script>
-
 
 <svelte:head>
   <title>{activePage.charAt(0).toUpperCase() + activePage.slice(1)} – Lezie</title>
