@@ -4,6 +4,31 @@ import { auth } from '$lib/server/auth';
 import { dev } from '$app/environment';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 
+const authMiddleware: Handle = async ({ event, resolve }) => {
+	return svelteKitHandler({
+		event,
+		resolve,
+		auth,
+		onSessionResolve: async (session) => {
+			// Populate locals so they are available in +page.server.ts
+			event.locals.session = session?.session ?? null;
+			event.locals.user = session?.user ?? null;
+
+			const path = event.url.pathname;
+
+			// 1. Auth Guard: Protect the dashboard
+			if (path.startsWith("/dashboard") && !session) {
+				throw redirect(303, "/signin");
+			}
+
+			// 2. Prevent logged-in users from seeing signin/signup
+			if (session && (path === "/signin" || path === "/signup")) {
+				throw redirect(303, "/dashboard");
+			}
+		},
+	});
+};
+
 // ==================== 1. RATE LIMITER ====================
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_RULES: Record<string, { max: number; windowMs: number }> = {
