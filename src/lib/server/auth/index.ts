@@ -6,9 +6,9 @@ import { users, userProfiles, userPreferences } from '$lib/server/db/schema';
 import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { passkey } from 'better-auth/plugins/passkey';
-import { eq } from 'drizzle-orm';
 import {
   protectName,
+  searchHashFor,
 } from '$lib/security/dataProtection';
 
 export const auth = betterAuth({
@@ -34,7 +34,6 @@ export const auth = betterAuth({
     passkey()
   ],
 
-  // Custom fields added to the session/user object
   user: {
     additionalFields: {
       username:    { type: 'string' },
@@ -49,29 +48,44 @@ export const auth = betterAuth({
     requireEmailVerification: false,
   },
 
-  advanced: {
-    backgroundTasks: {
-      enabled: true,
-    },
-  },
-
   databaseHooks: {
     user: {
       create: {
+        /**
+         * BEFORE HOOK: 
+         * Solves the "null value in email_hash" error by calculating 
+         * hashes before the database insert occurs.
+         */
+        before: async (user) => {
+          const emailHash = searchHashFor(user.email, 'email');
+          
+          const rawUsername = (user as any).username;
+          const rawPhone = (user as any).phoneNumber;
+
+          return {
+            data: {
+              ...user,
+              emailHash,
+              usernameHash: rawUsername ? searchHashFor(rawUsername, 'username') : null,
+              phoneHash: rawPhone ? searchHashFor(rawPhone, 'phone') : null,
+            }
+          };
+        },
+
+        /**
+         * AFTER HOOK:
+         * Syncs the created user to auxiliary app tables.
+         */
         after: async (user) => {
           const startTime = Date.now();
           try {
-            // Split name for profile storage
             const nameParts = user.name?.split(' ') || [];
             const firstName = nameParts[0] || '';
             const lastName  = nameParts.slice(1).join(' ') || '';
 
-            /**
-             * 1. Create Core App User
-             * Maps the Better Auth 'text' ID to our app's user table.
-             */
+            // 1. Sync to core Users table
             await db.insert(users).values({
-              id:         user.id as any, // Cast to any to bypass UUID strictness if using Nanoids
+              id:         user.id as any,
               hashable:   user.id,        
               email:      user.email,
               phone:      (user as any).phoneNumber ?? null,
@@ -83,11 +97,7 @@ export const auth = betterAuth({
               lastActive: new Date(),
             }).onConflictDoNothing();
 
-            /**
-             * 2. Create Encrypted User Profile
-             * Uses Tier 2/3 protection. We use user.id as the Context ID (AAD)
-             * to cryptographically bind this profile to this specific user.
-             */
+            // 2. Create encrypted User Profile
             await db.insert(userProfiles).values({
               userId:    user.id as any,
               firstName: firstName ? protectName(firstName) : null,
@@ -95,10 +105,7 @@ export const auth = betterAuth({
               updatedAt: new Date(),
             }).onConflictDoNothing();
 
-            /**
-             * 3. Create Default Preferences
-             * Non-PII data, stored in plaintext.
-             */
+            // 3. Set default Preferences
             await db.insert(userPreferences).values({
               userId:         user.id as any,
               alertRadius:    5,
@@ -107,12 +114,10 @@ export const auth = betterAuth({
             }).onConflictDoNothing();
 
             if (dev) {
-              const duration = Date.now() - startTime;
-              console.log(`[AUTH:SYNC] ✅ Successfully synced profile for ${user.email} (${duration}ms)`);
+              console.log(`[AUTH:SYNC] ✅ Synced ${user.email} (${Date.now() - startTime}ms)`);
             }
           } catch (error) {
-            console.error(`[AUTH:SYNC] ❌ Critical failure during user sync for ${user.id}:`, error);
-            // In production, you might want to trigger an alert/sentry event here
+            console.error(`[AUTH:SYNC] ❌ Critical failure for ${user.id}:`, error);
           }
         },
       },
@@ -126,7 +131,7 @@ export const auth = betterAuth({
   ],
 
   session: {
-    expiresIn: 60 * 60 * 24 * 30, // 30 days
-    updateAge: 60 * 60 * 24,      // Refresh session every 24 hours
+    expiresIn: 60 * 60 * 24 * 30,
+    updateAge: 60 * 60 * 24,
   },
 });
