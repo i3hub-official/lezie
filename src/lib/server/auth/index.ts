@@ -7,6 +7,7 @@ import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { passkey } from 'better-auth/plugins/passkey';
 
+
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL || 'http://localhost:5173',
   secret: env.BETTER_AUTH_SECRET || 'c0ed822af57f5cfa11cf49010fd02cd67c3f74e1904f7e24f13d41c95764a551',
