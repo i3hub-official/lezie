@@ -1,17 +1,9 @@
-import { defineConfig } from "drizzle-kit";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
+import { config } from "dotenv";
 
-export default defineConfig({
-  schema: [
-    "./src/lib/server/db/schema.ts",
-    "./src/lib/server/db/auth-schema.ts"
-  ], 
-  out: "./drizzle",
-  dialect: "sqlite", // Keep this
-  // REMOVE the 'driver' line entirely
-  dbCredentials: {
-    url: process.env.TURSO_DATABASE_URL!,
-    authToken: process.env.TURSO_AUTH_TOKEN!,
-  },
-  verbose: true,
-  strict: true,
-});
+config({ path: ".env" });
+
+const sql = neon(process.env.DATABASE_URL!);
+
+export const db = drizzle({ client: sql });
