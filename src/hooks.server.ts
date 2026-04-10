@@ -84,13 +84,49 @@ const authSession: Handle = async ({ event, resolve }) => {
   return resolve(event);
 };
 
+// ==================== CACHE CONTROL ====================
+
 const cacheControl: Handle = async ({ event, resolve }) => {
   const response = await resolve(event);
-  if (event.url.pathname.startsWith('/dashboard')) {
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  const url      = event.url.pathname;
+
+  const noCachePaths = [
+    '/dashboard',
+    '/signup',
+    '/login',
+    '/report',
+    '/profile',
+    '/settings',
+    '/contact',
+    '/safety-guidelines',
+    '/faq',
+  ];
+
+  // If the path matches or is a sub-path (e.g., /profile/edit)
+  if (noCachePaths.some(p => url === p || url.startsWith(p + '/'))) {
+    response.headers.set(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0'
+    );
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+  } else if (url === '/' || url === '/home') {
+    // Shared landing pages: Cache for 1 hour, refresh in background
+    response.headers.set(
+      'Cache-Control',
+      'public, max-age=3600, stale-while-revalidate=86400'
+    );
+  } else {
+    // Default: Cache for 5 minutes
+    response.headers.set(
+      'Cache-Control',
+      'public, max-age=300, stale-while-revalidate=600'
+    );
   }
+
   return response;
 };
+
 
 // ==================== EXPORT ====================
 export const handle: Handle = sequence(
