@@ -1,14 +1,13 @@
 // src/lib/server/services/ai.service.ts
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
+import { env } from '$env/dynamic/private';
 
-
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY!);
 
 export interface ReportAnalysis {
   title?: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
-  threatScore: number; // 0-100
+  threatScore: number;
   categories: string[];
   summary: string;
   recommendedAction: string;
@@ -16,169 +15,125 @@ export interface ReportAnalysis {
   needsImmediateAttention: boolean;
 }
 
-export interface UserBehavior {
-  [key: string]: unknown;
-}
-
-export interface HistoricalPattern {
-  [key: string]: unknown;
-}
-
 export class AIService {
+  /**
+   * Analyzes an incident report for threat level and urgency.
+   */
   static async analyzeReport(title: string, description: string, category: string): Promise<ReportAnalysis> {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-    
+    // 1.5-flash is perfect for high-speed categorization/summarization
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-flash',
+      generationConfig: { responseMimeType: "application/json" } 
+    });
+
     const prompt = `
-      You are an AI safety analyst for Lezie, a community safety platform. Analyze this incident report:
-      
+      Analyze this incident report for Lezie, a community safety platform:
       Category: ${category}
       Title: ${title}
       Description: ${description}
       
-      Provide a threat assessment with the following JSON structure:
+      Return JSON using this schema:
       {
-        "severity": "low|medium|high|critical",
-        "threatScore": number between 0-100,
-        "categories": array of relevant threat categories (max 3),
-        "summary": "brief 1-sentence summary",
-        "recommendedAction": "what authorities should do",
-        "confidence": number between 0-1,
+        "severity": "low" | "medium" | "high" | "critical",
+        "threatScore": number (0-100),
+        "categories": string[] (max 3),
+        "summary": string (1 sentence),
+        "recommendedAction": string,
+        "confidence": number (0-1),
         "needsImmediateAttention": boolean
       }
-      
-      Consider factors like: threat to life, property damage, urgency, scale, and credibility.
-      Respond with ONLY the JSON object.
     `;
-    
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    
+
     try {
-      // Clean the response to ensure valid JSON
-      const cleanedText = text.replace(/```json\n?|\n?```/g, '').trim();
-      const analysis = JSON.parse(cleanedText);
-      return analysis;
+      const result = await model.generateContent(prompt);
+      return JSON.parse(result.response.text());
     } catch (error) {
-      console.error('Failed to parse AI analysis:', error);
-      // Return default analysis
+      console.error('AI Analysis Error:', error);
       return {
         severity: 'medium',
         threatScore: 50,
         categories: [category],
-        summary: 'Unable to analyze automatically. Manual review required.',
-        recommendedAction: 'Assign for manual review',
-        confidence: 0.3,
+        summary: 'Automatic analysis failed. Manual review required.',
+        recommendedAction: 'Verify incident details manually.',
+        confidence: 0,
         needsImmediateAttention: false,
       };
     }
   }
 
-  static async detectImpersonation(
-    userBehavior: UserBehavior,
-    historicalData: HistoricalPattern[]
-  ): Promise<{
+  /**
+   * Detects impersonation by comparing current behavior against history.
+   */
+  static async detectImpersonation(userBehavior: any, historicalData: any[]): Promise<{
     isSuspicious: boolean;
     flags: string[];
     confidence: number;
   }> {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-    
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-flash',
+      generationConfig: { responseMimeType: "application/json" }
+    });
+
     const prompt = `
-      Analyze this user behavior for potential identity fraud or impersonation:
+      Compare current user behavior against historical patterns to detect identity fraud:
+      Current: ${JSON.stringify(userBehavior)}
+      History: ${JSON.stringify(historicalData)}
       
-      Current Behavior: ${JSON.stringify(userBehavior)}
-      Historical Patterns: ${JSON.stringify(historicalData)}
-      
-      Respond with JSON:
-      {
-        "isSuspicious": boolean,
-        "flags": array of suspicious patterns detected,
-        "confidence": number 0-1
-      }
+      Return JSON: { "isSuspicious": boolean, "flags": string[], "confidence": number }
     `;
-    
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    
+
     try {
-      const cleanedText = text.replace(/```json\n?|\n?```/g, '').trim();
-      return JSON.parse(cleanedText);
+      const result = await model.generateContent(prompt);
+      return JSON.parse(result.response.text());
     } catch {
-      return {
-        isSuspicious: false,
-        flags: [],
-        confidence: 0,
-      };
+      return { isSuspicious: false, flags: [], confidence: 0 };
     }
   }
 
+  /**
+   * Provides high-level insights across multiple reports.
+   */
   static async summarizeReports(reports: ReportAnalysis[]): Promise<string> {
-    if (reports.length === 0) return 'No reports to summarize';
-    
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-    const reportsText = reports.map(r => 
-      `- ${r.title}: ${r.summary.substring(0, 100)}... [${r.severity}]`
-    ).join('\n');
-    
+    if (!reports.length) return 'No reports available.';
+
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const reportsText = reports.map(r => `- ${r.title}: ${r.summary} [${r.severity}]`).join('\n');
+
     const prompt = `
-      Summarize these ${reports.length} incident reports for community safety insights:
+      Summarize these ${reports.length} safety reports. 
+      Identify critical incidents, emerging patterns, and community advice.
+      Keep it professional and under 200 words.
       
+      Reports:
       ${reportsText}
-      
-      Provide a concise summary highlighting:
-      1. Most critical incidents
-      2. Emerging patterns
-      3. Recommended actions for the community
-      
-      Keep it under 200 words.
     `;
-    
+
     const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
+    return result.response.text();
   }
 
-  static async predictTrends(
-    historicalReports: ReportAnalysis[],
-    timeframe: 'day' | 'week' | 'month'
-  ): Promise<{
-    predictedIncidents: number;
-    highRiskAreas: Array<{ lat: number; lng: number; risk: number }>;
-    commonCategories: string[];
-    alert: string | null;
-  }> {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-    
+  /**
+   * Predicts future risks based on historical data.
+   */
+  static async predictTrends(historicalReports: any[], timeframe: string) {
+    // 1.5-pro is better for analyzing long contexts and trends
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-pro',
+      generationConfig: { responseMimeType: "application/json" }
+    });
+
     const prompt = `
-      Based on historical incident data, predict safety trends for the next ${timeframe}:
+      Analyze historical data to predict safety trends for the next ${timeframe}.
+      Data: ${JSON.stringify(historicalReports.slice(0, 50))}
       
-      Data: ${JSON.stringify(historicalReports.slice(0, 100))}
-      
-      Respond with JSON:
-      {
-        "predictedIncidents": number,
-        "highRiskAreas": array of {lat, lng, risk} objects,
-        "commonCategories": array of categories,
-        "alert": "warning message if needed or null"
-      }
+      Return JSON: { "predictedIncidents": number, "highRiskAreas": Array<{lat, lng, risk}>, "commonCategories": string[], "alert": string | null }
     `;
-    
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    
+
     try {
-      const cleanedText = text.replace(/```json\n?|\n?```/g, '').trim();
-      return JSON.parse(cleanedText);
+      const result = await model.generateContent(prompt);
+      return JSON.parse(result.response.text());
     } catch {
-      return {
-        predictedIncidents: historicalReports.length,
-        highRiskAreas: [],
-        commonCategories: [],
-        alert: null,
-      };
+      return { predictedIncidents: 0, highRiskAreas: [], commonCategories: [], alert: null };
     }
   }
 }
