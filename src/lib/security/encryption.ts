@@ -1,9 +1,12 @@
 // src/lib/security/encryption.ts
+import { env } from '$env/dynamic/private';
 import crypto from 'crypto';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ENV VALIDATION — Fail fast
 // ─────────────────────────────────────────────────────────────────────────────
+
+
 function mustHexEnv(name: string, bytes: number): Buffer {
   const raw = process.env[name];
   if (!raw) throw new Error(`${name} is missing`);
@@ -15,7 +18,7 @@ function mustHexEnv(name: string, bytes: number): Buffer {
 }
 
 // Master AES-256 key — never changes without full re-encryption
-const ENCRYPTION_KEY = mustHexEnv('ENCRYPTION_KEY', 32);
+const ENCRYPTION_KEY = mustHexEnvFrom(env.ENCRYPTION_KEY, 32);
 
 // Fixed IVs per field type — prevents cross-field linkability
 const FIXED_IV = {
