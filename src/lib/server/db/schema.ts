@@ -45,20 +45,15 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 }, (table) => [
-  // Unique indexes for quick lookup
   uniqueIndex('users_email_idx').on(table.email).where(sql`${table.email} IS NOT NULL`),
   uniqueIndex('users_phone_idx').on(table.phone).where(sql`${table.phone} IS NOT NULL`),
   uniqueIndex('users_refresh_token_idx').on(table.refreshToken).where(sql`${table.refreshToken} IS NOT NULL`),
-
-  // Indexes for filtering and sorting
   index('users_tier_idx').on(table.tier),
   index('users_kyc_status_idx').on(table.kycStatus),
   index('users_trust_score_idx').on(table.trustScore),
   index('users_is_active_idx').on(table.isActive),
   index('users_last_active_idx').on(table.lastActive),
   index('users_created_at_idx').on(table.createdAt),
-
-  // Composite index for common queries
   index('users_active_tier_idx').on(table.isActive, table.tier),
 ]);
 
@@ -82,9 +77,8 @@ export const userProfiles = pgTable('user_profiles', {
   index('user_profiles_name_idx').on(table.firstName, table.lastName),
   index('user_profiles_city_idx').on(table.city),
   index('user_profiles_country_idx').on(table.country),
-
-  // GiST index for geospatial queries
-  index('user_profiles_location_idx').using('gist', sql`${table.location}::text`),
+  // GIN index for jsonb location queries
+  index('user_profiles_location_idx').using('gin', table.location),
 ]);
 
 // Categories
@@ -116,7 +110,7 @@ export const statuses = pgTable('statuses', {
   index('statuses_is_active_idx').on(table.isActive),
 ]);
 
-// Reports - Main table, needs extensive indexing
+// Reports
 export const reports = pgTable('reports', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').references(() => users.id),
@@ -134,28 +128,19 @@ export const reports = pgTable('reports', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 }, (table) => [
-  // Foreign key indexes
   index('reports_user_id_idx').on(table.userId),
   index('reports_category_id_idx').on(table.categoryId),
   index('reports_status_id_idx').on(table.statusId),
-
-  // Filtering indexes
   index('reports_severity_idx').on(table.severity),
   index('reports_verification_status_idx').on(table.verificationStatus),
   index('reports_is_anonymous_idx').on(table.isAnonymous),
-
-  // Date range indexes
   index('reports_created_at_idx').on(table.createdAt),
   index('reports_updated_at_idx').on(table.updatedAt),
-
-  // Composite indexes for common queries
   index('reports_severity_created_idx').on(table.severity, table.createdAt),
   index('reports_status_created_idx').on(table.statusId, table.createdAt),
   index('reports_category_severity_idx').on(table.categoryId, table.severity),
-
-  // GiST index for geospatial queries
-  index('reports_location_idx').using('gist', sql`${table.location}::text`),
-
+  // GIN index for jsonb location queries
+  index('reports_location_idx').using('gin', table.location),
   // Full-text search indexes
   index('reports_title_search_idx').using('gin', sql`to_tsvector('english', ${table.title})`),
   index('reports_description_search_idx').using('gin', sql`to_tsvector('english', ${table.description})`),
@@ -200,7 +185,7 @@ export const reportComments = pgTable('report_comments', {
   index('report_comments_report_created_idx').on(table.reportId, table.createdAt),
 ]);
 
-// Notifications - High volume table
+// Notifications
 export const notifications = pgTable('notifications', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').references(() => users.id).notNull(),
@@ -255,13 +240,13 @@ export const identityFlags = pgTable('identity_flags', {
   index('identity_flags_user_id_idx').on(table.userId),
   index('identity_flags_flag_type_idx').on(table.flagType),
   // identity_flags_resolved_idx removed — superseded by identity_flags_user_resolved_idx
-  // Keep if you frequently query WHERE resolved = false without a userId filter
+  // Restore if you query WHERE resolved = false without a userId filter
   index('identity_flags_created_at_idx').on(table.createdAt),
   index('identity_flags_user_resolved_idx').on(table.userId, table.resolved),
   index('identity_flags_type_created_idx').on(table.flagType, table.createdAt),
 ]);
 
-// Audit Logs - High volume, needs careful indexing
+// Audit Logs
 export const auditLogs = pgTable('audit_logs', {
   id: uuid('id').primaryKey().defaultRandom(),
   adminId: uuid('admin_id').references(() => users.id).notNull(),
@@ -319,9 +304,8 @@ export const savedLocations = pgTable('saved_locations', {
   // saved_locations_is_work_idx removed — saved_locations_user_work_idx covers it
   index('saved_locations_user_home_idx').on(table.userId, table.isHome),
   index('saved_locations_user_work_idx').on(table.userId, table.isWork),
-
-  // GiST index for geospatial queries
-  index('saved_locations_location_idx').using('gist', sql`${table.location}::text`),
+  // GIN index for jsonb location queries
+  index('saved_locations_location_idx').using('gin', table.location),
 ]);
 
 // ==================== RELATIONS ====================
