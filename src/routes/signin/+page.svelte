@@ -1,25 +1,10 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { authStore } from '$lib/stores/auth';
+  import { authClient } from '$lib/auth-client'; // Replace store with client
   import { 
-    Mail, 
-    Lock, 
-    Eye, 
-    EyeOff,
-    AlertCircle,
-    ArrowRight,
-    ArrowLeft,
-    MapPin,
-    Users,
-    Bell,
-    User,
-    Phone,
-    Fingerprint,
-    ChevronLeft,
-    Home,
-    Sparkles,
-    ShieldCheck,
-    Smartphone
+    Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight, ArrowLeft,
+    MapPin, Users, Bell, User, Phone, Fingerprint, ChevronLeft,
+    Home, Sparkles, ShieldCheck, Smartphone
   } from 'lucide-svelte';
   
   let step = $state<'identifier' | 'password'>('identifier');
@@ -34,7 +19,6 @@
   let showPassword = $state(false);
   let touched = $state<Record<string, boolean>>({});
   
-  // Detect identifier type (email, username, or phone)
   const getIdentifierType = (identifier: string): 'email' | 'username' | 'phone' => {
     if (/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(identifier)) return 'email';
     if (/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(identifier)) return 'phone';
@@ -44,11 +28,9 @@
   const validateIdentifier = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.identifier.trim()) {
-      newErrors.identifier = 'Email, username, or phone number is required';
+      newErrors.identifier = 'Required';
     } else if (getIdentifierType(formData.identifier) === 'email' && !/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(formData.identifier)) {
-      newErrors.identifier = 'Please enter a valid email address';
-    } else if (getIdentifierType(formData.identifier) === 'phone' && formData.identifier.replace(/[\s\-\(\)\+]/g, '').length < 10) {
-      newErrors.identifier = 'Please enter a valid phone number';
+      newErrors.identifier = 'Invalid email';
     }
     return newErrors;
   };
@@ -58,7 +40,7 @@
     const identifierErrors = validateIdentifier();
     if (Object.keys(identifierErrors).length > 0) { 
       errors = identifierErrors;
-      Object.keys(identifierErrors).forEach(key => { touched[key] = true; });
+      touched.identifier = true;
       return; 
     }
     errors = {};
@@ -68,67 +50,58 @@
   const handlePasswordSubmit = async (e: Event) => {
     e.preventDefault();
     if (!formData.password) { 
-      errors = { password: 'Password or PIN is required' };
+      errors = { password: 'Required' };
       touched.password = true;
       return; 
     }
+    
     isLoading = true;
     errors = {};
+
     try {
-      const isPin = /^\d{4,6}$/.test(formData.password);
-      if (isPin) {
-        await authStore.loginWithPin(formData.identifier, formData.password, formData.rememberMe);
+      const { data, error } = await authClient.signIn.email({
+        email: formData.identifier.trim().toLowerCase(),
+        password: formData.password,
+        dontRememberMe: !formData.rememberMe,
+      });
+
+      if (error) {
+        errors.submit = error.message || 'Invalid credentials';
       } else {
-        await authStore.login(formData.identifier, formData.password, formData.rememberMe);
+        goto('/dashboard');
       }
-      goto('/dashboard');
-    } catch (error: unknown) {
-      errors.submit = error instanceof Error ? error.message : 'Invalid credentials';
+    } catch (err) {
+      errors.submit = 'A connection error occurred';
+    } finally {
+      isLoading = false;
+    }
+  };
+
+  const handlePasskeyLogin = async () => {
+    isLoading = true;
+    try {
+      const { data, error } = await authClient.signIn.passkey();
+      if (error) {
+        errors.submit = error.message;
+      } else {
+        goto('/dashboard');
+      }
+    } catch (err) {
+      errors.submit = 'Passkey authentication failed';
     } finally {
       isLoading = false;
     }
   };
   
-  const goBackToIdentifier = () => { 
-    step = 'identifier'; 
-    errors = {}; 
-  };
-
-  const goBackToLanding = () => {
-    goto('/');
-  };
+  const goBackToIdentifier = () => { step = 'identifier'; errors = {}; };
+  const goBackToLanding = () => goto('/');
   
   const getIdentifierIcon = () => {
     const type = getIdentifierType(formData.identifier);
-    if (type === 'email') return Mail;
-    if (type === 'phone') return Phone;
-    return User;
-  };
-  
-  const getIdentifierLabel = () => {
-    const type = getIdentifierType(formData.identifier);
-    if (type === 'email') return 'Email';
-    if (type === 'phone') return 'Phone Number';
-    return 'Username';
-  };
-
-  const formatPhoneInput = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
-    if (cleaned.length <= 3) return cleaned;
-    if (cleaned.length <= 6) return `(${cleaned.slice(0,3)}) ${cleaned.slice(3)}`;
-    return `(${cleaned.slice(0,3)}) ${cleaned.slice(3,6)}-${cleaned.slice(6,10)}`;
-  };
-
-  const handleIdentifierInput = (e: Event) => {
-    const input = e.target as HTMLInputElement;
-    const type = getIdentifierType(input.value);
-    if (type === 'phone') {
-      formData.identifier = formatPhoneInput(input.value);
-    } else {
-      formData.identifier = input.value;
-    }
+    return type === 'email' ? Mail : (type === 'phone' ? Phone : User);
   };
 </script>
+
 
 <svelte:head>
   <title>Sign In - Lezie</title>
