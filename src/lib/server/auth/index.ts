@@ -6,8 +6,15 @@ import { users, userProfiles, userPreferences } from '$lib/server/db/schema';
 import { env } from '$env/dynamic/private';
 
 export const auth = betterAuth({
-  // Ensure BETTER_AUTH_SECRET is set in your .env
+  // Fallback to localhost if ENV is missing to prevent the "Base URL" warning
+  baseURL: env.BETTER_AUTH_URL || 'http://localhost:5173',
   secret: env.BETTER_AUTH_SECRET || 'c0ed822af57f5cfa11cf49010fd02cd67c3f74e1904f7e24f13d41c95764a551',
+
+  // 1. BUILT-IN LOGGER: Set to 'debug' for dev, 'info' or 'error' for production
+  logger: {
+    level: "debug", 
+    enabled: true,
+  },
 
   database: drizzleAdapter(db, {
     provider: 'pg',
@@ -21,25 +28,23 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
-    autoSignIn: true, // Automatically sign in after sign up
+    autoSignIn: true,
   },
 
-  // SPEED FIX: Enable background tasks so hooks don't block the response
   advanced: {
     backgroundTasks: {
       enabled: true,
     },
   },
 
-  // DATABASE SYNC LOGIC
   databaseHooks: {
     user: {
       create: {
+        before: async (user) => {
+           console.log(`[AUTH:SYNC] ⏳ Starting sync for new user: ${user.email}`);
+        },
         after: async (user) => {
-          /**
-           * We perform these inserts as a "fire-and-forget" block 
-           * to keep the signup response time fast.
-           */
+          const startTime = Date.now();
           try {
             // 1. Create main app user record
             await db.insert(users).values({
@@ -52,7 +57,7 @@ export const auth = betterAuth({
               lastActive: new Date(),
             }).onConflictDoNothing();
 
-            // 2. Create the user profile (pulling name from Better Auth)
+            // 2. Create the user profile
             const firstName = user.name?.split(' ')[0] || '';
             const lastName = user.name?.split(' ').slice(1).join(' ') || '';
 
@@ -66,22 +71,21 @@ export const auth = betterAuth({
             // 3. Initialize default preferences
             await db.insert(userPreferences).values({
               userId: user.id,
-              alertRadius: 5, // Default 5km
+              alertRadius: 5,
               notifyCritical: true,
               notifyHigh: true,
             }).onConflictDoNothing();
 
-            console.log(`📡 Lezie Sync: Profile & Preferences created for ${user.id}`);
+            const duration = Date.now() - startTime;
+            console.log(`[AUTH:SYNC] ✅ Successfully synced tables for ${user.id} (${duration}ms)`);
           } catch (error) {
-            // Log the error but don't crash the auth process
-            console.error('❌ Sync Hook Error:', error);
+            console.error(`[AUTH:SYNC] ❌ Critical failure syncing user ${user.id}:`, error);
           }
         },
       },
     },
   },
 
-  // SECURITY & COOKIES
   trustedOrigins: [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
@@ -89,7 +93,7 @@ export const auth = betterAuth({
   ],
 
   session: {
-    expiresIn: 60 * 60 * 24 * 30, // 30 days
-    updateAge: 60 * 60 * 24,      // Refresh session every 24 hours
+    expiresIn: 60 * 60 * 24 * 30, 
+    updateAge: 60 * 60 * 24,      
   },
 });
