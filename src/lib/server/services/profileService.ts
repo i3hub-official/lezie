@@ -28,7 +28,7 @@ export const load: PageServerLoad = async ({ locals }) => {
       savedLocationsData,
       activeFlags,
     ] = await Promise.all([
-      // 1. Account data from users table
+      // Account data
       db
         .select({
           tier: users.tier,
@@ -42,13 +42,13 @@ export const load: PageServerLoad = async ({ locals }) => {
         .limit(1)
         .then((rows) => rows[0] ?? null),
 
-      // 2. Decrypted profile
+      // Profile (decrypted)
       getProfile(userId),
 
-      // 3. Decrypted KYC data
+      // KYC (decrypted)
       getKycData(userId),
 
-      // 4. Recent reports (last 10) - with category and status joined
+      // Recent reports (last 10) with category & status
       db
         .select({
           id: reports.id,
@@ -60,13 +60,13 @@ export const load: PageServerLoad = async ({ locals }) => {
           statusName: sql<string>`statuses.name`,
         })
         .from(reports)
-        .leftJoin('categories', eq(reports.categoryId, sql`categories.id`))  // or import categories if preferred
+        .leftJoin('categories', eq(reports.categoryId, sql`categories.id`))
         .leftJoin('statuses', eq(reports.statusId, sql`statuses.id`))
         .where(eq(reports.userId, userId))
         .orderBy(desc(reports.createdAt))
         .limit(10),
 
-      // 5. Report summary (total + breakdown by severity)
+      // Report summary
       db
         .select({
           total: sql<number>`COUNT(*)`,
@@ -78,7 +78,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         .from(reports)
         .where(eq(reports.userId, userId)),
 
-      // 6. Unread notifications count
+      // Unread count
       db
         .select({ count: sql<number>`COUNT(*)` })
         .from(notifications)
@@ -86,7 +86,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         .where(eq(notifications.isRead, false))
         .then((rows) => rows[0]),
 
-      // 7. Recent notifications (last 20)
+      // Recent notifications
       db
         .select({
           id: notifications.id,
@@ -101,7 +101,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         .orderBy(desc(notifications.createdAt))
         .limit(20),
 
-      // 8. Saved locations
+      // Saved locations
       db
         .select({
           id: savedLocations.id,
@@ -114,7 +114,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         .from(savedLocations)
         .where(eq(savedLocations.userId, userId)),
 
-      // 9. Active (unresolved) identity flags
+      // Active flags
       db
         .select({
           id: identityFlags.id,
@@ -128,10 +128,10 @@ export const load: PageServerLoad = async ({ locals }) => {
     ]);
 
     return {
-      user: locals.user,                    // Better Auth user
-      account,                              // tier, trustScore, kycStatus...
-      profile,                              // decrypted firstName, lastName, bio...
-      kycData,                              // decrypted KYC or null
+      user: locals.user,
+      account,
+      profile,
+      kycData,
       recentReports,
       reportSummary,
       unreadCount: unreadCountResult?.count ?? 0,
