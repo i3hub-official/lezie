@@ -7,16 +7,14 @@ import crypto from 'crypto';
 // ─────────────────────────────────────────────────────────────────────────────
 
 
-function mustHexEnv(name: string, bytes: number): Buffer {
-  const raw = process.env[name];
-  if (!raw) throw new Error(`${name} is missing`);
+function mustHexEnvFrom(raw: string | undefined, bytes: number): Buffer {
+  if (!raw) throw new Error(`ENV is missing`);
   if (raw.length !== bytes * 2)
-    throw new Error(`${name} must be ${bytes * 2} hex chars (${bytes} bytes)`);
+    throw new Error(`ENV must be ${bytes * 2} hex chars`);
   const buf = Buffer.from(raw, 'hex');
-  if (buf.length !== bytes) throw new Error(`${name} is not valid hex`);
+  if (buf.length !== bytes) throw new Error(`Invalid hex`);
   return buf;
 }
-
 // Master AES-256 key — never changes without full re-encryption
 const ENCRYPTION_KEY = mustHexEnvFrom(env.ENCRYPTION_KEY, 32);
 
