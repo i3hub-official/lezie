@@ -1,16 +1,14 @@
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
+import { DATABASE_URL } from "$env/static/private"; // Use SvelteKit's env handler
 import * as schema from "./schema";
 import * as authSchema from "./auth-schema";
 
-// Vite uses import.meta.env instead of process.env
-const databaseUrl = process.env.DATABASE_URL || import.meta.env.VITE_DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL is not defined in environment variables");
+if (!DATABASE_URL) {
+  throw new Error("DATABASE_URL is missing from .env");
 }
 
-const sql = neon(databaseUrl);
+const sql = neon(DATABASE_URL);
 
 export const db = drizzle({ 
   client: sql, 
