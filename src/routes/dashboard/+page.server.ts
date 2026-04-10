@@ -2,13 +2,19 @@ import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 
 import { db } from '$lib/server/db';
-import { users } from '$lib/server/db/schema';
-import { eq, desc, sql } from 'drizzle-orm';
+import { 
+  users, 
+  reports, 
+  notifications, 
+  savedLocations, 
+  identityFlags 
+} from '$lib/server/db/schema';
 
+import { eq, desc, sql } from 'drizzle-orm';
 import { getProfile, getKycData } from '$lib/server/services/profileService';
 
 export const load: PageServerLoad = async ({ locals }) => {
-  const userId = locals.user.id;   // Safe to access because hooks.server.ts already protects this route
+  const userId = locals.user.id;
 
   try {
     const [
@@ -19,10 +25,10 @@ export const load: PageServerLoad = async ({ locals }) => {
       reportSummary,
       unreadCountResult,
       recentNotifications,
-      savedLocations,
+      savedLocationsData,
       activeFlags,
     ] = await Promise.all([
-      // Account data from your main users table
+      // Account data
       db
         .select({
           tier: users.tier,
@@ -32,75 +38,109 @@ export const load: PageServerLoad = async ({ locals }) => {
           isActive: users.isActive,
         })
         .from(users)
-        .where(eq(users.id, userId as any))
+        .where(eq(users.id, userId))
         .limit(1)
         .then((rows) => rows[0] ?? null),
 
       // Profile (decrypted)
       getProfile(userId),
 
-      // KYC data (decrypted)
+      // KYC (decrypted)
       getKycData(userId),
 
-      // === TODO: Replace these placeholders with your real queries ===
-
-      // Recent reports (last 10)
+      // Recent reports (last 10) with category & status
       db
-        .select() // select your actual fields + joins to category/status
-        .from(/* your reports table name */)
-        .where(eq(/* reports.userId column */, userId as any))
-        .orderBy(desc(/* reports.createdAt or similar */))
+        .select({
+          id: reports.id,
+          title: reports.title,
+          severity: reports.severity,
+          verificationStatus: reports.verificationStatus,
+          createdAt: reports.createdAt,
+          categoryName: sql<string>`categories.name`,
+          statusName: sql<string>`statuses.name`,
+        })
+        .from(reports)
+        .leftJoin('categories', eq(reports.categoryId, sql`categories.id`))
+        .leftJoin('statuses', eq(reports.statusId, sql`statuses.id`))
+        .where(eq(reports.userId, userId))
+        .orderBy(desc(reports.createdAt))
         .limit(10),
 
       // Report summary
       db
         .select({
           total: sql<number>`COUNT(*)`,
-          // Add severity/status breakdown here if needed
+          low: sql<number>`SUM(CASE WHEN severity = 'low' THEN 1 ELSE 0 END)`,
+          medium: sql<number>`SUM(CASE WHEN severity = 'medium' THEN 1 ELSE 0 END)`,
+          high: sql<number>`SUM(CASE WHEN severity = 'high' THEN 1 ELSE 0 END)`,
+          critical: sql<number>`SUM(CASE WHEN severity = 'critical' THEN 1 ELSE 0 END)`,
         })
-        .from(/* your reports table name */)
-        .where(eq(/* reports.userId column */, userId as any)),
+        .from(reports)
+        .where(eq(reports.userId, userId)),
 
-      // Unread notifications count
+      // Unread count
       db
         .select({ count: sql<number>`COUNT(*)` })
-        .from(/* your notifications table name */)
-        .where(eq(/* notifications.userId column */, userId as any))
+        .from(notifications)
+        .where(eq(notifications.userId, userId))
+        .where(eq(notifications.isRead, false))
         .then((rows) => rows[0]),
 
-      // Recent notifications (last 20)
+      // Recent notifications
       db
-        .select()
-        .from(/* your notifications table name */)
-        .where(eq(/* notifications.userId column */, userId as any))
-        .orderBy(desc(/* notifications.createdAt */))
+        .select({
+          id: notifications.id,
+          type: notifications.type,
+          title: notifications.title,
+          body: notifications.body,
+          isRead: notifications.isRead,
+          createdAt: notifications.createdAt,
+        })
+        .from(notifications)
+        .where(eq(notifications.userId, userId))
+        .orderBy(desc(notifications.createdAt))
         .limit(20),
 
       // Saved locations
       db
-        .select()
-        .from(/* your saved_locations table name */)
-        .where(eq(/* saved_locations.userId column */, userId as any)),
+        .select({
+          id: savedLocations.id,
+          name: savedLocations.name,
+          location: savedLocations.location,
+          address: savedLocations.address,
+          isHome: savedLocations.isHome,
+          isWork: savedLocations.isWork,
+        })
+        .from(savedLocations)
+        .where(eq(savedLocations.userId, userId)),
 
-      // Active/unresolved identity flags
+      // Active flags
       db
-        .select()
-        .from(/* your flags table name */)
-        .where(eq(/* flags.userId column */, userId as any)),
+        .select({
+          id: identityFlags.id,
+          flagType: identityFlags.flagType,
+          description: identityFlags.description,
+          createdAt: identityFlags.createdAt,
+        })
+        .from(identityFlags)
+        .where(eq(identityFlags.userId, userId))
+        .where(eq(identityFlags.resolved, false)),
     ]);
 
     return {
-      user: locals.user,           // Better Auth user
-      account,                     // tier, trustScore, kycStatus, etc.
-      profile,                     // decrypted profile
-      kycData,                     // decrypted KYC or null
+      user: locals.user,
+      account,
+      profile,
+      kycData,
       recentReports,
       reportSummary,
       unreadCount: unreadCountResult?.count ?? 0,
       recentNotifications,
-      savedLocations,
+      savedLocations: savedLocationsData,
       activeFlags,
     };
   } catch (err) {
     console.error(`[DASHBOARD LOAD] Failed for user ${userId}:`, err);
-    throw error
+    throw error(500, 'Unable to load your dashboard. Please try again later.');
+  }
+};
