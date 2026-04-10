@@ -785,6 +785,12 @@ async function handleSubmit(e: Event) {
                 Continue <ArrowRight size={15} />
               {/if}
             </button>
+{#if errors.submit}
+  <div class="text-red-500 text-sm mt-2 flex items-center gap-2">
+    <AlertCircle size={16} /> {errors.submit}
+  </div>
+{/if}
+
           </div>
         </form>
       </div>
