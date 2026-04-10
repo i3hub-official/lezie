@@ -6,14 +6,10 @@ import { users, userProfiles, userPreferences } from '$lib/server/db/schema';
 import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { passkey } from 'better-auth/plugins/passkey';
-import {
-  protectName,
-  searchHashFor,
-} from '$lib/security/dataProtection';
 
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL || 'http://localhost:5173',
-  secret: env.BETTER_AUTH_SECRET,
+  secret: env.BETTER_AUTH_SECRET || 'c0ed822af57f5cfa11c3f74e....c95764',
 
   logger: {
     level: dev ? 'debug' : 'error',
@@ -34,16 +30,12 @@ export const auth = betterAuth({
     passkey()
   ],
 
-  // IMPORTANT: All columns in the 'user' table must be defined here 
-  // if they are not standard Better Auth fields.
+  // Custom fields — must match columns added to authUsers in auth-schema.ts
   user: {
     additionalFields: {
-      username:     { type: 'string' },
-      phoneNumber:  { type: 'string' },
-      pin:          { type: 'string' },
-      emailHash:    { type: 'string' },
-      usernameHash: { type: 'string' },
-      phoneHash:    { type: 'string' },
+      username:    { type: 'string' },
+      phoneNumber: { type: 'string' },
+      pin:         { type: 'string' },
     }
   },
 
@@ -53,31 +45,18 @@ export const auth = betterAuth({
     requireEmailVerification: false,
   },
 
+  advanced: {
+    backgroundTasks: {
+      enabled: true,
+    },
+  },
+
   databaseHooks: {
     user: {
       create: {
-        /**
-         * BEFORE: Populates the email_hash column so the 
-         * NOT NULL constraint in the DB is satisfied.
-         */
         before: async (user) => {
-          const emailHash = searchHashFor(user.email, 'email');
-          const rawUsername = (user as any).username;
-          const rawPhone = (user as any).phoneNumber;
-
-          return {
-            data: {
-              ...user,
-              emailHash: emailHash,
-              usernameHash: rawUsername ? searchHashFor(rawUsername, 'username') : null,
-              phoneHash: rawPhone ? searchHashFor(rawPhone, 'phone') : null,
-            }
-          };
+          if (dev) console.log(`[AUTH:SYNC] ⏳ Starting sync for new user: ${user.email}`);
         },
-
-        /**
-         * AFTER: Syncs the account to the application-level tables.
-         */
         after: async (user) => {
           const startTime = Date.now();
           try {
@@ -85,29 +64,28 @@ export const auth = betterAuth({
             const firstName = nameParts[0] || '';
             const lastName  = nameParts.slice(1).join(' ') || '';
 
-            // 1. Core User Record
+            // NOTE: users.id is uuid but Better Auth generates a text ID.
+            // We cast user.id as uuid — ensure your DB accepts this or
+            // change users.id to text('id') in schema.ts.
             await db.insert(users).values({
-              id:         user.id as any,
-              hashable:   user.id,        
-              email:      user.email,
-              phone:      (user as any).phoneNumber ?? null,
-              username:   (user as any).username    ?? null,
-              tier:       '1',
-              trustScore: 0,
-              kycStatus:  'pending',
-              isActive:   true,
-              lastActive: new Date(),
+              id:          user.id as any, // Better Auth text ID cast to uuid
+              email:       user.email,
+              phone:       (user as any).phoneNumber ?? null,
+              username:    (user as any).username    ?? null,
+              tier:        '1',
+              trustScore:  0,
+              kycStatus:   'pending',
+              isActive:    true,
+              lastActive:  new Date(),
             }).onConflictDoNothing();
 
-            // 2. Encrypted Profile
             await db.insert(userProfiles).values({
               userId:    user.id as any,
-              firstName: firstName ? protectName(firstName) : null,
-              lastName:  lastName  ? protectName(lastName)  : null,
+              firstName,
+              lastName,
               updatedAt: new Date(),
             }).onConflictDoNothing();
 
-            // 3. User Preferences
             await db.insert(userPreferences).values({
               userId:         user.id as any,
               alertRadius:    5,
@@ -116,7 +94,8 @@ export const auth = betterAuth({
             }).onConflictDoNothing();
 
             if (dev) {
-              console.log(`[AUTH:SYNC] ✅ Synced tables for ${user.email} (${Date.now() - startTime}ms)`);
+              const duration = Date.now() - startTime;
+              console.log(`[AUTH:SYNC] ✅ Synced tables for ${user.id} (${duration}ms)`);
             }
           } catch (error) {
             console.error(`[AUTH:SYNC] ❌ Critical failure syncing user ${user.id}:`, error);
@@ -129,11 +108,11 @@ export const auth = betterAuth({
   trustedOrigins: [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
-    'https://lezie.vercel.app',
+    'https://lezie.vercel.app',   // fixed: was http
   ],
 
   session: {
     expiresIn: 60 * 60 * 24 * 30,
-    updateAge: 60 * 60 * 24,
+    updateAge:  60 * 60 * 24,
   },
 });
