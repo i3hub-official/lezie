@@ -1,8 +1,7 @@
-
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { authStore } from '$lib/stores/auth';
+  import { authClient } from '$lib/auth-client'; // Integrated Better Auth Client
   import {
     Bell, MapPin, AlertTriangle, TrendingUp, Shield, Clock,
     ChevronRight, FlagTriangleRight, Users, CheckCircle,
@@ -22,8 +21,24 @@
   import ProfilePage    from './ProfilePage.svelte';
   import SettingsPage   from './SettingsPage.svelte';
 
-  let isLoading        = $state(false);
-  let user             = $state<{ name: string; email: string } | null>(null);
+  // 1. Receive data from +page.server.ts
+  let { data } = $props();
+
+  // 2. Reactive User & Name Formatting
+  const user = $derived(data.user);
+  
+  const formattedName = $derived(() => {
+    if (!user?.name) return 'User';
+    const parts = user.name.trim().split(' ');
+    const firstName = parts[0];
+    if (parts.length > 1) {
+      const initial = parts[parts.length - 1].charAt(0).toUpperCase();
+      return `${firstName} ${initial}.`;
+    }
+    return firstName;
+  });
+
+  let isLoading        = $state(true);
   let recentIncidents  = $state<any[]>([]);
   let stats            = $state({ totalReports:0, activeAlerts:0, communityMembers:0, safetyScore:0, verifiedReports:0, pendingReviews:0 });
   let notifications    = $state<any[]>([]);
@@ -33,7 +48,6 @@
   let isSidebarCollapsed = $state(false);
   let isMobile         = $state(false);
 
-  // Page components mapping
   const pages: Record<string, any> = {
     dashboard: null,
     map: MapPage,
@@ -48,11 +62,16 @@
   let CurrentPageComponent = $derived(pages[activePage]);
 
   onMount(() => {
+    // Safety check: if hooks.server failed, redirect client-side
+    if (!user) {
+      goto('/login');
+      return;
+    }
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     loadData();
     
-    // Use hash-based routing to hide URLs from address bar
     const handleHashChange = () => {
       const hash = window.location.hash.slice(1);
       if (hash && pages[hash]) {
@@ -77,8 +96,10 @@
   }
 
   async function loadData() {
+    isLoading = true;
+    // Simulate fetching dashboard data
     await new Promise(r => setTimeout(r, 600));
-    user = { name: 'Ogwo GP', email: 'ogwogp@gmail.com' };
+    
     stats = { totalReports:47, activeAlerts:3, communityMembers:1250, safetyScore:86, verifiedReports:32, pendingReviews:8 };
     recentIncidents = [
       { id:1, title:'Suspicious person near school', category:'suspicious', severity:'high',
@@ -105,16 +126,9 @@
     isLoading = false;
   }
 
+  // Helper functions unchanged
   function getCategoryIcon(cat: string) {
     return { suspicious:AlertTriangle, theft:AlertOctagon, vandalism:Building, fire:Flame, accident:Car, noise:Volume2 }[cat] ?? AlertTriangle;
-  }
-
-  function getSeverityColor(s: string) {
-    return { low:'#10B981', medium:'#F59E0B', high:'#F97316', critical:'#EF4444' }[s] ?? '#6B7280';
-  }
-
-  function getStatusColor(s: string) {
-    return { verified:'#10B981', resolved:'#6B7280', investigating:'#F59E0B', active:'#EF4444' }[s] ?? '#6B7280';
   }
 
   function formatTime(d: string) {
@@ -128,17 +142,16 @@
 
   const unreadCount = $derived(notifications.filter(n => !n.read).length);
 
-  // Navigate using hash - URLs stay hidden from browser history bar
   function navigate(page: string) {
     activePage = page;
     isMobileMenuOpen = false;
-    // Use hash to store state without changing the actual URL path
     window.location.hash = page === 'dashboard' ? '' : page;
   }
 
+  // Updated Logout Logic
   async function handleLogout() {
-    await authStore.logout();
-    goto('/');
+    await authClient.signOut();
+    goto('/login');
   }
 
   const navItems = [
@@ -152,6 +165,7 @@
     { path:'settings',  icon:Settings,      label:'Settings' },
   ];
 </script>
+
 
 <svelte:head>
   <title>{activePage.charAt(0).toUpperCase() + activePage.slice(1)} – Lezie</title>
