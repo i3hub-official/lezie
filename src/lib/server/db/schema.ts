@@ -31,7 +31,7 @@ export const mediaTypeEnum = pgEnum('media_type', ['image', 'video', 'audio']);
 
 // Users table
 export const users = pgTable('users', {
-  id: uuid('id').primaryKey(),
+  id: uuid('id').primaryKey().defaultRandom(),
   email: varchar('email', { length: 255 }),
   phone: varchar('phone', { length: 20 }),
   passwordHash: varchar('password_hash', { length: 255 }),
