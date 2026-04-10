@@ -47,35 +47,45 @@
     step = 'password';
   };
   
-  const handlePasswordSubmit = async (e: Event) => {
+    const handlePasswordSubmit = async (e: Event) => {
     e.preventDefault();
-    if (!formData.password) { 
-      errors = { password: 'Required' };
-      touched.password = true;
-      return; 
-    }
-    
     isLoading = true;
     errors = {};
 
     try {
+      // 1. Resolve the identifier to an actual email
+      const resolveRes = await fetch('/api/login-resolver', {
+        method: 'POST',
+        body: JSON.stringify({ identifier: formData.identifier })
+      });
+      const resolved = await resolveRes.json();
+
+      if (!resolveRes.ok) {
+        errors.submit = "Account not found";
+        isLoading = false;
+        return;
+      }
+
+      // 2. Sign in using the resolved email
+      // This works for both Passwords and PINs (stored as the password)
       const { data, error } = await authClient.signIn.email({
-        email: formData.identifier.trim().toLowerCase(),
+        email: resolved.email,
         password: formData.password,
         dontRememberMe: !formData.rememberMe,
       });
 
       if (error) {
-        errors.submit = error.message || 'Invalid credentials';
+        errors.submit = error.message;
       } else {
         goto('/dashboard');
       }
     } catch (err) {
-      errors.submit = 'A connection error occurred';
+      errors.submit = "Login failed. Check your connection.";
     } finally {
       isLoading = false;
     }
   };
+
 
   const handlePasskeyLogin = async () => {
     isLoading = true;
