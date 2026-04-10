@@ -2,14 +2,12 @@ import type { Handle } from '@sveltejs/kit';
 import { auth } from '$lib/server/auth';
 import { sequence } from '@sveltejs/kit/hooks';
 
-// ==================== RATE LIMITER STORE ====================
-
+// ==================== RATE LIMITER ====================
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
-
 const RATE_LIMIT_RULES: Record<string, { max: number; windowMs: number }> = {
-  '/login':   { max: 10,  windowMs: 60_000 },   // 10 attempts / min
-  '/signup':  { max: 5,   windowMs: 60_000 },   // 5 attempts / min
-  '/api':     { max: 100, windowMs: 60_000 },   // 100 req / min
+  '/login':   { max: 10,  windowMs: 60_000 },
+  '/signup':  { max: 5,   windowMs: 60_000 },
+  '/api':     { max: 100, windowMs: 60_000 },
 };
 
 function getRateLimit(pathname: string) {
@@ -22,165 +20,79 @@ function getRateLimit(pathname: string) {
 function checkRateLimit(ip: string, pathname: string): boolean {
   const rule = getRateLimit(pathname);
   if (!rule) return true;
-
-  const key   = `${ip}:${pathname}`;
-  const now   = Date.now();
+  const key = `${ip}:${pathname}`;
+  const now = Date.now();
   const entry = rateLimitStore.get(key);
-
   if (!entry || now > entry.resetAt) {
     rateLimitStore.set(key, { count: 1, resetAt: now + rule.windowMs });
     return true;
   }
-
   entry.count++;
-  if (entry.count > rule.max) return false;
-
-  return true;
+  return entry.count <= rule.max;
 }
 
-// Clean up expired entries every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of rateLimitStore) {
-    if (now > entry.resetAt) rateLimitStore.delete(key);
-  }
-}, 5 * 60_000);
-
-// ==================== REQUEST LOGGING ====================
+// ==================== MIDDLEWARE HANDLERS ====================
 
 const requestLogging: Handle = async ({ event, resolve }) => {
-  const start    = Date.now();
-  const method   = event.request.method;
-  const pathname = event.url.pathname;
-
+  const start = Date.now();
   const response = await resolve(event);
-
-  const ms     = Date.now() - start;
-  const status = response.status;
-  const color  =
-    status >= 500 ? '\x1b[31m' :   // red
-    status >= 400 ? '\x1b[33m' :   // yellow
-    status >= 300 ? '\x1b[36m' :   // cyan
-                    '\x1b[32m';    // green
-
-  console.log(`${color}[${status}]\x1b[0m ${method} ${pathname} — ${ms}ms`);
-
+  const ms = Date.now() - start;
+  console.log(`[${response.status}] ${event.request.method} ${event.url.pathname} — ${ms}ms`);
   return response;
 };
-
-// ==================== RATE LIMITING ====================
 
 const rateLimiting: Handle = async ({ event, resolve }) => {
   let ip: string;
   try {
     ip = event.getClientAddress();
   } catch {
-    // Fallback for local dev/Termux environments
-    ip = '127.0.0.1';
+    ip = '127.0.0.1'; // Termux/Local Dev Fallback
   }
 
-  const pathname = event.url.pathname;
-
-  if (!checkRateLimit(ip, pathname)) {
-    const rule = getRateLimit(pathname)!;
-    console.warn(`[rate-limit] ${ip} exceeded limit on ${pathname}`);
-    return new Response(
-      JSON.stringify({ error: 'Too many requests. Please slow down.' }),
-      {
-        status: 429,
-        headers: {
-          'Content-Type': 'application/json',
-          'Retry-After': String(rule.windowMs / 1000),
-        },
-      }
-    );
+  if (!checkRateLimit(ip, event.url.pathname)) {
+    return new Response(JSON.stringify({ error: 'Too many requests' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
-
   return resolve(event);
 };
 
-// ==================== SECURITY HEADERS ====================
-
 const securityHeaders: Handle = async ({ event, resolve }) => {
   const response = await resolve(event);
-
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set(
-    'Strict-Transport-Security',
-    'max-age=31536000; includeSubDomains; preload'
-  );
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set(
-    'Permissions-Policy',
-    'camera=(), microphone=(), payment=(), usb=(), interest-cohort=()'
-  );
-  response.headers.set(
-    'Content-Security-Policy',
-    [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https:",
-      "connect-src 'self' https://*.neon.tech wss:",
-      "frame-ancestors 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-    ].join('; ')
-  );
-
   return response;
 };
 
-// ==================== AUTH SESSION ====================
-
 const authSession: Handle = async ({ event, resolve }) => {
-  // Better Auth handle internal API routes
+  // CRITICAL: Better Auth handler for API routes
   if (event.url.pathname.startsWith('/api/auth')) {
     return auth.handler(event.request);
   }
 
-  // Populate locals for other routes
-  const session = await auth.api.getSession({ 
-    headers: event.request.headers 
-  });
-
+  const session = await auth.api.getSession({ headers: event.request.headers });
   if (session) {
-    event.locals.user    = session.user;
+    event.locals.user = session.user;
     event.locals.session = session.session;
   } else {
-    event.locals.user    = null;
+    event.locals.user = null;
     event.locals.session = null;
   }
 
   return resolve(event);
 };
 
-// ==================== CACHE CONTROL ====================
-
 const cacheControl: Handle = async ({ event, resolve }) => {
   const response = await resolve(event);
-  const url      = event.url.pathname;
-
-  const noCachePaths = [
-    '/dashboard', '/signup', '/login', '/report', 
-    '/profile', '/settings', '/contact'
-  ];
-
-  if (noCachePaths.some(p => url === p || url.startsWith(p + '/'))) {
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-    response.headers.set('Pragma', 'no-cache');
-    response.headers.set('Expires', '0');
-  } else {
-    response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
+  if (event.url.pathname.startsWith('/dashboard')) {
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   }
-
   return response;
 };
 
 // ==================== EXPORT ====================
-
 export const handle: Handle = sequence(
   requestLogging,
   rateLimiting,
