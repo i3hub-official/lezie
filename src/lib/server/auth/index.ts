@@ -5,7 +5,7 @@ import * as authSchema from '$lib/server/db/auth-schema';
 import { users, userProfiles, userPreferences } from '$lib/server/db/schema';
 import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
-import { passkey } from 'better-auth/plugins/passkey';
+import { passkey } from 'better-auth/plugins/passkey/index';
 
 
 export const auth = betterAuth({
