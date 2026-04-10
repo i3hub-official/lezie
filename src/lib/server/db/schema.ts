@@ -15,6 +15,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
+import { authUsers } from './auth-schema';
 
 // ==================== ENUMS ====================
 
@@ -32,6 +33,7 @@ export const mediaTypeEnum = pgEnum('media_type', ['image', 'video', 'audio']);
 // Users table
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
+  hashable: text('hashable').references(() => authUsers.id).unique(), // FK to auth schema; unique() creates the index
   email: varchar('email', { length: 255 }),
   phone: varchar('phone', { length: 20 }),
   username: varchar('username', { length: 100 }), // synced from authUsers
@@ -306,6 +308,10 @@ export const savedLocations = pgTable('saved_locations', {
 // ==================== RELATIONS ====================
 
 export const usersRelations = relations(users, ({ one, many }) => ({
+  authUser: one(authUsers, {
+    fields: [users.hashable],
+    references: [authUsers.id]
+  }),
   profile: one(userProfiles),
   preferences: one(userPreferences),
   reports: many(reports),
