@@ -1,89 +1,118 @@
-import 'dotenv/config';
+import { env } from '$env/dynamic/private';
 import crypto from 'crypto';
 
-function mustHexEnv(name: string, bytes: number): Buffer {
-  const raw = process.env[name];
-  if (!raw) throw new Error(`CRITICAL: ${name} is missing`);
+/**
+ * Helper to convert hex env strings to Buffers at runtime.
+ * Fail-fast logic ensures we don't encrypt with undefined keys.
+ */
+function getBufferFromEnv(name: string, bytes: number): Buffer {
+  const raw = env[name];
+  if (!raw) {
+    throw new Error(`CRITICAL: Environment variable ${name} is missing.`);
+  }
   const buf = Buffer.from(raw, 'hex');
-  if (buf.length !== bytes) throw new Error(`${name} size mismatch`);
+  if (buf.length !== bytes) {
+    throw new Error(`${name} must be ${bytes} bytes (hex len: ${bytes * 2}). Got ${raw.length}`);
+  }
   return buf;
 }
 
-const ENCRYPTION_KEY_V1 = mustHexEnv('ENCRYPTION_KEY', 32);
+// Versioning allows for smooth key rotation in the future
 const VERSION_PREFIX = 'v1';
 
-const FIXED_IV = {
-  email:    mustHexEnv('FIXED_IV_EMAIL',    16),
-  phone:    mustHexEnv('FIXED_IV_PHONE',    16),
-  username: mustHexEnv('FIXED_IV_USERNAME', 16),
-  nin:      mustHexEnv('FIXED_IV_NIN',      16),
-  bvn:      mustHexEnv('FIXED_IV_BVN',      16),
-};
+// ─────────────────────────────────────────────────────────────────────────────
+// TIER 1: Searchable Deterministic (AES-256-CBC)
+// ─────────────────────────────────────────────────────────────────────────────
+export type SearchableField = 'email' | 'phone' | 'username' | 'nin' | 'bvn';
 
-// --- TIER 1: Searchable ---
-export function encryptSearchable(data: string, field: keyof typeof FIXED_IV): string {
-  if (!data) return ''; 
-  const iv = FIXED_IV[field];
-  const cipher = crypto.createCipheriv('aes-256-cbc', ENCRYPTION_KEY_V1, iv);
+export function encryptSearchable(data: string, field: SearchableField): string {
+  if (!data) return '';
+  const key = getBufferFromEnv('ENCRYPTION_KEY', 32);
+  const iv = getBufferFromEnv(`FIXED_IV_${field.toUpperCase()}`, 16);
+  
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
   const encrypted = Buffer.concat([cipher.update(data, 'utf8'), cipher.final()]);
+  
   return `${VERSION_PREFIX}:${encrypted.toString('hex')}`;
 }
 
-export function decryptSearchable(payload: string, field: keyof typeof FIXED_IV): string {
+export function decryptSearchable(payload: string, field: SearchableField): string {
   if (!payload) return '';
   const [version, encHex] = payload.split(':');
-  if (version !== 'v1') throw new Error('Unsupported key version');
+  if (version !== 'v1') throw new Error('Unsupported encryption version');
+
+  const key = getBufferFromEnv('ENCRYPTION_KEY', 32);
+  const iv = getBufferFromEnv(`FIXED_IV_${field.toUpperCase()}`, 16);
   
-  const decipher = crypto.createDecipheriv('aes-256-cbc', ENCRYPTION_KEY_V1, FIXED_IV[field]);
+  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
   return decipher.update(encHex, 'hex', 'utf8') + decipher.final('utf8');
 }
 
-// --- TIER 2: Random IV ---
+// ─────────────────────────────────────────────────────────────────────────────
+// TIER 2: Random IV (AES-256-CBC)
+// ─────────────────────────────────────────────────────────────────────────────
 export function encryptField(data: string): string {
   if (!data) return '';
+  const key = getBufferFromEnv('ENCRYPTION_KEY', 32);
   const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv('aes-256-cbc', ENCRYPTION_KEY_V1, iv);
+  
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
   const encrypted = Buffer.concat([cipher.update(data, 'utf8'), cipher.final()]);
+  
   return `${VERSION_PREFIX}:${iv.toString('hex')}:${encrypted.toString('hex')}`;
 }
 
 export function decryptField(payload: string): string {
   if (!payload) return '';
   const [version, ivHex, encHex] = payload.split(':');
-  if (version !== 'v1') throw new Error('Unsupported key version');
+  if (version !== 'v1') throw new Error('Unsupported encryption version');
+
+  const key = getBufferFromEnv('ENCRYPTION_KEY', 32);
+  const decipher = crypto.createDecipheriv('aes-256-cbc', key, Buffer.from(ivHex, 'hex'));
   
-  const decipher = crypto.createDecipheriv('aes-256-cbc', ENCRYPTION_KEY_V1, Buffer.from(ivHex, 'hex'));
   return decipher.update(encHex, 'hex', 'utf8') + decipher.final('utf8');
 }
 
-// --- TIER 3: Authenticated (GCM) with Context Binding ---
+// ─────────────────────────────────────────────────────────────────────────────
+// TIER 3: Authenticated GCM with Context Binding (AAD)
+// ─────────────────────────────────────────────────────────────────────────────
 export function encryptSecure(data: string, contextId: string): string {
   if (!data) return '';
-  const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv('aes-256-gcm', ENCRYPTION_KEY_V1, iv);
+  const key = getBufferFromEnv('ENCRYPTION_KEY', 32);
+  const iv = crypto.randomBytes(12); // GCM standard
   
-  // AAD: Binds the ciphertext to a specific ID (e.g. UserID) 
-  // to prevent moving encrypted blobs between database rows.
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
   cipher.setAAD(Buffer.from(contextId)); 
   
   const encrypted = Buffer.concat([cipher.update(data, 'utf8'), cipher.final()]);
-  return `${VERSION_PREFIX}:${iv.toString('hex')}:${cipher.getAuthTag().toString('hex')}:${encrypted.toString('hex')}`;
+  const authTag = cipher.getAuthTag();
+  
+  return `${VERSION_PREFIX}:${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted.toString('hex')}`;
 }
 
 export function decryptSecure(payload: string, contextId: string): string {
   if (!payload) return '';
   const [version, ivHex, tagHex, encHex] = payload.split(':');
-  if (version !== 'v1') throw new Error('Unsupported key version');
+  if (version !== 'v1') throw new Error('Unsupported encryption version');
 
-  const decipher = crypto.createDecipheriv('aes-256-gcm', ENCRYPTION_KEY_V1, Buffer.from(ivHex, 'hex'));
+  const key = getBufferFromEnv('ENCRYPTION_KEY', 32);
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, Buffer.from(ivHex, 'hex'));
+  
   decipher.setAuthTag(Buffer.from(tagHex, 'hex'));
   decipher.setAAD(Buffer.from(contextId));
 
   return decipher.update(encHex, 'hex', 'utf8') + decipher.final('utf8');
 }
 
-// --- Search Hash ---
+// ─────────────────────────────────────────────────────────────────────────────
+// SEARCH HASH (HMAC-SHA512)
+// ─────────────────────────────────────────────────────────────────────────────
 export function generateSearchHash(input: string, context: string): string {
-  const pepper = process.env.SEARCH_HASH_PEPPER || '';
-  return crypto.createHmac('sha512', pepper).update(`${context}:${input}`).digest('hex');
+  const pepper = env.SEARCH_HASH_PEPPER;
+  if (!pepper || pepper.length < 32) throw new Error('SEARCH_HASH_PEPPER insecure or missing');
+
+  return crypto
+    .createHmac('sha512', pepper)
+    .update(`${context}:${input}`)
+    .digest('hex');
 }
