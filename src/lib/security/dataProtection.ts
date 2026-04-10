@@ -1,4 +1,3 @@
-// src/lib/security/dataProtection.ts
 import {
   encryptSearchable,
   decryptSearchable,
@@ -11,7 +10,7 @@ import {
 } from '$lib/security/encryption';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NORMALIZATION
+// NORMALIZATION — The source of truth for "Clean" data
 // ─────────────────────────────────────────────────────────────────────────────
 const normalize = {
   email: (s: string): string =>
@@ -33,212 +32,75 @@ const normalize = {
       w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
     ),
 
-  /** NIN: strip everything except digits, trim whitespace */
-  nin: (s: string): string =>
-    s.replace(/\D/g, '').trim(),
+  nin: (s: string): string => s.replace(/\D/g, '').trim(),
 
-  /** BVN: strip everything except digits, trim whitespace */
-  bvn: (s: string): string =>
-    s.replace(/\D/g, '').trim(),
+  bvn: (s: string): string => s.replace(/\D/g, '').trim(),
 
-  /** Government IDs (passport, driver's licence, TIN, etc.): uppercase, collapse spaces */
-  governmentId: (s: string): string =>
-    s.trim().toUpperCase().replace(/\s+/g, ''),
+  governmentId: (s: string): string => s.trim().toUpperCase().replace(/\s+/g, ''),
 
-  /** Account numbers: digits only */
-  accountNumber: (s: string): string =>
-    s.replace(/\D/g, '').trim(),
+  accountNumber: (s: string): string => s.replace(/\D/g, '').trim(),
 
-  /** ISO-8601 date string (YYYY-MM-DD): strip whitespace */
-  dateOfBirth: (s: string): string =>
-    s.trim(),
+  dateOfBirth: (s: string): string => s.trim(),
 
-  /** General free-text: trim leading/trailing whitespace only */
-  general: (s: string): string =>
-    s.trim(),
+  general: (s: string): string => s.trim(),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PROTECT — Encrypt on write
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Email: searchable (deterministic) + search hash for login resolver */
-export async function protectEmail(raw: string) {
-  const normal = normalize.email(raw);
+/** Helper for Tier 1 searchable fields with companion hashes */
+function protectTier1(raw: string, field: SearchableField, normalizer: (s: string) => string) {
+  const normal = normalizer(raw);
   return {
-    encrypted:  encryptSearchable(normal, 'email'),
-    searchHash: await generateSearchHash(normal, 'email'),
+    encrypted:  encryptSearchable(normal, field),
+    searchHash: generateSearchHash(normal, field), // Now synchronous
   };
 }
 
-/** Phone: searchable (deterministic) + search hash */
-export async function protectPhone(raw: string) {
-  const normal = normalize.phone(raw);
-  return {
-    encrypted:  encryptSearchable(normal, 'phone'),
-    searchHash: await generateSearchHash(normal, 'phone'),
-  };
-}
+export const protectEmail    = (raw: string) => protectTier1(raw, 'email',    normalize.email);
+export const protectPhone    = (raw: string) => protectTier1(raw, 'phone',    normalize.phone);
+export const protectUsername = (raw: string) => protectTier1(raw, 'username', normalize.username);
+export const protectNin      = (raw: string) => protectTier1(raw, 'nin',      normalize.nin);
+export const protectBvn      = (raw: string) => protectTier1(raw, 'bvn',      normalize.bvn);
 
-/** Username: searchable (deterministic) + search hash */
-export async function protectUsername(raw: string) {
-  const normal = normalize.username(raw);
-  return {
-    encrypted:  encryptSearchable(normal, 'username'),
-    searchHash: await generateSearchHash(normal, 'username'),
-  };
-}
+/** Tier 2: Random IV (Not searchable) */
+export const protectName           = (raw: string) => encryptField(normalize.name(raw));
+export const protectText           = (raw: string) => encryptField(raw.trim());
+export const protectGovernmentId   = (raw: string) => encryptField(normalize.governmentId(raw));
+export const protectAccountNumber  = (raw: string) => encryptField(normalize.accountNumber(raw));
+export const protectDateOfBirth    = (raw: string) => encryptField(normalize.dateOfBirth(raw));
+export const protectGeneral        = (raw: string) => encryptField(normalize.general(raw));
 
-/**
- * NIN (National Identification Number) — Tier 1 searchable.
- * Normalised to digits-only before encryption; produces a search hash
- * so the DB can look up a user by NIN without decrypting.
- */
-export async function protectNin(raw: string) {
-  const normal = normalize.nin(raw);
-  return {
-    encrypted:  encryptSearchable(normal, 'nin'),
-    searchHash: await generateSearchHash(normal, 'nin'),
-  };
-}
-
-/**
- * BVN (Bank Verification Number) — Tier 1 searchable.
- * Normalised to digits-only before encryption; produces a search hash
- * so the DB can look up a user by BVN without decrypting.
- */
-export async function protectBvn(raw: string) {
-  const normal = normalize.bvn(raw);
-  return {
-    encrypted:  encryptSearchable(normal, 'bvn'),
-    searchHash: await generateSearchHash(normal, 'bvn'),
-  };
-}
-
-/** Name / firstName / lastName: random-IV, not searchable */
-export function protectName(raw: string): string {
-  return encryptField(normalize.name(raw));
-}
-
-/** Address, city, country, bio: random-IV */
-export function protectText(raw: string): string {
-  return encryptField(raw.trim());
-}
-
-/**
- * Government-issued ID string — Tier 2 random-IV, not searchable.
- * Covers: passport number, driver's licence, TIN, CAC RC number, voter ID, etc.
- * Normalised to uppercase. Use protectNin / protectBvn for NIN and BVN
- * (they need deterministic lookup).
- */
-export function protectGovernmentId(raw: string): string {
-  return encryptField(normalize.governmentId(raw));
-}
-
-/**
- * Bank / wallet account number — Tier 2 random-IV, not searchable.
- * Normalised to digits-only.
- */
-export function protectAccountNumber(raw: string): string {
-  return encryptField(normalize.accountNumber(raw));
-}
-
-/**
- * Date of birth — Tier 2 random-IV, not searchable.
- * Store as an ISO-8601 string (YYYY-MM-DD) before calling this.
- */
-export function protectDateOfBirth(raw: string): string {
-  return encryptField(normalize.dateOfBirth(raw));
-}
-
-/**
- * General free-text field — Tier 2 random-IV, not searchable.
- * Use for notes, remarks, descriptions, or any unstructured string
- * that doesn't fit a more specific protect* helper.
- */
-export function protectGeneral(raw: string): string {
-  return encryptField(normalize.general(raw));
-}
-
-/**
- * Sensitive structured blob — Tier 3 GCM authenticated encryption.
- * Use for any object that must be tamper-evident: compliance payloads,
- * document metadata, risk scores, internal flags, etc.
- */
-export function protectSensitiveData(raw: object): string {
-  return encryptSecure(JSON.stringify(raw));
-}
-
-/** kycData jsonb blob: GCM authenticated encryption */
-export function protectKycData(raw: object): string {
-  return encryptSecure(JSON.stringify(raw));
-}
+/** Tier 3: GCM Authenticated (Tamper-evident blobs) */
+export const protectSensitiveData = (raw: object) => encryptSecure(JSON.stringify(raw));
+export const protectKycData       = (raw: object) => encryptSecure(JSON.stringify(raw));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UNPROTECT — Decrypt on read
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function revealEmail(encrypted: string): string {
-  return decryptSearchable(encrypted, 'email');
-}
+export const revealEmail    = (enc: string) => decryptSearchable(enc, 'email');
+export const revealPhone    = (enc: string) => decryptSearchable(enc, 'phone');
+export const revealUsername = (enc: string) => decryptSearchable(enc, 'username');
+export const revealNin      = (enc: string) => decryptSearchable(enc, 'nin');
+export const revealBvn      = (enc: string) => decryptSearchable(enc, 'bvn');
 
-export function revealPhone(encrypted: string): string {
-  return decryptSearchable(encrypted, 'phone');
-}
+export const revealName           = (enc: string) => decryptField(enc);
+export const revealText           = (enc: string) => decryptField(enc);
+export const revealGovernmentId   = (enc: string) => decryptField(enc);
+export const revealAccountNumber  = (enc: string) => decryptField(enc);
+export const revealDateOfBirth    = (enc: string) => decryptField(enc);
+export const revealGeneral        = (enc: string) => decryptField(enc);
 
-export function revealUsername(encrypted: string): string {
-  return decryptSearchable(encrypted, 'username');
-}
-
-/** Decrypt a NIN back to its normalised digit string */
-export function revealNin(encrypted: string): string {
-  return decryptSearchable(encrypted, 'nin');
-}
-
-/** Decrypt a BVN back to its normalised digit string */
-export function revealBvn(encrypted: string): string {
-  return decryptSearchable(encrypted, 'bvn');
-}
-
-export function revealName(encrypted: string): string {
-  return decryptField(encrypted);
-}
-
-export function revealText(encrypted: string): string {
-  return decryptField(encrypted);
-}
-
-export function revealGovernmentId(encrypted: string): string {
-  return decryptField(encrypted);
-}
-
-export function revealAccountNumber(encrypted: string): string {
-  return decryptField(encrypted);
-}
-
-export function revealDateOfBirth(encrypted: string): string {
-  return decryptField(encrypted);
-}
-
-export function revealGeneral(encrypted: string): string {
-  return decryptField(encrypted);
-}
-
-export function revealSensitiveData<T = object>(encrypted: string): T {
-  return JSON.parse(decryptSecure(encrypted)) as T;
-}
-
-export function revealKycData<T = object>(encrypted: string): T {
-  return JSON.parse(decryptSecure(encrypted)) as T;
+export function revealSecure<T = any>(enc: string): T {
+  return JSON.parse(decryptSecure(enc));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SEARCH HASH LOOKUP — Used in login resolver
+// SEARCH HASH LOOKUP — For queries
 // ─────────────────────────────────────────────────────────────────────────────
-export async function searchHashFor(
-  input: string,
-  field: SearchableField
-): Promise<string> {
+export function searchHashFor(input: string, field: SearchableField): string {
   const normalizers: Record<SearchableField, (s: string) => string> = {
     email:    normalize.email,
     phone:    normalize.phone,
