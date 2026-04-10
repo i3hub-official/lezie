@@ -1,24 +1,19 @@
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { users } from '$lib/server/db/schema';
+import { authUsers } from '$lib/server/db/auth-schema';
 import { or, eq } from 'drizzle-orm';
 
 export const POST = async ({ request }) => {
-    const { identifier } = await request.json();
+  const { identifier } = await request.json();
 
-    // Find the user by any of the 3 identifiers
-    const user = await db.query.users.findFirst({
-        where: or(
-            eq(users.email, identifier),
-            eq(users.username, identifier),
-            eq(users.phoneNumber, identifier)
-        )
-    });
+  // Search by email only in authUsers (Better Auth's table)
+  const user = await db.query.authUsers.findFirst({
+    where: eq(authUsers.email, identifier)
+  });
 
-    if (!user) {
-        return json({ error: "User not found" }, { status: 404 });
-    }
+  if (!user) {
+    return json({ error: 'Account not found' }, { status: 404 });
+  }
 
-    // Return the primary email so the frontend can call signIn.email
-    return json({ email: user.email });
+  return json({ email: user.email });
 };
