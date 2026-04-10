@@ -7,7 +7,7 @@ import { env } from '$env/dynamic/private';
 
 export const auth = betterAuth({
   // Ensure BETTER_AUTH_SECRET is set in your .env
-  secret: env.BETTER_AUTH_SECRET || 'a-very-secure-fallback-secret-32-chars-long',
+  secret: env.BETTER_AUTH_SECRET || 'c0ed822af57f5cfa11cf49010fd02cd67c3f74e1904f7e24f13d41c95764a551',
 
   database: drizzleAdapter(db, {
     provider: 'pg',
