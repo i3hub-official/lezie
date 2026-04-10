@@ -6,7 +6,7 @@ import { dev } from '$app/environment';
 // ==================== 1. RATE LIMITER ====================
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_RULES: Record<string, { max: number; windowMs: number }> = {
-  '/login':   { max: 10, windowMs: 60_000 },
+  '/signin':   { max: 10, windowMs: 60_000 },
   '/signup':  { max: 5,  windowMs: 60_000 },
   '/api':     { max: 100, windowMs: 60_000 },
 };
@@ -65,9 +65,13 @@ const authSession: Handle = async ({ event, resolve }) => {
 
   // 4. AUTH GUARD: Protect dashboard and sub-routes
   const isProtectedRoute = path.startsWith('/dashboard') || 
-                           path.startsWith('/profile') || 
-                           path.startsWith('/settings') ||
-                           path.startsWith('/report');
+                           path.startsWith('/dashboard#map) || 
+                           path.startsWith('/dashboard#alerts') ||
+path.startsWith('/dashboard#community) ||
+path.startsWith('/dashboard#statistics') ||
+path.startsWith('/dashboard#settings) || 
+path.startsWith('/dashboard#profile) || 
+                           path.startsWith('/dashboard#report');
 
   if (isProtectedRoute && !event.locals.session) {
     if (dev) console.log(`[AUTH] 🛡️ Blocked guest from ${path}`);
