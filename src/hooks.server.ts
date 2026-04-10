@@ -1,6 +1,7 @@
 import type { Handle } from '@sveltejs/kit';
 import { auth } from '$lib/server/auth';
 import { sequence } from '@sveltejs/kit/hooks';
+import { dev } from '$app/environment'; // Import dev flag
 
 // ==================== RATE LIMITER ====================
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
@@ -36,8 +37,19 @@ function checkRateLimit(ip: string, pathname: string): boolean {
 const requestLogging: Handle = async ({ event, resolve }) => {
   const start = Date.now();
   const response = await resolve(event);
-  const ms = Date.now() - start;
-  console.log(`[${response.status}] ${event.request.method} ${event.url.pathname} — ${ms}ms`);
+  
+  // LOG ONLY ON DEV
+  if (dev) {
+    const ms = Date.now() - start;
+    const method = event.request.method;
+    const status = response.status;
+    const path = event.url.pathname;
+    
+    // Add a little color logic for the Termux console if you like
+    const color = status >= 400 ? '❌' : status >= 300 ? '🌀' : '✅';
+    console.log(`${color} [${status}] ${method} ${path} — ${ms}ms`);
+  }
+  
   return response;
 };
 
@@ -50,6 +62,7 @@ const rateLimiting: Handle = async ({ event, resolve }) => {
   }
 
   if (!checkRateLimit(ip, event.url.pathname)) {
+    if (dev) console.warn(`[RATE LIMIT] Blocked IP: ${ip} for ${event.url.pathname}`);
     return new Response(JSON.stringify({ error: 'Too many requests' }), {
       status: 429,
       headers: { 'Content-Type': 'application/json' }
@@ -67,7 +80,6 @@ const securityHeaders: Handle = async ({ event, resolve }) => {
 };
 
 const authSession: Handle = async ({ event, resolve }) => {
-  // CRITICAL: Better Auth handler for API routes
   if (event.url.pathname.startsWith('/api/auth')) {
     return auth.handler(event.request);
   }
@@ -91,42 +103,22 @@ const cacheControl: Handle = async ({ event, resolve }) => {
   const url      = event.url.pathname;
 
   const noCachePaths = [
-    '/dashboard',
-    '/signup',
-    '/login',
-    '/report',
-    '/profile',
-    '/settings',
-    '/contact',
-    '/safety-guidelines',
-    '/faq',
+    '/dashboard', '/signup', '/login', '/report', '/profile',
+    '/settings', '/contact', '/safety-guidelines', '/faq',
   ];
 
-  // If the path matches or is a sub-path (e.g., /profile/edit)
   if (noCachePaths.some(p => url === p || url.startsWith(p + '/'))) {
-    response.headers.set(
-      'Cache-Control',
-      'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0'
-    );
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', '0');
   } else if (url === '/' || url === '/home') {
-    // Shared landing pages: Cache for 1 hour, refresh in background
-    response.headers.set(
-      'Cache-Control',
-      'public, max-age=3600, stale-while-revalidate=86400'
-    );
+    response.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
   } else {
-    // Default: Cache for 5 minutes
-    response.headers.set(
-      'Cache-Control',
-      'public, max-age=300, stale-while-revalidate=600'
-    );
+    response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
   }
 
   return response;
 };
-
 
 // ==================== EXPORT ====================
 export const handle: Handle = sequence(
