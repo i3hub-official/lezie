@@ -22,6 +22,8 @@ const FIXED_IV = {
   email:    mustHexEnv('FIXED_IV_EMAIL',    16),
   phone:    mustHexEnv('FIXED_IV_PHONE',    16),
   username: mustHexEnv('FIXED_IV_USERNAME', 16),
+  nin:      mustHexEnv('FIXED_IV_NIN',      16), // National Identification Number
+  bvn:      mustHexEnv('FIXED_IV_BVN',      16), // Bank Verification Number
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -38,10 +40,10 @@ function assertValidHex(str: string, field: string): void {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TIER 1: Searchable Deterministic Encryption (AES-256-CBC + Fixed IV)
-// Use for: email, phone, username — fields you need to search/lookup
+// Use for: email, phone, username, nin, bvn — fields you need to search/lookup
 // Same plaintext → same ciphertext per field type (enables WHERE queries)
 // ─────────────────────────────────────────────────────────────────────────────
-export type SearchableField = 'email' | 'phone' | 'username';
+export type SearchableField = 'email' | 'phone' | 'username' | 'nin' | 'bvn';
 
 export function encryptSearchable(data: string, field: SearchableField): string {
   const iv = FIXED_IV[field];
@@ -62,7 +64,8 @@ export function decryptSearchable(encryptedData: string, field: SearchableField)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TIER 2: Random-IV Encryption (AES-256-CBC)
-// Use for: name, firstName, lastName, address, city, country, dateOfBirth
+// Use for: name, firstName, lastName, address, city, country, dateOfBirth,
+//          general text fields, government-issued ID numbers (non-searchable)
 // Not searchable — different ciphertext each time
 // ─────────────────────────────────────────────────────────────────────────────
 export function encryptField(data: string): string {
@@ -92,7 +95,8 @@ export function decryptField(encryptedData: string): string {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TIER 3: AES-256-GCM — Authenticated Encryption
-// Use for: kycData jsonb, any tamper-sensitive blob
+// Use for: kycData jsonb, sensitive blobs, government document data,
+//          any tamper-sensitive structured payload
 // ─────────────────────────────────────────────────────────────────────────────
 export function encryptSecure(data: string): string {
   const iv = crypto.randomBytes(12);
@@ -123,7 +127,7 @@ export function decryptSecure(encryptedData: string): string {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SEARCHABLE HASH — For indexed lookup without decryption
-// Use for: login resolver (find user by email/phone/username)
+// Use for: login resolver (find user by email/phone/username/nin/bvn)
 // ─────────────────────────────────────────────────────────────────────────────
 export async function generateSearchHash(
   input: string,
