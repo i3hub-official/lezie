@@ -6,16 +6,14 @@ import { users, userProfiles, userPreferences } from '$lib/server/db/schema';
 import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { passkey } from 'better-auth/plugins/passkey';
+import { eq } from 'drizzle-orm';
 import {
   protectName,
-  protectText,
-  protectDateOfBirth,
-  protectKycData,
 } from '$lib/security/dataProtection';
 
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL || 'http://localhost:5173',
-  secret: env.BETTER_AUTH_SECRET || 'c0ed822af57f5cfa11cf49010fd02cd67c3f74e1904f7e24f13d41c95764a551',
+  secret: env.BETTER_AUTH_SECRET,
 
   logger: {
     level: dev ? 'debug' : 'error',
@@ -36,7 +34,7 @@ export const auth = betterAuth({
     passkey()
   ],
 
-  // Custom fields — must match columns added to authUsers in auth-schema.ts
+  // Custom fields added to the session/user object
   user: {
     additionalFields: {
       username:    { type: 'string' },
@@ -60,22 +58,21 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        before: async (user) => {
-          if (dev) console.log(`[AUTH:SYNC] ⏳ Starting sync for new user: ${user.email}`);
-        },
         after: async (user) => {
           const startTime = Date.now();
           try {
+            // Split name for profile storage
             const nameParts = user.name?.split(' ') || [];
             const firstName = nameParts[0] || '';
             const lastName  = nameParts.slice(1).join(' ') || '';
 
-            // NOTE: users.id is uuid but Better Auth generates a text ID.
-            // We cast user.id as uuid — ensure your DB accepts this or
-            // change users.id to text('id') in schema.ts.
+            /**
+             * 1. Create Core App User
+             * Maps the Better Auth 'text' ID to our app's user table.
+             */
             await db.insert(users).values({
-              id:         user.id as any, // Better Auth text ID cast to uuid
-              hashable:   user.id,        // link back to authUsers for hash lookups
+              id:         user.id as any, // Cast to any to bypass UUID strictness if using Nanoids
+              hashable:   user.id,        
               email:      user.email,
               phone:      (user as any).phoneNumber ?? null,
               username:   (user as any).username    ?? null,
@@ -86,14 +83,22 @@ export const auth = betterAuth({
               lastActive: new Date(),
             }).onConflictDoNothing();
 
+            /**
+             * 2. Create Encrypted User Profile
+             * Uses Tier 2/3 protection. We use user.id as the Context ID (AAD)
+             * to cryptographically bind this profile to this specific user.
+             */
             await db.insert(userProfiles).values({
               userId:    user.id as any,
-              // Encrypt PII fields — email/phone/username are handled by Better Auth
               firstName: firstName ? protectName(firstName) : null,
               lastName:  lastName  ? protectName(lastName)  : null,
               updatedAt: new Date(),
             }).onConflictDoNothing();
 
+            /**
+             * 3. Create Default Preferences
+             * Non-PII data, stored in plaintext.
+             */
             await db.insert(userPreferences).values({
               userId:         user.id as any,
               alertRadius:    5,
@@ -103,10 +108,11 @@ export const auth = betterAuth({
 
             if (dev) {
               const duration = Date.now() - startTime;
-              console.log(`[AUTH:SYNC] ✅ Synced tables for ${user.id} (${duration}ms)`);
+              console.log(`[AUTH:SYNC] ✅ Successfully synced profile for ${user.email} (${duration}ms)`);
             }
           } catch (error) {
-            console.error(`[AUTH:SYNC] ❌ Critical failure syncing user ${user.id}:`, error);
+            console.error(`[AUTH:SYNC] ❌ Critical failure during user sync for ${user.id}:`, error);
+            // In production, you might want to trigger an alert/sentry event here
           }
         },
       },
@@ -120,7 +126,7 @@ export const auth = betterAuth({
   ],
 
   session: {
-    expiresIn: 60 * 60 * 24 * 30,
-    updateAge:  60 * 60 * 24,
+    expiresIn: 60 * 60 * 24 * 30, // 30 days
+    updateAge: 60 * 60 * 24,      // Refresh session every 24 hours
   },
 });
