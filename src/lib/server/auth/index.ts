@@ -4,16 +4,16 @@ import { db } from '$lib/server/db';
 import * as authSchema from '$lib/server/db/auth-schema';
 import { users, userProfiles, userPreferences } from '$lib/server/db/schema';
 import { env } from '$env/dynamic/private';
-import { dev } from '$app/environment'; // Import the dev flag
+import { dev } from '$app/environment';
+import { passkey } from 'better-auth/plugins'; // 1. Import Passkey plugin
 
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL || 'http://localhost:5173',
   secret: env.BETTER_AUTH_SECRET || 'c0ed822af57f5cfa11cf49010fd02cd67c3f74e1904f7e24f13d41c95764a551',
 
-  // 1. BUILT-IN LOGGER: Set to debug only during development
   logger: {
     level: dev ? "debug" : "error", 
-    enabled: dev, // Disable entirely in production for performance
+    enabled: dev,
   },
 
   database: drizzleAdapter(db, {
@@ -26,9 +26,26 @@ export const auth = betterAuth({
     },
   }),
 
+  // 2. Enable Plugins
+  plugins: [
+    passkey()
+  ],
+
+  // 3. Define Custom Fields for Identifiers
+  user: {
+    additionalFields: {
+      username: { type: "string" },
+      phoneNumber: { type: "string" },
+      pin: { type: "string" } 
+    }
+  },
+
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
+    // Allows us to handle the login via multiple identifiers 
+    // manually in a resolver if needed
+    requireEmailVerification: false 
   },
 
   advanced: {
@@ -41,12 +58,17 @@ export const auth = betterAuth({
     user: {
       create: {
         before: async (user) => {
-           // Only log if in dev mode
            if (dev) console.log(`[AUTH:SYNC] ⏳ Starting sync for new user: ${user.email}`);
         },
         after: async (user) => {
           const startTime = Date.now();
           try {
+            // Map the name parts safely
+            const nameParts = user.name?.split(' ') || [];
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+
+            // Sync with your Lezie application tables
             await db.insert(users).values({
               id: user.id,
               email: user.email,
@@ -56,9 +78,6 @@ export const auth = betterAuth({
               isActive: true,
               lastActive: new Date(),
             }).onConflictDoNothing();
-
-            const firstName = user.name?.split(' ')[0] || '';
-            const lastName = user.name?.split(' ').slice(1).join(' ') || '';
 
             await db.insert(userProfiles).values({
               userId: user.id,
@@ -79,7 +98,6 @@ export const auth = betterAuth({
               console.log(`[AUTH:SYNC] ✅ Successfully synced tables for ${user.id} (${duration}ms)`);
             }
           } catch (error) {
-            // Always log critical errors regardless of environment
             console.error(`[AUTH:SYNC] ❌ Critical failure syncing user ${user.id}:`, error);
           }
         },
