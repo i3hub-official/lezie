@@ -245,6 +245,7 @@
   }
 </script>
 
+
 <svelte:head>
   <title>{activePage.charAt(0).toUpperCase() + activePage.slice(1)} – Lezie</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
