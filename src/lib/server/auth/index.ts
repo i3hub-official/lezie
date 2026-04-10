@@ -34,11 +34,16 @@ export const auth = betterAuth({
     passkey()
   ],
 
+  // IMPORTANT: All columns in the 'user' table must be defined here 
+  // if they are not standard Better Auth fields.
   user: {
     additionalFields: {
-      username:    { type: 'string' },
-      phoneNumber: { type: 'string' },
-      pin:         { type: 'string' },
+      username:     { type: 'string' },
+      phoneNumber:  { type: 'string' },
+      pin:          { type: 'string' },
+      emailHash:    { type: 'string' },
+      usernameHash: { type: 'string' },
+      phoneHash:    { type: 'string' },
     }
   },
 
@@ -52,20 +57,18 @@ export const auth = betterAuth({
     user: {
       create: {
         /**
-         * BEFORE HOOK: 
-         * Solves the "null value in email_hash" error by calculating 
-         * hashes before the database insert occurs.
+         * BEFORE: Populates the email_hash column so the 
+         * NOT NULL constraint in the DB is satisfied.
          */
         before: async (user) => {
           const emailHash = searchHashFor(user.email, 'email');
-          
           const rawUsername = (user as any).username;
           const rawPhone = (user as any).phoneNumber;
 
           return {
             data: {
               ...user,
-              emailHash,
+              emailHash: emailHash,
               usernameHash: rawUsername ? searchHashFor(rawUsername, 'username') : null,
               phoneHash: rawPhone ? searchHashFor(rawPhone, 'phone') : null,
             }
@@ -73,8 +76,7 @@ export const auth = betterAuth({
         },
 
         /**
-         * AFTER HOOK:
-         * Syncs the created user to auxiliary app tables.
+         * AFTER: Syncs the account to the application-level tables.
          */
         after: async (user) => {
           const startTime = Date.now();
@@ -83,7 +85,7 @@ export const auth = betterAuth({
             const firstName = nameParts[0] || '';
             const lastName  = nameParts.slice(1).join(' ') || '';
 
-            // 1. Sync to core Users table
+            // 1. Core User Record
             await db.insert(users).values({
               id:         user.id as any,
               hashable:   user.id,        
@@ -97,7 +99,7 @@ export const auth = betterAuth({
               lastActive: new Date(),
             }).onConflictDoNothing();
 
-            // 2. Create encrypted User Profile
+            // 2. Encrypted Profile
             await db.insert(userProfiles).values({
               userId:    user.id as any,
               firstName: firstName ? protectName(firstName) : null,
@@ -105,7 +107,7 @@ export const auth = betterAuth({
               updatedAt: new Date(),
             }).onConflictDoNothing();
 
-            // 3. Set default Preferences
+            // 3. User Preferences
             await db.insert(userPreferences).values({
               userId:         user.id as any,
               alertRadius:    5,
@@ -114,10 +116,10 @@ export const auth = betterAuth({
             }).onConflictDoNothing();
 
             if (dev) {
-              console.log(`[AUTH:SYNC] ✅ Synced ${user.email} (${Date.now() - startTime}ms)`);
+              console.log(`[AUTH:SYNC] ✅ Synced tables for ${user.email} (${Date.now() - startTime}ms)`);
             }
           } catch (error) {
-            console.error(`[AUTH:SYNC] ❌ Critical failure for ${user.id}:`, error);
+            console.error(`[AUTH:SYNC] ❌ Critical failure syncing user ${user.id}:`, error);
           }
         },
       },
