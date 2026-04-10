@@ -4,16 +4,16 @@ import { db } from '$lib/server/db';
 import * as authSchema from '$lib/server/db/auth-schema';
 import { users, userProfiles, userPreferences } from '$lib/server/db/schema';
 import { env } from '$env/dynamic/private';
+import { dev } from '$app/environment'; // Import the dev flag
 
 export const auth = betterAuth({
-  // Fallback to localhost if ENV is missing to prevent the "Base URL" warning
   baseURL: env.BETTER_AUTH_URL || 'http://localhost:5173',
   secret: env.BETTER_AUTH_SECRET || 'c0ed822af57f5cfa11cf49010fd02cd67c3f74e1904f7e24f13d41c95764a551',
 
-  // 1. BUILT-IN LOGGER: Set to 'debug' for dev, 'info' or 'error' for production
+  // 1. BUILT-IN LOGGER: Set to debug only during development
   logger: {
-    level: "debug", 
-    enabled: true,
+    level: dev ? "debug" : "error", 
+    enabled: dev, // Disable entirely in production for performance
   },
 
   database: drizzleAdapter(db, {
@@ -41,12 +41,12 @@ export const auth = betterAuth({
     user: {
       create: {
         before: async (user) => {
-           console.log(`[AUTH:SYNC] ⏳ Starting sync for new user: ${user.email}`);
+           // Only log if in dev mode
+           if (dev) console.log(`[AUTH:SYNC] ⏳ Starting sync for new user: ${user.email}`);
         },
         after: async (user) => {
           const startTime = Date.now();
           try {
-            // 1. Create main app user record
             await db.insert(users).values({
               id: user.id,
               email: user.email,
@@ -57,7 +57,6 @@ export const auth = betterAuth({
               lastActive: new Date(),
             }).onConflictDoNothing();
 
-            // 2. Create the user profile
             const firstName = user.name?.split(' ')[0] || '';
             const lastName = user.name?.split(' ').slice(1).join(' ') || '';
 
@@ -68,7 +67,6 @@ export const auth = betterAuth({
               updatedAt: new Date(),
             }).onConflictDoNothing();
 
-            // 3. Initialize default preferences
             await db.insert(userPreferences).values({
               userId: user.id,
               alertRadius: 5,
@@ -76,9 +74,12 @@ export const auth = betterAuth({
               notifyHigh: true,
             }).onConflictDoNothing();
 
-            const duration = Date.now() - startTime;
-            console.log(`[AUTH:SYNC] ✅ Successfully synced tables for ${user.id} (${duration}ms)`);
+            if (dev) {
+              const duration = Date.now() - startTime;
+              console.log(`[AUTH:SYNC] ✅ Successfully synced tables for ${user.id} (${duration}ms)`);
+            }
           } catch (error) {
+            // Always log critical errors regardless of environment
             console.error(`[AUTH:SYNC] ❌ Critical failure syncing user ${user.id}:`, error);
           }
         },
