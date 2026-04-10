@@ -64,7 +64,13 @@ const authSession: Handle = async ({ event, resolve }) => {
   const path = event.url.pathname;
 
   // 4. AUTH GUARD: Protect dashboard and sub-routes
-  const isProtectedRoute = path.startsWith('/dashboard');
+  const isProtectedRoute =
+  path.startsWith('/dashboard') ||
+  path.startsWith('/alerts') ||
+  path.startsWith('/map') ||
+  path.startsWith('/report') ||
+  path.startsWith('/incident') ||
+  path.startsWith('/safety-quest');
 
   if (isProtectedRoute && !event.locals.session) {
     if (dev) console.log(`[AUTH] 🛡️ Blocked guest from ${path}`);
