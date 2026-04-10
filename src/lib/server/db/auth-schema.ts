@@ -18,26 +18,15 @@ export const authUsers = pgTable('user', {
   email: text('email').notNull(),
   emailVerified: boolean('email_verified').notNull().default(false),
   image: text('image'),
+  username: text('username'),
+  phoneNumber: text('phone_number'),
+  pin: text('pin'),
   createdAt: timestamp('created_at').notNull(),
   updatedAt: timestamp('updated_at').notNull()
 }, (table) => [
-  uniqueIndex('auth_users_email_idx').on(table.email)
-]);
-
-// Sessions table
-export const sessions = pgTable('session', {
-  id: text('id').primaryKey(),
-  expiresAt: timestamp('expires_at').notNull(),
-  token: text('token').notNull(),
-  createdAt: timestamp('created_at').notNull(),
-  updatedAt: timestamp('updated_at').notNull(),
-  ipAddress: text('ip_address'),
-  userAgent: text('user_agent'),
-  userId: text('user_id').notNull().references(() => authUsers.id, { onDelete: 'cascade' })
-}, (table) => [
-  uniqueIndex('auth_sessions_token_idx').on(table.token),
-  index('auth_sessions_user_id_idx').on(table.userId),
-  index('auth_sessions_expires_at_idx').on(table.expiresAt)
+  uniqueIndex('auth_users_email_idx').on(table.email),
+  uniqueIndex('auth_users_username_idx').on(table.username),
+  uniqueIndex('auth_users_phone_idx').on(table.phoneNumber),
 ]);
 
 // Accounts table (for OAuth providers)
