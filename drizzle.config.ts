@@ -1,14 +1,15 @@
-import { drizzle } from "drizzle-orm/neon-http";
-import { neon } from "@neondatabase/serverless";
-import { config } from "dotenv";
+import { defineConfig } from "drizzle-kit";
 
-config({ path: ".env.local" });
-
-const sql = neon(process.env.DATABASE_URL!);
-
-export const db = drizzle({ client: sql });
-
-
-
-
-
+export default defineConfig({
+  schema: [
+    "./src/lib/server/db/schema.ts",
+    "./src/lib/server/db/auth-schema.ts"
+  ],
+  out: "./drizzle",
+  dialect: "postgresql",
+  dbCredentials: {
+    url: process.env.DATABASE_URL!,
+  },
+  verbose: true,
+  strict: true,
+});
