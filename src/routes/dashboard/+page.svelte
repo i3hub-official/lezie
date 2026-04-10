@@ -64,7 +64,7 @@
   onMount(() => {
     // Safety check: if hooks.server failed, redirect client-side
     if (!user) {
-      goto('/login');
+      goto('/signin');
       return;
     }
 
@@ -151,7 +151,7 @@
   // Updated Logout Logic
   async function handleLogout() {
     await authClient.signOut();
-    goto('/login');
+    goto('/signin');
   }
 
   const navItems = [
