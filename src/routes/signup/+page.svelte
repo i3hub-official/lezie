@@ -302,36 +302,49 @@ let touchedTerms  = $state(false);
     if (currentStep > 1) { currentStep--; errors = {}; window.scrollTo({ top:0, behavior:'smooth' }); }
   }
 
-  async function handleSubmit(e: Event) {
+  
+async function handleSubmit(e: Event) {
     e.preventDefault();
+    
+    // 1. Validation Logic
     const errs = validateStep3();
     if (Object.keys(errs).length > 0) {
       errors = errs;
       Object.keys(errs).forEach(k => { touched[k] = true; });
       return;
     }
+
     touchedTerms = true;
-    isLoading = true; errors = {};
-    try {
-      const res = await fetch('/api/signup', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          firstName:   formData.firstName.trim(),
-          lastName:    formData.lastName.trim(),
-          dateOfBirth: formData.dateOfBirth,
-          phone:       `${formData.dialCode}${formData.phone}`,
-          email:       formData.email.trim().toLowerCase(),
-          password:    formData.password,
-        }),
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || 'Signup failed');
-      await authStore.login(formData.email, formData.password);
-      goto('/dashboard');
-    } catch (err: unknown) {
-      errors.submit = err instanceof Error ? err.message : 'An error occurred';
-    } finally { isLoading = false; }
-  }
+    isLoading = true; 
+    errors = {};
+
+    // 2. The Better Auth Sign-Up Call
+    // This replaces BOTH the fetch('/api/signup') AND the authStore.login()
+    const { data, error } = await authClient.signUp.email({
+      email: formData.email.trim().toLowerCase(),
+      password: formData.password,
+      name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
+      // Extra data for your sync hook
+      data: {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        phone: `${formData.dialCode}${formData.phone}`,
+        dateOfBirth: formData.dateOfBirth,
+      }
+    });
+
+    if (error) {
+      errors.submit = error.message;
+      isLoading = false;
+      return;
+    }
+
+    // 3. Success Redirection
+    // Better Auth automatically creates the session, so no need to call 'login' manually.
+    goto('/dashboard');
+    isLoading = false;
+}
+
 
   // ── Password strength ───────────────────────────────────
   const passwordStrength = $derived(() => {
