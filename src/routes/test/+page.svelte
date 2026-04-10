@@ -98,7 +98,7 @@
 
   async function handleSignIn() {
     // Redirect to sign in page or show modal
-    window.location.href = '/auth/signin';
+    window.location.href = '/signin';
   }
 
   function autoFillTest(index: number) {
