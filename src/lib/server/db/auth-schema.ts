@@ -35,9 +35,9 @@ export const sessions = pgTable('session', {
   userAgent: text('user_agent'),
   userId: text('user_id').notNull().references(() => authUsers.id, { onDelete: 'cascade' })
 }, (table) => [
-  uniqueIndex('sessions_token_idx').on(table.token),
-  index('sessions_user_id_idx').on(table.userId),
-  index('sessions_expires_at_idx').on(table.expiresAt)
+  uniqueIndex('auth_sessions_token_idx').on(table.token),
+  index('auth_sessions_user_id_idx').on(table.userId),
+  index('auth_sessions_expires_at_idx').on(table.expiresAt)
 ]);
 
 // Accounts table (for OAuth providers)
@@ -56,9 +56,9 @@ export const accounts = pgTable('account', {
   createdAt: timestamp('created_at').notNull(),
   updatedAt: timestamp('updated_at').notNull()
 }, (table) => [
-  index('accounts_user_id_idx').on(table.userId),
-  index('accounts_provider_id_idx').on(table.providerId),
-  uniqueIndex('accounts_provider_account_idx').on(table.providerId, table.accountId)
+  index('auth_accounts_user_id_idx').on(table.userId),
+  index('auth_accounts_provider_id_idx').on(table.providerId),
+  uniqueIndex('auth_accounts_provider_account_idx').on(table.providerId, table.accountId)
 ]);
 
 // Verifications table (for email verification, password reset)
@@ -70,8 +70,8 @@ export const verifications = pgTable('verification', {
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at')
 }, (table) => [
-  index('verifications_identifier_idx').on(table.identifier),
-  index('verifications_expires_at_idx').on(table.expiresAt)
+  index('auth_verifications_identifier_idx').on(table.identifier),
+  index('auth_verifications_expires_at_idx').on(table.expiresAt)
 ]);
 
 // Rate limiting table (optional, for Better Auth rate limiting)
@@ -83,5 +83,5 @@ export const rateLimits = pgTable('rate_limit', {
   createdAt: timestamp('created_at').notNull(),
   updatedAt: timestamp('updated_at').notNull()
 }, (table) => [
-  uniqueIndex('rate_limit_key_idx').on(table.key)
+  uniqueIndex('auth_rate_limit_key_idx').on(table.key)
 ]);
