@@ -22,6 +22,20 @@
       "when": 1775085465238,
       "tag": "0002_cheerful_texas_twister",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1775813804106,
+      "tag": "0003_zippy_fantastic_four",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1775814804851,
+      "tag": "0004_chubby_madelyne_pryor",
+      "breakpoints": true
     }
   ]
 }
