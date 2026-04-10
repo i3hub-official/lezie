@@ -6,11 +6,10 @@ import { users } from '$lib/server/db/schema';
 import { eq, desc, sql } from 'drizzle-orm';
 
 import { getProfile, getKycData } from '$lib/server/services/profileService';
-// Import your other services/queries here as needed:
-// e.g. getRecentReports, getReportSummary, getUnreadNotificationsCount, etc.
+// TODO: Import your other query functions here when ready
+// e.g. import { getRecentReports, getReportSummary } from '$lib/server/services/reportService';
 
 export const load: PageServerLoad = async ({ locals }) => {
-  // 1. Authentication guard — redirect to your signin page
   if (!locals.user?.id) {
     throw redirect(302, '/signin');
   }
@@ -29,7 +28,7 @@ export const load: PageServerLoad = async ({ locals }) => {
       savedLocations,
       activeFlags,
     ] = await Promise.all([
-      // Account data from your main `users` table
+      // Account data from your users table
       db
         .select({
           tier: users.tier,
@@ -37,70 +36,63 @@ export const load: PageServerLoad = async ({ locals }) => {
           kycStatus: users.kycStatus,
           lastActive: users.lastActive,
           isActive: users.isActive,
-          // Add any other columns you need from the users table
         })
         .from(users)
         .where(eq(users.id, userId as any))
         .limit(1)
         .then((rows) => rows[0] ?? null),
 
-      // Decrypted profile (firstName, lastName, bio, address, dob, avatarUrl, etc.)
       getProfile(userId),
 
-      // Decrypted KYC data or null
       getKycData(userId),
 
-      // Recent reports — replace with your actual query
-      // Example placeholder:
+      // === Replace these placeholders with your actual queries ===
       db
-        .select() // select your report fields + joins
+        .select() // ← select your report fields + joins here
         .from(/* your reports table */)
-        .where(/* eq(reports.userId, userId as any) */)
+        .where(eq(/* reports.userId */, userId as any)) // ← replace with real column
         .orderBy(desc(/* reports.createdAt */))
         .limit(10),
 
-      // Report summary (counts)
       db
         .select({
           total: sql<number>`COUNT(*)`,
-          // Add severity/status breakdown as needed
+          // add more breakdowns here (severity, status, etc.)
         })
         .from(/* your reports table */)
-        .where(/* filter by userId */),
+        .where(eq(/* reports.userId */, userId as any)),
 
-      // Unread notifications count
       db
         .select({ count: sql<number>`COUNT(*)` })
         .from(/* your notifications table */)
-        .where(/* unread condition + userId */)
+        .where(eq(/* notifications.userId */, userId as any)) // add unread condition if needed
         .then((rows) => rows[0]),
 
-      // Recent notifications (last 20)
       db
         .select()
         .from(/* notifications table */)
-        .where(/* userId condition */)
-        .orderBy(desc(/* createdAt */))
+        .where(eq(/* notifications.userId */, userId as any))
+        .orderBy(desc(/* notifications.createdAt */))
         .limit(20),
 
-      // Saved locations
+      // Fixed: proper eq usage
       db
         .select()
         .from(/* saved_locations table */)
         .where(eq(/* saved_locations.userId */, userId as any)),
 
-      // Active/unresolved identity flags
+      // Fixed: proper eq usage
       db
         .select()
         .from(/* flags table */)
-        .where(/* userId + unresolved condition */),
+        .where(eq(/* flags.userId */, userId as any)), // add unresolved condition if needed
     ]);
 
     return {
-      user: locals.user,                    // Better Auth user (email, username, name, phoneNumber, etc.)
-      account,                              // tier, trustScore, kycStatus, etc.
-      profile,                              // decrypted profile fields
-      kycData,                              // decrypted KYC object or null
+      user: locals.user,
+      account,
+      profile,
+      kycData,
       recentReports,
       reportSummary,
       unreadCount: unreadCountResult?.count ?? 0,
