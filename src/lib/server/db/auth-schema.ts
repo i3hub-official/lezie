@@ -85,4 +85,3 @@ export const rateLimits = pgTable('rate_limit', {
 }, (table) => [
   uniqueIndex('rate_limit_key_idx').on(table.key)
 ]);
-
