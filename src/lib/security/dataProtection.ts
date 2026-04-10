@@ -10,7 +10,7 @@ import {
 } from '$lib/security/encryption';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NORMALIZATION — The source of truth for "Clean" data
+// NORMALIZATION
 // ─────────────────────────────────────────────────────────────────────────────
 const normalize = {
   email: (s: string): string =>
@@ -49,12 +49,15 @@ const normalize = {
 // PROTECT — Encrypt on write
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Helper for Tier 1 searchable fields with companion hashes */
-function protectTier1(raw: string, field: SearchableField, normalizer: (s: string) => string) {
+/** * Tier 1: Deterministic + Search Hash 
+ * Use for fields that require database lookups (WHERE clauses).
+ */
+async function protectTier1(raw: string, field: SearchableField, normalizer: (s: string) => string) {
   const normal = normalizer(raw);
+  if (!normal) throw new Error(`Value for ${field} cannot be empty after normalization`);
   return {
     encrypted:  encryptSearchable(normal, field),
-    searchHash: generateSearchHash(normal, field), // Now synchronous
+    searchHash: generateSearchHash(normal, field),
   };
 }
 
@@ -64,17 +67,28 @@ export const protectUsername = (raw: string) => protectTier1(raw, 'username', no
 export const protectNin      = (raw: string) => protectTier1(raw, 'nin',      normalize.nin);
 export const protectBvn      = (raw: string) => protectTier1(raw, 'bvn',      normalize.bvn);
 
-/** Tier 2: Random IV (Not searchable) */
-export const protectName           = (raw: string) => encryptField(normalize.name(raw));
-export const protectText           = (raw: string) => encryptField(raw.trim());
-export const protectGovernmentId   = (raw: string) => encryptField(normalize.governmentId(raw));
-export const protectAccountNumber  = (raw: string) => encryptField(normalize.accountNumber(raw));
-export const protectDateOfBirth    = (raw: string) => encryptField(normalize.dateOfBirth(raw));
-export const protectGeneral        = (raw: string) => encryptField(normalize.general(raw));
+/** * Tier 2: Random IV (Not searchable) 
+ * Use for PII that is displayed but never used as a search key.
+ */
+export const protectName          = (raw: string) => encryptField(normalize.name(raw));
+export const protectText          = (raw: string) => encryptField(normalize.general(raw));
+export const protectGovernmentId  = (raw: string) => encryptField(normalize.governmentId(raw));
+export const protectAccountNumber = (raw: string) => encryptField(normalize.accountNumber(raw));
+export const protectDateOfBirth   = (raw: string) => encryptField(normalize.dateOfBirth(raw));
+export const protectGeneral       = (raw: string) => encryptField(normalize.general(raw));
 
-/** Tier 3: GCM Authenticated (Tamper-evident blobs) */
-export const protectSensitiveData = (raw: object) => encryptSecure(JSON.stringify(raw));
-export const protectKycData       = (raw: object) => encryptSecure(JSON.stringify(raw));
+/** * Tier 3: Authenticated GCM with Context Binding
+ * The 'ownerId' (e.g., User UUID) is used as AAD (Additional Authenticated Data).
+ * This prevents an attacker from moving this blob to another user's database record.
+ */
+export function protectSensitiveData(raw: object, ownerId: string): string {
+  if (!ownerId) throw new Error("Context Binding (ownerId) is required for Tier 3 encryption");
+  return encryptSecure(JSON.stringify(raw), ownerId);
+}
+
+export function protectKycData(raw: object, ownerId: string): string {
+  return protectSensitiveData(raw, ownerId);
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UNPROTECT — Decrypt on read
@@ -86,20 +100,35 @@ export const revealUsername = (enc: string) => decryptSearchable(enc, 'username'
 export const revealNin      = (enc: string) => decryptSearchable(enc, 'nin');
 export const revealBvn      = (enc: string) => decryptSearchable(enc, 'bvn');
 
-export const revealName           = (enc: string) => decryptField(enc);
-export const revealText           = (enc: string) => decryptField(enc);
-export const revealGovernmentId   = (enc: string) => decryptField(enc);
-export const revealAccountNumber  = (enc: string) => decryptField(enc);
-export const revealDateOfBirth    = (enc: string) => decryptField(enc);
-export const revealGeneral        = (enc: string) => decryptField(enc);
+export const revealName          = (enc: string) => decryptField(enc);
+export const revealText          = (enc: string) => decryptField(enc);
+export const revealGovernmentId  = (enc: string) => decryptField(enc);
+export const revealAccountNumber = (enc: string) => decryptField(enc);
+export const revealDateOfBirth   = (enc: string) => decryptField(enc);
+export const revealGeneral       = (enc: string) => decryptField(enc);
 
-export function revealSecure<T = any>(enc: string): T {
-  return JSON.parse(decryptSecure(enc));
+/** * Decrypts Tier 3 data. Will throw if:
+ * 1. The data was tampered with.
+ * 2. The ownerId does not match the ID used during encryption.
+ */
+export function revealSensitiveData<T = any>(enc: string, ownerId: string): T {
+  if (!ownerId) throw new Error("Context Binding (ownerId) is required for Tier 3 decryption");
+  const decrypted = decryptSecure(enc, ownerId);
+  return JSON.parse(decrypted) as T;
+}
+
+export function revealKycData<T = any>(enc: string, ownerId: string): T {
+  return revealSensitiveData<T>(enc, ownerId);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SEARCH HASH LOOKUP — For queries
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Generates a search hash for querying the database.
+ * Use this in your login resolver or search functions.
+ */
 export function searchHashFor(input: string, field: SearchableField): string {
   const normalizers: Record<SearchableField, (s: string) => string> = {
     email:    normalize.email,
@@ -108,5 +137,7 @@ export function searchHashFor(input: string, field: SearchableField): string {
     nin:      normalize.nin,
     bvn:      normalize.bvn,
   };
-  return generateSearchHash(normalizers[field](input), field);
+  
+  const normal = normalizers[field](input);
+  return generateSearchHash(normal, field);
 }
