@@ -6,6 +6,12 @@ import { users, userProfiles, userPreferences } from '$lib/server/db/schema';
 import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { passkey } from 'better-auth/plugins/passkey';
+import {
+  protectName,
+  protectText,
+  protectDateOfBirth,
+  protectKycData,
+} from '$lib/security/dataProtection';
 
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL || 'http://localhost:5173',
@@ -68,21 +74,23 @@ export const auth = betterAuth({
             // We cast user.id as uuid — ensure your DB accepts this or
             // change users.id to text('id') in schema.ts.
             await db.insert(users).values({
-              id:          user.id as any, // Better Auth text ID cast to uuid
-              email:       user.email,
-              phone:       (user as any).phoneNumber ?? null,
-              username:    (user as any).username    ?? null,
-              tier:        '1',
-              trustScore:  0,
-              kycStatus:   'pending',
-              isActive:    true,
-              lastActive:  new Date(),
+              id:         user.id as any, // Better Auth text ID cast to uuid
+              hashable:   user.id,        // link back to authUsers for hash lookups
+              email:      user.email,
+              phone:      (user as any).phoneNumber ?? null,
+              username:   (user as any).username    ?? null,
+              tier:       '1',
+              trustScore: 0,
+              kycStatus:  'pending',
+              isActive:   true,
+              lastActive: new Date(),
             }).onConflictDoNothing();
 
             await db.insert(userProfiles).values({
               userId:    user.id as any,
-              firstName,
-              lastName,
+              // Encrypt PII fields — email/phone/username are handled by Better Auth
+              firstName: firstName ? protectName(firstName) : null,
+              lastName:  lastName  ? protectName(lastName)  : null,
               updatedAt: new Date(),
             }).onConflictDoNothing();
 
@@ -108,7 +116,7 @@ export const auth = betterAuth({
   trustedOrigins: [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
-    'https://lezie.vercel.app',   // fixed: was http
+    'https://lezie.vercel.app',
   ],
 
   session: {
