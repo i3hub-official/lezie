@@ -1,20 +1,14 @@
 import type { PageServerLoad } from './$types';
-import { error, redirect } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 
 import { db } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
 import { eq, desc, sql } from 'drizzle-orm';
 
 import { getProfile, getKycData } from '$lib/server/services/profileService';
-// TODO: Import your other query functions here when ready
-// e.g. import { getRecentReports, getReportSummary } from '$lib/server/services/reportService';
 
 export const load: PageServerLoad = async ({ locals }) => {
-  if (!locals.user?.id) {
-    throw redirect(302, '/signin');
-  }
-
-  const userId = locals.user.id;
+  const userId = locals.user.id;   // Safe to access because hooks.server.ts already protects this route
 
   try {
     const [
@@ -28,7 +22,7 @@ export const load: PageServerLoad = async ({ locals }) => {
       savedLocations,
       activeFlags,
     ] = await Promise.all([
-      // Account data from your users table
+      // Account data from your main users table
       db
         .select({
           tier: users.tier,
@@ -42,57 +36,64 @@ export const load: PageServerLoad = async ({ locals }) => {
         .limit(1)
         .then((rows) => rows[0] ?? null),
 
+      // Profile (decrypted)
       getProfile(userId),
 
+      // KYC data (decrypted)
       getKycData(userId),
 
-      // === Replace these placeholders with your actual queries ===
+      // === TODO: Replace these placeholders with your real queries ===
+
+      // Recent reports (last 10)
       db
-        .select() // ← select your report fields + joins here
-        .from(/* your reports table */)
-        .where(eq(/* reports.userId */, userId as any)) // ← replace with real column
-        .orderBy(desc(/* reports.createdAt */))
+        .select() // select your actual fields + joins to category/status
+        .from(/* your reports table name */)
+        .where(eq(/* reports.userId column */, userId as any))
+        .orderBy(desc(/* reports.createdAt or similar */))
         .limit(10),
 
+      // Report summary
       db
         .select({
           total: sql<number>`COUNT(*)`,
-          // add more breakdowns here (severity, status, etc.)
+          // Add severity/status breakdown here if needed
         })
-        .from(/* your reports table */)
-        .where(eq(/* reports.userId */, userId as any)),
+        .from(/* your reports table name */)
+        .where(eq(/* reports.userId column */, userId as any)),
 
+      // Unread notifications count
       db
         .select({ count: sql<number>`COUNT(*)` })
-        .from(/* your notifications table */)
-        .where(eq(/* notifications.userId */, userId as any)) // add unread condition if needed
+        .from(/* your notifications table name */)
+        .where(eq(/* notifications.userId column */, userId as any))
         .then((rows) => rows[0]),
 
+      // Recent notifications (last 20)
       db
         .select()
-        .from(/* notifications table */)
-        .where(eq(/* notifications.userId */, userId as any))
+        .from(/* your notifications table name */)
+        .where(eq(/* notifications.userId column */, userId as any))
         .orderBy(desc(/* notifications.createdAt */))
         .limit(20),
 
-      // Fixed: proper eq usage
+      // Saved locations
       db
         .select()
-        .from(/* saved_locations table */)
-        .where(eq(/* saved_locations.userId */, userId as any)),
+        .from(/* your saved_locations table name */)
+        .where(eq(/* saved_locations.userId column */, userId as any)),
 
-      // Fixed: proper eq usage
+      // Active/unresolved identity flags
       db
         .select()
-        .from(/* flags table */)
-        .where(eq(/* flags.userId */, userId as any)), // add unresolved condition if needed
+        .from(/* your flags table name */)
+        .where(eq(/* flags.userId column */, userId as any)),
     ]);
 
     return {
-      user: locals.user,
-      account,
-      profile,
-      kycData,
+      user: locals.user,           // Better Auth user
+      account,                     // tier, trustScore, kycStatus, etc.
+      profile,                     // decrypted profile
+      kycData,                     // decrypted KYC or null
       recentReports,
       reportSummary,
       unreadCount: unreadCountResult?.count ?? 0,
@@ -102,6 +103,4 @@ export const load: PageServerLoad = async ({ locals }) => {
     };
   } catch (err) {
     console.error(`[DASHBOARD LOAD] Failed for user ${userId}:`, err);
-    throw error(500, 'Unable to load your dashboard. Please try again later.');
-  }
-};
+    throw error
