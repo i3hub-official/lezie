@@ -339,7 +339,7 @@ async function handleSubmit(e: Event) {
       }
 
       // If successful, the cookie is already set by the browser
-      goto('/dashboard');
+      window.location.href = '/dashboard';
     } catch (err) {
       errors.submit = "Connection failed. Please check your internet.";
       isLoading = false;
