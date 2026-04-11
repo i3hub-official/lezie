@@ -307,7 +307,7 @@ let touchedTerms  = $state(false);
   
 async function handleSubmit(e: Event) {
     e.preventDefault();
-    
+
     const errs = validateStep3();
     if (Object.keys(errs).length > 0 || !acceptedTerms) {
       errors = errs;
@@ -316,36 +316,36 @@ async function handleSubmit(e: Event) {
       return;
     }
 
-    isLoading = true; 
+    isLoading = true;
     errors = {};
 
     try {
       const { data, error } = await authClient.signUp.email({
-        email: formData.email.trim().toLowerCase(),
+        email:    formData.email.trim().toLowerCase(),
         password: formData.password,
-        name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
-        // These fields will be available in the 'user' object in your server hook
+        name:     `${formData.firstName.trim()} ${formData.lastName.trim()}`,
         data: {
-          phone: `${formData.dialCode}${formData.phone}`,
+          phone:       `${formData.dialCode}${formData.phone}`,
           dateOfBirth: formData.dateOfBirth,
         }
       });
 
       if (error) {
-        // Better Auth errors often have a 'message' property
         errors.submit = error.message || "An unexpected error occurred";
-        isLoading = false;
         return;
       }
 
-      // If successful, the cookie is already set by the browser
-      window.location.href = '/dashboard';
+      // Session is created but email is unverified.
+      // Send the user to the verify-email page — the hook will enforce
+      // this gate on every protected route until they click the link.
+      await goto(`/verify-email?email=${encodeURIComponent(formData.email.trim().toLowerCase())}`);
+
     } catch (err) {
       errors.submit = "Connection failed. Please check your internet.";
+    } finally {
       isLoading = false;
     }
-}
-
+  }
 
 
   // ── Password strength ───────────────────────────────────
