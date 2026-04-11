@@ -1,17 +1,20 @@
 // src/routes/api/profile/+server.ts
-
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { users, userProfiles } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { protectName, protectText, protectPhone } from '$lib/security/dataProtection';
+import {
+  protectName,
+  protectText,
+  protectPhone,
+} from '$lib/security/dataProtection';
 
 export const PATCH: RequestHandler = async ({ request, locals }) => {
   if (!locals.user) throw error(401, 'Unauthorized');
 
   const userId = locals.user.id;
-  const body = await request.json();
+  const body   = await request.json();
 
   const {
     firstName,
@@ -26,64 +29,54 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
   } = body;
 
   try {
-    // Encrypt profile fields
     const profileUpdate: Record<string, any> = {
       updatedAt: new Date(),
     };
 
-    if (firstName !== undefined)
-      profileUpdate.firstName = firstName ? protectName(firstName) : null;
-    if (lastName !== undefined)
-      profileUpdate.lastName = lastName ? protectName(lastName) : null;
-    if (city !== undefined)
-      profileUpdate.city = city ? protectText(city) : null;
-    if (country !== undefined)
-      profileUpdate.country = country ? protectText(country) : null;
-    if (address !== undefined)
-      profileUpdate.address = address ? protectText(address) : null;
-    if (bio !== undefined)
-      profileUpdate.bio = bio ? protectText(bio) : null;
+    // Only update fields that are non-empty strings
+    if (firstName?.trim()) profileUpdate.firstName = protectName(firstName.trim());
+    if (lastName?.trim())  profileUpdate.lastName  = protectName(lastName.trim());
+    if (city?.trim())      profileUpdate.city      = protectText(city.trim());
+    if (country?.trim())   profileUpdate.country   = protectText(country.trim());
+    if (address?.trim())   profileUpdate.address   = protectText(address.trim());
+    if (bio?.trim())       profileUpdate.bio       = protectText(bio.trim());
 
-    await db
-      .update(userProfiles)
-      .set(profileUpdate)
-      .where(eq(userProfiles.userId, userId));
-
-    // Phone lives in users table
-    if (phone !== undefined) {
-      const { encrypted: encPhone } = await protectPhone(phone);
-      await db
-        .update(users)
-        .set({ phone: encPhone, updatedAt: new Date() })
-        .where(eq(users.id, userId));
-    }
-
-    // Social links live in userProfiles as jsonb (location field repurposed)
-    // Actually store in bio jsonb — we'll use a dedicated approach:
-    // Store social links in userProfiles.location as { twitter, linkedin }
-    if (twitterHandle !== undefined || linkedinHandle !== undefined) {
+    // Social links — store in location jsonb under a 'social' key
+    // Only update if at least one handle is provided
+    if (twitterHandle?.trim() || linkedinHandle?.trim()) {
       const [existing] = await db
         .select({ location: userProfiles.location })
         .from(userProfiles)
         .where(eq(userProfiles.userId, userId));
 
-      const currentSocial = (existing?.location as any)?.social ?? {};
-      const updatedSocial = {
-        ...currentSocial,
-        ...(twitterHandle !== undefined  ? { twitter:  twitterHandle  } : {}),
-        ...(linkedinHandle !== undefined ? { linkedin: linkedinHandle } : {}),
-      };
+      const currentLocation = (existing?.location as any) ?? {};
+      const currentSocial   = currentLocation.social ?? {};
 
+      const updatedSocial: Record<string, string> = { ...currentSocial };
+      if (twitterHandle?.trim())  updatedSocial.twitter  = twitterHandle.trim();
+      if (linkedinHandle?.trim()) updatedSocial.linkedin = linkedinHandle.trim();
+
+      profileUpdate.location = {
+        ...currentLocation,
+        social: updatedSocial,
+      };
+    }
+
+    // Only run profile update if there's something to update
+    if (Object.keys(profileUpdate).length > 1) {
       await db
         .update(userProfiles)
-        .set({
-          location: {
-            ...(existing?.location as any ?? {}),
-            social: updatedSocial,
-          },
-          updatedAt: new Date(),
-        })
+        .set(profileUpdate)
         .where(eq(userProfiles.userId, userId));
+    }
+
+    // Phone — required, must not be empty
+    if (phone?.trim()) {
+      const { encrypted: encPhone } = await protectPhone(phone.trim());
+      await db
+        .update(users)
+        .set({ phone: encPhone, updatedAt: new Date() })
+        .where(eq(users.id, userId));
     }
 
     return json({ success: true });
