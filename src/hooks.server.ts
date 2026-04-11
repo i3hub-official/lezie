@@ -15,6 +15,7 @@ import { dev } from '$app/environment';
  */
 const ROUTE_CONFIG = {
   PUBLIC_EXACT: new Set([
+'/',
     '/signin',
     '/signup',
     '/forgot-password',
