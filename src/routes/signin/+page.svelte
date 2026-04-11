@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { authClient } from '$lib/auth-client'; // Replace store with client
+  import { authClient } from '$lib/auth-client';
   import { 
     Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight, ArrowLeft,
     MapPin, Users, Bell, User, Phone, Fingerprint, ChevronLeft,
@@ -46,7 +46,6 @@
     errors = {};
     step = 'password';
   };
-  
 
   const handlePasswordSubmit = async (e: Event) => {
     e.preventDefault();
@@ -63,12 +62,11 @@
 
       if (!resolveRes.ok) {
         errors.submit = "Account not found";
-        isLoading = false;
         return;
       }
 
       // 2. Sign in using the resolved email
-      // This works for both Passwords and PINs (stored as the password)
+      // Works for both passwords and PINs (stored as the password)
       const { data, error } = await authClient.signIn.email({
         email: resolved.email,
         password: formData.password,
@@ -78,8 +76,8 @@
       if (error) {
         errors.submit = error.message;
       } else {
-  window.location.href = '/dashboard';
-}
+        await goto('/dashboard');
+      }
     } catch (err) {
       errors.submit = "Login failed. Check your connection.";
     } finally {
@@ -94,7 +92,7 @@
       if (error) {
         errors.submit = error.message;
       } else {
-        goto('/dashboard');
+        await goto('/dashboard');
       }
     } catch (err) {
       errors.submit = 'Passkey authentication failed';
@@ -111,7 +109,6 @@
     return type === 'email' ? Mail : (type === 'phone' ? Phone : User);
   };
 </script>
-
 
 <svelte:head>
   <title>Sign In - Lezie</title>
