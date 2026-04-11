@@ -240,9 +240,9 @@
   }
 
   async function handleLogout() {
-    await authClient.signOut();
-    goto('/signin');
-  }
+  await authClient.signOut();
+  window.location.href = '/signin';
+}
 </script>
 
 
