@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+import { browser } from '$app/environment'; 
   import { goto } from '$app/navigation';
   import {
     MapPin, Camera, X, AlertTriangle, Send, Navigation, Shield,
@@ -108,7 +109,9 @@
     );
   }
 
+
   async function getUserAddressFromCoords(lat: number, lng: number) {
+if (!browser) return;
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
       const data = await res.json();
