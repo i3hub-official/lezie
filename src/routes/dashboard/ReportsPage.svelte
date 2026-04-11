@@ -133,7 +133,8 @@ if (!browser) return;
 
   async function searchAdditionalLocation(query: string) {
     additionalLocationSearchQuery = query;
-    if (!query.trim() || query.length < 3) {
+    if (!browser) return;
+if (!query.trim() || query.length < 3) {
       additionalLocationSearchResults = [];
       return;
     }
