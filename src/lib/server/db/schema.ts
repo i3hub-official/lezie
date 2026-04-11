@@ -35,8 +35,8 @@ export const users = pgTable('users', {
   id: text('id').primaryKey(), // NanoID from Better Auth
   hashable: text('hashable').references(() => authUsers.id).unique(),
   email: varchar('email', { length: 255 }),
-  phone: varchar('phone', { length: 20 }),
-  username: varchar('username', { length: 100 }),
+  phone: varchar('phone', { length: 255 }),
+  username: varchar('username', { length: 255 }),
   passwordHash: varchar('password_hash', { length: 255 }),
   tier: userTierEnum('tier').default('1').notNull(),
   trustScore: integer('trust_score').default(0).notNull(),
@@ -59,14 +59,14 @@ export const users = pgTable('users', {
 export const userProfiles = pgTable('user_profiles', {
   id: text('id').primaryKey(),
   userId: text('user_id').references(() => users.id).notNull().unique(), // Changed to text
-  firstName: varchar('first_name', { length: 100 }),
-  lastName: varchar('last_name', { length: 100 }),
+  firstName: varchar('first_name', { length: 255 }),
+  lastName: varchar('last_name', { length: 400 }),
   avatarUrl: varchar('avatar_url', { length: 500 }),
   bio: text('bio'),
   location: jsonb('location'),
   address: text('address'),
-  city: varchar('city', { length: 100 }),
-  country: varchar('country', { length: 100 }),
+  city: varchar('city', { length: 255 }),
+  country: varchar('country', { length: 255 }),
   dateOfBirth: timestamp('date_of_birth'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
@@ -77,7 +77,7 @@ export const userProfiles = pgTable('user_profiles', {
 // Categories
 export const categories = pgTable('categories', {
   id: uuid('id').primaryKey().defaultRandom(),
-  name: varchar('name', { length: 100 }).notNull().unique(),
+  name: varchar('name', { length: 255 }).notNull().unique(),
   description: text('description'),
   icon: varchar('icon', { length: 50 }).notNull(),
   color: varchar('color', { length: 20 }).default('#3b82f6'),
@@ -90,7 +90,7 @@ export const categories = pgTable('categories', {
 // Statuses
 export const statuses = pgTable('statuses', {
   id: uuid('id').primaryKey().defaultRandom(),
-  name: varchar('name', { length: 50 }).notNull().unique(),
+  name: varchar('name', { length: 255 }).notNull().unique(),
   description: text('description'),
   color: varchar('color', { length: 20 }).notNull(),
   isActive: boolean('is_active').default(true).notNull(),
@@ -217,7 +217,7 @@ export const sessions = pgTable('sessions', {
 export const savedLocations = pgTable('saved_locations', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: text('user_id').references(() => users.id).notNull(), // Changed to text
-  name: varchar('name', { length: 100 }).notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
   location: jsonb('location').notNull(),
   address: text('address'),
   isHome: boolean('is_home').default(false),
