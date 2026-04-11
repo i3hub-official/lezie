@@ -30,7 +30,6 @@ export const auth = betterAuth({
     passkey()
   ],
 
-  // Custom fields — must match columns added to authUsers in auth-schema.ts
   user: {
     additionalFields: {
       username:    { type: 'string' },
@@ -49,6 +48,18 @@ export const auth = betterAuth({
     backgroundTasks: {
       enabled: true,
     },
+    // Fix: ensure cookie works on localhost
+    cookies: {
+      session_token: {
+        name: 'better-auth.session_token',
+        options: {
+          httpOnly: true,
+          sameSite: 'lax',
+          secure: !dev,       // false in dev (http), true in prod (https)
+          path: '/',
+        }
+      }
+    }
   },
 
   databaseHooks: {
@@ -64,19 +75,16 @@ export const auth = betterAuth({
             const firstName = nameParts[0] || '';
             const lastName  = nameParts.slice(1).join(' ') || '';
 
-            // NOTE: users.id is uuid but Better Auth generates a text ID.
-            // We cast user.id as uuid — ensure your DB accepts this or
-            // change users.id to text('id') in schema.ts.
             await db.insert(users).values({
-              id:          user.id as any, // Better Auth text ID cast to uuid
-              email:       user.email,
-              phone:       (user as any).phoneNumber ?? null,
-              username:    (user as any).username    ?? null,
-              tier:        '1',
-              trustScore:  0,
-              kycStatus:   'pending',
-              isActive:    true,
-              lastActive:  new Date(),
+              id:         user.id as any,
+              email:      user.email,
+              phone:      (user as any).phoneNumber ?? null,
+              username:   (user as any).username    ?? null,
+              tier:       '1',
+              trustScore: 0,
+              kycStatus:  'pending',
+              isActive:   true,
+              lastActive: new Date(),
             }).onConflictDoNothing();
 
             await db.insert(userProfiles).values({
@@ -108,11 +116,16 @@ export const auth = betterAuth({
   trustedOrigins: [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
-    'https://lezie.vercel.app',   // fixed: was http
+    'https://lezie.vercel.app',
   ],
 
   session: {
-    expiresIn: 60 * 60 * 24 * 30,
+    expiresIn:  60 * 60 * 24 * 30,
     updateAge:  60 * 60 * 24,
+    // Cache session in cookie to avoid DB lookup on every request
+    cookieCache: {
+      enabled: true,
+      maxAge:  60 * 5, // 5 minutes
+    }
   },
 });
