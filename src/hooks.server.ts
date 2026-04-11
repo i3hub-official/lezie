@@ -10,38 +10,54 @@ import { dev } from '$app/environment';
  * PUBLIC_EXACT   — paths matched character-for-character
  * PUBLIC_PREFIX  — any path that *starts with* these strings
  *
- * Everything not listed here is PROTECTED by default.
+ * VERIFIED_ONLY  — paths that require an authenticated AND verified email.
+ *                  Authenticated-but-unverified users hitting these are
+ *                  redirected to /verify-email instead of /signin.
+ *
+ * Everything not listed in PUBLIC_* is PROTECTED by default.
  * To open a new route: add it to the right list and you're done.
  */
 const ROUTE_CONFIG = {
   PUBLIC_EXACT: new Set([
-'/',
     '/signin',
     '/signup',
     '/forgot-password',
     '/reset-password',
+    '/verify-email',          // landing page after signup
   ]),
 
   PUBLIC_PREFIX: [
-    '/api/auth',   // Better Auth internal endpoints
-    '/_app',       // SvelteKit build assets
-    '/favicon',    // Favicon requests
+    '/api/auth',              // Better Auth internal endpoints
+    '/api/resend-verification', // resend verification email
+    '/_app',                  // SvelteKit build assets
+    '/favicon',               // Favicon requests
+  ],
+
+  // Paths that require a verified email — authenticated but unverified
+  // users are bounced to /verify-email rather than /signin
+  VERIFIED_ONLY: [
+    '/dashboard', '/alerts', '/map', '/report',
+    '/incident', '/safety-quest', '/profile', '/settings',
   ],
 } as const;
 
-/** Returns true if the path is publicly accessible without a session */
 function isPublicRoute(pathname: string): boolean {
   if (ROUTE_CONFIG.PUBLIC_EXACT.has(pathname)) return true;
   return ROUTE_CONFIG.PUBLIC_PREFIX.some(p => pathname.startsWith(p));
 }
 
+function requiresVerification(pathname: string): boolean {
+  return ROUTE_CONFIG.VERIFIED_ONLY.some(p => pathname.startsWith(p));
+}
+
 // ==================== 2. RATE LIMITER ====================
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_RULES: Record<string, { max: number; windowMs: number }> = {
-  '/signin':          { max: 10,  windowMs: 60_000 },
-  '/signup':          { max: 5,   windowMs: 60_000 },
-  '/forgot-password': { max: 5,   windowMs: 60_000 },
-  '/api':             { max: 100, windowMs: 60_000 },
+  '/signin':              { max: 10, windowMs: 60_000 },
+  '/signup':              { max: 5,  windowMs: 60_000 },
+  '/forgot-password':     { max: 5,  windowMs: 60_000 },
+  '/api/resend-verification': { max: 3, windowMs: 60_000 }, // tight — prevent email spam
+  '/api':                 { max: 100, windowMs: 60_000 },
 };
 
 function checkRateLimit(ip: string, pathname: string): boolean {
@@ -62,9 +78,6 @@ function checkRateLimit(ip: string, pathname: string): boolean {
 
 // ==================== 3. MIDDLEWARE HANDLERS ====================
 
-/**
- * LOGGING: Monitor request performance in dev
- */
 const requestLogging: Handle = async ({ event, resolve }) => {
   const start = Date.now();
   const response = await resolve(event);
@@ -76,9 +89,6 @@ const requestLogging: Handle = async ({ event, resolve }) => {
   return response;
 };
 
-/**
- * RATE LIMITING: Prevent brute force on auth endpoints
- */
 const rateLimiting: Handle = async ({ event, resolve }) => {
   let ip = '127.0.0.1';
   try { ip = event.getClientAddress(); } catch { /* Termux fallback */ }
@@ -92,11 +102,6 @@ const rateLimiting: Handle = async ({ event, resolve }) => {
   return resolve(event);
 };
 
-/**
- * AUTHENTICATION & SECURITY
- * Handles: Better Auth API, session resolve, route protection,
- *          session expiry, post-login redirect, auth-page bypass
- */
 const authSession: Handle = async ({ event, resolve }) => {
   // 1. Let Better Auth handle its own API routes
   if (event.url.pathname.startsWith('/api/auth')) {
@@ -114,11 +119,9 @@ const authSession: Handle = async ({ event, resolve }) => {
     sessionResult && now > new Date(sessionResult.session.expiresAt).getTime();
 
   if (sessionResult && !isExpired) {
-    // Valid session
     event.locals.user    = sessionResult.user;
     event.locals.session = sessionResult.session;
   } else {
-    // No session or expired
     if (isExpired && dev) {
       console.warn(`[AUTH] 🕒 Expired session for user: ${sessionResult!.user.id}`);
     }
@@ -126,41 +129,45 @@ const authSession: Handle = async ({ event, resolve }) => {
     event.locals.session = null;
   }
 
-  // 3. Unauthenticated: only public routes are accessible — everything else → /signin
-  //    This covers '/', '/dashboard', '/alerts', any future route automatically.
-  if (!event.locals.session && !isPublicRoute(path)) {
-    if (dev) console.log(`[AUTH] 🛡️ Guest blocked from ${path}`);
+  const user    = event.locals.user;
+  const session = event.locals.session;
 
-    // Carry the intended destination so the signin page can redirect back after login
+  // 3. Unauthenticated → public routes only, everything else → /signin
+  if (!session && !isPublicRoute(path)) {
+    if (dev) console.log(`[AUTH] 🛡️ Guest blocked from ${path}`);
     const next = path !== '/' ? `?redirectTo=${encodeURIComponent(path)}` : '';
     throw redirect(303, `/signin${next}`);
   }
 
-  // 4. Expired session specifically → tell the user why
-  if (!event.locals.session && isExpired && !isPublicRoute(path)) {
+  // 4. Expired session on protected route → tell the user why
+  if (!session && isExpired && !isPublicRoute(path)) {
     throw redirect(303, '/signin?error=session_expired');
   }
 
-  // 5. Authenticated users have no reason to see auth pages → dashboard
-  if (event.locals.session && ROUTE_CONFIG.PUBLIC_EXACT.has(path)) {
+  // 5. Authenticated but email NOT verified → bounce to /verify-email
+  //    Only applies to routes that explicitly require verification.
+  //    Public routes (signin, signup, verify-email itself) pass through freely.
+  if (session && user && !(user as any).emailVerified && requiresVerification(path)) {
+    if (dev) console.log(`[AUTH] 📧 Unverified user blocked from ${path}`);
+    throw redirect(303, `/verify-email?email=${encodeURIComponent(user.email)}`);
+  }
+
+  // 6. Authenticated + verified users have no reason to see auth pages → dashboard
+  if (session && (user as any)?.emailVerified && ROUTE_CONFIG.PUBLIC_EXACT.has(path)) {
     throw redirect(303, '/dashboard');
   }
 
   return resolve(event);
 };
 
-/**
- * CACHE CONTROL: Prevent sensitive pages from being cached
- */
 const cacheControl: Handle = async ({ event, resolve }) => {
   const response = await resolve(event);
   const path = event.url.pathname;
 
-  // Only cache static assets — everything else is dynamic or sensitive
   const isStaticAsset =
     path.startsWith('/_app') ||
     path.startsWith('/favicon') ||
-    path.match(/\.(ico|png|jpg|jpeg|svg|webp|woff2?|ttf|otf|css|js)$/);
+    /\.(ico|png|jpg|jpeg|svg|webp|woff2?|ttf|otf|css|js)$/.test(path);
 
   if (!isStaticAsset) {
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
