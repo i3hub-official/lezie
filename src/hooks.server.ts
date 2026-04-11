@@ -156,11 +156,18 @@ const cacheControl: Handle = async ({ event, resolve }) => {
   const response = await resolve(event);
   const path = event.url.pathname;
 
-  if (path.startsWith('/dashboard') || path.startsWith('/api')) {
+  // Only cache static assets — everything else is dynamic or sensitive
+  const isStaticAsset =
+    path.startsWith('/_app') ||
+    path.startsWith('/favicon') ||
+    path.match(/\.(ico|png|jpg|jpeg|svg|webp|woff2?|ttf|otf|css|js)$/);
+
+  if (!isStaticAsset) {
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', '0');
   }
+
   return response;
 };
 
