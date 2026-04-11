@@ -1,168 +1,130 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
-  import { 
-    Mail, MapPin, Calendar, Award, Shield, 
+  import {
+    Mail, MapPin, Calendar, Award, Shield,
     Settings, LogOut, Camera, CheckCircle,
     AlertTriangle, Bell, Star, TrendingUp,
-    Edit2, X, Save, ChevronLeft, Globe,
-    Phone, Briefcase, Heart, Share2, Users,Activity
+    Edit2, X, Save, Globe,
+    Phone, Heart, Users, Activity
   } from 'lucide-svelte';
+  import { authClient } from '$lib/auth-client';
+  import { goto } from '$app/navigation';
 
-  let isLoading = false;
-  let isEditing = false;
-  let showDeleteConfirm = false;
-  let activeTab = 'overview';
-  
-  let user = {
-    name: "Ogwo Godspower",
-    email: "ogwogp@example.com",
-    phone: "+234 803 123 4567",
-    avatar: "https://ui-avatars.com/api/?name=Ogwo+Godspower&background=6a2c91&color=fff&size=200",
-    coverPhoto: "https://images.unsplash.com/photo-1497366811353-2a2cf8b86f2b?w=1200",
-    joinDate: "March 2025",
-    location: "Port Harcourt, Rivers State",
-    safetyScore: 92,
-    reportsSubmitted: 47,
-    verifiedReports: 41,
-    helpfulVotes: 156,
-    alertsCreated: 8,
-    description: "Community safety advocate and active resident of Port Harcourt. Passionate about building a safer neighbourhood through timely reporting and community engagement.",
-    badges: ["First Responder", "Top Reporter", "Community Guardian", "Safety Hero"],
-    socialLinks: {
-      twitter: "@ogwogp",
-      linkedin: "ogwo-godspower"
+  // ── Props from dashboard +page.server.ts ──
+  let { data } = $props<{
+    data: {
+      user:    any;
+      account: any;
+      profile: any;
     }
-  };
-  
-  let recentActivity = [
-    {
-      id: 1,
-      type: 'report',
-      title: 'Reported suspicious activity',
-      location: 'Maple Street',
-      timestamp: new Date(Date.now() - 2 * 3600000).toISOString(),
-      status: 'verified'
-    },
-    {
-      id: 2,
-      type: 'verification',
-      title: 'Verified incident report',
-      location: 'Downtown',
-      timestamp: new Date(Date.now() - 1 * 86400000).toISOString(),
-      status: 'completed'
-    },
-    {
-      id: 3,
-      type: 'alert',
-      title: 'Created new alert zone',
-      location: 'Home Area',
-      timestamp: new Date(Date.now() - 3 * 86400000).toISOString(),
-      status: 'active'
-    }
-  ];
-  
-  let editForm = {
-    name: '',
-    email: '',
-    phone: '',
-    location: '',
-    description: '',
-    twitter: '',
-    linkedin: ''
-  };
-  
-  onMount(async () => {
-    await loadProfile();
-    isLoading = false;
+  }>();
+
+  // ── Derived display values ──
+  const fullName    = $derived(
+    [data.profile?.firstName, data.profile?.lastName].filter(Boolean).join(' ')
+    || data.user?.name
+    || 'User'
+  );
+  const email       = $derived(data.user?.email ?? '');
+  const joinDate    = $derived(
+    data.user?.createdAt
+      ? new Date(data.user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      : '—'
+  );
+  const safetyScore = $derived(data.account?.trustScore ?? 0);
+  const social      = $derived((data.profile?.location as any)?.social ?? {});
+
+  // ── Local UI state ──
+  let isEditing       = $state(false);
+  let isSaving        = $state(false);
+  let saveError       = $state('');
+  let saveSuccess     = $state(false);
+  let activeTab       = $state('overview');
+
+  let editForm = $state({
+    firstName:      '',
+    lastName:       '',
+    phone:          '',
+    city:           '',
+    country:        '',
+    bio:            '',
+    twitterHandle:  '',
+    linkedinHandle: '',
   });
-  
-  async function loadProfile() {
-    await new Promise(resolve => setTimeout(resolve, 600));
-  }
-  
+
   function startEditing() {
+    const nameParts = (data.user?.name ?? '').split(' ');
     editForm = {
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      location: user.location,
-      description: user.description,
-      twitter: user.socialLinks.twitter || '',
-      linkedin: user.socialLinks.linkedin || ''
+      firstName:      data.profile?.firstName ?? nameParts[0] ?? '',
+      lastName:       data.profile?.lastName  ?? nameParts.slice(1).join(' ') ?? '',
+      phone:          data.profile?.phone     ?? '',
+      city:           data.profile?.city      ?? '',
+      country:        data.profile?.country   ?? '',
+      bio:            data.profile?.bio       ?? '',
+      twitterHandle:  social.twitter          ?? '',
+      linkedinHandle: social.linkedin         ?? '',
     };
-    isEditing = true;
+    saveError   = '';
+    saveSuccess = false;
+    isEditing   = true;
   }
-  
-  function saveProfile() {
-    user.name = editForm.name;
-    user.email = editForm.email;
-    user.phone = editForm.phone;
-    user.location = editForm.location;
-    user.description = editForm.description;
-    user.socialLinks = {
-      twitter: editForm.twitter,
-      linkedin: editForm.linkedin
-    };
-    isEditing = false;
-  }
-  
+
   function cancelEditing() {
     isEditing = false;
+    saveError = '';
   }
-  
+
+  async function saveProfile() {
+    isSaving  = true;
+    saveError = '';
+
+    try {
+      const res = await fetch('/api/profile', {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(editForm),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        saveError = body.message ?? 'Failed to save profile';
+        return;
+      }
+
+      saveSuccess = true;
+      isEditing   = false;
+
+      // Full reload so dashboard re-runs load() and gets fresh decrypted data
+      setTimeout(() => window.location.reload(), 800);
+    } catch (err) {
+      saveError = 'Connection error. Please try again.';
+    } finally {
+      isSaving = false;
+    }
+  }
+
+  async function handleLogout() {
+    await authClient.signOut();
+    window.location.href = '/signin';
+  }
+
   function formatDate(dateString: string) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
+    const diff  = Date.now() - new Date(dateString).getTime();
     const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(hours / 24);
-    
-    if (hours < 1) return 'Just now';
-    if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-    if (days < 7) return `${days} day${days !== 1 ? 's' : ''} ago`;
-    return date.toLocaleDateString();
-  }
-  
-  function formatRelativeTime(dateString: string) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
-  
-  function getActivityIcon(type: string) {
-    switch(type) {
-      case 'report': return AlertTriangle;
-      case 'verification': return CheckCircle;
-      case 'alert': return Bell;
-      default: return Activity;
-    }
-  }
-  
-  function getActivityColor(type: string) {
-    switch(type) {
-      case 'report': return '#EF4444';
-      case 'verification': return '#10B981';
-      case 'alert': return '#F59E0B';
-      default: return '#6B7280';
-    }
-  }
-  
-  function handleLogout() {
-    goto('/');
+    const days  = Math.floor(hours / 24);
+    if (hours < 1)  return 'Just now';
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7)   return `${days}d ago`;
+    return new Date(dateString).toLocaleDateString();
   }
 </script>
 
 <div class="profile-page">
   <div class="profile-container">
+
     <!-- Header -->
     <div class="page-header">
-      <div class="header-left">
-    
-      </div>
       <div class="header-center">
-        <div class="logo-badge">
-          <Users size={24} />
-        </div>
+        <div class="logo-badge"><Users size={24} /></div>
         <div>
           <h1>My Profile</h1>
           <p>Manage your account and preferences</p>
@@ -170,226 +132,211 @@
       </div>
       <div class="header-right">
         {#if !isEditing}
-          <button class="edit-btn" on:click={startEditing} type="button">
-            <Edit2 size={18} />
-            <span>Edit Profile</span>
+          <button class="edit-btn" onclick={startEditing} type="button">
+            <Edit2 size={18} /><span>Edit Profile</span>
           </button>
         {:else}
-          <button class="save-btn" on:click={saveProfile} type="button">
-            <Save size={18} />
-            <span>Save Changes</span>
+          <button class="save-btn" onclick={saveProfile} disabled={isSaving} type="button">
+            <Save size={18} /><span>{isSaving ? 'Saving…' : 'Save Changes'}</span>
           </button>
-          <button class="cancel-btn" on:click={cancelEditing} type="button">
-            <X size={18} />
-            <span>Cancel</span>
+          <button class="cancel-btn" onclick={cancelEditing} type="button">
+            <X size={18} /><span>Cancel</span>
           </button>
         {/if}
       </div>
     </div>
 
-    {#if isLoading}
-      <div class="loading-container">
-        <div class="loading-spinner"></div>
-        <p>Loading profile...</p>
-      </div>
-    {:else}
-      <!-- Cover Photo & Avatar -->
-      <div class="cover-section">
-        <div class="cover-photo" style="background-image: url({user.coverPhoto})">
-          <button class="change-cover-btn" type="button">
-            <Camera size={16} />
-            Change Cover
-          </button>
-        </div>
-        <div class="avatar-section">
-          <img src={user.avatar} alt={user.name} class="avatar" />
-          <button class="change-avatar-btn" type="button" aria-label="Change avatar">
-            <Camera size={14} />
-          </button>
-        </div>
-      </div>
-
-      <!-- Profile Card -->
-      <div class="profile-card">
-        <!-- User Info -->
-        <div class="user-info">
-          {#if isEditing}
-            <input 
-              type="text" 
-              bind:value={editForm.name}
-              class="name-input"
-              placeholder="Full Name"
-            />
-          {:else}
-            <h1 class="user-name">{user.name}</h1>
-          {/if}
-
-          <div class="user-details">
-            <div class="detail-item">
-              <Mail size={16} />
-              <span>{user.email}</span>
-            </div>
-            <div class="detail-item">
-              <Phone size={16} />
-              <span>{user.phone}</span>
-            </div>
-            <div class="detail-item">
-              <MapPin size={16} />
-              <span>{user.location}</span>
-            </div>
-            <div class="detail-item">
-              <Calendar size={16} />
-              <span>Member since {user.joinDate}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Description -->
-        <div class="description-section">
-          {#if isEditing}
-            <textarea 
-              bind:value={editForm.description}
-              class="description-input"
-              rows="4"
-              placeholder="Tell us about yourself..."
-            ></textarea>
-          {:else}
-            <p class="user-description">{user.description}</p>
-          {/if}
-        </div>
-
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon reports-icon">
-              <AlertTriangle size={22} />
-            </div>
-            <div class="stat-content">
-              <span class="stat-value">{user.reportsSubmitted}</span>
-              <span class="stat-label">Reports Submitted</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon verified-icon">
-              <CheckCircle size={22} />
-            </div>
-            <div class="stat-content">
-              <span class="stat-value">{user.verifiedReports}</span>
-              <span class="stat-label">Verified Reports</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon votes-icon">
-              <Star size={22} />
-            </div>
-            <div class="stat-content">
-              <span class="stat-value">{user.helpfulVotes}</span>
-              <span class="stat-label">Helpful Votes</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon alerts-icon">
-              <Bell size={22} />
-            </div>
-            <div class="stat-content">
-              <span class="stat-value">{user.alertsCreated}</span>
-              <span class="stat-label">Alerts Created</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Safety Score -->
-        <div class="safety-score-section">
-          <div class="score-header">
-            <Shield size={20} style="color: var(--primary-color)" />
-            <h3>Safety Score</h3>
-          </div>
-          <div class="score-container">
-            <div class="score-circle">
-              <svg viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="45" fill="none" stroke="#E5E7EB" stroke-width="8"/>
-                <circle cx="50" cy="50" r="45" fill="none" stroke="var(--primary-color)" stroke-width="8"
-                  stroke-dasharray="282.74"
-                  stroke-dashoffset={282.74 - (282.74 * user.safetyScore / 100)}
-                  transform="rotate(-90 50 50)" stroke-linecap="round"/>
-              </svg>
-              <span class="score-value">{user.safetyScore}%</span>
-            </div>
-            <div class="score-text">
-              <p>Your safety score is <strong>{user.safetyScore}%</strong></p>
-              <p class="score-rank">Rank: Gold Guardian</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Achievements -->
-        <div class="badges-section">
-          <div class="section-header">
-            <Award size={20} style="color: var(--primary-color)" />
-            <h3>Achievements</h3>
-          </div>
-          <div class="badges-grid">
-            {#each user.badges as badge}
-              <div class="badge">
-                <Shield size={16} />
-                <span>{badge}</span>
-              </div>
-            {/each}
-          </div>
-        </div>
-
-        <!-- Social Links -->
-        {#if !isEditing && (user.socialLinks.twitter || user.socialLinks.linkedin)}
-          <div class="social-section">
-            <div class="section-header">
-              <Globe size={20} style="color: var(--primary-color)" />
-              <h3>Connect</h3>
-            </div>
-            <div class="social-links">
-              {#if user.socialLinks.twitter}
-                <a href="https://twitter.com/{user.socialLinks.twitter.slice(1)}" target="_blank" rel="noopener noreferrer" class="social-link twitter">
-                  <svg class="social-icon" viewBox="0 0 24 24" width="16" height="16">
-                    <path fill="currentColor" d="M22.46 6c-.77.35-1.6.58-2.46.69c.88-.53 1.56-1.37 1.88-2.38c-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29c0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15c0 1.49.75 2.81 1.91 3.56c-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21c-.36.1-.74.15-1.13.15c-.27 0-.54-.03-.8-.08c.54 1.69 2.11 2.92 4.01 2.95c-1.49 1.17-3.35 1.86-5.36 1.86c-.35 0-.69-.02-1.03-.06c1.92 1.23 4.19 1.95 6.63 1.95c7.96 0 12.31-6.59 12.31-12.31c0-.19-.01-.38-.02-.57c.85-.6 1.58-1.35 2.16-2.21z"/>
-                  </svg>
-                  <span>{user.socialLinks.twitter}</span>
-                </a>
-              {/if}
-              {#if user.socialLinks.linkedin}
-                <a href="https://linkedin.com/in/{user.socialLinks.linkedin}" target="_blank" rel="noopener noreferrer" class="social-link linkedin">
-                  <svg class="social-icon" viewBox="0 0 24 24" width="16" height="16">
-                    <path fill="currentColor" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037c-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85c3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065c0-1.138.92-2.063 2.063-2.063c1.14 0 2.064.925 2.064 2.063c0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.454c.979 0 1.771-.773 1.771-1.729V1.729C24 .774 23.204 0 22.225 0z"/>
-                  </svg>
-                  <span>{user.socialLinks.linkedin}</span>
-                </a>
-              {/if}
-            </div>
-          </div>
-        {/if}
-
-        <!-- Action Buttons -->
-        <div class="profile-actions">
-          {#if isEditing}
-            <button class="btn btn-primary" on:click={saveProfile}>
-              <Save size={18} />
-              Save Changes
-            </button>
-            <button class="btn btn-secondary" on:click={cancelEditing}>
-              <X size={18} />
-              Cancel
-            </button>
-          {:else}
-            <button class="btn btn-primary" on:click={startEditing}>
-              <Settings size={18} />
-              Edit Profile
-            </button>
-            <button class="btn btn-outline" on:click={handleLogout}>
-              <LogOut size={18} />
-              Sign Out
-            </button>
-          {/if}
-        </div>
+    {#if saveSuccess}
+      <div class="alert alert-success">
+        <CheckCircle size={16} /> Profile updated successfully
       </div>
     {/if}
+    {#if saveError}
+      <div class="alert alert-error">
+        <AlertTriangle size={16} /> {saveError}
+      </div>
+    {/if}
+
+    <!-- Avatar section -->
+    <div class="cover-section">
+      <div class="cover-photo">
+        <button class="change-cover-btn" type="button">
+          <Camera size={16} /> Change Cover
+        </button>
+      </div>
+      <div class="avatar-section">
+        <img
+          src="https://ui-avatars.com/api/?name={encodeURIComponent(fullName)}&background=6a2c91&color=fff&size=200"
+          alt={fullName}
+          class="avatar"
+        />
+        <button class="change-avatar-btn" type="button" aria-label="Change avatar">
+          <Camera size={14} />
+        </button>
+      </div>
+    </div>
+
+    <!-- Profile Card -->
+    <div class="profile-card">
+
+      <!-- Name + details -->
+      <div class="user-info">
+        {#if isEditing}
+          <div class="edit-row">
+            <input type="text" bind:value={editForm.firstName}  class="name-input" placeholder="First name" />
+            <input type="text" bind:value={editForm.lastName}   class="name-input" placeholder="Last name"  />
+          </div>
+        {:else}
+          <h1 class="user-name">{fullName}</h1>
+        {/if}
+
+        <div class="user-details">
+          <div class="detail-item"><Mail size={16} /><span>{email}</span></div>
+
+          <div class="detail-item">
+            <Phone size={16} />
+            {#if isEditing}
+              <input type="tel" bind:value={editForm.phone} class="inline-input" placeholder="+234 800 000 0000" />
+            {:else}
+              <span>{data.profile?.phone ?? '—'}</span>
+            {/if}
+          </div>
+
+          <div class="detail-item">
+            <MapPin size={16} />
+            {#if isEditing}
+              <input type="text" bind:value={editForm.city}    class="inline-input" placeholder="City"    />
+              <input type="text" bind:value={editForm.country} class="inline-input" placeholder="Country" />
+            {:else}
+              <span>
+                {[data.profile?.city, data.profile?.country].filter(Boolean).join(', ') || '—'}
+              </span>
+            {/if}
+          </div>
+
+          <div class="detail-item"><Calendar size={16} /><span>Member since {joinDate}</span></div>
+        </div>
+      </div>
+
+      <!-- Bio -->
+      <div class="description-section">
+        {#if isEditing}
+          <textarea bind:value={editForm.bio} class="description-input" rows="4"
+            placeholder="Tell your community about yourself…"></textarea>
+        {:else}
+          <p class="user-description">{data.profile?.bio ?? 'No bio yet.'}</p>
+        {/if}
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon reports-icon"><AlertTriangle size={22} /></div>
+          <div class="stat-content">
+            <span class="stat-value">0</span>
+            <span class="stat-label">Reports Submitted</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon verified-icon"><CheckCircle size={22} /></div>
+          <div class="stat-content">
+            <span class="stat-value">0</span>
+            <span class="stat-label">Verified Reports</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon votes-icon"><Star size={22} /></div>
+          <div class="stat-content">
+            <span class="stat-value">0</span>
+            <span class="stat-label">Helpful Votes</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon alerts-icon"><Bell size={22} /></div>
+          <div class="stat-content">
+            <span class="stat-value">0</span>
+            <span class="stat-label">Alerts Created</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Safety score -->
+      <div class="safety-score-section">
+        <div class="score-header">
+          <Shield size={20} style="color: var(--primary-color)" />
+          <h3>Safety Score</h3>
+        </div>
+        <div class="score-container">
+          <div class="score-circle">
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="45" fill="none" stroke="#E5E7EB" stroke-width="8"/>
+              <circle cx="50" cy="50" r="45" fill="none" stroke="var(--primary-color)" stroke-width="8"
+                stroke-dasharray="282.74"
+                stroke-dashoffset={282.74 - (282.74 * safetyScore / 100)}
+                transform="rotate(-90 50 50)" stroke-linecap="round"/>
+            </svg>
+            <span class="score-value">{safetyScore}</span>
+          </div>
+          <div class="score-text">
+            <p>Trust Score: <strong>{safetyScore}</strong></p>
+            <p class="score-rank">KYC: {data.account?.kycStatus ?? '—'}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Social links -->
+      <div class="social-section">
+        <div class="section-header">
+          <Globe size={20} style="color: var(--primary-color)" />
+          <h3>Connect</h3>
+        </div>
+        {#if isEditing}
+          <div class="social-edit">
+            <input type="text" bind:value={editForm.twitterHandle}
+              class="inline-input" placeholder="@twitter_handle" />
+            <input type="text" bind:value={editForm.linkedinHandle}
+              class="inline-input" placeholder="linkedin-handle" />
+          </div>
+        {:else if social.twitter || social.linkedin}
+          <div class="social-links">
+            {#if social.twitter}
+              <a href="https://twitter.com/{social.twitter.replace('@','')}"
+                target="_blank" rel="noopener noreferrer" class="social-link twitter">
+                <span>{social.twitter}</span>
+              </a>
+            {/if}
+            {#if social.linkedin}
+              <a href="https://linkedin.com/in/{social.linkedin}"
+                target="_blank" rel="noopener noreferrer" class="social-link linkedin">
+                <span>{social.linkedin}</span>
+              </a>
+            {/if}
+          </div>
+        {:else}
+          <p class="muted">No social links added yet.</p>
+        {/if}
+      </div>
+
+      <!-- Actions -->
+      <div class="profile-actions">
+        {#if isEditing}
+          <button class="btn btn-primary" onclick={saveProfile} disabled={isSaving}>
+            <Save size={18} /> {isSaving ? 'Saving…' : 'Save Changes'}
+          </button>
+          <button class="btn btn-secondary" onclick={cancelEditing}>
+            <X size={18} /> Cancel
+          </button>
+        {:else}
+          <button class="btn btn-primary" onclick={startEditing}>
+            <Settings size={18} /> Edit Profile
+          </button>
+          <button class="btn btn-outline" onclick={handleLogout}>
+            <LogOut size={18} /> Sign Out
+          </button>
+        {/if}
+      </div>
+
+    </div>
   </div>
 </div>
 
