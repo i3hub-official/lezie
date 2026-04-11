@@ -46,6 +46,11 @@ export const auth = betterAuth({
       username:    { type: 'string' },
       phoneNumber: { type: 'string' },
       pin:         { type: 'string' },
+      // Hash columns — computed in the before hook and written by Better Auth.
+      // Declared here so Better Auth includes them in its INSERT payload.
+      emailHash:    { type: 'string', required: false },
+      phoneHash:    { type: 'string', required: false },
+      usernameHash: { type: 'string', required: false },
     }
   },
 
