@@ -50,6 +50,13 @@
       "when": 1775853877953,
       "tag": "0006_careless_mantis",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1775907496527,
+      "tag": "0007_silky_juggernaut",
+      "breakpoints": true
     }
   ]
 }
