@@ -3,6 +3,7 @@
   import { env } from '$env/dynamic/public';
   import { pwaInfo } from 'virtual:pwa-info';
   import { goto } from '$app/navigation';
+  import { browser } from '$app/environment';
   import { authStore } from '$lib/stores/auth';
 
   import ShutdownPage from '$lib/components/ShutdownPage.svelte';
@@ -21,18 +22,24 @@
   // const REGION_BLOCKED   = env.PUBLIC_REGION_BLOCKED   === 'true';   // Currently not used
 
   let { children } = $props();
+
   let isAuthenticated = $state(false);
+  let isSuspended     = $state(false);
+  let userEmail       = $state('');
 
-  // For account suspension, pulled from auth store
-  let isSuspended = $state(false);
-  let userEmail   = $state('');
+  /**
+   * Blocks rendering until the auth store has resolved at least once.
+   * Prevents the flash where the page paints before the session is known.
+   * On the server (SSR) we skip the gate — it only applies in the browser.
+   */
+  let authReady = $state(!browser); // true on server, false until store resolves in browser
 
-  // Auth check
   $effect(() => {
     const unsubscribe = authStore.subscribe(s => {
       isAuthenticated = !!s.user;
       isSuspended     = s.user?.suspended ?? false;
       userEmail       = s.user?.email ?? '';
+      authReady       = true; // store has resolved — safe to paint
     });
 
     return unsubscribe;
@@ -62,75 +69,95 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 </svelte:head>
 
-<main class="min-h-screen antialiased text-slate-900 selection:bg-violet-100">
+<!--
+  Auth gate: hold rendering until the auth store has resolved its first value.
+  This prevents the signed-in UI or protected page content from flashing
+  before the redirect in hooks.server.ts takes effect.
+-->
+{#if !authReady}
+  <div class="auth-gate" aria-hidden="true"></div>
 
-  <!-- Global Navigation -->
-  {#if isAuthenticated}
-    <nav class="global-nav">
-      <div class="nav-container">
-        <div class="nav-brand" onclick={() => goto('/dashboard')}>
-          <button type="button" class="lz-logo">
-            <img src="/icons/lz_ico.png" alt="Lezie" class="lz-logo-img" width="32" height="32"/>
-            <span class="lz-logo-text">Lezie</span>
-          </button>
+{:else}
+  <main class="min-h-screen antialiased text-slate-900 selection:bg-violet-100">
+
+    <!-- Global Navigation -->
+    {#if isAuthenticated}
+      <nav class="global-nav">
+        <div class="nav-container">
+          <div class="nav-brand" onclick={() => goto('/dashboard')}>
+            <button type="button" class="lz-logo">
+              <img src="/icons/lz_ico.png" alt="Lezie" class="lz-logo-img" width="32" height="32"/>
+              <span class="lz-logo-text">Lezie</span>
+            </button>
+          </div>
+
+          <div class="nav-links">
+            <button class="nav-link" onclick={() => goto('/dashboard')}>Dashboard</button>
+            <button class="nav-link" onclick={() => goto('/map')}>Map</button>
+            <button class="nav-link" onclick={() => goto('/alerts')}>Alerts</button>
+            <button class="nav-link" onclick={() => goto('/statistics')}>Statistics</button>
+          </div>
+
+          <div class="nav-actions">
+            <button class="nav-icon-btn" onclick={() => goto('/profile')}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </button>
+            <button class="logout-btn" onclick={handleLogout}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              Sign Out
+            </button>
+          </div>
         </div>
+      </nav>
+    {/if}
 
-        <div class="nav-links">
-          <button class="nav-link" onclick={() => goto('/dashboard')}>Dashboard</button>
-          <button class="nav-link" onclick={() => goto('/map')}>Map</button>
-          <button class="nav-link" onclick={() => goto('/alerts')}>Alerts</button>
-          <button class="nav-link" onclick={() => goto('/statistics')}>Statistics</button>
-        </div>
+    <!-- Page Content -->
+    {#if SHUTDOWN_MODE}
+      <ShutdownPage />
 
-        <div class="nav-actions">
-          <button class="nav-icon-btn" onclick={() => goto('/profile')}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-          </button>
-          <button class="logout-btn" onclick={handleLogout}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
-            Sign Out
-          </button>
-        </div>
-      </div>
-    </nav>
-  {/if}
+    {:else if MAINTENANCE_MODE}
+      <MaintenancePage />
 
-  <!-- Page Content -->
-  {#if SHUTDOWN_MODE}
-    <ShutdownPage />
+    {:else if isSuspended}
+      <SuspendedPage email={userEmail} />
 
-  {:else if MAINTENANCE_MODE}
-    <MaintenancePage />
+    <!-- 
+      Region blocking logic is currently disabled 
+      Uncomment the lines below when you want to re-enable region restriction
+    -->
+    <!-- 
+    {:else if regionAllowed === null}
+      <RegionBlockedPage onAllowed={() => regionAllowed = true} />
 
-  {:else if isSuspended}
-    <SuspendedPage email={userEmail} />
+    {:else if regionAllowed === false}
+      <RegionBlockedPage />
+    -->
 
-  <!-- 
-    Region blocking logic is currently disabled 
-    Uncomment the lines below when you want to re-enable region restriction
-  -->
-  <!-- 
-  {:else if regionAllowed === null}
-    <RegionBlockedPage onAllowed={() => regionAllowed = true} />
+    {:else}
+      {@render children()}
+    {/if}
 
-  {:else if regionAllowed === false}
-    <RegionBlockedPage />
-  -->
+    <!-- Global Notifications -->
+    <CookieNotice />
+    <ToastContainer />
+    <ConfirmationModal />
 
-  {:else}
-    {@render children()}
-  {/if}
+  </main>
+{/if}
 
-  <!-- Global Notifications -->
-  <CookieNotice />
-  <ToastContainer />
-  <ConfirmationModal />
-
-</main>
+<style>
+  /* Matches your app background — invisible to the user, just blocks paint */
+  .auth-gate {
+    position: fixed;
+    inset: 0;
+    background: #fff;
+    z-index: 9999;
+  }
+</style>
