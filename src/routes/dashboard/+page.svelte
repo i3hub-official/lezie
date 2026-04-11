@@ -1,3 +1,4 @@
+
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
@@ -508,7 +509,7 @@
         {/if}
 
       {:else if CurrentPageComponent}
-        <svelte:component this={CurrentPageComponent} />
+  <svelte:component this={CurrentPageComponent} {data} />
       {:else}
         <div class="db-loading">
           <Loader2 size={28} class="db-spin" /><p>Loading…</p>
