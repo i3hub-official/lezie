@@ -43,7 +43,7 @@
 </svelte:head>
 
 <!-- FAB -->
-<a href="/report" class="fab">Report Incident</a>
+<a href="/signin" class="fab">Report Incident</a>
 
 <!-- NAV -->
 <nav class="nav">
