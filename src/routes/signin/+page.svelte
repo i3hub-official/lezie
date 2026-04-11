@@ -1,6 +1,8 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { browser } from '$app/environment';
   import { authClient } from '$lib/auth-client';
+  import { authStore } from '$lib/stores/auth';
   import { 
     Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight, ArrowLeft,
     MapPin, Users, Bell, User, Phone, Fingerprint, ChevronLeft,
@@ -14,10 +16,33 @@
     rememberMe: false
   });
   
-  let errors = $state<Record<string, string>>({});
-  let isLoading = $state(false);
+  let errors       = $state<Record<string, string>>({});
+  let isLoading    = $state(false);
   let showPassword = $state(false);
-  let touched = $state<Record<string, boolean>>({});
+  let touched      = $state<Record<string, boolean>>({});
+
+  /**
+   * Visibility gate — keeps the page hidden until we know the auth state.
+   * If the user is already signed in, goto('/dashboard') fires before
+   * anything is painted, so there is no flash at all.
+   *
+   * - false  → page is invisible (waiting for store to resolve)
+   * - true   → store has resolved AND user is not authenticated; safe to show
+   */
+  let visible = $state(!browser); // SSR: always visible (no JS flash risk)
+
+  $effect(() => {
+    const unsub = authStore.subscribe(s => {
+      if (s.user) {
+        // Already authenticated — redirect silently before any paint
+        goto('/dashboard', { replaceState: true });
+      } else {
+        // Not authenticated — reveal the page
+        visible = true;
+      }
+    });
+    return unsub;
+  });
   
   const getIdentifierType = (identifier: string): 'email' | 'username' | 'phone' => {
     if (/^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(identifier)) return 'email';
@@ -87,22 +112,23 @@
 
   const handlePasskeyLogin = async () => {
     isLoading = true;
+    errors = {};
     try {
       const { data, error } = await authClient.signIn.passkey();
       if (error) {
-        errors.submit = error.message;
+        errors.submit = error.message || 'Passkey authentication failed';
       } else {
         await goto('/dashboard');
       }
     } catch (err) {
-      errors.submit = 'Passkey authentication failed';
+      errors.submit = 'An unexpected error occurred during passkey login';
     } finally {
       isLoading = false;
     }
   };
   
   const goBackToIdentifier = () => { step = 'identifier'; errors = {}; };
-  const goBackToLanding = () => goto('/');
+  const goBackToLanding    = () => goto('/');
   
   const getIdentifierIcon = () => {
     const type = getIdentifierType(formData.identifier);
@@ -116,7 +142,8 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
 </svelte:head>
 
-<div class="si-page">
+<!-- Visibility gate: hidden until auth state is confirmed -->
+<div class="si-page" class:si-page--hidden={!visible}>
 
   <aside class="si-panel">
     <div class="si-panel-inner">
@@ -218,7 +245,6 @@
                     id="identifier"
                     placeholder="you@example.com, username, or +1 (234) 567-8900"
                     bind:value={formData.identifier}
-                    oninput={handleIdentifierInput}
                     onblur={() => { touched.identifier = true; errors.identifier = validateIdentifier().identifier; }}
                     class="si-input {errors.identifier && touched.identifier ? 'si-input--err' : ''}"
                     autocomplete="username"
@@ -291,40 +317,22 @@
               </div>
             </form>
 
-           {#if typeof window !== 'undefined' && window.PublicKeyCredential}
-  <div class="si-passkey-divider"><span>or continue with</span></div>
-  
-  <button 
-    type="button" 
-    class="si-passkey-btn" 
-    disabled={isLoading}
-    onclick={async () => {
-      isLoading = true;
-      errors = {}; // Clear previous errors
-      
-      try {
-        const { data, error } = await authClient.signIn.passkey();
-        
-        if (error) {
-          errors.submit = error.message || 'Passkey authentication failed';
-        } else {
-          goto('/dashboard');
-        }
-      } catch (err) {
-        errors.submit = 'An unexpected error occurred during passkey login';
-      } finally {
-        isLoading = false;
-      }
-    }}
-  >
-    {#if isLoading}
-      <span class="si-spinner"></span>
-    {:else}
-      <Fingerprint size={18} />
-      <span>Sign in with Passkey</span>
-    {/if}
-  </button>
-{/if}
+            {#if typeof window !== 'undefined' && window.PublicKeyCredential}
+              <div class="si-passkey-divider"><span>or continue with</span></div>
+              <button 
+                type="button" 
+                class="si-passkey-btn" 
+                disabled={isLoading}
+                onclick={handlePasskeyLogin}
+              >
+                {#if isLoading}
+                  <span class="si-spinner"></span>
+                {:else}
+                  <Fingerprint size={18} />
+                  <span>Sign in with Passkey</span>
+                {/if}
+              </button>
+            {/if}
 
           </div>
         {/if}
@@ -435,5 +443,9 @@
     .si-btn-back { width: 100%; justify-content: center; }
     .si-btn-next { width: 100%; }
     .si-back-home { font-size: 0.75rem; padding: 0.375rem 0.875rem; }
+  }
+.si-page--hidden {
+    opacity: 0;
+    pointer-events: none;
   }
 </style>
