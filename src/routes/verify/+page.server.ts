@@ -65,19 +65,13 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
     }
 
     const code      = tokenToCode(token);
-    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const hash      = createHash('sha256').update(token).digest('hex');
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-    // Store the code in the verifications table so ANY device/browser can validate it.
-    // Key: SHA-256 hash of the token (so the raw token isn't stored).
-    // Value: the 6-digit code.
-    // Expires: 15 minutes from now.
-    const tokenHash  = createHash('sha256').update(token).digest('hex');
-    const expiresAt  = new Date(Date.now() + 15 * 60 * 1000);
-
-    // Upsert — handles the case where the user clicks the link twice
+    // Store code in verifications table so any device/browser can validate it
     await db.insert(verifications).values({
-      id:         `vc_${tokenHash.slice(0, 24)}`,
-      identifier: `verify_code:${tokenHash}`,
+      id:         `vc_${hash.slice(0, 24)}`,
+      identifier: `verify_code:${hash}`,
       value:      code,
       expiresAt,
     }).onConflictDoUpdate({
@@ -85,11 +79,9 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
       set:    { value: code, expiresAt },
     });
 
-    if (dev) console.log('[VERIFY] ✅ code stored, expires:', expiresAt);
+    if (dev) console.log('[VERIFY] ✅ code stored:', code, '| expires:', expiresAt);
 
-    // Return the tokenHash so the client can store it in sessionStorage.
-    // The verify-email page uses it to look up the correct code in the DB.
-    return { status: 'success', code, tokenHash };
+    return { status: 'success', code };
 
   } catch (err: any) {
     console.error('[VERIFY] error:', err?.message ?? err);
