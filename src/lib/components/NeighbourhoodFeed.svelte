@@ -4,6 +4,7 @@
 
 <script lang="ts">
   import { onMount } from 'svelte';
+
   import {
     MapPin, Clock, AlertTriangle, Shield, Users,
     Flame, Car, Building, Volume2, AlertOctagon,
@@ -11,6 +12,7 @@
     Sparkles, Loader2, RefreshCw, Radio, ChevronDown,
     ChevronUp, TrendingUp, Zap, Eye, Filter
   } from 'lucide-svelte';
+import { haversineKm } from '$lib/server/db/geo';
 
   // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -107,66 +109,42 @@
   });
 
   async function loadFeed() {
-    isLoadingFeed = true;
+  isLoadingFeed = true;
 
-    // ── Real fetch (uncomment when API/DB is ready) ────────────────────────
-    //
-    // const params = new URLSearchParams();
-    // if (lat)           params.set('lat', String(lat));
-    // if (lng)           params.set('lng', String(lng));
-    // if (neighbourhood) params.set('neighbourhood', neighbourhood);
-    //
-    // const res = await fetch(`/api/feed?${params}`);
-    // feedItems = await res.json();
-    //
-    // ─────────────────────────────────────────────────────────────────────
+  const params = new URLSearchParams();
+  if (lat)           params.set('lat',           String(lat));
+  if (lng)           params.set('lng',           String(lng));
+  if (neighbourhood) params.set('neighbourhood', neighbourhood);
 
-    // Stub data — replace with real fetch above
-    await new Promise(r => setTimeout(r, 700));
-    feedItems = [
-      {
-        id: '1', type: 'incident', title: 'Suspicious men spotted near ATM',
-        body: 'Two men have been loitering around the GTBank ATM on Allen Avenue since 7pm. They match the description of suspects from last week\'s robbery.',
-        category: 'suspicious', severity: 'high',
-        location: 'Allen Avenue', distance_km: 0.4,
-        reported_at: new Date(Date.now() - 25 * 60000).toISOString(),
-        isAnonymous: false, author: 'John A.', reactions: 14, comments: 6,
-      },
-      {
-        id: '2', type: 'alert', title: 'Area flooded — avoid Obafemi Awolowo Road',
-        body: 'Heavy rain has caused flooding along Obafemi Awolowo Road. Vehicles are stuck. Divert via Toyin Street.',
-        category: 'other', severity: 'medium',
-        location: 'Obafemi Awolowo Road', distance_km: 0.9,
-        reported_at: new Date(Date.now() - 55 * 60000).toISOString(),
-        isAnonymous: false, author: 'Community Admin', reactions: 32, comments: 11,
-      },
-      {
-        id: '3', type: 'incident', title: 'Phone snatching on okada',
-        body: 'A man on a motorcycle snatched my phone at the junction by shoprite. Beige-coloured Bajaj, no plate.',
-        category: 'theft', severity: 'high',
-        location: 'Shoprite Junction', distance_km: 1.2,
-        reported_at: new Date(Date.now() - 2 * 3600000).toISOString(),
-        isAnonymous: true, reactions: 9, comments: 4,
-      },
-      {
-        id: '4', type: 'post', title: 'Neighbourhood watch meeting this Saturday',
-        body: 'Residents of GRA Phase 2 are invited to the monthly safety meeting at the community hall. 10am sharp. Let\'s plan together.',
-        location: 'GRA Phase 2 Community Hall', distance_km: 1.6,
-        reported_at: new Date(Date.now() - 5 * 3600000).toISOString(),
-        isAnonymous: false, author: 'Estate Security', reactions: 41, comments: 18,
-      },
-      {
-        id: '5', type: 'incident', title: 'Loud argument and gunshots heard',
-        body: 'Residents report hearing what sounded like gunshots around the back of the market. Police have been called.',
-        category: 'suspicious', severity: 'critical',
-        location: 'Behind Tejuosho Market', distance_km: 1.8,
-        reported_at: new Date(Date.now() - 8 * 3600000).toISOString(),
-        isAnonymous: true, reactions: 55, comments: 23,
-      },
-    ];
-
-    isLoadingFeed = false;
+  const res = await fetch(`/api/reports/map?${params}&dateRange=day`);
+  if (res.ok) {
+    const raw = await res.json();
+    // Map map-API shape to FeedItem shape
+    feedItems = raw.map((r: any) => ({
+      id:          r.id,
+      type:        'incident' as const,
+      title:       r.title,
+      body:        r.description,
+      category:    r.category,
+      severity:    r.severity,
+      location:    r.location,
+      distance_km: (lat && lng)
+        ? haversineKm(lat, lng, r.lat, r.lng)
+        : undefined,
+      reported_at: r.time,
+    }))
+    // Enforce 2km radius on client side as final guard
+    .filter((item: any) =>
+      item.distance_km === undefined || item.distance_km <= 2
+    )
+    .sort((a: any, b: any) =>
+      (a.distance_km ?? 99) - (b.distance_km ?? 99)
+    );
   }
+
+  isLoadingFeed = false;
+}
+        
 
   // ── AI Summarise ──────────────────────────────────────────────────────────
 
