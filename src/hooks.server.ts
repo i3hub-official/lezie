@@ -22,6 +22,7 @@ const ROUTE_CONFIG = {
     '/api/login-resolver',
     '/api/signin',
 '/api/health',
+'/api/statistics',
     '/_app',
     '/favicon',
   ],
