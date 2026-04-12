@@ -2,9 +2,19 @@
   import { goto } from '$app/navigation';
   import { ShieldCheck, AlertCircle, Copy, Check, ArrowRight } from 'lucide-svelte';
 
+  import { onMount } from 'svelte';
+
   let { data } = $props();
 
   let copied = $state(false);
+
+  onMount(() => {
+    // Store the tokenHash so the verify-email page can validate the entered code
+    // from any browser/device — not tied to a cookie on this specific browser.
+    if (data.status === 'success' && data.tokenHash) {
+      sessionStorage.setItem('_vth', data.tokenHash);
+    }
+  });
 
   async function copyCode() {
     if (!data.code) return;
