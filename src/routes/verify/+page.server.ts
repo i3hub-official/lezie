@@ -1,8 +1,17 @@
 // src/routes/verify/+page.server.ts
+//
+// User lands here after clicking the link in their email.
+// We validate the token with Better Auth, derive a 6-digit display code,
+// store it server-side in the session, then show it to the user.
+// The code never travels over any channel — only the user's eyes carry it back.
+
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { auth } from '$lib/server/auth';
 import { dev } from '$app/environment';
 
+// Derive a 6-digit code deterministically from the token.
+// Same token always produces the same code — no storage needed.
 function tokenToCode(token: string): string {
   const positions = [2, 7, 13, 19, 26, 31];
   return positions
@@ -10,11 +19,11 @@ function tokenToCode(token: string): string {
     .join('');
 }
 
-export const load: PageServerLoad = async ({ url, request }) => {
+export const load: PageServerLoad = async ({ url, request, cookies }) => {
   const token = url.searchParams.get('token');
 
   if (!token) {
-    return { status: 'invalid', code: null, message: 'No verification token provided.' };
+    redirect(303, '/signup');
   }
 
   try {
@@ -25,36 +34,39 @@ export const load: PageServerLoad = async ({ url, request }) => {
       )
     );
 
-    // Log the raw response in dev so we know exactly what Better Auth returns
     if (dev) {
-      const clone = response.clone();
-      const text  = await clone.text().catch(() => '(unreadable)');
-      console.log(`[VERIFY] status=${response.status} body=${text.slice(0, 300)}`);
+      const text = await response.clone().text().catch(() => '');
+      console.log(`[VERIFY] status=${response.status} body=${text.slice(0, 200)}`);
     }
 
-    // Better Auth redirects (302/303) on success, returns 200 with JSON on some configs.
-    // It returns 400 for invalid/expired tokens and 500 for server errors.
-    if (response.status === 200 || response.status === 302 || response.status === 303) {
-      return { status: 'success', code: tokenToCode(token), message: null };
+    const success = response.status === 200
+      || response.status === 302
+      || response.status === 303;
+
+    if (!success) {
+      const data = await response.json().catch(() => ({}));
+      const message = response.status === 400
+        ? 'This link has already been used or has expired.'
+        : ((data as any)?.message ?? 'Verification failed.');
+      return { status: 'error', message };
     }
 
-    if (response.status === 400) {
-      return {
-        status: 'expired',
-        code:    null,
-        message: 'This link has already been used or has expired.'
-      };
-    }
+    // Derive the code and store it in a short-lived signed cookie.
+    // The verify-email page reads this to validate what the user types.
+    const code = tokenToCode(token);
 
-    const data = await response.json().catch(() => ({}));
-    return {
-      status:  'error',
-      code:    null,
-      message: (data as any)?.message ?? `Verification failed (${response.status}).`
-    };
+    cookies.set('_vc', code, {
+      path:     '/api/verify-code',
+      httpOnly: true,
+      sameSite: 'strict',
+      secure:   !dev,
+      maxAge:   60 * 15, // 15 minutes to enter the code
+    });
+
+    return { status: 'success', code };
 
   } catch (err) {
     console.error('[VERIFY]', err);
-    return { status: 'error', code: null, message: 'Something went wrong. Please try again.' };
+    return { status: 'error', message: 'Something went wrong. Please try again.' };
   }
 };
