@@ -59,17 +59,23 @@ export const auth = betterAuth({
     autoSignIn: true,
     requireEmailVerification: true,
 
-    sendVerificationEmail: async ({ user, url }) => {
-      if (dev) console.log(`[AUTH] Verification -> ${user.email} : ${url}`);
-      const { subject, html } = verificationEmailTemplate({ url, name: user.name });
-      await sendEmail({ to: user.email, subject, html });
-    },
-
     sendResetPassword: async ({ user, url }) => {
       if (dev) console.log(`[AUTH] Password reset -> ${user.email} : ${url}`);
       const { subject, html } = passwordResetTemplate({ url, name: user.name });
       await sendEmail({ to: user.email, subject, html });
     },
+  },
+
+  // emailVerification must be a top-level key for auth.api.sendVerificationEmail
+  // and the /api/auth/send-verification-email endpoint to work correctly.
+  emailVerification: {
+    sendVerificationEmail: async ({ user, url }) => {
+      if (dev) console.log(`[AUTH] Verification -> ${user.email} : ${url}`);
+      const { subject, html } = verificationEmailTemplate({ url, name: user.name });
+      await sendEmail({ to: user.email, subject, html });
+    },
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
   },
 
   advanced: {
