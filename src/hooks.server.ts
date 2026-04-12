@@ -19,7 +19,6 @@ import { dev } from '$app/environment';
  */
 const ROUTE_CONFIG = {
   PUBLIC_EXACT: new Set([
-'/',
     '/signin',
     '/signup',
     '/forgot-password',
@@ -34,6 +33,7 @@ const ROUTE_CONFIG = {
     '/api/create-email-ref',    // called immediately after signup before cookie propagates
     '/api/verify-code',         // validates the entered code against the httpOnly cookie
     '/api/login-resolver',      // resolves email/username/phone to email for signin
+    '/api/signin',              // custom signin endpoint — bypasses Zod email validation
     '/_app',                    // SvelteKit build assets
     '/favicon',                 // Favicon requests
   ],
