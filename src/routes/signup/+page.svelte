@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import { authStore } from '$lib/stores/auth';
 import { authClient } from '$lib/auth-client';
+import { browser } from '$app/environment';
 
   import {
     Mail, Lock, Eye, EyeOff, User, Phone, Calendar,
@@ -111,6 +112,7 @@ let touchedTerms  = $state(false);
 
   // ── Geolocation → dial code ─────────────────────────────
   onMount(async () => {
+if (!browser) return;  // ← extra guard
     try {
       const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
       if (!res.ok) return;
