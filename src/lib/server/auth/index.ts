@@ -116,6 +116,7 @@ export const auth = betterAuth({
         after: async (user) => {
           const startTime = Date.now();
           try {
+            const { nanoid } = await import('nanoid');
             const nameParts = user.name?.split(' ') || [];
             const firstName = nameParts[0] || '';
             const lastName  = nameParts.slice(1).join(' ') || '';
@@ -128,13 +129,16 @@ export const auth = betterAuth({
               isActive: true, lastActive: new Date(),
             }).onConflictDoNothing();
 
+            // userProfiles.id and userPreferences.id have no DB default —
+            // generate NanoIDs explicitly to match the app-wide pattern.
             await db.insert(userProfiles).values({
-              userId: user.id as any, firstName, lastName, updatedAt: new Date(),
+              id: nanoid(), userId: user.id as any,
+              firstName, lastName, updatedAt: new Date(),
             }).onConflictDoNothing();
 
             await db.insert(userPreferences).values({
-              userId: user.id as any, alertRadius: 5,
-              notifyCritical: true, notifyHigh: true,
+              id: nanoid(), userId: user.id as any,
+              alertRadius: 5, notifyCritical: true, notifyHigh: true,
             }).onConflictDoNothing();
 
             if (dev) console.log(`[AUTH:SYNC] Synced ${user.id} (${Date.now() - startTime}ms)`);
