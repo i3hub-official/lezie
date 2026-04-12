@@ -47,28 +47,40 @@
     }
   }
 
-  async function submitCode() {
+ async function submitCode() {
     const code = codeDigits.join('');
     if (code.length !== 6) return;
 
-    verifying  = true;
-    codeError  = '';
+    verifying = true;
+    codeError = '';
+
+    // Read the tokenHash stored by the /verify page
+    const tokenHash = sessionStorage.getItem('_vth');
+
+    if (!tokenHash) {
+      codeError = 'Session expired. Please click the verification link again.';
+      verifying = false;
+      return;
+    }
 
     try {
       const res = await fetch('/api/verify-code', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ code }),
+        body:    JSON.stringify({ code, tokenHash }),
       });
 
       const body = await res.json();
 
       if (!res.ok) {
-        codeError   = body.error ?? 'Incorrect code.';
-        codeDigits  = ['', '', '', '', '', ''];
+        codeError  = body.error ?? 'Incorrect code.';
+        codeDigits = ['', '', '', '', '', ''];
         inputRefs[0]?.focus();
         return;
       }
+
+      // Clear the stored hash — it's been used
+      sessionStorage.removeItem('_vth');
 
       codeSuccess = true;
       setTimeout(() => goto('/dashboard'), 1200);
