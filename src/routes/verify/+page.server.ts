@@ -11,7 +11,7 @@ function tokenToCode(token: string): string {
     .join('');
 }
 
-export const load: PageServerLoad = async ({ url, cookies }) => {
+export const load: PageServerLoad = async ({ url, request, cookies }) => {
   const token = url.searchParams.get('token');
 
   if (!token) {
@@ -19,32 +19,50 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
   }
 
   try {
-    // Use the internal API directly — bypasses Zod email validation
-    // which chokes on the encrypted email stored in the JWT payload.
-    await auth.api.verifyEmail({
-      query: { token },
-    });
+    const response = await auth.handler(
+      new Request(
+        new URL(`/api/auth/verify-email?token=${encodeURIComponent(token)}`, url.origin),
+        { method: 'GET', headers: request.headers }
+      )
+    );
+
+    // Always log so we can see exactly what Better Auth returns
+    const bodyText = await response.clone().text().catch(() => '');
+    console.log(`[VERIFY] status=${response.status}`);
+    console.log(`[VERIFY] body=${bodyText.slice(0, 400)}`);
+    console.log(`[VERIFY] location=${response.headers.get('location') ?? 'none'}`);
+
+    // Better Auth can return:
+    //   200 — success with JSON body
+    //   302/303 — redirect on success (callbackURL)
+    //   400 — invalid/expired token
+    //   500 — server error
+    // Treat anything that isn't 4xx/5xx as success
+    const failed = response.status >= 400;
+
+    if (failed) {
+      let message = 'This link has already been used or has expired.';
+      try {
+        const data = JSON.parse(bodyText);
+        if (data?.message) message = data.message;
+      } catch { /* use default */ }
+      return { status: 'error', message };
+    }
 
     const code = tokenToCode(token);
 
     cookies.set('_vc', code, {
       path:     '/api/verify-code',
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: 'lax',   // changed from strict — strict blocks cross-tab cookie reads
       secure:   !dev,
       maxAge:   60 * 15,
     });
 
     return { status: 'success', code };
 
-  } catch (err: any) {
+  } catch (err) {
     console.error('[VERIFY]', err);
-
-    const message =
-      err?.body?.message === 'Token has expired' || err?.status === 400
-        ? 'This link has already been used or has expired.'
-        : 'Something went wrong. Please try again.';
-
-    return { status: 'error', message };
+    return { status: 'error', message: 'Something went wrong. Please try again.' };
   }
 };
