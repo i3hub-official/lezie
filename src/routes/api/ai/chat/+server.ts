@@ -109,11 +109,6 @@ async function fetchNearbyIncidents(
     .slice(0, 10);
 }
 
-  // Stub — returns empty until DB is wired
-  console.warn('[chat] fetchNearbyIncidents: using stub, no real DB query yet.');
-  return [];
-}
-
 // ─── Build Context Block from Nearby Incidents ────────────────────────────────
 
 function buildIncidentContext(incidents: NearbyIncident[]): string {
