@@ -2,10 +2,10 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
-import { authUsers } from '$lib/server/db/auth-schema';
+import { authUsers, verifications } from '$lib/server/db/auth-schema';
 import { eq } from 'drizzle-orm';
 import { dev } from '$app/environment';
-import { createHmac, timingSafeEqual } from 'crypto';
+import { createHmac, timingSafeEqual, createHash } from 'crypto';
 import { env } from '$env/dynamic/private';
 
 function tokenToCode(token: string): string {
@@ -15,34 +15,20 @@ function tokenToCode(token: string): string {
     .join('');
 }
 
-// Verify a Better Auth JWT (HS256) and return its payload.
-// Better Auth signs tokens with BETTER_AUTH_SECRET.
 function verifyJwt(token: string): { email: string; exp: number } | null {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
-
     const [headerB64, payloadB64, sigB64] = parts;
-    const secret  = env.BETTER_AUTH_SECRET;
-    const signing  = `${headerB64}.${payloadB64}`;
-
-    // Verify HMAC-SHA256 signature
-    const expected = createHmac('sha256', secret)
-      .update(signing)
+    const expected = createHmac('sha256', env.BETTER_AUTH_SECRET)
+      .update(`${headerB64}.${payloadB64}`)
       .digest('base64url');
-
-    const sigBuf = Buffer.from(sigB64,  'base64url');
+    const sigBuf = Buffer.from(sigB64,   'base64url');
     const expBuf = Buffer.from(expected, 'base64url');
-
     if (sigBuf.length !== expBuf.length) return null;
     if (!timingSafeEqual(sigBuf, expBuf)) return null;
-
-    // Decode payload
-    const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'));
-    return payload;
-  } catch {
-    return null;
-  }
+    return JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'));
+  } catch { return null; }
 }
 
 export const load: PageServerLoad = async ({ url, cookies }) => {
@@ -52,12 +38,10 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
   try {
     const payload = verifyJwt(token);
 
-    if (dev) {
-      console.log('[VERIFY] payload:', payload
-        ? { email: payload.email?.slice(0, 20) + '...', exp: new Date(payload.exp * 1000) }
-        : 'null — invalid signature'
-      );
-    }
+    if (dev) console.log('[VERIFY] payload:', payload
+      ? { email: payload.email?.slice(0, 20) + '...', exp: new Date(payload.exp * 1000) }
+      : 'invalid signature'
+    );
 
     if (!payload) {
       return { status: 'error', message: 'Invalid verification link.' };
@@ -67,7 +51,7 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
       return { status: 'error', message: 'This link has expired. Please request a new one.' };
     }
 
-    // payload.email is the encrypted email — match it against the DB directly
+    // Mark email as verified
     const updated = await db
       .update(authUsers)
       .set({ emailVerified: true })
@@ -80,17 +64,32 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
       return { status: 'error', message: 'Account not found or already verified.' };
     }
 
-    const code = tokenToCode(token);
+    const code      = tokenToCode(token);
+    const tokenHash = createHash('sha256').update(token).digest('hex');
 
-    cookies.set('_vc', code, {
-      path:     '/api/verify-code',
-      httpOnly: true,
-      sameSite: 'lax',
-      secure:   !dev,
-      maxAge:   60 * 15,
+    // Store the code in the verifications table so ANY device/browser can validate it.
+    // Key: SHA-256 hash of the token (so the raw token isn't stored).
+    // Value: the 6-digit code.
+    // Expires: 15 minutes from now.
+    const tokenHash  = createHash('sha256').update(token).digest('hex');
+    const expiresAt  = new Date(Date.now() + 15 * 60 * 1000);
+
+    // Upsert — handles the case where the user clicks the link twice
+    await db.insert(verifications).values({
+      id:         `vc_${tokenHash.slice(0, 24)}`,
+      identifier: `verify_code:${tokenHash}`,
+      value:      code,
+      expiresAt,
+    }).onConflictDoUpdate({
+      target: verifications.id,
+      set:    { value: code, expiresAt },
     });
 
-    return { status: 'success', code };
+    if (dev) console.log('[VERIFY] ✅ code stored, expires:', expiresAt);
+
+    // Return the tokenHash so the client can store it in sessionStorage.
+    // The verify-email page uses it to look up the correct code in the DB.
+    return { status: 'success', code, tokenHash };
 
   } catch (err: any) {
     console.error('[VERIFY] error:', err?.message ?? err);
