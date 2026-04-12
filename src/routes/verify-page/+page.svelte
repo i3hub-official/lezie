@@ -30,7 +30,7 @@
   <div class="vp-shell">
 
     <a href="/" class="vp-logo-link">
-      <img src="/icons/lz_logo_t.png" alt="Lezie" class="vp-logo" />
+      <img src="/icons/lz_ico.png" alt="Lezie" class="vp-logo" />
     </a>
 
     <div class="vp-card">
