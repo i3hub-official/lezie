@@ -37,7 +37,7 @@ async function verifyPassword(plain: string, stored: string): Promise<boolean> {
     // Better Auth uses @node-rs/bcrypt or its own scrypt — try bcrypt format
     // If the hash starts with $2b$, it's bcrypt
     if (stored.startsWith('$2')) {
-      const bcrypt = await import('bcrypt').catch(() => null);
+      const bcrypt = await import('bcryptjs').catch(() => null);
       if (bcrypt) return bcrypt.compare(plain, stored);
     }
 
