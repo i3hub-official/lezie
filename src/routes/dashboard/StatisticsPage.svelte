@@ -13,7 +13,19 @@
   } from 'lucide-svelte';
 
   let isLoading = $state(true);
+ 
   let timeRange = $state('month');
+
+  // Re-fetch and re-render charts when timeRange changes
+  $effect(() => {
+    const range = timeRange; // track dependency
+    if (!isLoading) {
+      loadStatistics().then(() => {
+        setTimeout(() => initCharts(), 100);
+      });
+    }
+  });
+
   let selectedCategory = $state('all');
   let selectedSeverity = $state('all');
   let showFilters = $state(false);
@@ -71,74 +83,44 @@
   });
 
   async function loadStatistics() {
-    await new Promise(resolve => setTimeout(resolve, 800));
+    try {
+      const res = await fetch(`/api/statistics?timeRange=${timeRange}`);
+      if (!res.ok) throw new Error(`Statistics API error (${res.status})`);
+      const data = await res.json();
 
-    stats = {
-      totalIncidents: 1247,
-      verifiedReports: 892,
-      avgResponseTime: 12.4,
-      safetyScore: 86,
-      activeUsers: 3450,
-      communityReports: 425
-    };
+      // ── Stats ─────────────────────────────────────────────────────────────
+      stats = {
+        totalIncidents:   data.communityStats.totalIncidents,
+        verifiedReports:  data.communityStats.verifiedReports,
+        avgResponseTime:  data.communityStats.avgResponseTime,
+        safetyScore:      data.communityStats.safetyScore,
+        activeUsers:      data.communityStats.activeUsers,
+        communityReports: data.communityStats.communityReports,
+      };
 
-    incidentTrend = [
-      { month: 'Jan', count: 98, verified: 72 },
-      { month: 'Feb', count: 112, verified: 84 },
-      { month: 'Mar', count: 105, verified: 78 },
-      { month: 'Apr', count: 134, verified: 96 },
-      { month: 'May', count: 128, verified: 91 },
-      { month: 'Jun', count: 145, verified: 103 },
-      { month: 'Jul', count: 156, verified: 112 },
-      { month: 'Aug', count: 142, verified: 101 },
-      { month: 'Sep', count: 138, verified: 99 },
-      { month: 'Oct', count: 121, verified: 87 },
-      { month: 'Nov', count: 115, verified: 82 },
-      { month: 'Dec', count: 108, verified: 77 }
-    ];
+      // ── Charts ────────────────────────────────────────────────────────────
+      incidentTrend        = data.incidentTrend;
+      categoryDistribution = data.categoryDistribution;
+      severityDistribution = data.severityDistribution;
+      topLocations         = data.topLocations;
+      userEngagement       = data.userEngagement;
 
-    categoryDistribution = [
-      { category: 'Suspicious', count: 423, percentage: 33.9, color: '#F59E0B' },
-      { category: 'Theft', count: 287, percentage: 23.0, color: '#EF4444' },
-      { category: 'Vandalism', count: 198, percentage: 15.9, color: '#F97316' },
-      { category: 'Accident', count: 156, percentage: 12.5, color: '#F59E0B' },
-      { category: 'Noise', count: 98, percentage: 7.9, color: '#8B5CF6' },
-      { category: 'Fire', count: 85, percentage: 6.8, color: '#DC2626' }
-    ];
+      // responseTimes has no live data yet — keep static until
+      // response_time column is added to reports table
+      responseTimes = [
+        { category: 'Fire',       time: 5.2,  target: 8,  color: '#DC2626' },
+        { category: 'Critical',   time: 6.8,  target: 10, color: '#EF4444' },
+        { category: 'Theft',      time: 12.4, target: 15, color: '#EF4444' },
+        { category: 'Accident',   time: 10.1, target: 12, color: '#F59E0B' },
+        { category: 'Suspicious', time: 14.7, target: 20, color: '#F59E0B' },
+        { category: 'Vandalism',  time: 16.3, target: 24, color: '#F97316' },
+        { category: 'Noise',      time: 18.2, target: 30, color: '#8B5CF6' },
+      ];
 
-    severityDistribution = [
-      { severity: 'Low', count: 445, percentage: 35.7, color: '#10B981' },
-      { severity: 'Medium', count: 389, percentage: 31.2, color: '#F59E0B' },
-      { severity: 'High', count: 267, percentage: 21.4, color: '#F97316' },
-      { severity: 'Critical', count: 146, percentage: 11.7, color: '#EF4444' }
-    ];
-
-    responseTimes = [
-      { category: 'Fire', time: 5.2, target: 8, color: '#DC2626' },
-      { category: 'Critical', time: 6.8, target: 10, color: '#EF4444' },
-      { category: 'Theft', time: 12.4, target: 15, color: '#EF4444' },
-      { category: 'Accident', time: 10.1, target: 12, color: '#F59E0B' },
-      { category: 'Suspicious', time: 14.7, target: 20, color: '#F59E0B' },
-      { category: 'Vandalism', time: 16.3, target: 24, color: '#F97316' },
-      { category: 'Noise', time: 18.2, target: 30, color: '#8B5CF6' }
-    ];
-
-    topLocations = [
-      { location: 'Downtown', count: 234, trend: '+12%' },
-      { location: 'Maple Street', count: 187, trend: '+8%' },
-      { location: 'Central Park', count: 156, trend: '-3%' },
-      { location: 'West End', count: 143, trend: '+15%' },
-      { location: 'North District', count: 128, trend: '+5%' }
-    ];
-
-    userEngagement = [
-      { month: 'Jan', reports: 89, verifications: 234, comments: 156 },
-      { month: 'Feb', reports: 102, verifications: 267, comments: 178 },
-      { month: 'Mar', reports: 95, verifications: 245, comments: 165 },
-      { month: 'Apr', reports: 121, verifications: 312, comments: 201 },
-      { month: 'May', reports: 115, verifications: 298, comments: 189 },
-      { month: 'Jun', reports: 134, verifications: 345, comments: 223 }
-    ];
+    } catch (err) {
+      console.error('[StatisticsPage] loadStatistics failed:', err);
+      // Keep zeroed defaults on failure so the page still renders
+    }
   }
 
   function initCharts() {
