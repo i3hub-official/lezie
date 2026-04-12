@@ -28,6 +28,8 @@ export const reportStatusEnum = pgEnum('report_status', ['reported', 'investigat
 export const notificationTypeEnum = pgEnum('notification_type', ['alert', 'verification', 'system']);
 export const flagTypeEnum = pgEnum('flag_type', ['travel_anomaly', 'multiple_reports', 'suspicious_pattern']);
 export const mediaTypeEnum = pgEnum('media_type', ['image', 'video', 'audio']);
+export const alertZoneStatusEnum = pgEnum('alert_zone_status', ['active', 'inactive']);
+
 
 // ==================== TABLES WITH INDEXES ====================
 
@@ -227,6 +229,26 @@ export const savedLocations = pgTable('saved_locations', {
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
+export const alertZones = pgTable('alert_zones', {
+  id:                uuid('id').primaryKey().defaultRandom(),
+  userId:            text('user_id').references(() => users.id).notNull(),
+  name:              varchar('name', { length: 255 }).notNull(),
+  radius:            integer('radius').default(2).notNull(),        // km, max 2
+  categories:        jsonb('categories').notNull().$type<string[]>(),
+  severity:          jsonb('severity').notNull().$type<string[]>(),
+  isActive:          boolean('is_active').default(true).notNull(),
+  locationLabel:     varchar('location_label', { length: 255 }),
+  lat:               text('lat'),                                   // stored as text to avoid float precision issues
+  lng:               text('lng'),
+  lastTriggered:     timestamp('last_triggered'),
+  notificationCount: integer('notification_count').default(0).notNull(),
+  createdAt:         timestamp('created_at').defaultNow().notNull(),
+  updatedAt:         timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  index('alert_zones_user_idx').on(table.userId),
+  index('alert_zones_active_idx').on(table.isActive),
+]);
+
 // ==================== RELATIONS ====================
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -248,7 +270,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   notifications: many(notifications),
   sessions: many(sessions),
   identityFlags: many(identityFlags),
-  savedLocations: many(savedLocations)
+  savedLocations: many(savedLocations),
+alertZones: many(alertZones)
 }));
 
 export const reportsRelations = relations(reports, ({ one, many }) => ({
@@ -266,4 +289,11 @@ export const reportsRelations = relations(reports, ({ one, many }) => ({
   }),
   media: many(reportMedia),
   comments: many(reportComments)
+}));
+
+export const alertZonesRelations = relations(alertZones, ({ one }) => ({
+  user: one(users, {
+    fields: [alertZones.userId],
+    references: [users.id],
+  }),
 }));
