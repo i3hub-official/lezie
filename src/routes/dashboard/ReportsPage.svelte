@@ -21,6 +21,27 @@ import { browser } from '$app/environment';
   let category = $state('');
   let severity = $state('medium');
   let isAnonymous = $state(false);
+
+let aiAnalysis        = $state<null | {
+    category: string;
+    severity: string;
+    severity_score: number;
+    tags: string[];
+    summary: string;
+    recommended_action: string;
+    prevention_tips: string[];
+    confidence: number;
+  }>(null);
+  let isAnalysing       = $state(false);
+  let analysisError     = $state('');
+
+  // Severity colour map (matches ai.config.ts SEVERITY_COLOURS)
+  const severityColours: Record<string, string> = {
+    low:      '#10B981',
+    medium:   '#F59E0B',
+    high:     '#F97316',
+    critical: '#EF4444',
+  };
   
   // User's fixed location (auto-detected, cannot be edited)
   let userLocation = $state<{ lat: number; lng: number } | null>(null);
@@ -245,8 +266,37 @@ if (!query.trim() || query.length < 3) {
       console.log('Submitting report:', reportData);
       
       await new Promise(r => setTimeout(r, 1500));
-      success = true;
-      setTimeout(() => goto('/dashboard'), 2000);
+
+      // ── AI analysis ──────────────────────────────────────────────────────
+      isAnalysing = true;
+      try {
+        const aiRes = await fetch('/api/ai/analyse-report', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title,
+            description,
+            location: userLocationDetails.city
+              ? `${userLocationDetails.city}, ${userLocationDetails.state}`
+              : undefined,
+            reported_at: new Date().toISOString(),
+          }),
+        });
+
+        if (aiRes.ok) {
+          aiAnalysis = await aiRes.json();
+        } else {
+          analysisError = 'AI analysis unavailable — report still submitted.';
+        }
+      } catch {
+        analysisError = 'AI analysis unavailable — report still submitted.';
+      } finally {
+        isAnalysing = false;
+      }
+success = true;
+      // Give user time to read the AI analysis before redirecting
+      setTimeout(() => goto('/dashboard'), aiAnalysis ? 8000 : 3000);
+
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to submit report';
     } finally {
@@ -269,6 +319,91 @@ if (!query.trim() || query.length < 3) {
       <!-- Success State -->
       {#if success}
         <div class="rp-card rp-success">
+
+<!-- AI Analysis Results -->
+        {#if isAnalysing}
+          <div class="rp-card rp-ai-card">
+            <div class="rp-ai-loading">
+              <Loader2 size={22} class="rp-spinning" />
+              <span>Analysing your report with AI…</span>
+            </div>
+          </div>
+
+        {:else if aiAnalysis}
+          <div class="rp-card rp-ai-card">
+
+            <!-- AI card header -->
+            <div class="rp-ai-head">
+              <div class="rp-ai-badge">
+                <TrendingUp size={15} />
+                <span>AI Analysis</span>
+              </div>
+              <span class="rp-ai-confidence">
+                {Math.round(aiAnalysis.confidence * 100)}% confidence
+              </span>
+            </div>
+
+            <!-- Severity score -->
+            <div class="rp-ai-severity"
+              style="background:{severityColours[aiAnalysis.severity]}18;
+                     border-color:{severityColours[aiAnalysis.severity]}40;">
+              <div class="rp-ai-score-ring"
+                style="--ring-color:{severityColours[aiAnalysis.severity]}">
+                <span>{aiAnalysis.severity_score}</span>
+                <small>/10</small>
+              </div>
+              <div>
+                <strong style="color:{severityColours[aiAnalysis.severity]}">
+                  {aiAnalysis.severity.charAt(0).toUpperCase() + aiAnalysis.severity.slice(1)} Severity
+                </strong>
+                <p class="rp-ai-category">Category: {aiAnalysis.category.replace(/_/g, ' ')}</p>
+              </div>
+            </div>
+
+            <!-- Summary -->
+            <p class="rp-ai-summary">{aiAnalysis.summary}</p>
+
+            <!-- Tags -->
+            {#if aiAnalysis.tags.length > 0}
+              <div class="rp-ai-tags">
+                {#each aiAnalysis.tags as tag}
+                  <span class="rp-ai-tag">{tag}</span>
+                {/each}
+              </div>
+            {/if}
+
+            <!-- Recommended action -->
+            <div class="rp-ai-rec">
+              <Shield size={14} />
+              <div>
+                <strong>Recommended Action</strong>
+                <p>{aiAnalysis.recommended_action}</p>
+              </div>
+            </div>
+
+            <!-- Prevention tips -->
+            {#if aiAnalysis.prevention_tips.length > 0}
+              <div class="rp-ai-tips">
+                <strong>Prevention Tips</strong>
+                <ul>
+                  {#each aiAnalysis.prevention_tips as tip}
+                    <li>
+                      <span class="rp-ai-tip-dot"></span>
+                      {tip}
+                    </li>
+                  {/each}
+                </ul>
+              </div>
+            {/if}
+
+          </div>
+
+        {:else if analysisError}
+          <div class="rp-card rp-ai-card rp-ai-card--error">
+            <AlertCircle size={15} />
+            <span>{analysisError}</span>
+          </div>
+        {/if}
           <div class="rp-success-icon">
             <CheckCircle size={44} strokeWidth={1.5} />
           </div>
@@ -1044,5 +1179,194 @@ if (!query.trim() || query.length < 3) {
   @media (max-width: 400px) {
     .rp-severity-grid { grid-template-columns: 1fr; }
     .rp-category-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── AI Analysis Card ──────────────────────────────────────────────────── */
+  .rp-ai-card {
+    animation: stepIn .4s ease;
+    border-color: var(--primary-border);
+    background: linear-gradient(135deg, var(--primary-bg) 0%, white 100%);
+  }
+
+  .rp-ai-card--error {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .75rem;
+    color: #92400e;
+    background: #fef3c7;
+    border-color: #fde68a;
+  }
+
+  .rp-ai-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    padding: 1.25rem;
+    font-size: .875rem;
+    color: var(--primary-color);
+  }
+
+  .rp-ai-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: .75rem;
+    border-bottom: 1px solid var(--primary-border);
+  }
+
+  .rp-ai-badge {
+    display: flex;
+    align-items: center;
+    gap: .375rem;
+    font-size: .8125rem;
+    font-weight: 700;
+    color: var(--primary-color);
+  }
+
+  .rp-ai-confidence {
+    font-size: .688rem;
+    color: #64748b;
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: .2rem .625rem;
+    border-radius: 9999px;
+  }
+
+  .rp-ai-severity {
+    display: flex;
+    align-items: center;
+    gap: .875rem;
+    padding: .875rem;
+    border-radius: .875rem;
+    border: 1px solid;
+    margin-bottom: .875rem;
+  }
+
+  .rp-ai-score-ring {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 3px solid var(--ring-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: white;
+  }
+
+  .rp-ai-score-ring span {
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--dark-color);
+  }
+
+  .rp-ai-score-ring small {
+    font-size: .5rem;
+    color: #94a3b8;
+  }
+
+  .rp-ai-severity strong {
+    display: block;
+    font-size: .875rem;
+    margin-bottom: .125rem;
+  }
+
+  .rp-ai-category {
+    font-size: .75rem;
+    color: #64748b;
+    text-transform: capitalize;
+    margin: 0;
+  }
+
+  .rp-ai-summary {
+    font-size: .8125rem;
+    color: #334155;
+    line-height: 1.6;
+    margin-bottom: .875rem;
+  }
+
+  .rp-ai-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .375rem;
+    margin-bottom: .875rem;
+  }
+
+  .rp-ai-tag {
+    font-size: .625rem;
+    font-weight: 500;
+    padding: .25rem .625rem;
+    background: white;
+    border: 1px solid var(--primary-border);
+    color: var(--primary-color);
+    border-radius: .375rem;
+    text-transform: capitalize;
+  }
+
+  .rp-ai-rec {
+    display: flex;
+    align-items: flex-start;
+    gap: .625rem;
+    padding: .75rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: .75rem;
+    margin-bottom: .875rem;
+  }
+
+  .rp-ai-rec svg { color: var(--primary-color); flex-shrink: 0; margin-top: 2px; }
+
+  .rp-ai-rec strong {
+    display: block;
+    font-size: .75rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: .25rem;
+  }
+
+  .rp-ai-rec p {
+    font-size: .75rem;
+    color: #475569;
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  .rp-ai-tips strong {
+    display: block;
+    font-size: .75rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: .5rem;
+  }
+
+  .rp-ai-tips ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+
+  .rp-ai-tips li {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    font-size: .75rem;
+    color: #475569;
+    line-height: 1.55;
+  }
+
+  .rp-ai-tip-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    flex-shrink: 0;
+    margin-top: .35rem;
   }
 </style>
