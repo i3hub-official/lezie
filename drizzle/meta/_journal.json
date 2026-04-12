@@ -57,6 +57,13 @@
       "when": 1775907496527,
       "tag": "0007_silky_juggernaut",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1775959054587,
+      "tag": "0008_luxuriant_doctor_octopus",
+      "breakpoints": true
     }
   ]
 }
