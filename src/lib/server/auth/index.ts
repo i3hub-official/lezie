@@ -18,6 +18,7 @@ import {
   protectEmail,
   protectPhone,
   protectUsername,
+  revealEmail,
 } from '$lib/security/dataProtection';
 
 export const auth = betterAuth({
@@ -60,9 +61,10 @@ export const auth = betterAuth({
     requireEmailVerification: true,
 
     sendResetPassword: async ({ user, url }) => {
-      if (dev) console.log(`[AUTH] Password reset -> ${user.email} : ${url}`);
+      const plainEmail = revealEmail(user.email);
+      if (dev) console.log(`[AUTH] Password reset -> ${plainEmail} : ${url}`);
       const { subject, html } = passwordResetTemplate({ url, name: user.name });
-      await sendEmail({ to: user.email, subject, html });
+      await sendEmail({ to: plainEmail, subject, html });
     },
   },
 
@@ -70,17 +72,21 @@ export const auth = betterAuth({
   // and the /api/auth/send-verification-email endpoint to work correctly.
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
+      // user.email is the encrypted value — decrypt it before sending.
+      // The before hook replaced the plaintext email with its ciphertext,
+      // so we must reverse that here to get the real recipient address.
+      const plainEmail = revealEmail(user.email);
+
       // Rewrite the verification URL to point to our custom /verify page.
       // Better Auth generates: /api/auth/verify-email?token=...
       // We redirect that to:   /verify?token=...
-      // The /verify page validates the token server-side and shows the code.
-      const token    = new URL(url).searchParams.get('token') ?? '';
-      const base     = new URL(url).origin;
+      const token     = new URL(url).searchParams.get('token') ?? '';
+      const base      = new URL(url).origin;
       const verifyUrl = `${base}/verify?token=${encodeURIComponent(token)}`;
 
-      if (dev) console.log(`[AUTH] Verification -> ${user.email} : ${verifyUrl}`);
+      if (dev) console.log(`[AUTH] Verification -> ${plainEmail} : ${verifyUrl}`);
       const { subject, html } = verificationEmailTemplate({ url: verifyUrl, name: user.name });
-      await sendEmail({ to: user.email, subject, html });
+      await sendEmail({ to: plainEmail, subject, html });
     },
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
