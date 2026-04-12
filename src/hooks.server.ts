@@ -21,6 +21,7 @@ const ROUTE_CONFIG = {
     '/api/verify-code',
     '/api/login-resolver',
     '/api/signin',
+'/api/health',
     '/_app',
     '/favicon',
   ],
