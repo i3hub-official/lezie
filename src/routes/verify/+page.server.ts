@@ -9,9 +9,14 @@ import { createHmac, timingSafeEqual, createHash } from 'crypto';
 import { env } from '$env/dynamic/private';
 
 function tokenToCode(token: string): string {
-  const positions = [2, 7, 13, 19, 26, 31];
-  return positions
-    .map(i => token.charCodeAt(i % token.length) % 10)
+  // Use the signature portion of the JWT (last segment after final '.')
+  // — this is unique per token even for the same email.
+  // Then SHA-256 hash it and take 6 decimal digits from the digest.
+  const sig = token.split('.').pop() ?? token;
+  const hash = createHash('sha256').update(sig).digest();
+  // Take 6 bytes and map each to a digit 0-9
+  return Array.from(hash.slice(0, 6))
+    .map(b => b % 10)
     .join('');
 }
 
