@@ -273,7 +273,13 @@
             </div>
 
            <div class="si-email-badge">
-<Smartphone size={14} class="si-badge-icon" />
+{#if getIdentifierType(formData.identifier) === 'email'}
+  <Mail size={14} />
+{:else if getIdentifierType(formData.identifier) === 'phone'}
+  <Phone size={14} />
+{:else}
+  <User size={14} />
+{/if}
   <span class="si-badge-email">{formData.identifier}</span>
   <button type="button" class="si-badge-edit" onclick={goBackToIdentifier}>Edit</button>
 </div>
