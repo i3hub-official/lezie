@@ -70,100 +70,112 @@
   });
   
   async function loadAlerts() {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    alerts = [
-      {
-        id: 1,
-        name: 'Home Area Alert',
-        radius: 1,
-        categories: ['suspicious', 'theft'],
-        severity: ['high', 'critical'],
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        lastTriggered: new Date(Date.now() - 3600000).toISOString(),
-        notificationCount: 12,
-        location: 'Maple Street Area'
-      },
-      {
-        id: 2,
-        name: 'Work Zone',
-        radius: 0.5,
-        categories: ['accident', 'fire'],
-        severity: ['medium', 'high', 'critical'],
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        lastTriggered: new Date(Date.now() - 86400000).toISOString(),
-        notificationCount: 5,
-        location: 'Downtown Business District'
-      },
-      {
-        id: 3,
-        name: 'School Zone',
-        radius: 2,
-        categories: ['suspicious'],
-        severity: ['high', 'critical'],
-        isActive: false,
-        createdAt: new Date().toISOString(),
-        lastTriggered: null,
-        notificationCount: 0,
-        location: 'Lincoln Elementary Area'
-      },
-      {
-        id: 4,
-        name: 'Park Area',
-        radius: 1.5,
-        categories: ['vandalism', 'noise'],
-        severity: ['low', 'medium'],
-        isActive: true,
-        createdAt: new Date(Date.now() - 172800000).toISOString(),
-        lastTriggered: new Date(Date.now() - 172800000).toISOString(),
-        notificationCount: 3,
-        location: 'Central Park'
+    try {
+      const res = await fetch('/api/ai/alerts');
+      if (!res.ok) throw new Error(`Failed to load alert zones (${res.status})`);
+      const data = await res.json();
+      alerts = (data.zones ?? []).map((z: any) => ({
+        id:                z.id,
+        name:              z.name,
+        radius:            z.radius,
+        categories:        z.categories,
+        severity:          z.severity,
+        isActive:          z.isActive,
+        createdAt:         z.createdAt,
+        lastTriggered:     z.lastTriggered ?? null,
+        notificationCount: z.notificationCount ?? 0,
+        location:          z.location ?? 'Custom Area',
+      }));
+    } catch (err) {
+      console.error('[AlertsPage] loadAlerts failed:', err);
+      alerts = [];
+    }
+  }
+  
+  
+  async function toggleAlert(alertId: string) {
+    // Optimistic update
+    const zone = alerts.find(a => a.id === alertId);
+    if (zone) zone.isActive = !zone.isActive;
+
+    try {
+      const res = await fetch('/api/ai/alerts', {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ zoneId: alertId }),
+      });
+
+      if (!res.ok) {
+        // Revert on failure
+        if (zone) zone.isActive = !zone.isActive;
+        console.error('[AlertsPage] toggleAlert failed:', res.status);
       }
-    ];
-  }
-  
-  function toggleAlert(alertId: number) {
-    const alert = alerts.find(a => a.id === alertId);
-    if (alert) {
-      alert.isActive = !alert.isActive;
+    } catch (err) {
+      if (zone) zone.isActive = !zone.isActive;
+      console.error('[AlertsPage] toggleAlert error:', err);
     }
   }
   
-  function deleteAlert(alertId: number) {
-    if (confirm('Are you sure you want to delete this alert zone?')) {
-      alerts = alerts.filter(a => a.id !== alertId);
+  
+  async function deleteAlert(alertId: string) {
+    if (!confirm('Are you sure you want to delete this alert zone?')) return;
+
+    // Optimistic update
+    const prev = alerts;
+    alerts = alerts.filter(a => a.id !== alertId);
+
+    try {
+      const res = await fetch('/api/ai/alerts', {
+        method:  'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ zoneId: alertId }),
+      });
+
+      if (!res.ok) {
+        alerts = prev; // revert
+        console.error('[AlertsPage] deleteAlert failed:', res.status);
+      }
+    } catch (err) {
+      alerts = prev;
+      console.error('[AlertsPage] deleteAlert error:', err);
     }
   }
   
-  function createAlert() {
+  async function createAlert() {
     if (!newAlert.name.trim()) return;
-    
-    const alert = {
-      id: Date.now(),
-      name: newAlert.name,
-      radius: newAlert.radius,
-      categories: newAlert.categories,
-      severity: newAlert.severity,
-      isActive: newAlert.isActive,
-      createdAt: new Date().toISOString(),
-      lastTriggered: null,
-      notificationCount: 0,
-      location: 'Custom Area'
-    };
-    
-    alerts.unshift(alert);
-    
-    newAlert = {
-      name: '',
-      radius: 1,
-      categories: [],
-      severity: [],
-      isActive: true
-    };
-    
-    showCreateModal = false;
+    if (newAlert.categories.length === 0) return;
+    if (newAlert.severity.length === 0)   return;
+
+    try {
+      const res = await fetch('/api/ai/alerts', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name:       newAlert.name.trim(),
+          radius:     newAlert.radius,
+          categories: newAlert.categories,
+          severity:   newAlert.severity,
+          isActive:   newAlert.isActive,
+          location:   'Custom Area',
+        }),
+      });
+
+      if (!res.ok) {
+        console.error('[AlertsPage] createAlert failed:', res.status);
+        return;
+      }
+
+      const data = await res.json();
+
+      // Prepend the newly created zone returned by the server
+      alerts = [data.zone, ...alerts];
+
+      newAlert = { name: '', radius: 1, categories: [], severity: [], isActive: true };
+      showCreateModal = false;
+
+    } catch (err) {
+      console.error('[AlertsPage] createAlert error:', err);
+    }
   }
   
   function toggleCategory(category: string) {
