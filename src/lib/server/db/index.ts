@@ -16,5 +16,5 @@ const sql = neon(DATABASE_URL, {
 
 export const db = drizzle({
   client: sql,
-  schema: { ...schema, ...authSchema },
+  schema: { ...schema, ...authSchema, ...community-schema},
 });
