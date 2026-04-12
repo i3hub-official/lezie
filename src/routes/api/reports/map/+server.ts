@@ -1,7 +1,4 @@
-
-//src/routes/api/reports/map/+server.ts:
-
-/*
+// src/routes/api/reports/map/+server.ts
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
@@ -55,7 +52,7 @@ export const GET: RequestHandler = async ({ url }) => {
         status:      r.statusName.toLowerCase(),
         location:    r.locationName ?? '',
         isLive:      r.severity === 'critical' || r.severity === 'high',
-        witnesses:   0,   // add a verifications count join here when ready
+        witnesses:   0, // add a verifications count join here when ready
       };
     })
     .filter(Boolean);
