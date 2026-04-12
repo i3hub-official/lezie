@@ -306,14 +306,13 @@ if (!browser) return;  // ← extra guard
     if (currentStep > 1) { currentStep--; errors = {}; window.scrollTo({ top:0, behavior:'smooth' }); }
   }
 
-  
-async function handleSubmit(e: Event) {
+  async function handleSubmit(e: Event) {
     e.preventDefault();
 
     const errs = validateStep3();
     if (Object.keys(errs).length > 0 || !acceptedTerms) {
       errors = errs;
-      if (!acceptedTerms) errors.terms = "Please accept the terms";
+      if (!acceptedTerms) errors.terms = 'Please accept the terms';
       Object.keys(errs).forEach(k => { touched[k] = true; });
       return;
     }
@@ -333,17 +332,21 @@ async function handleSubmit(e: Event) {
       });
 
       if (error) {
-        errors.submit = error.message || "An unexpected error occurred";
+        errors.submit = error.message || 'An unexpected error occurred';
         return;
       }
 
-      // Session is created but email is unverified.
-      // Send the user to the verify-email page — the hook will enforce
-      // this gate on every protected route until they click the link.
-      await goto(`/verify-email?email=${encodeURIComponent(formData.email.trim().toLowerCase())}`);
+      // Get a signed ref from the server — never put the raw email in the URL
+      const refRes = await fetch('/api/create-email-ref', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email: formData.email.trim().toLowerCase() }),
+      });
+      const { ref } = await refRes.json();
 
+      await goto(`/verify-email?ref=${encodeURIComponent(ref)}`);
     } catch (err) {
-      errors.submit = "Connection failed. Please check your internet.";
+      errors.submit = 'Connection failed. Please check your internet.';
     } finally {
       isLoading = false;
     }
