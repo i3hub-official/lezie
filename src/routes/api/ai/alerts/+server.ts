@@ -79,122 +79,142 @@ function haversineKm(
 
 // ─── DB Stubs (replace with your Drizzle queries) ─────────────────────────────
 
+
+import { db } from '$lib/server/db';
+import { alertZones, reports, categories } from '$lib/server/db/schema';
+import { eq, and, gte } from 'drizzle-orm';
+import { haversineKm } from '$lib/server/db/geo';
+
+// ── getZonesForUser ──────────────────────────────────────────
 async function getZonesForUser(userId: string): Promise<AlertZone[]> {
-  // ── Real query (uncomment when ready) ────────────────────────────────────
-  //
-  // import { db } from '$lib/server/db';
-  // import { alertZones } from '$lib/server/db/schema';
-  // import { eq } from 'drizzle-orm';
-  //
-  // return db
-  //   .select()
-  //   .from(alertZones)
-  //   .where(eq(alertZones.userId, userId))
-  //   .orderBy(alertZones.createdAt);
-  //
-  // ─────────────────────────────────────────────────────────────────────────
-  console.warn('[smart-alerts] getZonesForUser: stub — no real DB query yet.');
-  return [];
+  const rows = await db
+    .select()
+    .from(alertZones)
+    .where(eq(alertZones.userId, userId))
+    .orderBy(alertZones.createdAt);
+
+  return rows.map(r => ({
+    id:                r.id,
+    userId:            r.userId,
+    name:              r.name,
+    radius:            r.radius,
+    categories:        r.categories as string[],
+    severity:          r.severity as SeverityLevel[],
+    isActive:          r.isActive,
+    location:          r.locationLabel ?? 'Custom Area',
+    lat:               r.lat ? Number(r.lat) : undefined,
+    lng:               r.lng ? Number(r.lng) : undefined,
+    createdAt:         r.createdAt.toISOString(),
+    lastTriggered:     r.lastTriggered?.toISOString() ?? null,
+    notificationCount: r.notificationCount,
+  }));
 }
 
-async function createZoneInDB(zone: Omit<AlertZone, 'id' | 'createdAt' | 'lastTriggered' | 'notificationCount'>): Promise<AlertZone> {
-  // ── Real query ────────────────────────────────────────────────────────────
-  //
-  // const [created] = await db
-  //   .insert(alertZones)
-  //   .values({
-  //     userId:     zone.userId,
-  //     name:       zone.name,
-  //     radius:     zone.radius,
-  //     categories: zone.categories,
-  //     severity:   zone.severity,
-  //     isActive:   zone.isActive,
-  //     location:   zone.location,
-  //     lat:        zone.lat,
-  //     lng:        zone.lng,
-  //   })
-  //   .returning();
-  // return created;
-  //
-  // ─────────────────────────────────────────────────────────────────────────
-  console.warn('[smart-alerts] createZoneInDB: stub.');
+// ── createZoneInDB ───────────────────────────────────────────
+async function createZoneInDB(
+  zone: Omit<AlertZone, 'id' | 'createdAt' | 'lastTriggered' | 'notificationCount'>
+): Promise<AlertZone> {
+  const [created] = await db
+    .insert(alertZones)
+    .values({
+      userId:        zone.userId,
+      name:          zone.name,
+      radius:        zone.radius,
+      categories:    zone.categories,
+      severity:      zone.severity,
+      isActive:      zone.isActive,
+      locationLabel: zone.location,
+      lat:           zone.lat ? String(zone.lat) : null,
+      lng:           zone.lng ? String(zone.lng) : null,
+    })
+    .returning();
+
   return {
-    ...zone,
-    id:                crypto.randomUUID(),
-    createdAt:         new Date().toISOString(),
+    id:                created.id,
+    userId:            created.userId,
+    name:              created.name,
+    radius:            created.radius,
+    categories:        created.categories as string[],
+    severity:          created.severity as SeverityLevel[],
+    isActive:          created.isActive,
+    location:          created.locationLabel ?? 'Custom Area',
+    lat:               created.lat ? Number(created.lat) : undefined,
+    lng:               created.lng ? Number(created.lng) : undefined,
+    createdAt:         created.createdAt.toISOString(),
     lastTriggered:     null,
     notificationCount: 0,
   };
 }
 
+// ── toggleZoneInDB ───────────────────────────────────────────
 async function toggleZoneInDB(zoneId: string, userId: string): Promise<boolean> {
-  // ── Real query ────────────────────────────────────────────────────────────
-  //
-  // const [zone] = await db
-  //   .select({ isActive: alertZones.isActive })
-  //   .from(alertZones)
-  //   .where(and(eq(alertZones.id, zoneId), eq(alertZones.userId, userId)));
-  //
-  // if (!zone) throw error(404, 'Alert zone not found.');
-  //
-  // await db
-  //   .update(alertZones)
-  //   .set({ isActive: !zone.isActive })
-  //   .where(eq(alertZones.id, zoneId));
-  //
-  // return !zone.isActive;
-  //
-  // ─────────────────────────────────────────────────────────────────────────
-  console.warn('[smart-alerts] toggleZoneInDB: stub.');
-  return true;
+  const [zone] = await db
+    .select({ isActive: alertZones.isActive })
+    .from(alertZones)
+    .where(and(eq(alertZones.id, zoneId), eq(alertZones.userId, userId)));
+
+  if (!zone) throw error(404, 'Alert zone not found.');
+
+  await db
+    .update(alertZones)
+    .set({
+      isActive:  !zone.isActive,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(alertZones.id, zoneId), eq(alertZones.userId, userId)));
+
+  return !zone.isActive;
 }
 
+// ── deleteZoneFromDB ─────────────────────────────────────────
 async function deleteZoneFromDB(zoneId: string, userId: string): Promise<void> {
-  // ── Real query ────────────────────────────────────────────────────────────
-  //
-  // const result = await db
-  //   .delete(alertZones)
-  //   .where(and(eq(alertZones.id, zoneId), eq(alertZones.userId, userId)));
-  //
-  // if (result.rowCount === 0) throw error(404, 'Alert zone not found.');
-  //
-  // ─────────────────────────────────────────────────────────────────────────
-  console.warn('[smart-alerts] deleteZoneFromDB: stub.');
+  const result = await db
+    .delete(alertZones)
+    .where(and(eq(alertZones.id, zoneId), eq(alertZones.userId, userId)))
+    .returning({ id: alertZones.id });
+
+  if (result.length === 0) throw error(404, 'Alert zone not found.');
 }
 
+// ── getRecentIncidentsNearZones ──────────────────────────────
 async function getRecentIncidentsNearZones(zones: AlertZone[]): Promise<object[]> {
-  // Fetches incidents within the radius of ALL active zones in one pass.
-  // ── Real query ────────────────────────────────────────────────────────────
-  //
-  // const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000); // last 72h
-  //
-  // const rows = await db
-  //   .select({
-  //     id:          reports.id,
-  //     title:       reports.title,
-  //     category:    reports.category,
-  //     severity:    reports.severity,
-  //     lat:         reports.lat,
-  //     lng:         reports.lng,
-  //     reportedAt:  reports.createdAt,
-  //     locationLabel: reports.locationLabel,
-  //   })
-  //   .from(reports)
-  //   .where(gte(reports.createdAt, cutoff));
-  //
-  // // Filter to only incidents that fall within at least one active zone
-  // return rows.filter(incident =>
-  //   zones.some(zone =>
-  //     zone.lat && zone.lng &&
-  //     haversineKm(zone.lat, zone.lng, incident.lat, incident.lng) <= zone.radius
-  //   )
-  // );
-  //
-  // ─────────────────────────────────────────────────────────────────────────
-  console.warn('[smart-alerts] getRecentIncidentsNearZones: stub.');
-  return [];
-}
+  const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000);
 
+  const rows = await db
+    .select({
+      id:           reports.id,
+      title:        reports.title,
+      severity:     reports.severity,
+      location:     reports.location,
+      locationName: reports.locationName,
+      createdAt:    reports.createdAt,
+      categoryName: categories.name,
+    })
+    .from(reports)
+    .innerJoin(categories, eq(reports.categoryId, categories.id))
+    .where(gte(reports.createdAt, cutoff));
+
+  return rows.filter(r => {
+    const loc = r.location as { lat?: number; lng?: number } | null;
+    if (!loc?.lat || !loc?.lng) return false;
+    return zones.some(zone => {
+      if (!zone.lat || !zone.lng) return false;
+      return haversineKm(zone.lat, zone.lng, loc.lat!, loc.lng!) <= zone.radius;
+    });
+  }).map(r => {
+    const loc = r.location as { lat: number; lng: number };
+    return {
+      id:           r.id,
+      title:        r.title,
+      category:     r.categoryName,
+      severity:     r.severity,
+      location:     r.locationName,
+      lat:          loc.lat,
+      lng:          loc.lng,
+      reportedAt:   r.createdAt.toISOString(),
+    };
+  });
+}
 // ─── AI Pattern Detection ─────────────────────────────────────────────────────
 
 async function analysePatterns(
