@@ -1,12 +1,9 @@
 // src/routes/verify/+page.server.ts
 import type { PageServerLoad } from './$types';
 import { auth } from '$lib/server/auth';
+import { dev } from '$app/environment';
 
-// Deterministically derive a short human-readable code from the token.
-// The code is generated on the server from the token — it never exists
-// independently and is never stored or transmitted separately.
 function tokenToCode(token: string): string {
-  // Take characters spread across the token and map to digits
   const positions = [2, 7, 13, 19, 26, 31];
   return positions
     .map(i => token.charCodeAt(i % token.length) % 10)
@@ -21,7 +18,6 @@ export const load: PageServerLoad = async ({ url, request }) => {
   }
 
   try {
-    // Let Better Auth validate the token and mark the email as verified
     const response = await auth.handler(
       new Request(
         new URL(`/api/auth/verify-email?token=${encodeURIComponent(token)}`, url.origin),
@@ -29,21 +25,33 @@ export const load: PageServerLoad = async ({ url, request }) => {
       )
     );
 
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      const message = (data as any)?.message ?? 'Verification failed.';
-
-      // Token already used
-      if (response.status === 400) {
-        return { status: 'expired', code: null, message: 'This link has already been used or has expired.' };
-      }
-
-      return { status: 'error', code: null, message };
+    // Log the raw response in dev so we know exactly what Better Auth returns
+    if (dev) {
+      const clone = response.clone();
+      const text  = await clone.text().catch(() => '(unreadable)');
+      console.log(`[VERIFY] status=${response.status} body=${text.slice(0, 300)}`);
     }
 
-    // Token is valid — derive the display code from it
-    const code = tokenToCode(token);
-    return { status: 'success', code, message: null };
+    // Better Auth redirects (302/303) on success, returns 200 with JSON on some configs.
+    // It returns 400 for invalid/expired tokens and 500 for server errors.
+    if (response.status === 200 || response.status === 302 || response.status === 303) {
+      return { status: 'success', code: tokenToCode(token), message: null };
+    }
+
+    if (response.status === 400) {
+      return {
+        status: 'expired',
+        code:    null,
+        message: 'This link has already been used or has expired.'
+      };
+    }
+
+    const data = await response.json().catch(() => ({}));
+    return {
+      status:  'error',
+      code:    null,
+      message: (data as any)?.message ?? `Verification failed (${response.status}).`
+    };
 
   } catch (err) {
     console.error('[VERIFY]', err);
