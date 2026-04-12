@@ -9,8 +9,10 @@
     Send, Image as ImageIcon, Link, Smile,
     ChevronRight, Calendar, Bell, CheckCircle,
     AlertCircle, HelpCircle, BookOpen, Target,
-    LayoutGrid, List
+    LayoutGrid, Radio, List
   } from 'lucide-svelte';
+import NeighbourhoodFeed from '$lib/components/NeighbourhoodFeed.svelte';
+
 
   let isLoading = $state(true);
   let showCreatePost = $state(false);
@@ -22,7 +24,10 @@
   let showDiscussions = $state(true);
   let showMembers = $state(true);
   let showEvents = $state(true);
-  
+  let showNeighbourhoodFeed = $state(true);
+  let userLat = $state<number | null>(null);
+  let userLng = $state<number | null>(null);
+
   let newPost = $state({
     content: '',
     category: 'general',
@@ -35,6 +40,8 @@
   let events = $state<any[]>([]);
   let currentUser = $state<any>(null);
   
+
+
   let categories = $state([
     { id: 'general', label: 'General Discussion', icon: MessageCircle, color: '#6B7280' },
     { id: 'safety', label: 'Safety Tips', icon: Shield, color: '#10B981' },
@@ -46,7 +53,21 @@
   onMount(async () => {
     await loadData();
     isLoading = false;
+
+// Get user location for NeighbourhoodFeed
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          userLat = pos.coords.latitude;
+          userLng  = pos.coords.longitude;
+        },
+        () => { /* silently ignore — feed still works without location */ },
+        { timeout: 8000, maximumAge: 60000 }
+      );
+    }
   });
+
+
 
   async function loadData() {
     await new Promise(resolve => setTimeout(resolve, 800));
@@ -300,11 +321,15 @@
   }
   
   function toggleAllSections() {
-    const allVisible = showFeed && showDiscussions && showMembers && showEvents;
-    showFeed = !allVisible;
-    showDiscussions = !allVisible;
-    showMembers = !allVisible;
-    showEvents = !allVisible;
+    
+  const allVisible = showNeighbourhoodFeed && showFeed && showDiscussions && showMembers && showEvents;
+
+    showNeighbourhoodFeed = !allVisible;
+    showFeed              = !allVisible;
+    showDiscussions       = !allVisible;
+    showMembers           = !allVisible;
+    showEvents            = !allVisible;
+
   }
 </script>
 
@@ -402,13 +427,13 @@
         <span>Show sections:</span>
       </div>
       <div class="filter-buttons">
-        <button 
-          class="filter-btn {showFeed ? 'active' : ''}" 
-          onclick={() => showFeed = !showFeed}
+        <<button
+          class="filter-btn {showNeighbourhoodFeed ? 'active' : ''}"
+          onclick={() => showNeighbourhoodFeed = !showNeighbourhoodFeed}
         >
-          <TrendingUp size={14} />
-          <span>Community Feed</span>
-          <span class="filter-count">{getFilteredPosts().length}</span>
+          <Radio size={14} />
+          <span>Nearby Feed</span>
+          <span class="filter-count">live</span>
         </button>
         <button 
           class="filter-btn {showDiscussions ? 'active' : ''}" 
@@ -437,7 +462,7 @@
       </div>
       <button class="toggle-all-btn" onclick={toggleAllSections}>
         <LayoutGrid size={14} />
-        <span>{showFeed && showDiscussions && showMembers && showEvents ? 'Hide All' : 'Show All'}</span>
+       {showNeighbourhoodFeed && showFeed && showDiscussions && showMembers && showEvents ? 'Hide All' : 'Show All'}>
       </button>
     </div>
 
@@ -447,6 +472,25 @@
         <p>Loading community content...</p>
       </div>
     {:else}
+     <!-- Neighbourhood Feed Section -->
+      {#if showNeighbourhoodFeed}
+        <div class="section-container">
+          <div class="section-header">
+            <div class="section-title">
+              <Radio size={18} class="section-icon" />
+              <h2>Nearby Activity</h2>
+              <span class="section-count">within 2km</span>
+            </div>
+          </div>
+          <div class="section-content section-content--flush">
+            <NeighbourhoodFeed
+              lat={userLat}
+              lng={userLng}
+              neighbourhood=""
+            />
+          </div>
+        </div>
+      {/if}
       <!-- Community Feed Section -->
       {#if showFeed}
         <div class="section-container">
@@ -1806,5 +1850,46 @@
     .toggle-all-btn {
       justify-content: center;
     }
+  }
+  
+  /* NeighbourhoodFeed sits flush inside the section card */
+  .section-content--flush {
+    padding: 0;
+  }
+
+  /* NeighbourhoodFeed's own header has rounded top corners inside the card */
+  .section-content--flush :global(.nf-header) {
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  /* Feed items list gets a little breathing room */
+  .section-content--flush :global(.nf-list),
+  .section-content--flush :global(.nf-loading),
+  .section-content--flush :global(.nf-empty),
+  .section-content--flush :global(.nf-filters),
+  .section-content--flush :global(.nf-summary-wrap) {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  .section-content--flush :global(.nf-filters) {
+    padding-top: .875rem;
+  }
+
+  .section-content--flush :global(.nf-list) {
+    padding-bottom: 1.25rem;
+  }
+
+  .section-content--flush :global(.nf-loading),
+  .section-content--flush :global(.nf-empty) {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+
+  /* Remove outer border/shadow from feed items — card already provides them */
+  .section-content--flush :global(.nf-item) {
+    border-left-width: 3px;
   }
 </style>
