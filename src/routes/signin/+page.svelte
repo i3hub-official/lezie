@@ -78,30 +78,38 @@
     errors = {};
 
     try {
-      const res = await fetch('/api/signin', {
+      // 1. Resolve identifier (email/username/phone) to plaintext email
+      const resolveRes = await fetch('/api/login-resolver', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          identifier:    formData.identifier,
-          password:      formData.password,
-          dontRememberMe: !formData.rememberMe,
-        }),
+        body:    JSON.stringify({ identifier: formData.identifier }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        errors.submit = data.error ?? 'Invalid credentials.';
+      if (!resolveRes.ok) {
+        errors.submit = 'Account not found.';
         return;
       }
 
-      await goto('/dashboard');
+      const { email } = await resolveRes.json();
+
+      // 2. Sign in with plaintext email — works normally now
+      const { data, error } = await authClient.signIn.email({
+        email,
+        password:       formData.password,
+        dontRememberMe: !formData.rememberMe,
+      });
+
+      if (error) {
+        errors.submit = error.message ?? 'Invalid credentials.';
+      } else {
+        await goto('/dashboard');
+      }
     } catch (err) {
       errors.submit = 'Login failed. Check your connection.';
     } finally {
       isLoading = false;
     }
-  }; 
+  };
 
 
 
