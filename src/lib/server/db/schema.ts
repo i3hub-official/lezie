@@ -305,3 +305,4 @@ export const alertZonesRelations = relations(alertZones, ({ one }) => ({
     fields: [alertZones.userId],
     references: [users.id],
   }),
+}));
