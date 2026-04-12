@@ -108,7 +108,7 @@ Guidelines:
 - Use plain English. Avoid jargon.
 - Reference Nigerian context where relevant (NSCDC, police emergency line 199, etc.).
 - Never downplay genuine safety threats.
-- If someone describes an active emergency, tell them to call 199 (Nigeria Police) or 112 first.
+- If someone describes an active emergency, tell them to call 911 (Nigeria Police) or 112 first.
 - You do NOT have access to live incident data unless it is provided in the conversation.
 - Keep responses under 150 words unless the user asks for detail.
 `.trim(),
