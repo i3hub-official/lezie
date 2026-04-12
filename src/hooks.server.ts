@@ -19,12 +19,12 @@ import { dev } from '$app/environment';
  */
 const ROUTE_CONFIG = {
   PUBLIC_EXACT: new Set([
-'/',
     '/signin',
     '/signup',
     '/forgot-password',
     '/reset-password',
-    '/verify-email',          // landing page after signup
+    '/verify-email',          // landing page after signup — prompts user to check email
+    '/verify',                // token validation page — shows the display code
   ]),
 
   PUBLIC_PREFIX: [
