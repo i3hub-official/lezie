@@ -295,8 +295,8 @@ export const GET: RequestHandler = async ({ request }) => {
 };
 
 // POST — two uses depending on URL path:
-//   /api/ai/smart-alerts          → create a new zone
-//   /api/ai/smart-alerts/analyse  → run AI pattern detection
+//   /api/ai/alerts          → create a new zone
+//   /api/ai/alerts/analyse  → run AI pattern detection
 export const POST: RequestHandler = async ({ request, url }) => {
   const userId = await requireUser(request);
 
