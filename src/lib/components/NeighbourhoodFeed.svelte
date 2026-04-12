@@ -12,7 +12,7 @@
     Sparkles, Loader2, RefreshCw, Radio, ChevronDown,
     ChevronUp, TrendingUp, Zap, Eye, Filter
   } from 'lucide-svelte';
-import { haversineKm } from '$lib/server/db/geo';
+import type { haversineKm } from '$lib/server/db/geo';
 
   // ── Types ──────────────────────────────────────────────────────────────────
 
