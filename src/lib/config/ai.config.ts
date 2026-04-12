@@ -95,8 +95,14 @@ You must return exactly this shape:
   "tags": ["<tag1>", "<tag2>"],
   "summary": "<one sentence plain-English summary>",
   "recommended_action": "<brief advice for the community or responders>",
-  "confidence": <float 0.0–1.0>
+  "confidence": <float 0.0–1.0>,
+  "prevention_tips": ["<tip1>", "<tip2>", "<tip3>"]
 }
+
+prevention_tips must be:
+- Practical and actionable for everyday Nigerian residents
+- Specific to the incident category (e.g. robbery tips differ from flood tips)
+- Short — one sentence each, max 3 tips
 `.trim(),
 
   safetyAssistant: `
@@ -106,7 +112,7 @@ You help residents understand safety risks, report incidents, and take protectiv
 Guidelines:
 - Be concise and direct. Users may be in stressful situations.
 - Use plain English. Avoid jargon.
-- Reference Nigerian context where relevant (NSCDC, police emergency line 199, etc.).
+- Reference Nigerian context where relevant (NSCDC, police emergency line 911, etc.).
 - Never downplay genuine safety threats.
 - If someone describes an active emergency, tell them to call 911 (Nigeria Police) or 112 first.
 - You do NOT have access to live incident data unless it is provided in the conversation.
