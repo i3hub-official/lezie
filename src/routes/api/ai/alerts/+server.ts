@@ -292,40 +292,21 @@ Return the JSON as instructed.
 // ─── Auth Helper ──────────────────────────────────────────────────────────────
 // Swap this for your real session check (Better Auth / your auth-client pattern)
 
+import { auth } from '$lib/server/auth';
+
 async function requireUser(request: Request): Promise<string> {
-  // ── Real auth check ───────────────────────────────────────────────────────
-  //
-  // import { auth } from '$lib/server/auth';
-  // const session = await auth.getSession({ headers: request.headers });
-  // if (!session?.user?.id) throw error(401, 'Unauthorised.');
-  // return session.user.id;
-  //
-  // ─────────────────────────────────────────────────────────────────────────
-  console.warn('[smart-alerts] requireUser: stub — returning placeholder userId.');
-  return 'placeholder-user-id';
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session?.user?.id) throw error(401, 'Unauthorised.');
+
+  // Resolve to your internal users.id via the hashable link
+  const [user] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.hashable, session.user.id));
+
+  if (!user) throw error(401, 'User not found.');
+  return user.id;
 }
-
-// ─── Handlers ─────────────────────────────────────────────────────────────────
-
-// GET — load all alert zones for the current user
-export const GET: RequestHandler = async ({ request }) => {
-  const userId = await requireUser(request);
-  const zones = await getZonesForUser(userId);
-  return json({ zones }, { status: 200 });
-};
-
-// POST — two uses depending on URL path:
-//   /api/ai/alerts          → create a new zone
-//   /api/ai/alerts/analyse  → run AI pattern detection
-export const POST: RequestHandler = async ({ request, url }) => {
-  const userId = await requireUser(request);
-
-  let body: Record<string, unknown>;
-  try {
-    body = await request.json();
-  } catch {
-    throw error(400, 'Invalid JSON in request body.');
-  }
 
   // ── AI analysis sub-route ─────────────────────────────────────────────────
   if (url.pathname.endsWith('/analyse')) {
