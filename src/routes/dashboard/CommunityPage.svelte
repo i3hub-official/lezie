@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
+  import { goto, invalidateAll } from '$app/navigation';
+  import { enhance } from '$app/forms';
   import {
     Users, MessageCircle, Heart, Share2, Flag, ThumbsUp,
     UserPlus, Search, Filter, X, ChevronLeft, Plus,
@@ -11,325 +12,124 @@
     AlertCircle, HelpCircle, BookOpen, Target,
     LayoutGrid, Radio, List
   } from 'lucide-svelte';
-import NeighbourhoodFeed from '$lib/components/NeighbourhoodFeed.svelte';
+  import NeighbourhoodFeed from '$lib/components/NeighbourhoodFeed.svelte';
 
+  let { data } = $props();
 
-  let isLoading = $state(true);
-  let showCreatePost = $state(false);
-  let searchQuery = $state('');
-  let selectedPost = $state<any>(null);
-  
-  // Toggle states for each section
-  let showFeed = $state(true);
-  let showDiscussions = $state(true);
-  let showMembers = $state(true);
-  let showEvents = $state(true);
+  let showCreatePost       = $state(false);
+  let searchQuery          = $state('');
+  let showFeed             = $state(true);
+  let showDiscussions      = $state(true);
+  let showMembers          = $state(true);
+  let showEvents           = $state(true);
   let showNeighbourhoodFeed = $state(true);
-  let userLat = $state<number | null>(null);
-  let userLng = $state<number | null>(null);
+  let userLat              = $state<number | null>(null);
+  let userLng              = $state<number | null>(null);
 
   let newPost = $state({
-    content: '',
-    category: 'general',
-    isAnonymous: false
+    content:     '',
+    category:    'general',
+    isAnonymous: false,
+    scope:       'global' as 'global' | 'local',
   });
 
-  let posts = $state<any[]>([]);
-  let discussions = $state<any[]>([]);
-  let members = $state<any[]>([]);
-  let events = $state<any[]>([]);
-  let currentUser = $state<any>(null);
-  
-
-
-  let categories = $state([
-    { id: 'general', label: 'General Discussion', icon: MessageCircle, color: '#6B7280' },
-    { id: 'safety', label: 'Safety Tips', icon: Shield, color: '#10B981' },
-    { id: 'alerts', label: 'Alert Sharing', icon: Bell, color: '#F59E0B' },
-    { id: 'questions', label: 'Questions', icon: HelpCircle, color: '#3B82F6' },
-    { id: 'success', label: 'Success Stories', icon: Award, color: '#8B5CF6' }
-  ]);
-
-  onMount(async () => {
-    await loadData();
-    isLoading = false;
-
-// Get user location for NeighbourhoodFeed
+  // ── Location ──────────────────────────────────────────────
+  onMount(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
+        async (pos) => {
           userLat = pos.coords.latitude;
-          userLng  = pos.coords.longitude;
+          userLng = pos.coords.longitude;
+          // Re-load with location so local posts are included
+          await invalidateAll();
         },
-        () => { /* silently ignore — feed still works without location */ },
+        () => {},
         { timeout: 8000, maximumAge: 60000 }
       );
     }
   });
 
+  // ── Derived / filtered data ────────────────────────────────
+  const filteredPosts = $derived(
+    !searchQuery
+      ? data.posts
+      : data.posts.filter(p =>
+          p.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.authorName.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+  );
 
+  const filteredDiscussions = $derived(
+    !searchQuery
+      ? data.discussions
+      : data.discussions.filter(d =>
+          d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          d.authorName.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+  );
 
-  async function loadData() {
-    await new Promise(resolve => setTimeout(resolve, 800));
+  const filteredMembers = $derived(
+    !searchQuery
+      ? data.members
+      : data.members.filter(m =>
+          m.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+  );
 
-    currentUser = {
-      id: 1,
-      name: 'Ogwo GP',
-      avatar: 'https://ui-avatars.com/api/?name=Ogwo+Godspower&background=6a2c91&color=fff',
-      role: 'Safety Ambassador',
-      joinDate: '2024-01-15',
-      posts: 47,
-      reputation: 1250,
-      badges: ['Helper', 'Vigilant', 'Community Hero']
-    };
+  const filteredEvents = $derived(
+    !searchQuery
+      ? data.events
+      : data.events.filter(e =>
+          e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          e.location.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+  );
 
-    posts = [
-      {
-        id: 1,
-        author: {
-          name: 'Okpala Ebubechukwu Favour',
-          avatar: 'https://ui-avatars.com/api/?name=Okpala+Ebubechukwu&background=10B981&color=fff',
-          role: 'Neighborhood Watch'
-        },
-        content: 'Just wanted to share that the new street lights on Maple Avenue have made a huge difference! Haven\'t seen any suspicious activity in weeks. Great job everyone!',
-        category: 'success',
-        likes: 234,
-        comments: 45,
-        shares: 12,
-        timestamp: new Date(Date.now() - 2 * 3600000).toISOString(),
-        isPinned: true,
-        isVerified: true
-      },
-      {
-        id: 2,
-        author: {
-          name: 'Ephraim Joy',
-          avatar: 'https://ui-avatars.com/api/?name=Ephraim+Joy&background=F59E0B&color=fff',
-          role: 'Safety Officer'
-        },
-        content: 'Safety tip: Always keep your emergency contacts updated in your profile. In case of an incident, having quick access to emergency contacts can save precious minutes.',
-        category: 'safety',
-        likes: 189,
-        comments: 32,
-        shares: 67,
-        timestamp: new Date(Date.now() - 5 * 3600000).toISOString(),
-        isPinned: true,
-        isVerified: true
-      },
-      {
-        id: 3,
-        author: {
-          name: 'Onyeukwu Damain',
-          avatar: 'https://ui-avatars.com/api/?name=Onyeukwu+Damain&background=EF4444&color=fff',
-          role: 'Active Member'
-        },
-        content: 'Has anyone noticed increased police presence near the downtown area? I\'ve seen more patrols lately and wondering if there\'s a specific reason.',
-        category: 'questions',
-        likes: 67,
-        comments: 23,
-        shares: 4,
-        timestamp: new Date(Date.now() - 1 * 86400000).toISOString(),
-        isPinned: false,
-        isVerified: false
-      }
-    ];
+  // ── Categories ────────────────────────────────────────────
+  const categories = [
+    { id: 'general',  label: 'General Discussion', icon: MessageCircle, color: '#6B7280' },
+    { id: 'safety',   label: 'Safety Tips',        icon: Shield,        color: '#10B981' },
+    { id: 'alerts',   label: 'Alert Sharing',      icon: Bell,          color: '#F59E0B' },
+    { id: 'questions',label: 'Questions',          icon: HelpCircle,    color: '#3B82F6' },
+    { id: 'success',  label: 'Success Stories',    icon: Award,         color: '#8B5CF6' },
+  ];
 
-    discussions = [
-      {
-        id: 1,
-        title: 'Neighborhood Watch Program Expansion',
-        author: 'Community Board',
-        category: 'general',
-        replies: 234,
-        views: 1245,
-        lastActivity: new Date(Date.now() - 3 * 3600000).toISOString(),
-        isSticky: true
-      },
-      {
-        id: 2,
-        title: 'How to improve lighting in our area?',
-        author: 'Safety Committee',
-        category: 'safety',
-        replies: 89,
-        views: 567,
-        lastActivity: new Date(Date.now() - 1 * 86400000).toISOString(),
-        isSticky: false
-      },
-      {
-        id: 3,
-        title: 'Emergency response times - share your experience',
-        author: 'John Parker',
-        category: 'alerts',
-        replies: 145,
-        views: 890,
-        lastActivity: new Date(Date.now() - 2 * 86400000).toISOString(),
-        isSticky: false
-      }
-    ];
+  function getCategoryIcon(id: string)  { return categories.find(c => c.id === id)?.icon  ?? MessageCircle; }
+  function getCategoryColor(id: string) { return categories.find(c => c.id === id)?.color ?? '#6B7280'; }
+  function getCategoryLabel(id: string) { return categories.find(c => c.id === id)?.label ?? id; }
 
-    members = [
-      {
-        id: 1,
-        name: 'Dr. Sarah Johnson',
-        avatar: 'https://ui-avatars.com/api/?name=Sarah+Johnson&background=6a2c91&color=fff',
-        role: 'Safety Ambassador',
-        reputation: 2450,
-        badges: ['Expert', 'Helper', 'Leader'],
-        isOnline: true
-      },
-      {
-        id: 2,
-        name: 'Michael Chen',
-        avatar: 'https://ui-avatars.com/api/?name=Michael+Chen&background=10B981&color=fff',
-        role: 'Neighborhood Watch',
-        reputation: 1870,
-        badges: ['Vigilant', 'Helper'],
-        isOnline: true
-      },
-      {
-        id: 3,
-        name: 'Emily Rodriguez',
-        avatar: 'https://ui-avatars.com/api/?name=Emily+Rodriguez&background=F59E0B&color=fff',
-        role: 'Active Member',
-        reputation: 890,
-        badges: ['Newcomer'],
-        isOnline: false
-      },
-      {
-        id: 4,
-        name: 'David Kim',
-        avatar: 'https://ui-avatars.com/api/?name=David+Kim&background=3B82F6&color=fff',
-        role: 'Community Organizer',
-        reputation: 3100,
-        badges: ['Leader', 'Expert', 'Helper', 'Vigilant'],
-        isOnline: true
-      },
-      {
-        id: 5,
-        name: 'Maria Garcia',
-        avatar: 'https://ui-avatars.com/api/?name=Maria+Garcia&background=EF4444&color=fff',
-        role: 'Safety Monitor',
-        reputation: 1560,
-        badges: ['Vigilant', 'Helper'],
-        isOnline: false
-      },
-      {
-        id: 6,
-        name: 'James Wilson',
-        avatar: 'https://ui-avatars.com/api/?name=James+Wilson&background=8B5CF6&color=fff',
-        role: 'Active Member',
-        reputation: 720,
-        badges: ['Newcomer'],
-        isOnline: true
-      }
-    ];
-
-    events = [
-      {
-        id: 1,
-        title: 'Community Safety Workshop',
-        date: new Date(Date.now() + 5 * 86400000).toISOString(),
-        location: 'Community Center',
-        attendees: 45,
-        maxAttendees: 100,
-        category: 'workshop',
-        description: 'Learn essential safety tips and emergency response techniques'
-      },
-      {
-        id: 2,
-        title: 'Neighborhood Watch Meeting',
-        date: new Date(Date.now() + 12 * 86400000).toISOString(),
-        location: 'Maple Street School',
-        attendees: 32,
-        maxAttendees: 50,
-        category: 'meeting',
-        description: 'Monthly meeting to discuss community safety initiatives'
-      },
-      {
-        id: 3,
-        title: 'First Aid Certification Course',
-        date: new Date(Date.now() + 19 * 86400000).toISOString(),
-        location: 'Red Cross Building',
-        attendees: 18,
-        maxAttendees: 25,
-        category: 'training',
-        description: 'Get certified in first aid and CPR'
-      }
-    ];
-  }
-
+  // ── Formatting ────────────────────────────────────────────
   function formatDate(dateString: string) {
     const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
+    const diff  = Date.now() - date.getTime();
     const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(hours / 24);
-
-    if (hours < 1) return 'Just now';
-    if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-    if (days < 7) return `${days} day${days !== 1 ? 's' : ''} ago`;
+    const days  = Math.floor(hours / 24);
+    if (hours < 1)  return 'Just now';
+    if (hours < 24) return `${hours}h ago`;
+    if (days  < 7)  return `${days}d ago`;
     return date.toLocaleDateString();
   }
 
   function formatEventDate(dateString: string) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
-  function getCategoryIcon(categoryId: string) {
-    return categories.find(c => c.id === categoryId)?.icon || MessageCircle;
+  function tierToRole(tier: string) {
+    const map: Record<string, string> = {
+      '1': 'Member', '2': 'Active Member',
+      '3': 'Safety Ambassador', '4': 'Community Leader',
+    };
+    return map[tier] ?? 'Member';
   }
 
-  function getCategoryColor(categoryId: string) {
-    return categories.find(c => c.id === categoryId)?.color || '#6B7280';
-  }
-
-  function getFilteredPosts() {
-    if (!searchQuery) return posts;
-    return posts.filter(p => 
-      p.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.author.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }
-
-  function getFilteredDiscussions() {
-    if (!searchQuery) return discussions;
-    return discussions.filter(d => 
-      d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.author.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }
-
-  function getFilteredMembers() {
-    if (!searchQuery) return members;
-    return members.filter(m => 
-      m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.role.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }
-
-  function getFilteredEvents() {
-    if (!searchQuery) return events;
-    return events.filter(e => 
-      e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.location.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }
-
-  function getCategoryLabel(categoryId: string) {
-    return categories.find(c => c.id === categoryId)?.label || categoryId;
-  }
-  
+  // ── Toggle all sections ───────────────────────────────────
   function toggleAllSections() {
-    
-  const allVisible = showNeighbourhoodFeed && showFeed && showDiscussions && showMembers && showEvents;
-
+    const allVisible = showNeighbourhoodFeed && showFeed && showDiscussions && showMembers && showEvents;
     showNeighbourhoodFeed = !allVisible;
     showFeed              = !allVisible;
     showDiscussions       = !allVisible;
     showMembers           = !allVisible;
     showEvents            = !allVisible;
-
   }
 </script>
 
