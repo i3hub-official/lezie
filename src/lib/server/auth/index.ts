@@ -22,7 +22,7 @@ import {
 
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL || 'http://localhost:5173',
-  secret:  env.BETTER_AUTH_SECRET || '89e998e6034644edb1be296a3685791c',
+  secret:  env.BETTER_AUTH_SECRET || 'c0ed822af57f5cfa11c3f74e....c95764',
 
   logger: {
     level:   dev ? 'debug' : 'error',
@@ -70,8 +70,16 @@ export const auth = betterAuth({
   // and the /api/auth/send-verification-email endpoint to work correctly.
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
-      if (dev) console.log(`[AUTH] Verification -> ${user.email} : ${url}`);
-      const { subject, html } = verificationEmailTemplate({ url, name: user.name });
+      // Rewrite the verification URL to point to our custom /verify page.
+      // Better Auth generates: /api/auth/verify-email?token=...
+      // We redirect that to:   /verify?token=...
+      // The /verify page validates the token server-side and shows the code.
+      const token    = new URL(url).searchParams.get('token') ?? '';
+      const base     = new URL(url).origin;
+      const verifyUrl = `${base}/verify?token=${encodeURIComponent(token)}`;
+
+      if (dev) console.log(`[AUTH] Verification -> ${user.email} : ${verifyUrl}`);
+      const { subject, html } = verificationEmailTemplate({ url: verifyUrl, name: user.name });
       await sendEmail({ to: user.email, subject, html });
     },
     sendOnSignUp: true,
