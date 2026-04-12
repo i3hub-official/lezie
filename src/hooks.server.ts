@@ -32,6 +32,7 @@ const ROUTE_CONFIG = {
     '/api/auth',                // Better Auth internal endpoints
     '/api/resend-verification', // resend verification email
     '/api/create-email-ref',    // called immediately after signup before cookie propagates
+    '/api/verify-code',         // validates the entered code against the httpOnly cookie
     '/_app',                    // SvelteKit build assets
     '/favicon',                 // Favicon requests
   ],
