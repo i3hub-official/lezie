@@ -427,14 +427,14 @@ import NeighbourhoodFeed from '$lib/components/NeighbourhoodFeed.svelte';
         <span>Show sections:</span>
       </div>
       <div class="filter-buttons">
-        <<button
-          class="filter-btn {showNeighbourhoodFeed ? 'active' : ''}"
-          onclick={() => showNeighbourhoodFeed = !showNeighbourhoodFeed}
-        >
-          <Radio size={14} />
-          <span>Nearby Feed</span>
-          <span class="filter-count">live</span>
-        </button>
+        <button
+  class="filter-btn {showNeighbourhoodFeed ? 'active' : ''}"
+  onclick={() => showNeighbourhoodFeed = !showNeighbourhoodFeed}
+>
+  <Radio size={14} />
+  <span>Nearby Feed</span>
+  <span class="filter-count">live</span>
+</button>
         <button 
           class="filter-btn {showDiscussions ? 'active' : ''}" 
           onclick={() => showDiscussions = !showDiscussions}
