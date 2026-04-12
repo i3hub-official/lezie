@@ -123,6 +123,40 @@
     }
   }
 
+
+  // ── Derived insights from live data ──────────────────────────────────────
+  const verificationRate = $derived(
+    stats.totalIncidents > 0
+      ? Math.round((stats.verifiedReports / stats.totalIncidents) * 1000) / 10
+      : 0
+  );
+
+  const highRiskCount = $derived(
+    severityDistribution
+      .filter(s => ['High', 'Critical'].includes(s.severity))
+      .reduce((sum: number, s: any) => sum + s.count, 0)
+  );
+
+  const topCategory = $derived(
+    categoryDistribution.length > 0 ? categoryDistribution[0] : null
+  );
+
+  const topLocation = $derived(
+    topLocations.length > 0 ? topLocations[0] : null
+  );
+
+  // Trend vs previous period — computed from incidentTrend array
+  // Compares last month vs the month before it
+  const trendVsPrevious = $derived((() => {
+    if (incidentTrend.length < 2) return null;
+    const last = incidentTrend[incidentTrend.length - 1]?.count ?? 0;
+    const prev = incidentTrend[incidentTrend.length - 2]?.count ?? 0;
+    if (prev === 0) return null;
+    const pct = Math.round(((last - prev) / prev) * 100);
+    return { pct, up: pct >= 0 };
+  })());
+
+
   function initCharts() {
     // Trend Chart
     const trendCtx = document.getElementById('trendChart') as HTMLCanvasElement;
@@ -353,7 +387,7 @@
       </div>
     {:else}
       <!-- Stats Cards -->
-      <div class="stats-grid">
+     <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-icon total-icon">
             <AlertTriangle size={22} />
@@ -362,10 +396,12 @@
             <span class="stat-value">{formatNumber(stats.totalIncidents)}</span>
             <span class="stat-label">Total Incidents</span>
           </div>
-          <div class="stat-trend positive">
-            <TrendingUp size={12} />
-            <span>+8%</span>
-          </div>
+          {#if trendVsPrevious}
+            <div class="stat-trend {trendVsPrevious.up ? 'negative' : 'positive'}">
+              {#if trendVsPrevious.up}<TrendingUp size={12} />{:else}<TrendingDown size={12} />{/if}
+              <span>{trendVsPrevious.up ? '+' : ''}{trendVsPrevious.pct}%</span>
+            </div>
+          {/if}
         </div>
 
         <div class="stat-card">
@@ -378,7 +414,7 @@
           </div>
           <div class="stat-trend positive">
             <TrendingUp size={12} />
-            <span>+12%</span>
+            <span>{verificationRate}% rate</span>
           </div>
         </div>
 
@@ -387,12 +423,14 @@
             <Clock size={22} />
           </div>
           <div class="stat-content">
-            <span class="stat-value">{stats.avgResponseTime} min</span>
+            <span class="stat-value">
+              {stats.avgResponseTime > 0 ? `${stats.avgResponseTime} min` : '—'}
+            </span>
             <span class="stat-label">Avg Response Time</span>
           </div>
-          <div class="stat-trend negative">
-            <TrendingDown size={12} />
-            <span>-5%</span>
+          <div class="stat-trend neutral">
+            <Activity size={12} />
+            <span>Pending data</span>
           </div>
         </div>
 
@@ -404,9 +442,14 @@
             <span class="stat-value">{stats.safetyScore}%</span>
             <span class="stat-label">Safety Score</span>
           </div>
-          <div class="stat-trend positive">
-            <TrendingUp size={12} />
-            <span>+3%</span>
+          <div class="stat-trend {stats.safetyScore >= 70 ? 'positive' : 'negative'}">
+            {#if stats.safetyScore >= 70}
+              <TrendingUp size={12} />
+              <span>Good standing</span>
+            {:else}
+              <TrendingDown size={12} />
+              <span>Needs attention</span>
+            {/if}
           </div>
         </div>
 
@@ -420,7 +463,7 @@
           </div>
           <div class="stat-trend positive">
             <TrendingUp size={12} />
-            <span>+18%</span>
+            <span>This period</span>
           </div>
         </div>
 
@@ -432,12 +475,13 @@
             <span class="stat-value">{formatNumber(stats.communityReports)}</span>
             <span class="stat-label">Community Reports</span>
           </div>
-          <div class="stat-trend positive">
-            <TrendingUp size={12} />
-            <span>+22%</span>
+          <div class="stat-trend {highRiskCount > 0 ? 'negative' : 'positive'}">
+            <AlertTriangle size={12} />
+            <span>{highRiskCount} high risk</span>
           </div>
         </div>
       </div>
+
 
       <!-- Charts Grid -->
       <div class="charts-grid">
@@ -533,49 +577,80 @@
         </div>
 
         <!-- Safety Insights -->
-        <div class="insights-card">
+      <div class="insights-card">
           <div class="insights-header">
             <Award size={20} style="color: var(--primary-color)" />
             <h3>Safety Insights</h3>
           </div>
           <div class="insights-grid">
+
+            <!-- Trend vs previous period -->
             <div class="insight">
-              <div class="insight-icon positive">
-                <TrendingUp size={16} />
+              <div class="insight-icon {trendVsPrevious?.up ? 'warning' : 'positive'}">
+                {#if trendVsPrevious?.up}
+                  <TrendingUp size={16} />
+                {:else}
+                  <TrendingDown size={16} />
+                {/if}
               </div>
               <div>
-                <strong>12% decrease</strong>
-                <p>in incidents compared to last month</p>
+                {#if trendVsPrevious}
+                  <strong>
+                    {Math.abs(trendVsPrevious.pct)}% {trendVsPrevious.up ? 'increase' : 'decrease'}
+                  </strong>
+                  <p>in incidents vs previous period</p>
+                {:else}
+                  <strong>Insufficient data</strong>
+                  <p>need at least 2 months of reports</p>
+                {/if}
               </div>
             </div>
+
+            <!-- Verification rate -->
             <div class="insight">
-              <div class="insight-icon positive">
+              <div class="insight-icon {verificationRate >= 60 ? 'positive' : 'warning'}">
                 <CheckCircle size={16} />
               </div>
               <div>
-                <strong>71.5% verification rate</strong>
+                <strong>{verificationRate}% verification rate</strong>
                 <p>of community reports are verified</p>
               </div>
             </div>
+
+            <!-- Top hotspot -->
             <div class="insight">
               <div class="insight-icon warning">
+                <MapPin size={16} />
+              </div>
+              <div>
+                {#if topLocation}
+                  <strong>{topLocation.location}</strong>
+                  <p>is the top hotspot with {topLocation.count} incident{topLocation.count !== 1 ? 's' : ''}</p>
+                {:else}
+                  <strong>No hotspot data</strong>
+                  <p>incidents need location names to appear here</p>
+                {/if}
+              </div>
+            </div>
+
+            <!-- Top category -->
+            <div class="insight">
+              <div class="insight-icon {topCategory ? 'warning' : 'positive'}">
                 <AlertTriangle size={16} />
               </div>
               <div>
-                <strong>Friday evenings</strong>
-                <p>have the highest incident frequency</p>
+                {#if topCategory}
+                  <strong>{topCategory.category} — {topCategory.percentage}%</strong>
+                  <p>is the most reported incident type</p>
+                {:else}
+                  <strong>No category data yet</strong>
+                  <p>submit reports to see category breakdown</p>
+                {/if}
               </div>
             </div>
-            <div class="insight">
-              <div class="insight-icon positive">
-                <ThumbsUp size={16} />
-              </div>
-              <div>
-                <strong>86% satisfaction rate</strong>
-                <p>from community feedback</p>
-              </div>
-            </div>
+
           </div>
+        </div>
         </div>
       </div>
     {/if}
@@ -874,6 +949,11 @@
   .stat-trend.negative {
     background: #FEE2E2;
     color: #DC2626;
+  }
+  
+  .stat-trend.neutral {
+    color: #64748b;
+    background: #f1f5f9;
   }
 
   /* Charts Grid */
