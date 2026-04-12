@@ -63,43 +63,51 @@ function haversineKm(
 // TODO: swap the stub below for your real DB query once your reports table
 // has lat/lng columns. The interface above matches what the AI context needs.
 
+import { db } from '$lib/server/db';
+import { reports, categories, statuses } from '$lib/server/db/schema';
+import { gte, eq } from 'drizzle-orm';
+import { haversineKm } from '$lib/server/db/geo';
+
 async function fetchNearbyIncidents(
   lat: number,
   lng: number,
   radius_km: number
 ): Promise<NearbyIncident[]> {
-  // ── Real DB query (uncomment and adapt when ready) ────────────────────────
-  //
-  // import { db } from '$lib/server/db';
-  // import { reports } from '$lib/server/db/schema';
-  // import { and, gte, sql } from 'drizzle-orm';
-  //
-  // const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000); // last 48h
-  //
-  // const rows = await db
-  //   .select({
-  //     id:             reports.id,
-  //     title:          reports.title,
-  //     category:       reports.category,
-  //     severity:       reports.severity,
-  //     lat:            reports.lat,
-  //     lng:            reports.lng,
-  //     reported_at:    reports.createdAt,
-  //     location_label: reports.locationLabel,
-  //   })
-  //   .from(reports)
-  //   .where(gte(reports.createdAt, cutoff));
-  //
-  // return rows
-  //   .map(r => ({
-  //     ...r,
-  //     distance_km: haversineKm(lat, lng, r.lat, r.lng),
-  //   }))
-  //   .filter(r => r.distance_km <= radius_km)
-  //   .sort((a, b) => a.distance_km - b.distance_km)
-  //   .slice(0, 10); // cap at 10 to keep prompt size reasonable
-  //
-  // ─────────────────────────────────────────────────────────────────────────
+  // Last 48 hours
+  const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
+  const rows = await db
+    .select({
+      id:           reports.id,
+      title:        reports.title,
+      severity:     reports.severity,
+      location:     reports.location,
+      locationName: reports.locationName,
+      createdAt:    reports.createdAt,
+      categoryName: categories.name,
+    })
+    .from(reports)
+    .innerJoin(categories, eq(reports.categoryId, categories.id))
+    .where(gte(reports.createdAt, cutoff));
+
+  return rows
+    .map(r => {
+      const loc = r.location as { lat?: number; lng?: number } | null;
+      if (!loc?.lat || !loc?.lng) return null;
+      return {
+        id:             r.id,
+        title:          r.title,
+        category:       r.categoryName,
+        severity:       r.severity,
+        distance_km:    haversineKm(lat, lng, loc.lat, loc.lng),
+        reported_at:    r.createdAt.toISOString(),
+        location_label: r.locationName ?? undefined,
+      };
+    })
+    .filter((r): r is NearbyIncident => r !== null && r.distance_km <= radius_km)
+    .sort((a, b) => a.distance_km - b.distance_km)
+    .slice(0, 10);
+}
 
   // Stub — returns empty until DB is wired
   console.warn('[chat] fetchNearbyIncidents: using stub, no real DB query yet.');
