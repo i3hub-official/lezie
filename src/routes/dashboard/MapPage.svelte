@@ -14,6 +14,16 @@
   let searchQuery  = $state('');
   let selected     = $state<any>(null);
 
+$effect(() => {
+  // Re-fetch when date range changes
+  const range = filters.dateRange;
+  isLoading = true;
+  fetch(`/api/reports/map?dateRange=${range}`)
+    .then(r => r.json())
+    .then(data => { incidents = data; isLoading = false; })
+    .catch(() => { isLoading = false; });
+});
+
   const categories = [
     { value:'suspicious', label:'Suspicious', color:'#F59E0B', icon:AlertTriangle },
     { value:'theft',      label:'Theft',       color:'#EF4444', icon:AlertOctagon  },
@@ -31,22 +41,9 @@
   ];
 
   onMount(async () => {
-    await new Promise(r => setTimeout(r, 700));
-    incidents = [
-      { id:1, title:'Suspicious person near school', category:'suspicious', severity:'high',
-        lat:40.7128, lng:-74.0060, time:new Date().toISOString(), status:'active',
-        description:'Person acting suspiciously near the elementary school.', witnesses:3, isLive:true },
-      { id:2, title:'Car break-in on Main St', category:'theft', severity:'medium',
-        lat:40.7140, lng:-74.0080, time:new Date(Date.now()-3600000).toISOString(), status:'investigating',
-        description:'Multiple cars broken into overnight.', witnesses:5, isLive:false },
-      { id:3, title:'Vandalism at park', category:'vandalism', severity:'low',
-        lat:40.7110, lng:-74.0040, time:new Date(Date.now()-86400000).toISOString(), status:'resolved',
-        description:'Graffiti on park equipment.', witnesses:2, isLive:false },
-      { id:4, title:'Fire reported downtown', category:'fire', severity:'critical',
-        lat:40.7150, lng:-74.0100, time:new Date(Date.now()-7200000).toISOString(), status:'active',
-        description:'Structure fire, emergency services on scene.', witnesses:12, isLive:true },
-    ];
-    isLoading = false;
+    const res = await fetch(`/api/reports/map?dateRange=${filters.dateRange}`);
+  incidents = res.ok ? await res.json() : [];
+  isLoading = false;
   });
 
   const catColor  = (c: string) => categories.find(x => x.value === c)?.color ?? '#6B7280';
