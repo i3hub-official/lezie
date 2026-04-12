@@ -9,8 +9,6 @@
     Home, Sparkles, ShieldCheck, Smartphone
   } from 'lucide-svelte';
   
-  let Icon = $derived(getIdentifierIcon());
-  
   let step = $state<'identifier' | 'password'>('identifier');
   let formData = $state({
     identifier: '',
