@@ -1,3 +1,4 @@
+
 // src/lib/server/db/schema.ts
 
 import {
@@ -262,7 +263,7 @@ export const alertZones = pgTable('alert_zones', {
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   authUser: one(authUsers, {
-    fields: [users.hashable],
+    fields: [users.id],
     references: [authUsers.id]
   }),
   profile: one(userProfiles, {
