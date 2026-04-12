@@ -150,24 +150,9 @@ const authSession: Handle = async ({ event, resolve }) => {
   }
 
   // 5. Authenticated but email NOT verified → bounce to /verify-email
-  //    Re-read emailVerified from DB on every protected request — the session
-  //    cookie caches the old value and won't reflect verification immediately.
-  if (session && user && requiresVerification(path)) {
-    const { db }       = await import('$lib/server/db');
-    const { authUsers } = await import('$lib/server/db/auth-schema');
-    const { eq }       = await import('drizzle-orm');
-    const fresh = await db
-      .select({ emailVerified: authUsers.emailVerified })
-      .from(authUsers)
-      .where(eq(authUsers.id, user.id))
-      .limit(1)
-      .then(r => r[0]);
-
-    if (!fresh?.emailVerified) {
-      if (dev) console.log(`[AUTH] 📧 Unverified user blocked from ${path}`);
-      // Pass ref so the verify-email page can resend without raw email in URL
-      throw redirect(303, '/verify-email');
-    }
+  if (session && user && !(user as any).emailVerified && requiresVerification(path)) {
+    if (dev) console.log(`[AUTH] 📧 Unverified user blocked from ${path}`);
+    throw redirect(303, '/verify-email');
   }
 
   // 6. Authenticated + verified users have no reason to see auth pages → dashboard
