@@ -271,8 +271,9 @@
             </div>
 
             <div class="si-email-badge">
-              <svelte:component this={getIdentifierIcon()} size={14} class="si-badge-icon" />
-              <span class="si-badge-email">{formData.identifier}</span>
+            {@const Icon = getIdentifierIcon()}
+            <Icon size={14} class="si-badge-icon" />
+            <span class="si-badge-email">{formData.identifier}</span>
               <button type="button" class="si-badge-edit" onclick={goBackToIdentifier}>Edit</button>
             </div>
 
