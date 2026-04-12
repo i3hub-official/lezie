@@ -1,15 +1,17 @@
 // src/routes/api/login-resolver/+server.ts
+//
+// Resolves any identifier (email, username, phone) to the user's plaintext
+// email stored in authUsers — which Better Auth can use directly for signin.
+
 import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { authUsers } from '$lib/server/db/auth-schema';
+import { users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { searchHashFor } from '$lib/security/dataProtection';
 
-// Better Auth stores the encrypted email in the email column.
-// We return the encrypted email so authClient.signIn.email() can find
-// the user by matching it directly against the DB column.
-
-export const POST = async ({ request }) => {
+export const POST: RequestHandler = async ({ request }) => {
   const { identifier } = await request.json();
 
   if (!identifier?.trim()) {
@@ -19,38 +21,42 @@ export const POST = async ({ request }) => {
   const id = identifier.trim();
 
   try {
-    // 1. Try email hash
-    const emailHash = await searchHashFor(id.toLowerCase(), 'email');
+    // 1. Try direct email match on authUsers (plaintext)
     const byEmail = await db.query.authUsers.findFirst({
-      where: eq(authUsers.emailHash, emailHash)
+      where: eq(authUsers.email, id.toLowerCase()),
     });
-    if (byEmail?.email) {
-      // Return the encrypted email — Better Auth matches against the encrypted column
+    if (byEmail) {
       return json({ email: byEmail.email });
     }
 
-    // 2. Try username hash
+    // 2. Try username — look up hash in your users table, get authUser id, get email
     const usernameHash = await searchHashFor(id.toLowerCase(), 'username');
-    const byUsername = await db.query.authUsers.findFirst({
-      where: eq(authUsers.usernameHash, usernameHash)
+    const byUsername = await db.query.users.findFirst({
+      where: eq(users.usernameHash, usernameHash),
     });
-    if (byUsername?.email) {
-      return json({ email: byUsername.email });
+    if (byUsername) {
+      const authUser = await db.query.authUsers.findFirst({
+        where: eq(authUsers.id, byUsername.id as any),
+      });
+      if (authUser) return json({ email: authUser.email });
     }
 
-    // 3. Try phone hash
+    // 3. Try phone — same pattern
     const phoneHash = await searchHashFor(id, 'phone');
-    const byPhone = await db.query.authUsers.findFirst({
-      where: eq(authUsers.phoneHash, phoneHash)
+    const byPhone = await db.query.users.findFirst({
+      where: eq(users.phoneHash, phoneHash),
     });
-    if (byPhone?.email) {
-      return json({ email: byPhone.email });
+    if (byPhone) {
+      const authUser = await db.query.authUsers.findFirst({
+        where: eq(authUsers.id, byPhone.id as any),
+      });
+      if (authUser) return json({ email: authUser.email });
     }
 
     return json({ error: 'Account not found' }, { status: 404 });
 
   } catch (err) {
-    console.error('[LOGIN-RESOLVER] Error:', err);
+    console.error('[LOGIN-RESOLVER]', err);
     return json({ error: 'Something went wrong' }, { status: 500 });
   }
 };
