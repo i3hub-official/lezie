@@ -1,13 +1,17 @@
 // src/routes/api/ai/alerts/+server.ts
-// Handles two concerns:
-//   GET  /api/ai/alerts          → load user's alert zones from DB
-//   POST /api/ai/alerts          → create a new alert zone
-//   PATCH /api/ai/alerts         → toggle active/inactive
-//   DELETE /api/ai/alerts        → delete a zone
-//   POST /api/ai/alerts/analyse  → AI pattern detection on nearby incidents
+// Handles:
+//   GET    /api/ai/alerts          → load user's alert zones from DB
+//   POST   /api/ai/alerts          → create a new alert zone
+//   POST   /api/ai/alerts/analyse  → AI pattern detection on nearby incidents
+//   PATCH  /api/ai/alerts          → toggle active/inactive
+//   DELETE /api/ai/alerts          → delete a zone
 
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { db } from '$lib/server/db';
+import { alertZones, reports, categories, users } from '$lib/server/db/schema';
+import { eq, and, gte, desc } from 'drizzle-orm';
+import { auth } from '$lib/server/auth';
 import {
   getGeminiKey,
   AI_MODEL,
@@ -23,7 +27,7 @@ export interface AlertZone {
   id: string;
   userId: string;
   name: string;
-  radius: number;              // km — enforced max 2km per spec
+  radius: number;
   categories: string[];
   severity: SeverityLevel[];
   isActive: boolean;
@@ -49,10 +53,7 @@ export interface AIPatternResult {
   analysed_at: string;
 }
 
-// ─── Radius Guard ─────────────────────────────────────────────────────────────
-// Per spec: alerts are limited to users within 1–2km of an incident.
-// Zone radius is therefore capped at 2km server-side — client slider can go
-// higher but we clamp it here so no zone can ever exceed policy.
+// ─── Radius guard — max 2km per spec ─────────────────────────────────────────
 
 const MAX_RADIUS_KM = 2;
 
@@ -60,7 +61,7 @@ function clampRadius(radius: number): number {
   return Math.min(MAX_RADIUS_KM, Math.max(0.1, Number(radius) || 1));
 }
 
-// ─── Haversine (for filtering incidents to zone radius) ───────────────────────
+// ─── Haversine ────────────────────────────────────────────────────────────────
 
 function haversineKm(
   lat1: number, lng1: number,
@@ -77,15 +78,23 @@ function haversineKm(
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// ─── DB Stubs (replace with your Drizzle queries) ─────────────────────────────
+// ─── Auth ─────────────────────────────────────────────────────────────────────
 
+async function requireUser(request: Request): Promise<string> {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session?.user?.id) throw error(401, 'Unauthorised.');
 
-import { db } from '$lib/server/db';
-import { alertZones, reports, categories } from '$lib/server/db/schema';
-import { eq, and, gte } from 'drizzle-orm';
-import { haversineKm } from '$lib/server/db/geo';
+  const [user] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.hashable, session.user.id));
 
-// ── getZonesForUser ──────────────────────────────────────────
+  if (!user) throw error(401, 'User not found.');
+  return user.id;
+}
+
+// ─── DB helpers ───────────────────────────────────────────────────────────────
+
 async function getZonesForUser(userId: string): Promise<AlertZone[]> {
   const rows = await db
     .select()
@@ -110,7 +119,6 @@ async function getZonesForUser(userId: string): Promise<AlertZone[]> {
   }));
 }
 
-// ── createZoneInDB ───────────────────────────────────────────
 async function createZoneInDB(
   zone: Omit<AlertZone, 'id' | 'createdAt' | 'lastTriggered' | 'notificationCount'>
 ): Promise<AlertZone> {
@@ -146,7 +154,6 @@ async function createZoneInDB(
   };
 }
 
-// ── toggleZoneInDB ───────────────────────────────────────────
 async function toggleZoneInDB(zoneId: string, userId: string): Promise<boolean> {
   const [zone] = await db
     .select({ isActive: alertZones.isActive })
@@ -157,16 +164,12 @@ async function toggleZoneInDB(zoneId: string, userId: string): Promise<boolean> 
 
   await db
     .update(alertZones)
-    .set({
-      isActive:  !zone.isActive,
-      updatedAt: new Date(),
-    })
+    .set({ isActive: !zone.isActive, updatedAt: new Date() })
     .where(and(eq(alertZones.id, zoneId), eq(alertZones.userId, userId)));
 
   return !zone.isActive;
 }
 
-// ── deleteZoneFromDB ─────────────────────────────────────────
 async function deleteZoneFromDB(zoneId: string, userId: string): Promise<void> {
   const result = await db
     .delete(alertZones)
@@ -176,7 +179,6 @@ async function deleteZoneFromDB(zoneId: string, userId: string): Promise<void> {
   if (result.length === 0) throw error(404, 'Alert zone not found.');
 }
 
-// ── getRecentIncidentsNearZones ──────────────────────────────
 async function getRecentIncidentsNearZones(zones: AlertZone[]): Promise<object[]> {
   const cutoff = new Date(Date.now() - 72 * 60 * 60 * 1000);
 
@@ -192,30 +194,34 @@ async function getRecentIncidentsNearZones(zones: AlertZone[]): Promise<object[]
     })
     .from(reports)
     .innerJoin(categories, eq(reports.categoryId, categories.id))
-    .where(gte(reports.createdAt, cutoff));
+    .where(gte(reports.createdAt, cutoff))
+    .orderBy(desc(reports.createdAt));
 
-  return rows.filter(r => {
-    const loc = r.location as { lat?: number; lng?: number } | null;
-    if (!loc?.lat || !loc?.lng) return false;
-    return zones.some(zone => {
-      if (!zone.lat || !zone.lng) return false;
-      return haversineKm(zone.lat, zone.lng, loc.lat!, loc.lng!) <= zone.radius;
+  return rows
+    .filter(r => {
+      const loc = r.location as { lat?: number; lng?: number } | null;
+      if (!loc?.lat || !loc?.lng) return false;
+      return zones.some(zone => {
+        if (!zone.lat || !zone.lng) return false;
+        return haversineKm(zone.lat, zone.lng, loc.lat!, loc.lng!) <= zone.radius;
+      });
+    })
+    .map(r => {
+      const loc = r.location as { lat: number; lng: number };
+      return {
+        id:         r.id,
+        title:      r.title,
+        category:   r.categoryName,
+        severity:   r.severity,
+        location:   r.locationName,
+        lat:        loc.lat,
+        lng:        loc.lng,
+        reportedAt: r.createdAt.toISOString(),
+      };
     });
-  }).map(r => {
-    const loc = r.location as { lat: number; lng: number };
-    return {
-      id:           r.id,
-      title:        r.title,
-      category:     r.categoryName,
-      severity:     r.severity,
-      location:     r.locationName,
-      lat:          loc.lat,
-      lng:          loc.lng,
-      reportedAt:   r.createdAt.toISOString(),
-    };
-  });
 }
-// ─── AI Pattern Detection ─────────────────────────────────────────────────────
+
+// ─── AI pattern detection ─────────────────────────────────────────────────────
 
 async function analysePatterns(
   incidents: object[],
@@ -262,7 +268,7 @@ Return the JSON as instructed.
 
   if (!res.ok) {
     const errText = await res.text();
-    console.error('[smart-alerts] Gemini error:', res.status, errText);
+    console.error('[alerts] Gemini error:', res.status, errText);
     throw error(502, `AI service error (${res.status}). Please try again.`);
   }
 
@@ -270,7 +276,7 @@ Return the JSON as instructed.
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
   if (!text) {
-    console.error('[smart-alerts] Unexpected Gemini shape:', JSON.stringify(data));
+    console.error('[alerts] Unexpected Gemini shape:', JSON.stringify(data));
     throw error(502, 'AI returned an unexpected response. Please try again.');
   }
 
@@ -279,38 +285,34 @@ Return the JSON as instructed.
     const clean = text.replace(/```json|```/gi, '').trim();
     parsed = JSON.parse(clean);
   } catch {
-    console.error('[smart-alerts] Failed to parse AI JSON:', text);
+    console.error('[alerts] Failed to parse AI JSON:', text);
     throw error(502, 'AI returned malformed JSON. Please try again.');
   }
 
-  return {
-    ...parsed,
-    analysed_at: new Date().toISOString(),
-  };
+  return { ...parsed, analysed_at: new Date().toISOString() };
 }
 
-// ─── Auth Helper ──────────────────────────────────────────────────────────────
-// Swap this for your real session check (Better Auth / your auth-client pattern)
+// ─── Handlers ─────────────────────────────────────────────────────────────────
 
-import { auth } from '$lib/server/auth';
+export const GET: RequestHandler = async ({ request }) => {
+  const userId = await requireUser(request);
+  const zones  = await getZonesForUser(userId);
+  return json({ zones }, { status: 200 });
+};
 
-async function requireUser(request: Request): Promise<string> {
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session?.user?.id) throw error(401, 'Unauthorised.');
+export const POST: RequestHandler = async ({ request, url }) => {
+  const userId = await requireUser(request);
 
-  // Resolve to your internal users.id via the hashable link
-  const [user] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.hashable, session.user.id));
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    throw error(400, 'Invalid JSON in request body.');
+  }
 
-  if (!user) throw error(401, 'User not found.');
-  return user.id;
-}
-
-  // ── AI analysis sub-route ─────────────────────────────────────────────────
+  // AI analysis sub-route
   if (url.pathname.endsWith('/analyse')) {
-    const zones = await getZonesForUser(userId);
+    const zones       = await getZonesForUser(userId);
     const activeZones = zones.filter(z => z.isActive);
 
     if (activeZones.length === 0) {
@@ -323,17 +325,17 @@ async function requireUser(request: Request): Promise<string> {
     }
 
     const incidents = await getRecentIncidentsNearZones(activeZones);
-    const result = await analysePatterns(incidents, activeZones);
+    const result    = await analysePatterns(incidents, activeZones);
     return json(result, { status: 200 });
   }
 
-  // ── Create new zone ───────────────────────────────────────────────────────
-  const { name, radius, categories, severity, isActive, location, lat, lng } = body;
+  // Create new zone
+  const { name, radius, categories: cats, severity, isActive, location, lat, lng } = body;
 
   if (!name || typeof name !== 'string' || name.trim().length < 2) {
     throw error(400, 'Field "name" is required (min 2 characters).');
   }
-  if (!Array.isArray(categories) || categories.length === 0) {
+  if (!Array.isArray(cats) || cats.length === 0) {
     throw error(400, 'At least one category is required.');
   }
   if (!Array.isArray(severity) || severity.length === 0) {
@@ -342,9 +344,9 @@ async function requireUser(request: Request): Promise<string> {
 
   const newZone = await createZoneInDB({
     userId,
-    name:       name.trim(),
-    radius:     clampRadius(radius as number),   // ← radius capped at 2km
-    categories: categories as string[],
+    name:       (name as string).trim(),
+    radius:     clampRadius(radius as number),
+    categories: cats as string[],
     severity:   severity as SeverityLevel[],
     isActive:   typeof isActive === 'boolean' ? isActive : true,
     location:   typeof location === 'string' ? location.trim() : 'Custom Area',
@@ -355,7 +357,6 @@ async function requireUser(request: Request): Promise<string> {
   return json({ zone: newZone }, { status: 201 });
 };
 
-// PATCH — toggle a zone's active state
 export const PATCH: RequestHandler = async ({ request }) => {
   const userId = await requireUser(request);
 
@@ -375,7 +376,6 @@ export const PATCH: RequestHandler = async ({ request }) => {
   return json({ isActive: newState }, { status: 200 });
 };
 
-// DELETE — remove a zone
 export const DELETE: RequestHandler = async ({ request }) => {
   const userId = await requireUser(request);
 
