@@ -9,6 +9,8 @@
     Home, Sparkles, ShieldCheck, Smartphone
   } from 'lucide-svelte';
   
+  let Icon = $derived(getIdentifierIcon());
+  
   let step = $state<'identifier' | 'password'>('identifier');
   let formData = $state({
     identifier: '',
@@ -271,7 +273,6 @@
             </div>
 
            <div class="si-email-badge">
-  {@const Icon = getIdentifierIcon()}
   <Icon size={14} class="si-badge-icon" />
   <span class="si-badge-email">{formData.identifier}</span>
   <button type="button" class="si-badge-edit" onclick={goBackToIdentifier}>Edit</button>
