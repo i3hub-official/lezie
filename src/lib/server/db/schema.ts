@@ -15,6 +15,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
+import { nanoid } from 'nanoid';
 import { authUsers } from './auth-schema';
 
 // ==================== ENUMS ====================
@@ -32,7 +33,7 @@ export const mediaTypeEnum = pgEnum('media_type', ['image', 'video', 'audio']);
 
 // Users table
 export const users = pgTable('users', {
-  id: text('id').primaryKey(), // NanoID from Better Auth
+  id: text('id').primaryKey().$defaultFn(() => nanoid()), // NanoID — set by Better Auth on signup, fallback for direct inserts
   hashable: text('hashable').references(() => authUsers.id).unique(),
   email: varchar('email', { length: 255 }),
   phone: varchar('phone', { length: 255 }),
@@ -57,8 +58,8 @@ export const users = pgTable('users', {
 
 // User profiles
 export const userProfiles = pgTable('user_profiles', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').references(() => users.id).notNull().unique(), // Changed to text
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  userId: text('user_id').references(() => users.id).notNull().unique(),
   firstName: varchar('first_name', { length: 255 }),
   lastName: varchar('last_name', { length: 400 }),
   avatarUrl: varchar('avatar_url', { length: 500 }),
@@ -73,6 +74,24 @@ export const userProfiles = pgTable('user_profiles', {
 }, (table) => [
   index('user_profiles_name_idx').on(table.firstName, table.lastName),
 ]);
+
+// User Preferences
+export const userPreferences = pgTable('user_preferences', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  userId: text('user_id').references(() => users.id).notNull().unique(),
+  alertRadius: integer('alert_radius').default(5).notNull(),
+  quietHoursEnabled: boolean('quiet_hours_enabled').default(false).notNull(),
+  quietHoursStart: varchar('quiet_hours_start', { length: 5 }),
+  quietHoursEnd: varchar('quiet_hours_end', { length: 5 }),
+  notifyCritical: boolean('notify_critical').default(true).notNull(),
+  notifyHigh: boolean('notify_high').default(true).notNull(),
+  notifyMedium: boolean('notify_medium').default(true).notNull(),
+  notifyLow: boolean('notify_low').default(false).notNull(),
+  language: varchar('language', { length: 10 }).default('en'),
+  theme: varchar('theme', { length: 20 }).default('light'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
 
 // Categories
 export const categories = pgTable('categories', {
@@ -101,7 +120,7 @@ export const statuses = pgTable('statuses', {
 // Reports
 export const reports = pgTable('reports', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: text('user_id').references(() => users.id), // Changed to text
+  userId: text('user_id').references(() => users.id),
   categoryId: uuid('category_id').references(() => categories.id).notNull(),
   statusId: uuid('status_id').references(() => statuses.id).notNull(),
   title: varchar('title', { length: 200 }).notNull(),
@@ -121,7 +140,7 @@ export const reports = pgTable('reports', {
 export const reportMedia = pgTable('report_media', {
   id: uuid('id').primaryKey().defaultRandom(),
   reportId: uuid('report_id').references(() => reports.id).notNull(),
-  userId: text('user_id').references(() => users.id).notNull(), // Changed to text
+  userId: text('user_id').references(() => users.id).notNull(),
   mediaType: mediaTypeEnum('media_type').notNull(),
   url: varchar('url', { length: 500 }).notNull(),
   thumbnailUrl: varchar('thumbnail_url', { length: 500 }),
@@ -136,7 +155,7 @@ export const reportMedia = pgTable('report_media', {
 export const reportComments = pgTable('report_comments', {
   id: uuid('id').primaryKey().defaultRandom(),
   reportId: uuid('report_id').references(() => reports.id).notNull(),
-  userId: text('user_id').references(() => users.id).notNull(), // Changed to text
+  userId: text('user_id').references(() => users.id).notNull(),
   comment: text('comment').notNull(),
   isOfficial: boolean('is_official').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -146,7 +165,7 @@ export const reportComments = pgTable('report_comments', {
 // Notifications
 export const notifications = pgTable('notifications', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: text('user_id').references(() => users.id).notNull(), // Changed to text
+  userId: text('user_id').references(() => users.id).notNull(),
   type: notificationTypeEnum('type').notNull(),
   title: varchar('title', { length: 200 }).notNull(),
   body: text('body').notNull(),
@@ -155,33 +174,15 @@ export const notifications = pgTable('notifications', {
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
-// User Preferences
-export const userPreferences = pgTable('user_preferences', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').references(() => users.id).notNull().unique(), // Changed to text
-  alertRadius: integer('alert_radius').default(5).notNull(),
-  quietHoursEnabled: boolean('quiet_hours_enabled').default(false).notNull(),
-  quietHoursStart: varchar('quiet_hours_start', { length: 5 }),
-  quietHoursEnd: varchar('quiet_hours_end', { length: 5 }),
-  notifyCritical: boolean('notify_critical').default(true).notNull(),
-  notifyHigh: boolean('notify_high').default(true).notNull(),
-  notifyMedium: boolean('notify_medium').default(true).notNull(),
-  notifyLow: boolean('notify_low').default(false).notNull(),
-  language: varchar('language', { length: 10 }).default('en'),
-  theme: varchar('theme', { length: 20 }).default('light'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull()
-});
-
 // Identity Flags
 export const identityFlags = pgTable('identity_flags', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: text('user_id').references(() => users.id).notNull(), // Changed to text
+  userId: text('user_id').references(() => users.id).notNull(),
   flagType: flagTypeEnum('flag_type').notNull(),
   description: text('description').notNull(),
   metadata: jsonb('metadata'),
   resolved: boolean('resolved').default(false).notNull(),
-  resolvedBy: text('resolved_by').references(() => users.id), // Changed to text
+  resolvedBy: text('resolved_by').references(() => users.id),
   resolvedAt: timestamp('resolved_at'),
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
@@ -189,7 +190,7 @@ export const identityFlags = pgTable('identity_flags', {
 // Audit Logs
 export const auditLogs = pgTable('audit_logs', {
   id: uuid('id').primaryKey().defaultRandom(),
-  adminId: text('admin_id').references(() => users.id).notNull(), // Changed to text
+  adminId: text('admin_id').references(() => users.id).notNull(),
   action: varchar('action', { length: 100 }).notNull(),
   targetType: varchar('target_type', { length: 50 }).notNull(),
   targetId: uuid('target_id').notNull(),
@@ -202,7 +203,7 @@ export const auditLogs = pgTable('audit_logs', {
 // Sessions
 export const sessions = pgTable('sessions', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: text('user_id').references(() => users.id).notNull(), // Changed to text
+  userId: text('user_id').references(() => users.id).notNull(),
   token: varchar('token', { length: 500 }).notNull(),
   deviceInfo: jsonb('device_info'),
   ipAddress: varchar('ip_address', { length: 45 }),
@@ -216,7 +217,7 @@ export const sessions = pgTable('sessions', {
 // Saved Locations
 export const savedLocations = pgTable('saved_locations', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: text('user_id').references(() => users.id).notNull(), // Changed to text
+  userId: text('user_id').references(() => users.id).notNull(),
   name: varchar('name', { length: 255 }).notNull(),
   location: jsonb('location').notNull(),
   address: text('address'),
@@ -233,8 +234,14 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     fields: [users.hashable],
     references: [authUsers.id]
   }),
-  profile: one(userProfiles),
-  preferences: one(userPreferences),
+  profile: one(userProfiles, {
+    fields: [users.id],
+    references: [userProfiles.userId]
+  }),
+  preferences: one(userPreferences, {
+    fields: [users.id],
+    references: [userPreferences.userId]
+  }),
   reports: many(reports),
   comments: many(reportComments),
   media: many(reportMedia),
