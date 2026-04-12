@@ -84,7 +84,11 @@
   ];
 
   // ── Derived ──
-  const unreadCount = $derived(notifications.filter(n => !n.read).length);
+  const unreadCount = $derived(
+    (data.unreadCount ?? 0) > 0
+      ? data.unreadCount
+      : notifications.filter((n: any) => !n.read).length
+  );
 
   // ── Mount ──
   onMount(() => {
@@ -128,64 +132,67 @@
 
   async function loadData() {
     isLoading = true;
-    await new Promise(r => setTimeout(r, 600));
+
+    // ── Stats ────────────────────────────────────────────────────────────────
+    const summary = data.reportSummary;
+    const total   = summary?.total ?? 0;
+    const high    = (summary?.high ?? 0) + (summary?.critical ?? 0);
 
     stats = {
-      totalReports:     47,
-      activeAlerts:     3,
-      communityMembers: 1250,
-      safetyScore:      86,
-      verifiedReports:  32,
-      pendingReviews:   8
+      totalReports:     total,
+      verifiedReports:  (data.recentReports ?? []).filter(
+        (r: any) => r.verificationStatus === 'community-verified'
+      ).length,
+      activeAlerts:     data.unreadCount ?? 0,
+      safetyScore:      total > 0
+        ? Math.min(100, Math.round(((total - high) / total) * 100))
+        : 0,
+      communityMembers: 0,
+      pendingReviews:   0,
     };
 
-    recentIncidents = [
-      {
-        id: 1, title: 'Suspicious person near school',
-        category: 'suspicious', severity: 'high',
-        time: new Date(Date.now() - 2 * 3600000).toISOString(),
-        location: 'Maple Street Elementary',
-        status: 'verified', verificationCount: 15, commentCount: 8
-      },
-      {
-        id: 2, title: 'Car break-in on Main St',
-        category: 'theft', severity: 'medium',
-        time: new Date(Date.now() - 5 * 3600000).toISOString(),
-        location: 'Main Street',
-        status: 'investigating', verificationCount: 12, commentCount: 5
-      },
-      {
-        id: 3, title: 'Vandalism at community park',
-        category: 'vandalism', severity: 'low',
-        time: new Date(Date.now() - 86400000).toISOString(),
-        location: 'Oak Park',
-        status: 'resolved', verificationCount: 8, commentCount: 3
-      }
-    ];
+    // ── Recent incidents ─────────────────────────────────────────────────────
+    recentIncidents = (data.recentReports ?? []).slice(0, 5).map((r: any) => ({
+      id:                r.id,
+      title:             r.title,
+      category:          (r.categoryName  ?? 'other').toLowerCase(),
+      severity:          r.severity,
+      time:              typeof r.createdAt === 'string'
+                           ? r.createdAt
+                           : new Date(r.createdAt).toISOString(),
+      location:          r.locationName   ?? 'Unknown location',
+      status:            (r.statusName    ?? 'reported').toLowerCase(),
+      verificationCount: 0,
+      commentCount:      0,
+    }));
 
-    notifications = [
-      {
-        id: 1, type: 'alert', read: false,
-        message: 'Suspicious activity reported on Maple Street',
-        time: new Date(Date.now() - 600000).toISOString()
-      },
-      {
-        id: 2, type: 'success', read: false,
-        message: 'Community members confirmed your report',
-        time: new Date(Date.now() - 3600000).toISOString()
-      },
-      {
-        id: 3, type: 'info', read: true,
-        message: 'Your neighbourhood safety score improved',
-        time: new Date(Date.now() - 86400000).toISOString()
-      }
-    ];
+    // ── Notifications ─────────────────────────────────────────────────────────
+    // Map DB enum → template keys:
+    //   'verification' → 'success'
+    //   'system'       → 'info'
+    //   'alert'        → 'alert'  (unchanged)
+    const typeMap: Record<string, string> = {
+      verification: 'success',
+      system:       'info',
+      alert:        'alert',
+    };
 
+    notifications = (data.recentNotifications ?? []).slice(0, 5).map((n: any) => ({
+      id:      n.id,
+      type:    typeMap[n.type] ?? 'info',
+      read:    n.isRead,
+      message: n.body,
+      time:    typeof n.createdAt === 'string'
+                 ? n.createdAt
+                 : new Date(n.createdAt).toISOString(),
+    }));
+
+    // ── Safety tips — static content ──────────────────────────────────────────
     safetyTips = [
       'Always be aware of your surroundings',
       'Report suspicious activity immediately',
       'Share your location with trusted contacts',
-      'Keep emergency numbers saved'
+      'Keep emergency numbers saved',
     ];
 
     isLoading = false;
