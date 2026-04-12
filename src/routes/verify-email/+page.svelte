@@ -1,39 +1,28 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
   import { onMount, onDestroy } from 'svelte';
   import { Mail, RefreshCw, CheckCircle, AlertCircle, ArrowRight, Home, ShieldCheck } from 'lucide-svelte';
 
   let { data } = $props();
 
   // ── Code input ───────────────────────────────────────────
-  let codeDigits   = $state(['', '', '', '', '', '']);
-  let codeError    = $state('');
-  let codeSuccess  = $state(false);
-  let verifying    = $state(false);
-  let inputRefs:   HTMLInputElement[] = [];
+  let codeDigits  = $state(['', '', '', '', '', '']);
+  let codeError   = $state('');
+  let codeSuccess = $state(false);
+  let verifying   = $state(false);
+  let inputRefs: HTMLInputElement[] = [];
 
   function onDigitInput(e: Event, index: number) {
     const input = e.target as HTMLInputElement;
-    const val   = input.value.replace(/\D/g, '').slice(-1); // digits only, last char
+    const val   = input.value.replace(/\D/g, '').slice(-1);
     codeDigits[index] = val;
     codeError = '';
-
-    // Auto-advance
-    if (val && index < 5) {
-      inputRefs[index + 1]?.focus();
-    }
-
-    // Auto-submit when all 6 filled
-    if (codeDigits.every(d => d !== '')) {
-      submitCode();
-    }
+    if (val && index < 5) inputRefs[index + 1]?.focus();
+    if (codeDigits.every(d => d !== '')) submitCode();
   }
 
   function onDigitKeydown(e: KeyboardEvent, index: number) {
-    if (e.key === 'Backspace' && !codeDigits[index] && index > 0) {
-      inputRefs[index - 1]?.focus();
-    }
-    if (e.key === 'ArrowLeft' && index > 0) inputRefs[index - 1]?.focus();
+    if (e.key === 'Backspace' && !codeDigits[index] && index > 0) inputRefs[index - 1]?.focus();
+    if (e.key === 'ArrowLeft'  && index > 0) inputRefs[index - 1]?.focus();
     if (e.key === 'ArrowRight' && index < 5) inputRefs[index + 1]?.focus();
   }
 
@@ -47,27 +36,18 @@
     }
   }
 
- async function submitCode() {
+  async function submitCode() {
     const code = codeDigits.join('');
     if (code.length !== 6) return;
 
     verifying = true;
     codeError = '';
 
-    // Read the tokenHash stored by the /verify page
-    const tokenHash = sessionStorage.getItem('_vth');
-
-    if (!tokenHash) {
-      codeError = 'Session expired. Please click the verification link again.';
-      verifying = false;
-      return;
-    }
-
     try {
       const res = await fetch('/api/verify-code', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ code, tokenHash }),
+        body:    JSON.stringify({ code }),
       });
 
       const body = await res.json();
@@ -79,11 +59,9 @@
         return;
       }
 
-      // Clear the stored hash — it's been used
-      sessionStorage.removeItem('_vth');
-
       codeSuccess = true;
-      setTimeout(() => goto('/dashboard'), 1200);
+      // Full reload so the session re-reads emailVerified: true from the DB
+      setTimeout(() => { window.location.href = '/dashboard'; }, 1200);
     } catch {
       codeError = 'Something went wrong. Please try again.';
     } finally {
@@ -91,7 +69,7 @@
     }
   }
 
-    // ── Resend cooldown (persistent across navigation) ──────
+  // ── Resend cooldown (persistent across navigation) ───────
   const COOLDOWN_SECS = 60;
   const COOLDOWN_KEY  = 'lezie_resend_cooldown_until';
 
@@ -107,7 +85,6 @@
   }
 
   function startCooldown() {
-    // Store the expiry timestamp — survives page navigation
     sessionStorage.setItem(COOLDOWN_KEY, String(Date.now() + COOLDOWN_SECS * 1000));
     tickCooldown();
   }
@@ -116,18 +93,13 @@
     if (timer) clearInterval(timer);
     cooldown = getRemainingCooldown();
     if (cooldown <= 0) return;
-
     timer = setInterval(() => {
       cooldown = getRemainingCooldown();
-      if (cooldown <= 0) {
-        clearInterval(timer!);
-        timer = null;
-      }
+      if (cooldown <= 0) { clearInterval(timer!); timer = null; }
     }, 1000);
   }
 
   onMount(() => {
-    // Resume any existing cooldown that was running before navigation
     tickCooldown();
     inputRefs[0]?.focus();
   });
@@ -161,7 +133,7 @@
     }
   }
 
-  // Dots animation
+  // ── Dots animation ───────────────────────────────────────
   let activeDot = $state(0);
   let dotTimer: ReturnType<typeof setInterval>;
   onMount(() => { dotTimer = setInterval(() => { activeDot = (activeDot + 1) % 3; }, 900); });
