@@ -33,6 +33,7 @@ const ROUTE_CONFIG = {
     '/api/resend-verification', // resend verification email
     '/api/create-email-ref',    // called immediately after signup before cookie propagates
     '/api/verify-code',         // validates the entered code against the httpOnly cookie
+    '/api/login-resolver',      // resolves email/username/phone to email for signin
     '/_app',                    // SvelteKit build assets
     '/favicon',                 // Favicon requests
   ],
@@ -149,11 +150,24 @@ const authSession: Handle = async ({ event, resolve }) => {
   }
 
   // 5. Authenticated but email NOT verified → bounce to /verify-email
-  //    Only applies to routes that explicitly require verification.
-  //    Public routes (signin, signup, verify-email itself) pass through freely.
-  if (session && user && !(user as any).emailVerified && requiresVerification(path)) {
-    if (dev) console.log(`[AUTH] 📧 Unverified user blocked from ${path}`);
-    throw redirect(303, `/verify-email?email=${encodeURIComponent(user.email)}`);
+  //    Re-read emailVerified from DB on every protected request — the session
+  //    cookie caches the old value and won't reflect verification immediately.
+  if (session && user && requiresVerification(path)) {
+    const { db }       = await import('$lib/server/db');
+    const { authUsers } = await import('$lib/server/db/auth-schema');
+    const { eq }       = await import('drizzle-orm');
+    const fresh = await db
+      .select({ emailVerified: authUsers.emailVerified })
+      .from(authUsers)
+      .where(eq(authUsers.id, user.id))
+      .limit(1)
+      .then(r => r[0]);
+
+    if (!fresh?.emailVerified) {
+      if (dev) console.log(`[AUTH] 📧 Unverified user blocked from ${path}`);
+      // Pass ref so the verify-email page can resend without raw email in URL
+      throw redirect(303, '/verify-email');
+    }
   }
 
   // 6. Authenticated + verified users have no reason to see auth pages → dashboard
