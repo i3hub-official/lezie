@@ -19,7 +19,6 @@ import { dev } from '$app/environment';
  */
 const ROUTE_CONFIG = {
   PUBLIC_EXACT: new Set([
-'/',
     '/signin',
     '/signup',
     '/forgot-password',
@@ -29,10 +28,11 @@ const ROUTE_CONFIG = {
   ]),
 
   PUBLIC_PREFIX: [
-    '/api/auth',              // Better Auth internal endpoints
+    '/api/auth',                // Better Auth internal endpoints
     '/api/resend-verification', // resend verification email
-    '/_app',                  // SvelteKit build assets
-    '/favicon',               // Favicon requests
+    '/api/create-email-ref',    // called immediately after signup before cookie propagates
+    '/_app',                    // SvelteKit build assets
+    '/favicon',                 // Favicon requests
   ],
 
   // Paths that require a verified email — authenticated but unverified
