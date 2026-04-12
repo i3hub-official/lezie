@@ -161,35 +161,34 @@
     </div>
 
     <!-- Stats Cards -->
-   <div class="stat-card">
-  <div class="stat-icon members-icon"><Users size={22} /></div>
-  <div class="stat-content">
-    <span class="stat-value">{data.stats.memberCount.toLocaleString()}</span>
-    <span class="stat-label">Active Members</span>
-  </div>
-</div>
-<div class="stat-card">
-  <div class="stat-icon posts-icon"><MessageCircle size={22} /></div>
-  <div class="stat-content">
-    <span class="stat-value">{data.stats.postCount.toLocaleString()}</span>
-    <span class="stat-label">Total Posts</span>
-  </div>
-</div>
-<div class="stat-card">
-  <div class="stat-icon discussions-icon"><MessageSquare size={22} /></div>
-  <div class="stat-content">
-    <span class="stat-value">{data.stats.discussionCount.toLocaleString()}</span>
-    <span class="stat-label">Discussions</span>
-  </div>
-</div>
-<div class="stat-card">
-  <div class="stat-icon events-icon"><Calendar size={22} /></div>
-  <div class="stat-content">
-    <span class="stat-value">{data.stats.eventCount.toLocaleString()}</span>
-    <span class="stat-label">Upcoming Events</span>
-  </div>
-</div>
-
+    <div class="stat-card">
+      <div class="stat-icon members-icon"><Users size={22} /></div>
+      <div class="stat-content">
+        <span class="stat-value">{data.stats.memberCount.toLocaleString()}</span>
+        <span class="stat-label">Active Members</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon posts-icon"><MessageCircle size={22} /></div>
+      <div class="stat-content">
+        <span class="stat-value">{data.stats.postCount.toLocaleString()}</span>
+        <span class="stat-label">Total Posts</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon discussions-icon"><MessageSquare size={22} /></div>
+      <div class="stat-content">
+        <span class="stat-value">{data.stats.discussionCount.toLocaleString()}</span>
+        <span class="stat-label">Discussions</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon events-icon"><Calendar size={22} /></div>
+      <div class="stat-content">
+        <span class="stat-value">{data.stats.eventCount.toLocaleString()}</span>
+        <span class="stat-label">Upcoming Events</span>
+      </div>
+    </div>
 
     <!-- Search Bar -->
     <div class="search-bar-wrapper">
@@ -219,20 +218,20 @@
       </div>
       <div class="filter-buttons">
         <button
-  class="filter-btn {showNeighbourhoodFeed ? 'active' : ''}"
-  onclick={() => showNeighbourhoodFeed = !showNeighbourhoodFeed}
->
-  <Radio size={14} />
-  <span>Nearby Feed</span>
-  <span class="filter-count">live</span>
-</button>
+          class="filter-btn {showNeighbourhoodFeed ? 'active' : ''}"
+          onclick={() => showNeighbourhoodFeed = !showNeighbourhoodFeed}
+        >
+          <Radio size={14} />
+          <span>Nearby Feed</span>
+          <span class="filter-count">live</span>
+        </button>
         <button 
           class="filter-btn {showDiscussions ? 'active' : ''}" 
           onclick={() => showDiscussions = !showDiscussions}
         >
           <MessageSquare size={14} />
           <span>Discussions</span>
-          <span class="filter-count">{getFilteredDiscussions().length}</span>
+          <span class="filter-count">{filteredDiscussions.length}</span>
         </button>
         <button 
           class="filter-btn {showMembers ? 'active' : ''}" 
@@ -240,7 +239,7 @@
         >
           <Users size={14} />
           <span>Members</span>
-          <span class="filter-count">{getFilteredMembers().length}</span>
+          <span class="filter-count">{filteredMembers.length}</span>
         </button>
         <button 
           class="filter-btn {showEvents ? 'active' : ''}" 
@@ -248,12 +247,12 @@
         >
           <Calendar size={14} />
           <span>Events</span>
-          <span class="filter-count">{getFilteredEvents().length}</span>
+          <span class="filter-count">{filteredEvents.length}</span>
         </button>
       </div>
       <button class="toggle-all-btn" onclick={toggleAllSections}>
         <LayoutGrid size={14} />
-       {showNeighbourhoodFeed && showFeed && showDiscussions && showMembers && showEvents ? 'Hide All' : 'Show All'}>
+        {showNeighbourhoodFeed && showFeed && showDiscussions && showMembers && showEvents ? 'Hide All' : 'Show All'}
       </button>
     </div>
 
@@ -263,7 +262,7 @@
         <p>Loading community content...</p>
       </div>
     {:else}
-     <!-- Neighbourhood Feed Section -->
+      <!-- Neighbourhood Feed Section -->
       {#if showNeighbourhoodFeed}
         <div class="section-container">
           <div class="section-header">
@@ -282,6 +281,7 @@
           </div>
         </div>
       {/if}
+      
       <!-- Community Feed Section -->
       {#if showFeed}
         <div class="section-container">
@@ -289,19 +289,19 @@
             <div class="section-title">
               <TrendingUp size={18} class="section-icon" />
               <h2>Community Feed</h2>
-              <span class="section-count">{getFilteredPosts().length} posts</span>
+              <span class="section-count">{filteredPosts.length} posts</span>
             </div>
           </div>
-          
+
           <div class="section-content">
-            {#if getFilteredPosts().length === 0}
+            {#if filteredPosts.length === 0}
               <div class="empty-state">
                 <MessageCircle size={48} />
                 <p>No posts found matching your search</p>
               </div>
             {:else}
               <div class="posts-grid">
-                {#each getFilteredPosts() as post}
+                {#each filteredPosts as post}
                   {@const CategoryIcon = getCategoryIcon(post.category)}
                   <div class="post-card">
                     {#if post.isPinned}
@@ -312,15 +312,19 @@
                     {/if}
 
                     <div class="post-header">
-                      <img src={post.author.avatar} alt={post.author.name} class="post-avatar" />
+                      <img 
+                        src="https://ui-avatars.com/api/?name={encodeURIComponent(post.authorName)}&background=6a2c91&color=fff" 
+                        alt={post.authorName} 
+                        class="post-avatar" 
+                      />
                       <div class="post-author">
                         <div class="author-name">
-                          {post.author.name}
+                          {post.authorName}
                           {#if post.isVerified}
                             <CheckCircle size={14} class="verified-badge" />
                           {/if}
                         </div>
-                        <div class="author-role">{post.author.role}</div>
+                        <div class="author-role">{formatDate(post.createdAt.toISOString())}</div>
                       </div>
                       <div class="post-category" style="background: {getCategoryColor(post.category)}10; color: {getCategoryColor(post.category)}">
                         <CategoryIcon size={12} />
@@ -334,22 +338,25 @@
 
                     <div class="post-footer">
                       <div class="post-stats">
-                        <button class="stat-btn">
-                          <ThumbsUp size={14} />
-                          <span>{post.likes}</span>
-                        </button>
+                        <form method="POST" action="?/toggleLike" use:enhance>
+                          <input type="hidden" name="postId" value={post.id} />
+                          <button type="submit" class="stat-btn {post.isLiked ? 'liked' : ''}">
+                            <ThumbsUp size={14} />
+                            <span>{post.likeCount}</span>
+                          </button>
+                        </form>
                         <button class="stat-btn">
                           <MessageCircle size={14} />
-                          <span>{post.comments}</span>
+                          <span>{post.commentCount}</span>
                         </button>
                         <button class="stat-btn">
                           <Share2 size={14} />
-                          <span>{post.shares}</span>
+                          <span>{post.shareCount}</span>
                         </button>
                       </div>
                       <div class="post-time">
                         <Clock size={12} />
-                        <span>{formatDate(post.timestamp)}</span>
+                        <span>{formatDate(post.createdAt.toISOString())}</span>
                       </div>
                     </div>
                   </div>
@@ -367,19 +374,19 @@
             <div class="section-title">
               <MessageSquare size={18} class="section-icon" />
               <h2>Discussions</h2>
-              <span class="section-count">{getFilteredDiscussions().length} discussions</span>
+              <span class="section-count">{filteredDiscussions.length} discussions</span>
             </div>
           </div>
-          
+
           <div class="section-content">
-            {#if getFilteredDiscussions().length === 0}
+            {#if filteredDiscussions.length === 0}
               <div class="empty-state">
                 <MessageSquare size={48} />
                 <p>No discussions found matching your search</p>
               </div>
             {:else}
               <div class="discussions-list">
-                {#each getFilteredDiscussions() as discussion}
+                {#each filteredDiscussions as discussion}
                   {@const CategoryIcon = getCategoryIcon(discussion.category)}
                   <div class="discussion-card">
                     {#if discussion.isSticky}
@@ -395,16 +402,16 @@
                         <span>{getCategoryLabel(discussion.category)}</span>
                       </div>
                       <div class="discussion-stats">
-                        <span><MessageCircle size={12} /> {discussion.replies} replies</span>
-                        <span><Eye size={12} /> {discussion.views} views</span>
+                        <span><MessageCircle size={12} /> {discussion.replyCount} replies</span>
+                        <span><Eye size={12} /> {discussion.viewCount} views</span>
                       </div>
                     </div>
 
                     <h3 class="discussion-title">{discussion.title}</h3>
 
                     <div class="discussion-footer">
-                      <span class="discussion-author">by {discussion.author}</span>
-                      <span class="discussion-time">Last activity {formatDate(discussion.lastActivity)}</span>
+                      <span class="discussion-author">by {discussion.authorName}</span>
+                      <span class="discussion-time">Last activity {formatDate(discussion.lastActivityAt.toISOString())}</span>
                     </div>
                   </div>
                 {/each}
@@ -421,47 +428,47 @@
             <div class="section-title">
               <Users size={18} class="section-icon" />
               <h2>Members</h2>
-              <span class="section-count">{getFilteredMembers().length} members</span>
+              <span class="section-count">{filteredMembers.length} members</span>
             </div>
           </div>
-          
+
           <div class="section-content">
-            {#if getFilteredMembers().length === 0}
+            {#if filteredMembers.length === 0}
               <div class="empty-state">
                 <Users size={48} />
                 <p>No members found matching your search</p>
               </div>
             {:else}
               <div class="members-grid">
-                {#each getFilteredMembers() as member}
+                {#each filteredMembers as member}
                   <div class="member-card">
                     <div class="member-avatar-wrapper">
-                      <img src={member.avatar} alt={member.name} class="member-avatar" />
-                      {#if member.isOnline}
-                        <span class="online-dot"></span>
-                      {/if}
+                      <img 
+                        src="https://ui-avatars.com/api/?name={encodeURIComponent(member.name)}&background=6a2c91&color=fff" 
+                        alt={member.name} 
+                        class="member-avatar" 
+                      />
                     </div>
 
                     <h4 class="member-name">{member.name}</h4>
-                    <div class="member-role">{member.role}</div>
-
-                    <div class="member-badges">
-                      {#each member.badges as badge}
-                        <span class="badge">{badge}</span>
-                      {/each}
-                    </div>
+                    <div class="member-role">{tierToRole(member.tier)}</div>
 
                     <div class="member-stats">
                       <div class="member-stat">
                         <Award size={14} />
-                        <span>{member.reputation}</span>
+                        <span>{member.trustScore}</span>
                       </div>
                     </div>
 
-                    <button class="follow-btn">
-                      <UserPlus size={14} />
-                      Follow
-                    </button>
+                    {#if !member.isCurrentUser}
+                      <form method="POST" action="?/toggleFollow" use:enhance>
+                        <input type="hidden" name="followedId" value={member.id} />
+                        <button type="submit" class="follow-btn {member.isFollowing ? 'following' : ''}">
+                          <UserPlus size={14} />
+                          {member.isFollowing ? 'Following' : 'Follow'}
+                        </button>
+                      </form>
+                    {/if}
                   </div>
                 {/each}
               </div>
@@ -477,37 +484,42 @@
             <div class="section-title">
               <Calendar size={18} class="section-icon" />
               <h2>Upcoming Events</h2>
-              <span class="section-count">{getFilteredEvents().length} events</span>
+              <span class="section-count">{filteredEvents.length} events</span>
             </div>
           </div>
-          
+
           <div class="section-content">
-            {#if getFilteredEvents().length === 0}
+            {#if filteredEvents.length === 0}
               <div class="empty-state">
                 <Calendar size={48} />
                 <p>No events found matching your search</p>
               </div>
             {:else}
               <div class="events-grid">
-                {#each getFilteredEvents() as event}
+                {#each filteredEvents as event}
                   <div class="event-card">
                     <div class="event-date-badge">
-                      <span class="event-month">{formatEventDate(event.date).split(' ')[0]}</span>
-                      <span class="event-day">{formatEventDate(event.date).split(' ')[1]}</span>
+                      <span class="event-month">{formatEventDate(event.startsAt.toISOString()).split(' ')[0]}</span>
+                      <span class="event-day">{formatEventDate(event.startsAt.toISOString()).split(' ')[1]}</span>
                     </div>
 
                     <div class="event-details">
                       <h4 class="event-title">{event.title}</h4>
                       <div class="event-info">
                         <span><MapPin size={12} /> {event.location}</span>
-                        <span><Users size={12} /> {event.attendees}/{event.maxAttendees} attending</span>
+                        <span><Users size={12} /> {event.attendeeCount}{event.maxAttendees ? `/${event.maxAttendees}` : ''} attending</span>
                       </div>
-                      <div class="event-progress">
-                        <div class="progress-bar" style="width: {(event.attendees / event.maxAttendees) * 100}%"></div>
-                      </div>
-                      <button class="rsvp-btn">
-                        RSVP Now
-                      </button>
+                      {#if event.maxAttendees}
+                        <div class="event-progress">
+                          <div class="progress-bar" style="width: {(event.attendeeCount / event.maxAttendees) * 100}%"></div>
+                        </div>
+                      {/if}
+                      <form method="POST" action="?/toggleRsvp" use:enhance>
+                        <input type="hidden" name="eventId" value={event.id} />
+                        <button type="submit" class="rsvp-btn {event.isAttending ? 'attending' : ''}">
+                          {event.isAttending ? '✓ Going' : 'RSVP Now'}
+                        </button>
+                      </form>
                     </div>
                   </div>
                 {/each}
@@ -516,7 +528,7 @@
           </div>
         </div>
       {/if}
-      
+
       <!-- Empty state when no sections are visible -->
       {#if !showFeed && !showDiscussions && !showMembers && !showEvents}
         <div class="empty-state-all">
@@ -535,81 +547,111 @@
   {#if showCreatePost}
     <div class="modal-overlay" onclick={() => showCreatePost = false}>
       <div class="modal" onclick={(e) => e.stopPropagation()}>
-        <div class="modal-header">
-          <div class="modal-title">
-            <div class="modal-icon">
-              <Plus size={20} />
+        <form 
+          method="POST" 
+          action="?/createPost" 
+          use:enhance={() => {
+            return async ({ result, update }) => {
+              if (result.type === 'success') {
+                showCreatePost = false;
+                newPost = { content: '', category: 'general', isAnonymous: false, scope: 'global' };
+                await update();
+              }
+            };
+          }}
+        >
+          <div class="modal-header">
+            <div class="modal-title">
+              <div class="modal-icon">
+                <Plus size={20} />
+              </div>
+              <h2>Create New Post</h2>
             </div>
-            <h2>Create New Post</h2>
+            <button type="button" class="modal-close" onclick={() => showCreatePost = false}>
+              <X size={20} />
+            </button>
           </div>
-          <button class="modal-close" onclick={() => showCreatePost = false}>
-            <X size={20} />
-          </button>
-        </div>
 
-        <div class="modal-body">
-          <div class="form-field">
-            <label>Category</label>
-            <div class="category-select">
-              {#each categories as cat}
-                <button 
-                  class="category-option {newPost.category === cat.id ? 'selected' : ''}"
-                  style={newPost.category === cat.id ? `border-color: ${cat.color}; background: ${cat.color}10;` : ''}
-                  onclick={() => newPost.category = cat.id}
-                >
-                  <cat.icon size={16} style={newPost.category === cat.id ? `color: ${cat.color}` : ''} />
-                  <span>{cat.label}</span>
-                </button>
-              {/each}
+          <div class="modal-body">
+            <div class="form-field">
+              <label>Category</label>
+              <div class="category-select">
+                <input type="hidden" name="category" value={newPost.category} />
+                {#each categories as cat}
+                  <button 
+                    type="button"
+                    class="category-option {newPost.category === cat.id ? 'selected' : ''}"
+                    style={newPost.category === cat.id ? `border-color: ${cat.color}; background: ${cat.color}10;` : ''}
+                    onclick={() => newPost.category = cat.id}
+                  >
+                    <cat.icon size={16} style={newPost.category === cat.id ? `color: ${cat.color}` : ''} />
+                    <span>{cat.label}</span>
+                  </button>
+                {/each}
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label>Content</label>
+              <textarea 
+                name="content"
+                bind:value={newPost.content}
+                placeholder="Share your thoughts, safety tips, or questions with the community..."
+                class="post-input"
+                rows={6}
+              ></textarea>
+            </div>
+
+            <div class="form-field">
+              <label class="checkbox-label">
+                <input type="checkbox" bind:checked={newPost.isAnonymous} />
+                <span>Post anonymously</span>
+              </label>
+              <p class="field-hint">Your name won't be displayed publicly</p>
+            </div>
+
+            <div class="form-field">
+              <label class="checkbox-label">
+                <input type="radio" bind:group={newPost.scope} value="global" />
+                <span>Global - Visible to everyone</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="radio" bind:group={newPost.scope} value="local" />
+                <span>Local - Only visible in your area</span>
+              </label>
+            </div>
+
+            <div class="post-actions">
+              <button type="button" class="action-btn">
+                <ImageIcon size={16} />
+                Add Image
+              </button>
+              <button type="button" class="action-btn">
+                <Link size={16} />
+                Add Link
+              </button>
+              <button type="button" class="action-btn">
+                <Smile size={16} />
+                Add Emoji
+              </button>
             </div>
           </div>
 
-          <div class="form-field">
-            <label>Content</label>
-            <textarea 
-              bind:value={newPost.content}
-              placeholder="Share your thoughts, safety tips, or questions with the community..."
-              class="post-input"
-              rows={6}
-            ></textarea>
-          </div>
-
-          <div class="form-field">
-            <label class="checkbox-label">
-              <input type="checkbox" bind:checked={newPost.isAnonymous} />
-              <span>Post anonymously</span>
-            </label>
-            <p class="field-hint">Your name won't be displayed publicly</p>
-          </div>
-
-          <div class="post-actions">
-            <button class="action-btn">
-              <ImageIcon size={16} />
-              Add Image
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick={() => showCreatePost = false}>
+              Cancel
             </button>
-            <button class="action-btn">
-              <Link size={16} />
-              Add Link
-            </button>
-            <button class="action-btn">
-              <Smile size={16} />
-              Add Emoji
+            <button type="submit" class="btn-primary">
+              <Send size={16} />
+              Publish Post
             </button>
           </div>
-        </div>
 
-        <div class="modal-footer">
-          <button class="btn-secondary" onclick={() => showCreatePost = false}>
-            Cancel
-          </button>
-          <button class="btn-primary" onclick={() => {
-            showCreatePost = false;
-            newPost = { content: '', category: 'general', isAnonymous: false };
-          }}>
-            <Send size={16} />
-            Publish Post
-          </button>
-        </div>
+          <input type="hidden" name="isAnonymous" value={newPost.isAnonymous} />
+          <input type="hidden" name="scope" value={newPost.scope} />
+          {#if userLat}<input type="hidden" name="lat" value={userLat} />{/if}
+          {#if userLng}<input type="hidden" name="lng" value={userLng} />{/if}
+        </form>
       </div>
     </div>
   {/if}
