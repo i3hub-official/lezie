@@ -97,7 +97,7 @@
 
     <!-- Logo -->
     <a href="/" class="ve-logo-link">
-      <img src="/icons/lz_logo_t.png" alt="Lezie" class="ve-logo" />
+      <img src="/icons/lz_ico.png" alt="Lezie" class="ve-logo" />
     </a>
 
     <!-- Card -->
