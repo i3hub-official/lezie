@@ -1,495 +1,941 @@
+<!-- src/lib/components/NeighbourhoodFeed.svelte -->
+<!-- Neighbourhood feed showing nearby incidents/posts within 2km.        -->
+<!-- Includes AI summarise button that calls /api/ai/summarise-feed.      -->
+
 <script lang="ts">
   import { onMount } from 'svelte';
+  import {
+    MapPin, Clock, AlertTriangle, Shield, Users,
+    Flame, Car, Building, Volume2, AlertOctagon,
+    MoreHorizontal, ThumbsUp, MessageSquare, Share2,
+    Sparkles, Loader2, RefreshCw, Radio, ChevronDown,
+    ChevronUp, TrendingUp, Zap, Eye, Filter
+  } from 'lucide-svelte';
 
   // ── Types ──────────────────────────────────────────────────────────────────
-  type Severity = 'critical' | 'warning' | 'info' | 'resolved';
 
-  interface Incident {
-    id:        number;
-    title:     string;
-    location:  string;
-    area:      string;
-    time:      string;
-    severity:  Severity;
-    category:  string;
-    reports:   number;
-    verified:  boolean;
-    desc:      string;
+  interface FeedItem {
+    id: string;
+    type: 'incident' | 'post' | 'alert';
+    title: string;
+    body?: string;
+    category?: string;
+    severity?: 'low' | 'medium' | 'high' | 'critical';
+    location?: string;
+    distance_km?: number;
+    reported_at: string;
+    author?: string;
+    isAnonymous?: boolean;
+    reactions?: number;
+    comments?: number;
   }
 
-  // ── Mock data ──────────────────────────────────────────────────────────────
-  const ALL_INCIDENTS: Incident[] = [
-    { id:1,  title:'Armed robbery reported',        location:'Admiralty Way', area:'Lekki',         time:'2 min ago',  severity:'critical', category:'Crime',       reports:14, verified:true,  desc:'Multiple reports of armed men near the access road. Police notified.' },
-    { id:2,  title:'Suspicious vehicle parked',     location:'Opebi Road',   area:'Ikeja',          time:'8 min ago',  severity:'warning',  category:'Suspicious',  reports:4,  verified:false, desc:'Dark SUV parked for over 3 hours with occupants inside.' },
-    { id:3,  title:'Road accident — 2 vehicles',    location:'Third Mainland Bridge', area:'Lagos Island', time:'15 min ago', severity:'critical', category:'Accident', reports:22, verified:true, desc:'Two-vehicle collision blocking the fast lane. FRSC en route.' },
-    { id:4,  title:'Flooding on major road',        location:'Ago Palace Way', area:'Okota',        time:'22 min ago', severity:'warning',  category:'Hazard',      reports:9,  verified:true,  desc:'Heavy flooding making road impassable. Avoid if possible.' },
-    { id:5,  title:'Power outage — entire street',  location:'Bode Thomas St', area:'Surulere',     time:'34 min ago', severity:'info',     category:'Utility',     reports:6,  verified:false, desc:'PHCN transformer fault reported. No ETA for restoration.' },
-    { id:6,  title:'Street brawl dispersed',        location:'Computer Village', area:'Ikeja',      time:'41 min ago', severity:'resolved', category:'Crime',       reports:11, verified:true,  desc:'Police arrived and dispersed the crowd. Area now calm.' },
-    { id:7,  title:'Gas leak smell reported',       location:'Agungi Estate', area:'Lekki',         time:'55 min ago', severity:'critical', category:'Hazard',      reports:7,  verified:false, desc:'Strong gas smell reported by multiple residents near block C.' },
-    { id:8,  title:'Stray dog pack on loose',       location:'Gbagada Phase 2', area:'Gbagada',     time:'1 hr ago',   severity:'warning',  category:'Other',       reports:3,  verified:false, desc:'Pack of about 6–8 stray dogs spotted near the playground.' },
-    { id:9,  title:'Pothole caused tyre damage',    location:'Ikorodu Road',  area:'Maryland',      time:'1 hr ago',   severity:'info',     category:'Hazard',      reports:18, verified:true,  desc:'Large pothole after the bridge causing multiple tyre damage incidents.' },
-    { id:10, title:'Noise disturbance — late night',location:'Allen Avenue',  area:'Ikeja',         time:'2 hrs ago',  severity:'info',     category:'Noise',       reports:5,  verified:false, desc:'Loud music from an event venue past midnight.' },
-    { id:11, title:'Pickpocket at bus stop',        location:'Ojuelegba',     area:'Surulere',      time:'2 hrs ago',  severity:'warning',  category:'Crime',       reports:8,  verified:true,  desc:'Multiple reports of pickpocketing targeting commuters.' },
-    { id:12, title:'Road cleared — traffic normal', location:'Third Mainland Bridge', area:'Lagos Island', time:'3 hrs ago', severity:'resolved', category:'Accident', reports:22, verified:true, desc:'Accident cleared. Traffic flowing normally again.' },
-  ];
+  interface AISummary {
+    headline: string;
+    summary: string;
+    safety_tip: string;
+    mood: 'calm' | 'watchful' | 'tense' | 'urgent';
+    item_count: number;
+    generated_at: string;
+  }
 
-  const CATEGORIES = ['All', 'Crime', 'Hazard', 'Accident', 'Suspicious', 'Utility', 'Noise', 'Other'];
-  const AREAS      = ['All Areas', 'Lekki', 'Ikeja', 'Surulere', 'Lagos Island', 'Gbagada', 'Okota', 'Maryland'];
+  // ── Props ──────────────────────────────────────────────────────────────────
+
+  interface Props {
+    neighbourhood?: string;   // e.g. "Surulere, Lagos"
+    lat?: number | null;
+    lng?: number | null;
+  }
+
+  let {
+    neighbourhood = '',
+    lat = null,
+    lng = null,
+  }: Props = $props();
 
   // ── State ──────────────────────────────────────────────────────────────────
-  let selectedCategory = $state('All');
-  let selectedArea     = $state('All Areas');
-  let searchQuery      = $state('');
-  let expanded         = $state<number | null>(null);
-  let visible          = $state(false);
 
-  onMount(() => {
-    setTimeout(() => visible = true, 50);
-  });
+  let feedItems        = $state<FeedItem[]>([]);
+  let isLoadingFeed    = $state(true);
+  let activeFilter     = $state<'all' | 'incident' | 'post' | 'alert'>('all');
+  let aiSummary        = $state<AISummary | null>(null);
+  let isSummarising    = $state(false);
+  let summaryError     = $state('');
+  let summaryExpanded  = $state(true);
+  let showSummary      = $state(false);
 
-  // ── Derived ────────────────────────────────────────────────────────────────
-  let filtered = $derived(
-    ALL_INCIDENTS.filter(i => {
-      const matchCat  = selectedCategory === 'All'      || i.category === selectedCategory;
-      const matchArea = selectedArea === 'All Areas'    || i.area === selectedArea;
-      const matchQ    = !searchQuery || i.title.toLowerCase().includes(searchQuery.toLowerCase())
-                          || i.location.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchCat && matchArea && matchQ;
-    })
+  // ── Mood config ────────────────────────────────────────────────────────────
+
+  const moodConfig = {
+    calm:     { color: '#10B981', bg: '#d1fae5', border: '#6ee7b7', label: 'Calm',     icon: Shield  },
+    watchful: { color: '#F59E0B', bg: '#fef3c7', border: '#fcd34d', label: 'Watchful', icon: Eye     },
+    tense:    { color: '#F97316', bg: '#ffedd5', border: '#fdba74', label: 'Tense',    icon: AlertTriangle },
+    urgent:   { color: '#EF4444', bg: '#fee2e2', border: '#fca5a5', label: 'Urgent',   icon: Zap     },
+  };
+
+  // ── Category config ────────────────────────────────────────────────────────
+
+  const categoryConfig: Record<string, { color: string; bg: string; icon: any }> = {
+    suspicious: { color: '#F59E0B', bg: '#fef3c7', icon: AlertTriangle },
+    theft:      { color: '#EF4444', bg: '#fee2e2', icon: AlertOctagon  },
+    vandalism:  { color: '#F97316', bg: '#ffedd5', icon: Building      },
+    fire:       { color: '#DC2626', bg: '#fee2e2', icon: Flame         },
+    accident:   { color: '#F59E0B', bg: '#fef3c7', icon: Car           },
+    noise:      { color: '#8B5CF6', bg: '#ede9fe', icon: Volume2       },
+    other:      { color: '#6B7280', bg: '#f3f4f6', icon: MoreHorizontal},
+  };
+
+  const severityColors = {
+    low:      '#10B981',
+    medium:   '#F59E0B',
+    high:     '#F97316',
+    critical: '#EF4444',
+  };
+
+  // ── Derived: filtered items ────────────────────────────────────────────────
+
+  const displayItems = $derived(
+    activeFilter === 'all'
+      ? feedItems
+      : feedItems.filter(i => i.type === activeFilter)
   );
 
-  let criticalCount = $derived(filtered.filter(i => i.severity === 'critical').length);
+  // ── Mount: load feed ───────────────────────────────────────────────────────
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  const SEV: Record<Severity, { label: string; color: string; bg: string; border: string }> = {
-    critical: { label:'Critical', color:'#ef4444', bg:'#fef2f2', border:'rgba(239,68,68,.2)' },
-    warning:  { label:'Warning',  color:'#f59e0b', bg:'#fffbeb', border:'rgba(245,158,11,.2)' },
-    info:     { label:'Info',     color:'#6a2c91', bg:'rgba(106,44,145,.06)', border:'rgba(106,44,145,.15)' },
-    resolved: { label:'Resolved', color:'#22c55e', bg:'#f0fdf4', border:'rgba(34,197,94,.2)' },
-  };
+  onMount(async () => {
+    await loadFeed();
+  });
+
+  async function loadFeed() {
+    isLoadingFeed = true;
+
+    // ── Real fetch (uncomment when API/DB is ready) ────────────────────────
+    //
+    // const params = new URLSearchParams();
+    // if (lat)           params.set('lat', String(lat));
+    // if (lng)           params.set('lng', String(lng));
+    // if (neighbourhood) params.set('neighbourhood', neighbourhood);
+    //
+    // const res = await fetch(`/api/feed?${params}`);
+    // feedItems = await res.json();
+    //
+    // ─────────────────────────────────────────────────────────────────────
+
+    // Stub data — replace with real fetch above
+    await new Promise(r => setTimeout(r, 700));
+    feedItems = [
+      {
+        id: '1', type: 'incident', title: 'Suspicious men spotted near ATM',
+        body: 'Two men have been loitering around the GTBank ATM on Allen Avenue since 7pm. They match the description of suspects from last week\'s robbery.',
+        category: 'suspicious', severity: 'high',
+        location: 'Allen Avenue', distance_km: 0.4,
+        reported_at: new Date(Date.now() - 25 * 60000).toISOString(),
+        isAnonymous: false, author: 'John A.', reactions: 14, comments: 6,
+      },
+      {
+        id: '2', type: 'alert', title: 'Area flooded — avoid Obafemi Awolowo Road',
+        body: 'Heavy rain has caused flooding along Obafemi Awolowo Road. Vehicles are stuck. Divert via Toyin Street.',
+        category: 'other', severity: 'medium',
+        location: 'Obafemi Awolowo Road', distance_km: 0.9,
+        reported_at: new Date(Date.now() - 55 * 60000).toISOString(),
+        isAnonymous: false, author: 'Community Admin', reactions: 32, comments: 11,
+      },
+      {
+        id: '3', type: 'incident', title: 'Phone snatching on okada',
+        body: 'A man on a motorcycle snatched my phone at the junction by shoprite. Beige-coloured Bajaj, no plate.',
+        category: 'theft', severity: 'high',
+        location: 'Shoprite Junction', distance_km: 1.2,
+        reported_at: new Date(Date.now() - 2 * 3600000).toISOString(),
+        isAnonymous: true, reactions: 9, comments: 4,
+      },
+      {
+        id: '4', type: 'post', title: 'Neighbourhood watch meeting this Saturday',
+        body: 'Residents of GRA Phase 2 are invited to the monthly safety meeting at the community hall. 10am sharp. Let\'s plan together.',
+        location: 'GRA Phase 2 Community Hall', distance_km: 1.6,
+        reported_at: new Date(Date.now() - 5 * 3600000).toISOString(),
+        isAnonymous: false, author: 'Estate Security', reactions: 41, comments: 18,
+      },
+      {
+        id: '5', type: 'incident', title: 'Loud argument and gunshots heard',
+        body: 'Residents report hearing what sounded like gunshots around the back of the market. Police have been called.',
+        category: 'suspicious', severity: 'critical',
+        location: 'Behind Tejuosho Market', distance_km: 1.8,
+        reported_at: new Date(Date.now() - 8 * 3600000).toISOString(),
+        isAnonymous: true, reactions: 55, comments: 23,
+      },
+    ];
+
+    isLoadingFeed = false;
+  }
+
+  // ── AI Summarise ──────────────────────────────────────────────────────────
+
+  async function summariseFeed() {
+    if (isSummarising || feedItems.length === 0) return;
+
+    isSummarising = true;
+    summaryError  = '';
+    showSummary   = true;
+
+    try {
+      const res = await fetch('/api/ai/summarise-feed', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          neighbourhood: neighbourhood || undefined,
+          items: feedItems.map(item => ({
+            id:          item.id,
+            type:        item.type,
+            title:       item.title,
+            body:        item.body,
+            category:    item.category,
+            severity:    item.severity,
+            location:    item.location,
+            distance_km: item.distance_km,
+            reported_at: item.reported_at,
+          })),
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message ?? `Server error ${res.status}`);
+      }
+
+      aiSummary       = await res.json();
+      summaryExpanded = true;
+
+    } catch (err: unknown) {
+      summaryError = err instanceof Error ? err.message : 'Summary unavailable. Please try again.';
+    } finally {
+      isSummarising = false;
+    }
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  function formatTime(iso: string) {
+    const diff = Date.now() - new Date(iso).getTime();
+    const m    = Math.floor(diff / 60000);
+    const h    = Math.floor(diff / 3600000);
+    const d    = Math.floor(diff / 86400000);
+    if (m < 1)  return 'Just now';
+    if (h < 1)  return `${m}m ago`;
+    if (h < 24) return `${h}h ago`;
+    return `${d}d ago`;
+  }
+
+  function formatDistance(km?: number) {
+    if (km === undefined) return '';
+    return km < 1 ? `${Math.round(km * 1000)}m away` : `${km.toFixed(1)}km away`;
+  }
+
+  function getCatConfig(category?: string) {
+    return categoryConfig[category ?? 'other'] ?? categoryConfig.other;
+  }
 </script>
 
-<svelte:head>
-  <title>Lezie — Neighbourhood Feed</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
-</svelte:head>
+<div class="nf-wrap">
 
-<div class="page" class:visible>
-
-  <!-- ── HEADER ────────────────────────────────────────────────────────── -->
-  <div class="page-header">
-    <div class="header-inner">
-      <div class="header-left">
-        <h1>Neighbourhood Feed</h1>
-        <p class="header-sub">Real-time incidents near you</p>
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="nf-header">
+    <div class="nf-header-left">
+      <div class="nf-header-icon">
+        <Radio size={18} />
       </div>
-      <div class="header-right">
-        {#if criticalCount > 0}
-          <div class="critical-badge">
-            <span class="critical-dot"></span>
-            {criticalCount} critical {criticalCount === 1 ? 'alert' : 'alerts'}
-          </div>
+      <div>
+        <h2>Neighbourhood Feed</h2>
+        {#if neighbourhood}
+          <p class="nf-location"><MapPin size={11} /> {neighbourhood}</p>
+        {:else}
+          <p class="nf-location"><MapPin size={11} /> Within 2km of you</p>
         {/if}
-        <a href="/report" class="report-btn">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          Report
-        </a>
       </div>
+    </div>
+
+    <div class="nf-header-right">
+      <!-- Summarise button -->
+      <button
+        class="nf-summarise-btn {isSummarising ? 'nf-summarise-btn--loading' : ''}"
+        onclick={summariseFeed}
+        disabled={isSummarising || isLoadingFeed || feedItems.length === 0}
+        title="AI summary of this feed"
+      >
+        {#if isSummarising}
+          <Loader2 size={14} class="nf-spin" />
+          <span>Analysing…</span>
+        {:else}
+          <Sparkles size={14} />
+          <span>AI Summary</span>
+        {/if}
+      </button>
+
+      <!-- Refresh -->
+      <button
+        class="nf-icon-btn"
+        onclick={loadFeed}
+        disabled={isLoadingFeed}
+        title="Refresh feed"
+      >
+        <RefreshCw size={15} class={isLoadingFeed ? 'nf-spin' : ''} />
+      </button>
     </div>
   </div>
 
-  <!-- ── FILTERS ───────────────────────────────────────────────────────── -->
-  <div class="filters-wrap">
-    <div class="filters-inner">
-      <!-- Search -->
-      <div class="search-box">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input
-          bind:value={searchQuery}
-          type="text"
-          placeholder="Search incidents or location…"
-          aria-label="Search incidents"
-        />
-        {#if searchQuery}
-          <button class="clear-btn" onclick={() => searchQuery = ''} type="button" aria-label="Clear search">✕</button>
-        {/if}
-      </div>
-
-      <!-- Area -->
-      <select bind:value={selectedArea} class="select" aria-label="Filter by area">
-        {#each AREAS as a}
-          <option value={a}>{a}</option>
-        {/each}
-      </select>
-
-      <!-- Category pills -->
-      <div class="cat-pills">
-        {#each CATEGORIES as cat}
-          <button
-            class="cat-pill"
-            class:active={selectedCategory === cat}
-            onclick={() => selectedCategory = cat}
-            type="button"
-          >{cat}</button>
-        {/each}
-      </div>
-    </div>
-  </div>
-
-  <!-- ── FEED ──────────────────────────────────────────────────────────── -->
-  <div class="feed-wrap">
-    <div class="feed-inner">
-
-      {#if filtered.length === 0}
-        <div class="empty">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <p>No incidents match your filters.</p>
-          <button onclick={() => { selectedCategory='All'; selectedArea='All Areas'; searchQuery=''; }} type="button" class="reset-btn">Clear filters</button>
+  <!-- ── AI Summary Panel ───────────────────────────────────────────────── -->
+  {#if showSummary}
+    <div class="nf-summary-wrap">
+      {#if isSummarising}
+        <div class="nf-summary-loading">
+          <Loader2 size={18} class="nf-spin" />
+          <span>Generating AI summary of your neighbourhood feed…</span>
         </div>
-      {:else}
-        <div class="result-count">{filtered.length} incident{filtered.length !== 1 ? 's' : ''}</div>
 
-        <div class="feed">
-          {#each filtered as inc, i (inc.id)}
-            {@const sev = SEV[inc.severity]}
-            <div
-              class="incident-card"
-              class:is-expanded={expanded === inc.id}
-              style="animation-delay:{i * 0.04}s"
-              role="button"
-              tabindex="0"
-              onclick={() => expanded = expanded === inc.id ? null : inc.id}
-              onkeydown={(e) => e.key === 'Enter' && (expanded = expanded === inc.id ? null : inc.id)}
-            >
-              <!-- Left accent -->
-              <div class="accent" style="background:{sev.color}"></div>
+      {:else if summaryError}
+        <div class="nf-summary-error">
+          <AlertTriangle size={14} />
+          <span>{summaryError}</span>
+          <button onclick={summariseFeed}>Retry</button>
+        </div>
 
-              <div class="card-body">
-                <div class="card-top">
-                  <div class="card-meta">
-                    <!-- Severity badge -->
-                    <span class="sev-badge" style="color:{sev.color}; background:{sev.bg}; border-color:{sev.border}">
-                      {#if inc.severity === 'critical'}
-                        <span class="sev-dot" style="background:{sev.color}"></span>
-                      {/if}
-                      {sev.label}
-                    </span>
+      {:else if aiSummary}
+        {@const mood = moodConfig[aiSummary.mood]}
+        {@const MoodIcon = mood.icon}
 
-                    <!-- Category -->
-                    <span class="cat-label">{inc.category}</span>
-
-                    {#if inc.verified}
-                      <span class="verified-badge">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                        Verified
-                      </span>
-                    {/if}
-                  </div>
-
-                  <span class="time">{inc.time}</span>
-                </div>
-
-                <h3 class="card-title">{inc.title}</h3>
-
-                <div class="card-loc">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-                  </svg>
-                  {inc.location} · <span class="area">{inc.area}</span>
-                </div>
-
-                {#if expanded === inc.id}
-                  <p class="card-desc">{inc.desc}</p>
-                {/if}
-
-                <div class="card-footer">
-                  <span class="reports-count">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                      <circle cx="9" cy="7" r="4"/>
-                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                    </svg>
-                    {inc.reports} {inc.reports === 1 ? 'report' : 'reports'}
-                  </span>
-                  <span class="expand-hint">{expanded === inc.id ? 'Show less ↑' : 'Show more ↓'}</span>
-                </div>
-              </div>
+        <div
+          class="nf-summary-card"
+          style="border-color:{mood.border}; background:linear-gradient(135deg,{mood.bg} 0%,white 100%);"
+        >
+          <!-- Summary header -->
+          <div class="nf-summary-head">
+            <div class="nf-summary-title">
+              <span class="nf-mood-chip" style="background:{mood.bg}; color:{mood.color}; border-color:{mood.border};">
+                <MoodIcon size={11} />
+                {mood.label}
+              </span>
+              <span class="nf-summary-label">
+                <Sparkles size={12} />
+                AI Summary · {aiSummary.item_count} items
+              </span>
             </div>
-          {/each}
+            <button
+              class="nf-icon-btn"
+              onclick={() => summaryExpanded = !summaryExpanded}
+              title={summaryExpanded ? 'Collapse' : 'Expand'}
+            >
+              {#if summaryExpanded}
+                <ChevronUp size={14} />
+              {:else}
+                <ChevronDown size={14} />
+              {/if}
+            </button>
+          </div>
+
+          {#if summaryExpanded}
+            <!-- Headline -->
+            <p class="nf-summary-headline">{aiSummary.headline}</p>
+
+            <!-- Body -->
+            <p class="nf-summary-body">{aiSummary.summary}</p>
+
+            <!-- Safety tip -->
+            <div class="nf-summary-tip" style="border-color:{mood.border};">
+              <Zap size={12} style="color:{mood.color}; flex-shrink:0;" />
+              <p>{aiSummary.safety_tip}</p>
+            </div>
+
+            <p class="nf-summary-time">
+              <TrendingUp size={10} />
+              Generated {formatTime(aiSummary.generated_at)}
+              · <button class="nf-regen-btn" onclick={summariseFeed}>Regenerate</button>
+            </p>
+          {/if}
         </div>
       {/if}
     </div>
+  {/if}
+
+  <!-- ── Filter tabs ────────────────────────────────────────────────────── -->
+  <div class="nf-filters">
+    {#each ([
+      { value: 'all',      label: 'All'       },
+      { value: 'incident', label: 'Incidents' },
+      { value: 'alert',    label: 'Alerts'    },
+      { value: 'post',     label: 'Posts'     },
+    ] as const) as f}
+      <button
+        class="nf-filter-btn {activeFilter === f.value ? 'nf-filter-btn--active' : ''}"
+        onclick={() => activeFilter = f.value}
+      >
+        {f.label}
+        <span class="nf-filter-count">
+          {f.value === 'all' ? feedItems.length : feedItems.filter(i => i.type === f.value).length}
+        </span>
+      </button>
+    {/each}
   </div>
+
+  <!-- ── Feed items ─────────────────────────────────────────────────────── -->
+  {#if isLoadingFeed}
+    <div class="nf-loading">
+      <Loader2 size={24} class="nf-spin" />
+      <p>Loading nearby feed…</p>
+    </div>
+
+  {:else if displayItems.length === 0}
+    <div class="nf-empty">
+      <Users size={36} />
+      <p>No {activeFilter === 'all' ? '' : activeFilter + ' '}activity nearby.</p>
+    </div>
+
+  {:else}
+    <div class="nf-list">
+      {#each displayItems as item}
+        {@const cat = getCatConfig(item.category)}
+        {@const CatIcon = cat.icon}
+
+        <div class="nf-item nf-item--{item.type}">
+
+          <!-- Item header -->
+          <div class="nf-item-head">
+            <div class="nf-item-icon" style="background:{cat.bg}; color:{cat.color};">
+              <CatIcon size={14} />
+            </div>
+            <div class="nf-item-meta">
+              <div class="nf-item-meta-top">
+                <span class="nf-type-chip nf-type-chip--{item.type}">{item.type}</span>
+                {#if item.severity}
+                  <span
+                    class="nf-sev-chip"
+                    style="color:{severityColors[item.severity]};
+                           background:{severityColors[item.severity]}18;"
+                  >
+                    {item.severity}
+                  </span>
+                {/if}
+              </div>
+              <div class="nf-item-meta-bottom">
+                {#if item.location}
+                  <span><MapPin size={10} /> {item.location}</span>
+                {/if}
+                {#if item.distance_km !== undefined}
+                  <span class="nf-distance">· {formatDistance(item.distance_km)}</span>
+                {/if}
+                <span><Clock size={10} /> {formatTime(item.reported_at)}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Title + body -->
+          <h4 class="nf-item-title">{item.title}</h4>
+          {#if item.body}
+            <p class="nf-item-body">{item.body}</p>
+          {/if}
+
+          <!-- Footer -->
+          <div class="nf-item-foot">
+            <span class="nf-author">
+              {item.isAnonymous ? 'Anonymous' : (item.author ?? 'Community member')}
+            </span>
+            <div class="nf-item-actions">
+              {#if item.reactions !== undefined}
+                <button class="nf-action-btn">
+                  <ThumbsUp size={12} /> {item.reactions}
+                </button>
+              {/if}
+              {#if item.comments !== undefined}
+                <button class="nf-action-btn">
+                  <MessageSquare size={12} /> {item.comments}
+                </button>
+              {/if}
+              <button class="nf-action-btn">
+                <Share2 size={12} />
+              </button>
+            </div>
+          </div>
+
+        </div>
+      {/each}
+    </div>
+  {/if}
+
 </div>
 
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --ink:    #1a0b2e;
-    --violet: #6a2c91;
-    --viol-l: #8b5cf6;
-    --mist:   #ece9f8;
-    --fog:    #faf9ff;
-    --serif:  'DM Serif Display', Georgia, serif;
-  }
-
-  @keyframes slideIn {
-    from { opacity:0; transform:translateY(16px); }
-    to   { opacity:1; transform:translateY(0); }
-  }
-  @keyframes pulse {
-    0%,100% { opacity:1; transform:scale(1); }
-    50%     { opacity:.5; transform:scale(1.4); }
-  }
-
-  /* ── PAGE ─────────────────────────────────────────────────────────────── */
-  .page {
-    min-height: 100vh;
-    background: #faf9ff;
+  .nf-wrap {
     font-family: 'DM Sans', system-ui, sans-serif;
-    opacity: 0;
-    transition: opacity .4s ease;
-  }
-  .page.visible { opacity: 1; }
-
-  /* ── HEADER ───────────────────────────────────────────────────────────── */
-  .page-header {
-    background: #ffffff;
-    border-bottom: 1px solid var(--mist);
-    padding: 2rem 0 1.5rem;
-    position: sticky; top: 0; z-index: 10;
-  }
-  .header-inner {
-    max-width: 800px; margin: 0 auto; padding: 0 1.5rem;
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 1rem; flex-wrap: wrap;
-  }
-  h1 {
-    font-family: var(--serif);
-    font-size: clamp(1.5rem, 3vw, 2rem);
-    color: var(--ink); line-height: 1.1;
-  }
-  .header-sub { font-size: .8125rem; color: #94a3b8; margin-top: .2rem; }
-  .header-right { display:flex; align-items:center; gap:.75rem; }
-
-  .critical-badge {
-    display:flex; align-items:center; gap:.4rem;
-    background:#fef2f2; border:1px solid rgba(239,68,68,.2);
-    border-radius:99px; padding:.35rem .875rem;
-    font-size:.75rem; font-weight:700; color:#ef4444;
-  }
-  .critical-dot {
-    width:7px; height:7px; border-radius:50%; background:#ef4444;
-    animation:pulse 1.5s ease-in-out infinite;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
-  .report-btn {
-    display:inline-flex; align-items:center; gap:.375rem;
-    background:#6a2c91; color:white;
-    font-size:.8rem; font-weight:700;
-    padding:.5rem 1.125rem; border-radius:99px;
-    text-decoration:none; font-family:'DM Sans',sans-serif;
-    box-shadow:0 2px 12px rgba(106,44,145,.25);
-    transition:transform .2s, box-shadow .2s;
-  }
-  .report-btn:hover { transform:translateY(-1px); box-shadow:0 4px 18px rgba(106,44,145,.35); }
-
-  /* ── FILTERS ──────────────────────────────────────────────────────────── */
-  .filters-wrap {
-    background:#ffffff;
-    border-bottom:1px solid var(--mist);
-    padding:.875rem 0;
-    position:sticky; top:81px; z-index:9;
-  }
-  .filters-inner {
-    max-width:800px; margin:0 auto; padding:0 1.5rem;
-    display:flex; flex-direction:column; gap:.75rem;
+  /* ── Header ────────────────────────────────────────────────────────────── */
+  .nf-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    border-radius: 1.25rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid #e2e8f0;
   }
 
-  /* top row: search + area */
-  .search-box {
-    display:flex; align-items:center; gap:.625rem;
-    background:var(--fog); border:1.5px solid var(--mist);
-    border-radius:.875rem; padding:.625rem .875rem;
-    flex:1;
-    transition:border-color .2s, box-shadow .2s;
-  }
-  .search-box:focus-within {
-    border-color:var(--violet);
-    box-shadow:0 0 0 3px rgba(106,44,145,.1);
-  }
-  .search-box svg { color:#94a3b8; flex-shrink:0; }
-  .search-box input {
-    flex:1; border:none; background:transparent;
-    font-family:'DM Sans',sans-serif; font-size:.875rem; color:var(--ink);
-    outline:none;
-  }
-  .search-box input::placeholder { color:#94a3b8; }
-  .clear-btn {
-    background:none; border:none; cursor:pointer;
-    color:#94a3b8; font-size:.8rem; padding:.1rem .2rem;
-    line-height:1; transition:color .2s;
-  }
-  .clear-btn:hover { color:var(--ink); }
-
-  .select {
-    background:var(--fog); border:1.5px solid var(--mist);
-    border-radius:.875rem; padding:.625rem .875rem;
-    font-family:'DM Sans',sans-serif; font-size:.875rem; color:var(--ink);
-    cursor:pointer; outline:none;
-    transition:border-color .2s;
-  }
-  .select:focus { border-color:var(--violet); }
-
-  /* Category pills row */
-  .cat-pills {
-    display:flex; gap:.4rem; flex-wrap:wrap;
-  }
-  .cat-pill {
-    background:transparent; border:1.5px solid var(--mist);
-    border-radius:99px; padding:.3rem .75rem;
-    font-family:'DM Sans',sans-serif; font-size:.75rem; font-weight:600;
-    color:#64748b; cursor:pointer;
-    transition:all .2s;
-  }
-  .cat-pill:hover { border-color:rgba(106,44,145,.3); color:var(--violet); }
-  .cat-pill.active {
-    background:var(--violet); border-color:var(--violet);
-    color:white;
+  .nf-header-left {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
   }
 
-  /* ── FEED ─────────────────────────────────────────────────────────────── */
-  .feed-wrap { max-width:800px; margin:0 auto; padding:1.5rem; }
-  .feed-inner {}
-
-  .result-count {
-    font-size:.75rem; font-weight:600; color:#94a3b8;
-    letter-spacing:.05em; text-transform:uppercase;
-    margin-bottom:1rem;
+  .nf-header-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary-color, #6a2c91), var(--primary-dark, #4b1d68));
+    border-radius: .875rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
   }
 
-  .feed { display:flex; flex-direction:column; gap:.75rem; }
-
-  /* Card */
-  .incident-card {
-    background:#ffffff;
-    border:1px solid var(--mist);
-    border-radius:1.25rem;
-    display:flex; overflow:hidden;
-    cursor:pointer;
-    transition:box-shadow .25s, border-color .25s, transform .2s;
-    animation:slideIn .5s ease both;
-  }
-  .incident-card:hover {
-    box-shadow:0 8px 28px rgba(106,44,145,.09);
-    border-color:rgba(106,44,145,.2);
-    transform:translateY(-1px);
-  }
-  .incident-card.is-expanded {
-    border-color:rgba(106,44,145,.25);
-    box-shadow:0 12px 36px rgba(106,44,145,.12);
+  .nf-header-left h2 {
+    font-size: .9375rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: .125rem;
   }
 
-  .accent { width:4px; flex-shrink:0; }
-
-  .card-body { flex:1; padding:1.125rem 1.25rem; }
-
-  .card-top {
-    display:flex; align-items:flex-start; justify-content:space-between;
-    gap:.75rem; margin-bottom:.625rem;
-  }
-  .card-meta { display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; }
-
-  .sev-badge {
-    display:inline-flex; align-items:center; gap:.3rem;
-    border:1px solid; border-radius:99px;
-    padding:.2rem .6rem; font-size:.7rem; font-weight:700;
-    letter-spacing:.03em;
-  }
-  .sev-dot {
-    width:6px; height:6px; border-radius:50%;
-    animation:pulse 1.5s ease-in-out infinite;
+  .nf-location {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    font-size: .688rem;
+    color: #64748b;
   }
 
-  .cat-label {
-    font-size:.7rem; font-weight:600; color:#94a3b8;
-    background:var(--fog); border:1px solid var(--mist);
-    border-radius:99px; padding:.2rem .6rem;
+  .nf-header-right {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
   }
 
-  .verified-badge {
-    display:inline-flex; align-items:center; gap:.25rem;
-    font-size:.7rem; font-weight:600; color:#22c55e;
-    background:#f0fdf4; border:1px solid rgba(34,197,94,.2);
-    border-radius:99px; padding:.2rem .6rem;
+  /* ── Summarise button ───────────────────────────────────────────────────── */
+  .nf-summarise-btn {
+    display: flex;
+    align-items: center;
+    gap: .375rem;
+    padding: .5rem 1rem;
+    background: linear-gradient(135deg, var(--primary-color, #6a2c91), var(--primary-dark, #4b1d68));
+    color: white;
+    border: none;
+    border-radius: .75rem;
+    font-size: .75rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .2s;
+    white-space: nowrap;
   }
 
-  .time { font-size:.75rem; color:#94a3b8; white-space:nowrap; flex-shrink:0; }
-
-  .card-title {
-    font-family:var(--serif); font-size:1.0625rem;
-    color:var(--ink); line-height:1.3; margin-bottom:.5rem;
+  .nf-summarise-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(106,44,145,.3);
   }
 
-  .card-loc {
-    display:flex; align-items:center; gap:.3rem;
-    font-size:.8rem; color:#64748b; margin-bottom:.625rem;
-  }
-  .card-loc svg { color:#94a3b8; flex-shrink:0; }
-  .area { color:var(--violet); font-weight:600; }
-
-  .card-desc {
-    font-size:.8375rem; color:#475569; line-height:1.65;
-    padding:.75rem; background:var(--fog);
-    border-radius:.75rem; margin-bottom:.75rem;
-    border:1px solid var(--mist);
+  .nf-summarise-btn:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+    transform: none;
   }
 
-  .card-footer {
-    display:flex; align-items:center; justify-content:space-between;
-  }
-  .reports-count {
-    display:flex; align-items:center; gap:.35rem;
-    font-size:.75rem; color:#94a3b8;
-  }
-  .reports-count svg { color:#c4b5fd; }
-  .expand-hint {
-    font-size:.72rem; color:#c4b5fd; font-weight:600;
-    letter-spacing:.02em;
+  .nf-summarise-btn--loading {
+    background: #94a3b8;
   }
 
-  /* ── EMPTY ─────────────────────────────────────────────────────────────── */
-  .empty {
-    text-align:center; padding:4rem 2rem;
-    display:flex; flex-direction:column; align-items:center; gap:1rem;
+  /* ── Icon button ────────────────────────────────────────────────────────── */
+  .nf-icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: .375rem;
+    color: #94a3b8;
+    border-radius: .5rem;
+    display: flex;
+    transition: all .2s;
+    font-family: inherit;
   }
-  .empty svg { color:#c4b5fd; }
-  .empty p { color:#94a3b8; font-size:.9375rem; }
-  .reset-btn {
-    background:none; border:1.5px solid var(--mist);
-    border-radius:99px; padding:.5rem 1.25rem;
-    font-family:'DM Sans',sans-serif; font-size:.8125rem;
-    font-weight:600; color:var(--violet); cursor:pointer;
-    transition:all .2s;
-  }
-  .reset-btn:hover { border-color:var(--violet); background:rgba(106,44,145,.05); }
 
-  /* ── RESPONSIVE ─────────────────────────────────────────────────────────── */
-  @media (max-width:640px) {
-    .page-header { padding:1.25rem 0 1rem; }
-    .filters-wrap { top:72px; }
-    .cat-pill { font-size:.7rem; padding:.25rem .625rem; }
-    .card-title { font-size:.9375rem; }
+  .nf-icon-btn:hover:not(:disabled) {
+    background: var(--primary-bg, #f5f3ff);
+    color: var(--primary-color, #6a2c91);
+  }
+
+  .nf-icon-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ── Summary panel ──────────────────────────────────────────────────────── */
+  .nf-summary-wrap {
+    animation: fadeIn .3s ease;
+  }
+
+  .nf-summary-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    padding: 1.25rem;
+    background: white;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+    font-size: .8125rem;
+    color: var(--primary-color, #6a2c91);
+  }
+
+  .nf-summary-error {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .75rem 1rem;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    border-radius: .875rem;
+    font-size: .75rem;
+    color: #92400e;
+  }
+
+  .nf-summary-error button {
+    margin-left: auto;
+    background: none;
+    border: 1px solid #f59e0b;
+    color: #b45309;
+    border-radius: .375rem;
+    padding: .125rem .5rem;
+    font-size: .625rem;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .nf-summary-card {
+    border-radius: 1.25rem;
+    border: 1px solid;
+    padding: 1rem 1.25rem;
+    animation: fadeIn .3s ease;
+  }
+
+  .nf-summary-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .75rem;
+  }
+
+  .nf-summary-title {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+  }
+
+  .nf-mood-chip {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    font-size: .625rem;
+    font-weight: 700;
+    padding: .25rem .625rem;
+    border-radius: 9999px;
+    border: 1px solid;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  .nf-summary-label {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    font-size: .688rem;
+    color: #64748b;
+  }
+
+  .nf-summary-headline {
+    font-size: .9375rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.45;
+    margin-bottom: .625rem;
+  }
+
+  .nf-summary-body {
+    font-size: .8125rem;
+    color: #334155;
+    line-height: 1.6;
+    margin-bottom: .875rem;
+  }
+
+  .nf-summary-tip {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    padding: .625rem .75rem;
+    background: white;
+    border-radius: .75rem;
+    border: 1px solid;
+    margin-bottom: .625rem;
+  }
+
+  .nf-summary-tip p {
+    font-size: .75rem;
+    color: #475569;
+    line-height: 1.5;
+    margin: 0;
+    flex: 1;
+  }
+
+  .nf-summary-time {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    font-size: .563rem;
+    color: #94a3b8;
+  }
+
+  .nf-regen-btn {
+    background: none;
+    border: none;
+    color: var(--primary-color, #6a2c91);
+    font-size: .563rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+    text-decoration: underline;
+  }
+
+  /* ── Filters ────────────────────────────────────────────────────────────── */
+  .nf-filters {
+    display: flex;
+    gap: .375rem;
+    background: white;
+    padding: .25rem;
+    border-radius: .875rem;
+    border: 1px solid #e2e8f0;
+    width: fit-content;
+  }
+
+  .nf-filter-btn {
+    display: flex;
+    align-items: center;
+    gap: .375rem;
+    padding: .375rem .75rem;
+    background: none;
+    border: none;
+    border-radius: .625rem;
+    font-size: .75rem;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .2s;
+  }
+
+  .nf-filter-btn--active {
+    background: var(--primary-color, #6a2c91);
+    color: white;
+  }
+
+  .nf-filter-count {
+    font-size: .563rem;
+    background: rgba(0,0,0,.1);
+    padding: .1rem .375rem;
+    border-radius: .375rem;
+  }
+
+  .nf-filter-btn--active .nf-filter-count {
+    background: rgba(255,255,255,.2);
+  }
+
+  /* ── Loading / empty ────────────────────────────────────────────────────── */
+  .nf-loading,
+  .nf-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    padding: 3rem;
+    background: white;
+    border-radius: 1.25rem;
+    border: 1px solid #e2e8f0;
+    color: #94a3b8;
+    font-size: .8125rem;
+    text-align: center;
+  }
+
+  /* ── Feed list ──────────────────────────────────────────────────────────── */
+  .nf-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+
+  /* ── Feed item ──────────────────────────────────────────────────────────── */
+  .nf-item {
+    background: white;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+    padding: 1rem;
+    transition: all .2s;
+  }
+
+  .nf-item:hover {
+    border-color: var(--primary-border, #ddd6fe);
+    box-shadow: 0 4px 12px rgba(0,0,0,.06);
+  }
+
+  .nf-item--alert {
+    border-left: 3px solid #F59E0B;
+  }
+
+  .nf-item--incident {
+    border-left: 3px solid #EF4444;
+  }
+
+  .nf-item--post {
+    border-left: 3px solid var(--primary-color, #6a2c91);
+  }
+
+  .nf-item-head {
+    display: flex;
+    align-items: flex-start;
+    gap: .625rem;
+    margin-bottom: .625rem;
+  }
+
+  .nf-item-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: .625rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .nf-item-meta { flex: 1; min-width: 0; }
+
+  .nf-item-meta-top {
+    display: flex;
+    align-items: center;
+    gap: .375rem;
+    margin-bottom: .25rem;
+    flex-wrap: wrap;
+  }
+
+  .nf-type-chip {
+    font-size: .563rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    padding: .15rem .5rem;
+    border-radius: .375rem;
+  }
+
+  .nf-type-chip--incident { background: #fee2e2; color: #dc2626; }
+  .nf-type-chip--alert    { background: #fef3c7; color: #d97706; }
+  .nf-type-chip--post     { background: var(--primary-bg, #f5f3ff); color: var(--primary-color, #6a2c91); }
+
+  .nf-sev-chip {
+    font-size: .563rem;
+    font-weight: 600;
+    padding: .15rem .5rem;
+    border-radius: .375rem;
+    text-transform: capitalize;
+  }
+
+  .nf-item-meta-bottom {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+    font-size: .625rem;
+    color: #64748b;
+  }
+
+  .nf-item-meta-bottom span {
+    display: flex;
+    align-items: center;
+    gap: .2rem;
+  }
+
+  .nf-distance { color: var(--primary-color, #6a2c91); font-weight: 500; }
+
+  .nf-item-title {
+    font-size: .875rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: .375rem;
+    line-height: 1.4;
+  }
+
+  .nf-item-body {
+    font-size: .75rem;
+    color: #475569;
+    line-height: 1.6;
+    margin-bottom: .75rem;
+  }
+
+  .nf-item-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: .625rem;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .nf-author {
+    font-size: .625rem;
+    color: #94a3b8;
+    font-style: italic;
+  }
+
+  .nf-item-actions {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+  }
+
+  .nf-action-btn {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    background: none;
+    border: none;
+    font-size: .625rem;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: .25rem .5rem;
+    border-radius: .5rem;
+    font-family: inherit;
+    transition: all .15s;
+  }
+
+  .nf-action-btn:hover {
+    background: var(--primary-bg, #f5f3ff);
+    color: var(--primary-color, #6a2c91);
+  }
+
+  /* ── Animations ─────────────────────────────────────────────────────────── */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  :global(.nf-spin) { animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Responsive ─────────────────────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    .nf-header { flex-direction: column; gap: .875rem; align-items: flex-start; }
+    .nf-header-right { width: 100%; justify-content: flex-end; }
+    .nf-filters { width: 100%; overflow-x: auto; }
   }
 </style>
