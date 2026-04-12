@@ -30,30 +30,39 @@ export const flagTypeEnum = pgEnum('flag_type', ['travel_anomaly', 'multiple_rep
 export const mediaTypeEnum = pgEnum('media_type', ['image', 'video', 'audio']);
 export const alertZoneStatusEnum = pgEnum('alert_zone_status', ['active', 'inactive']);
 
-
 // ==================== TABLES WITH INDEXES ====================
 
 // Users table
 export const users = pgTable('users', {
-  id: text('id').primaryKey().$defaultFn(() => nanoid()), // NanoID — set by Better Auth on signup, fallback for direct inserts
-  hashable: text('hashable').references(() => authUsers.id).unique(),
-  email: varchar('email', { length: 255 }),
-  phone: varchar('phone', { length: 255 }),
-  username: varchar('username', { length: 255 }),
+  id: text('id').primaryKey().$defaultFn(() => nanoid()), // NanoID from Better Auth
+
+  // ── Encrypted PII (AES-256-CBC, random-IV) ──────────────────────────────
+  // Plaintext never stored here. Better Auth stores plaintext in authUsers.
+  email:        varchar('email',    { length: 500 }),  // encrypted
+  phone:        varchar('phone',    { length: 500 }),  // encrypted
+  username:     varchar('username', { length: 500 }),  // encrypted
+
+  // ── Search hashes (SHA-512 + pepper) ────────────────────────────────────
+  // Used for lookups — no PII exposed. Unique constraints live here.
+  emailHash:    text('email_hash'),
+  phoneHash:    text('phone_hash'),
+  usernameHash: text('username_hash'),
+
   passwordHash: varchar('password_hash', { length: 255 }),
-  tier: userTierEnum('tier').default('1').notNull(),
-  trustScore: integer('trust_score').default(0).notNull(),
-  kycStatus: kycStatusEnum('kyc_status').default('pending').notNull(),
-  kycData: jsonb('kyc_data'),
+  tier:         userTierEnum('tier').default('1').notNull(),
+  trustScore:   integer('trust_score').default(0).notNull(),
+  kycStatus:    kycStatusEnum('kyc_status').default('pending').notNull(),
+  kycData:      jsonb('kyc_data'),
   refreshToken: varchar('refresh_token', { length: 255 }),
-  isActive: boolean('is_active').default(true).notNull(),
-  lastActive: timestamp('last_active').defaultNow().notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull()
+  isActive:     boolean('is_active').default(true).notNull(),
+  lastActive:   timestamp('last_active').defaultNow().notNull(),
+  createdAt:    timestamp('created_at').defaultNow().notNull(),
+  updatedAt:    timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
-  uniqueIndex('users_email_idx').on(table.email).where(sql`${table.email} IS NOT NULL`),
-  uniqueIndex('users_phone_idx').on(table.phone).where(sql`${table.phone} IS NOT NULL`),
-  uniqueIndex('users_username_idx').on(table.username).where(sql`${table.username} IS NOT NULL`),
+  // Unique constraints on hash columns — deterministic, no PII in index
+  uniqueIndex('users_email_hash_idx').on(table.emailHash).where(sql`${table.emailHash} IS NOT NULL`),
+  uniqueIndex('users_phone_hash_idx').on(table.phoneHash).where(sql`${table.phoneHash} IS NOT NULL`),
+  uniqueIndex('users_username_hash_idx').on(table.usernameHash).where(sql`${table.usernameHash} IS NOT NULL`),
   index('users_tier_idx').on(table.tier),
   index('users_created_at_idx').on(table.createdAt),
 ]);
@@ -271,7 +280,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   sessions: many(sessions),
   identityFlags: many(identityFlags),
   savedLocations: many(savedLocations),
-alertZones: many(alertZones)
+  alertZones: many(alertZones)
 }));
 
 export const reportsRelations = relations(reports, ({ one, many }) => ({
@@ -296,4 +305,3 @@ export const alertZonesRelations = relations(alertZones, ({ one }) => ({
     fields: [alertZones.userId],
     references: [users.id],
   }),
-}));
