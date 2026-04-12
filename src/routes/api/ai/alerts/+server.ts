@@ -9,9 +9,8 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
-import { alertZones, reports, categories, users } from '$lib/server/db/schema';
+import { alertZones, reports, categories } from '$lib/server/db/schema';
 import { eq, and, gte, desc } from 'drizzle-orm';
-import { auth } from '$lib/server/auth';
 import {
   getGeminiKey,
   AI_MODEL,
@@ -79,18 +78,13 @@ function haversineKm(
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
+// hooks.server.ts already resolved the session — read locals directly.
+// users.id IS the Better Auth NanoID so no secondary lookup needed.
 
-async function requireUser(request: Request): Promise<string> {
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session?.user?.id) throw error(401, 'Unauthorised.');
-
-  const [user] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.hashable, session.user.id));
-
-  if (!user) throw error(401, 'User not found.');
-  return user.id;
+function requireUser(locals: App.Locals): string {
+  const userId = locals.user?.id;
+  if (!userId) throw error(401, 'Unauthorised.');
+  return userId;
 }
 
 // ─── DB helpers ───────────────────────────────────────────────────────────────
@@ -294,14 +288,14 @@ Return the JSON as instructed.
 
 // ─── Handlers ─────────────────────────────────────────────────────────────────
 
-export const GET: RequestHandler = async ({ request }) => {
-  const userId = await requireUser(request);
+export const GET: RequestHandler = async ({ locals }) => {
+  const userId = requireUser(locals);
   const zones  = await getZonesForUser(userId);
   return json({ zones }, { status: 200 });
 };
 
-export const POST: RequestHandler = async ({ request, url }) => {
-  const userId = await requireUser(request);
+export const POST: RequestHandler = async ({ request, url, locals }) => {
+  const userId = requireUser(locals);
 
   let body: Record<string, unknown>;
   try {
@@ -357,8 +351,8 @@ export const POST: RequestHandler = async ({ request, url }) => {
   return json({ zone: newZone }, { status: 201 });
 };
 
-export const PATCH: RequestHandler = async ({ request }) => {
-  const userId = await requireUser(request);
+export const PATCH: RequestHandler = async ({ request, locals }) => {
+  const userId = requireUser(locals);
 
   let body: Record<string, unknown>;
   try {
@@ -376,8 +370,8 @@ export const PATCH: RequestHandler = async ({ request }) => {
   return json({ isActive: newState }, { status: 200 });
 };
 
-export const DELETE: RequestHandler = async ({ request }) => {
-  const userId = await requireUser(request);
+export const DELETE: RequestHandler = async ({ request, locals }) => {
+  const userId = requireUser(locals);
 
   let body: Record<string, unknown>;
   try {
