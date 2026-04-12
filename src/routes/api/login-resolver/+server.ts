@@ -13,7 +13,7 @@ export const POST = async ({ request }) => {
   const { identifier } = await request.json();
 
   if (!identifier?.trim()) {
-    return json({ error: 'e-Mail, Phone or Username is required' }, { status: 400 });
+    return json({ error: 'Identifier is required' }, { status: 400 });
   }
 
   const id = identifier.trim();
@@ -47,7 +47,7 @@ export const POST = async ({ request }) => {
       return json({ email: byPhone.email });
     }
 
-    return json({ error: 'No account was found' }, { status: 404 });
+    return json({ error: 'Account not found' }, { status: 404 });
 
   } catch (err) {
     console.error('[LOGIN-RESOLVER] Error:', err);
