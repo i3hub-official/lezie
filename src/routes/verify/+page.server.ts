@@ -19,11 +19,12 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
   }
 
   try {
-    // Use the internal API directly — bypasses Zod email validation
-    // which chokes on the encrypted email stored in the JWT payload.
-    await auth.api.verifyEmail({
+    // Log the full error so we know exactly what's failing
+    const result = await auth.api.verifyEmail({
       query: { token },
     });
+
+    console.log('[VERIFY] api result:', JSON.stringify(result));
 
     const code = tokenToCode(token);
 
@@ -38,13 +39,25 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
     return { status: 'success', code };
 
   } catch (err: any) {
-    console.error('[VERIFY]', err);
+    // Log everything about the error
+    console.error('[VERIFY] error name:',    err?.name);
+    console.error('[VERIFY] error message:', err?.message);
+    console.error('[VERIFY] error status:',  err?.status);
+    console.error('[VERIFY] error body:',    JSON.stringify(err?.body));
+    console.error('[VERIFY] error cause:',   JSON.stringify(err?.cause));
+    console.error('[VERIFY] full error:',    err);
 
-    const message =
-      err?.body?.message === 'Token has expired' || err?.status === 400
+    const isExpired =
+      err?.status === 400 ||
+      err?.body?.message?.toLowerCase().includes('expir') ||
+      err?.body?.message?.toLowerCase().includes('invalid') ||
+      err?.message?.toLowerCase().includes('expir');
+
+    return {
+      status:  'error',
+      message: isExpired
         ? 'This link has already been used or has expired.'
-        : 'Something went wrong. Please try again.';
-
-    return { status: 'error', message };
+        : 'Something went wrong. Please try again.',
+    };
   }
 };
