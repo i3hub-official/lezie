@@ -23,3 +23,4 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
   return { maskedEmail, ref };
 };
+
