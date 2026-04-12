@@ -1,7 +1,9 @@
 // src/routes/verify/+page.server.ts
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { auth } from '$lib/server/auth';
+import { db } from '$lib/server/db';
+import { authUsers, verifications } from '$lib/server/db/auth-schema';
+import { eq, and, gt } from 'drizzle-orm';
 import { dev } from '$app/environment';
 
 function tokenToCode(token: string): string {
@@ -19,12 +21,48 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
   }
 
   try {
-    // Log the full error so we know exactly what's failing
-    const result = await auth.api.verifyEmail({
-      query: { token },
-    });
+    // Better Auth stores verification tokens in the `verification` table.
+    // The identifier is the encrypted email, value is the token.
+    // We query directly — bypassing Zod email validation entirely.
+    const now = new Date();
 
-    console.log('[VERIFY] api result:', JSON.stringify(result));
+    const record = await db
+      .select()
+      .from(verifications)
+      .where(
+        and(
+          eq(verifications.value, token),
+          gt(verifications.expiresAt, now)
+        )
+      )
+      .limit(1);
+
+    if (dev) {
+      console.log('[VERIFY] record found:', record.length > 0);
+      console.log('[VERIFY] token:', token.slice(0, 30) + '...');
+    }
+
+    if (record.length === 0) {
+      return {
+        status:  'error',
+        message: 'This link has already been used or has expired.',
+      };
+    }
+
+    const verification = record[0];
+
+    // Mark the email as verified on the auth user
+    await db
+      .update(authUsers)
+      .set({ emailVerified: true })
+      .where(eq(authUsers.email, verification.identifier));
+
+    // Delete the token so it can't be reused
+    await db
+      .delete(verifications)
+      .where(eq(verifications.value, token));
+
+    if (dev) console.log('[VERIFY] ✅ Email verified for identifier:', verification.identifier.slice(0, 20) + '...');
 
     const code = tokenToCode(token);
 
@@ -39,25 +77,7 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
     return { status: 'success', code };
 
   } catch (err: any) {
-    // Log everything about the error
-    console.error('[VERIFY] error name:',    err?.name);
-    console.error('[VERIFY] error message:', err?.message);
-    console.error('[VERIFY] error status:',  err?.status);
-    console.error('[VERIFY] error body:',    JSON.stringify(err?.body));
-    console.error('[VERIFY] error cause:',   JSON.stringify(err?.cause));
-    console.error('[VERIFY] full error:',    err);
-
-    const isExpired =
-      err?.status === 400 ||
-      err?.body?.message?.toLowerCase().includes('expir') ||
-      err?.body?.message?.toLowerCase().includes('invalid') ||
-      err?.message?.toLowerCase().includes('expir');
-
-    return {
-      status:  'error',
-      message: isExpired
-        ? 'This link has already been used or has expired.'
-        : 'Something went wrong. Please try again.',
-    };
+    console.error('[VERIFY] error:', err?.message ?? err);
+    return { status: 'error', message: 'Something went wrong. Please try again.' };
   }
 };
