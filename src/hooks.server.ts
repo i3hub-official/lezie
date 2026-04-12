@@ -107,79 +107,168 @@ const rateLimiting: Handle = async ({ event, resolve }) => {
   return resolve(event);
 };
 
+
 const authSession: Handle = async ({ event, resolve }) => {
+  const path = event.url.pathname;
+  const method = event.request.method;
+  
+  // ==================== FULL REQUEST LOGGING ====================
+  if (dev) {
+    console.log('\n=== AUTH REQUEST ===');
+    console.log(`[AUTH] ${method} ${path}`);
+    console.log('[AUTH] Cookies:', event.request.headers.get('cookie'));
+    console.log('[AUTH] Authorization header:', event.request.headers.get('authorization'));
+    console.log('[AUTH] User-Agent:', event.request.headers.get('user-agent'));
+  }
+
   // 1. Let Better Auth handle its own API routes
-  if (event.url.pathname.startsWith('/api/auth')) {
+  if (path.startsWith('/api/auth')) {
+    if (dev) console.log('[AUTH] Passing to Better Auth handler');
     return auth.handler(event.request);
   }
 
-  // 2. Resolve session
-  const sessionResult = await auth.api.getSession({
-    headers: event.request.headers
-  });
+  // 2. Resolve session with more detailed logging
+  let sessionResult = null;
+  let sessionError = null;
+  
+  try {
+    if (dev) console.log('[AUTH] Attempting to get session...');
+    
+    sessionResult = await auth.api.getSession({
+      headers: event.request.headers
+    });
+    
+    if (dev) {
+      console.log('[AUTH] Session result:', sessionResult ? '✅ Found' : '❌ Not found');
+      if (sessionResult) {
+        console.log('[AUTH] Session details:', {
+          userId: sessionResult.user.id,
+          email: sessionResult.user.email,
+          emailVerified: sessionResult.user.emailVerified,
+          sessionId: sessionResult.session.id,
+          expiresAt: sessionResult.session.expiresAt,
+          createdAt: sessionResult.session.createdAt,
+          updatedAt: sessionResult.session.updatedAt
+        });
+        
+        // Check if session is expired
+        const now = new Date();
+        const expiresAt = new Date(sessionResult.session.expiresAt);
+        const isExpired = now > expiresAt;
+        console.log('[AUTH] Current time:', now.toISOString());
+        console.log('[AUTH] Session expires:', expiresAt.toISOString());
+        console.log('[AUTH] Session expired?', isExpired);
+        if (isExpired) {
+          console.log('[AUTH] ⚠️ Session is EXPIRED!');
+          console.log('[AUTH] Expired by:', Math.floor((now.getTime() - expiresAt.getTime()) / 1000), 'seconds');
+        }
+      }
+    }
+  } catch (err) {
+    sessionError = err;
+    console.error('[AUTH] ❌ Error getting session:', err);
+    if (err instanceof Error) {
+      console.error('[AUTH] Error stack:', err.stack);
+    }
+  }
 
-  const path = event.url.pathname;
-  const now  = Date.now();
-  const isExpired =
-    sessionResult && now > new Date(sessionResult.session.expiresAt).getTime();
+  // 3. Process session result
+  const now = Date.now();
+  const hasValidSession = sessionResult && !sessionError;
+  const isExpired = hasValidSession && now > new Date(sessionResult.session.expiresAt).getTime();
+  
+  if (dev) {
+    console.log('[AUTH] Session validation:', {
+      hasSessionResult: !!sessionResult,
+      hasSessionError: !!sessionError,
+      isExpired,
+      isValid: hasValidSession && !isExpired
+    });
+  }
 
-  if (sessionResult && !isExpired) {
-    event.locals.user    = sessionResult.user;
+  if (hasValidSession && !isExpired) {
+    event.locals.user = sessionResult.user;
     event.locals.session = sessionResult.session;
+    if (dev) {
+      console.log('[AUTH] ✅ Session set in locals for user:', sessionResult.user.id);
+      console.log('[AUTH] User email verified:', sessionResult.user.emailVerified);
+    }
   } else {
     if (isExpired && dev) {
       console.warn(`[AUTH] 🕒 Expired session for user: ${sessionResult!.user.id}`);
+      console.warn(`[AUTH] Expired at: ${sessionResult!.session.expiresAt}`);
     }
-    event.locals.user    = null;
+    if (sessionError && dev) {
+      console.warn('[AUTH] ⚠️ Session error occurred');
+    }
+    if (!sessionResult && dev) {
+      console.warn('[AUTH] ⚠️ No session found');
+    }
+    event.locals.user = null;
     event.locals.session = null;
   }
 
-  const user    = event.locals.user;
-  const session = event.locals.session;
+  // 4. Check if route is public
+  const isPublic = isPublicRoute(path);
+  const needsVerification = requiresVerification(path);
+  
+  if (dev) {
+    console.log('[AUTH] Route info:', {
+      path,
+      isPublic,
+      needsVerification,
+      hasSession: !!event.locals.session,
+      hasUser: !!event.locals.user,
+      isAuthenticated: !!event.locals.session && !!event.locals.user
+    });
+  }
 
-  // 3. Unauthenticated → public routes only, everything else → /signin
-  if (!session && !isPublicRoute(path)) {
-    if (dev) console.log(`[AUTH] 🛡️ Guest blocked from ${path}`);
+  // 5. Unauthenticated → public routes only
+  if (!event.locals.session && !isPublic) {
+    if (dev) {
+      console.log(`[AUTH] 🛡️ Guest blocked from ${path}`);
+      console.log(`[AUTH] Redirecting to /signin with redirectTo=${encodeURIComponent(path)}`);
+    }
     const next = path !== '/' ? `?redirectTo=${encodeURIComponent(path)}` : '';
     throw redirect(303, `/signin${next}`);
   }
 
-  // 4. Expired session on protected route → tell the user why
-  if (!session && isExpired && !isPublicRoute(path)) {
+  // 6. Expired session on protected route
+  if (!event.locals.session && isExpired && !isPublic) {
+    if (dev) console.log('[AUTH] 🕒 Expired session redirecting to /signin');
     throw redirect(303, '/signin?error=session_expired');
   }
 
-  // 5. Authenticated but email NOT verified → bounce to /verify-email
-  if (session && user && !(user as any).emailVerified && requiresVerification(path)) {
-    if (dev) console.log(`[AUTH] 📧 Unverified user blocked from ${path}`);
+  // 7. Authenticated but email NOT verified
+  const user = event.locals.user;
+  const session = event.locals.session;
+  
+  if (session && user && !(user as any).emailVerified && needsVerification) {
+    if (dev) {
+      console.log(`[AUTH] 📧 Unverified user (${user.id}) blocked from ${path}`);
+      console.log('[AUTH] User email verified status:', (user as any).emailVerified);
+      console.log('[AUTH] Redirecting to /verify-email');
+    }
     throw redirect(303, '/verify-email');
   }
 
-  // 6. Authenticated + verified users have no reason to see auth pages → dashboard
+  // 8. Authenticated + verified users on auth pages → dashboard
   if (session && (user as any)?.emailVerified && ROUTE_CONFIG.PUBLIC_EXACT.has(path)) {
+    if (dev) {
+      console.log(`[AUTH] ✅ Verified user (${user.id}) on auth page ${path} → redirecting to /dashboard`);
+    }
     throw redirect(303, '/dashboard');
   }
 
+  if (dev) {
+    console.log('[AUTH] ✅ Request proceeding to resolver');
+    console.log('=== END AUTH REQUEST ===\n');
+  }
+
+  // 9. Proceed to next handler
   return resolve(event);
 };
 
-const cacheControl: Handle = async ({ event, resolve }) => {
-  const response = await resolve(event);
-  const path = event.url.pathname;
-
-  const isStaticAsset =
-    path.startsWith('/_app') ||
-    path.startsWith('/favicon') ||
-    /\.(ico|png|jpg|jpeg|svg|webp|woff2?|ttf|otf|css|js)$/.test(path);
-
-  if (!isStaticAsset) {
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-    response.headers.set('Pragma', 'no-cache');
-    response.headers.set('Expires', '0');
-  }
-
-  return response;
-};
 
 // ==================== 4. FINAL SEQUENCE ====================
 export const handle: Handle = sequence(
