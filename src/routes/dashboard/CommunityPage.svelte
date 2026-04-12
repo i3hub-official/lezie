@@ -161,44 +161,35 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-icon members-icon">
-          <Users size={22} />
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">1,250</span>
-          <span class="stat-label">Active Members</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon posts-icon">
-          <MessageCircle size={22} />
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">3,421</span>
-          <span class="stat-label">Total Posts</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon discussions-icon">
-          <MessageSquare size={22} />
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">847</span>
-          <span class="stat-label">Discussions</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon events-icon">
-          <Calendar size={22} />
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">12</span>
-          <span class="stat-label">Upcoming Events</span>
-        </div>
-      </div>
-    </div>
+   <div class="stat-card">
+  <div class="stat-icon members-icon"><Users size={22} /></div>
+  <div class="stat-content">
+    <span class="stat-value">{data.stats.memberCount.toLocaleString()}</span>
+    <span class="stat-label">Active Members</span>
+  </div>
+</div>
+<div class="stat-card">
+  <div class="stat-icon posts-icon"><MessageCircle size={22} /></div>
+  <div class="stat-content">
+    <span class="stat-value">{data.stats.postCount.toLocaleString()}</span>
+    <span class="stat-label">Total Posts</span>
+  </div>
+</div>
+<div class="stat-card">
+  <div class="stat-icon discussions-icon"><MessageSquare size={22} /></div>
+  <div class="stat-content">
+    <span class="stat-value">{data.stats.discussionCount.toLocaleString()}</span>
+    <span class="stat-label">Discussions</span>
+  </div>
+</div>
+<div class="stat-card">
+  <div class="stat-icon events-icon"><Calendar size={22} /></div>
+  <div class="stat-content">
+    <span class="stat-value">{data.stats.eventCount.toLocaleString()}</span>
+    <span class="stat-label">Upcoming Events</span>
+  </div>
+</div>
+
 
     <!-- Search Bar -->
     <div class="search-bar-wrapper">
