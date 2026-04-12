@@ -79,27 +79,50 @@
     }
   }
 
-  // ── Resend cooldown ──────────────────────────────────────
+    // ── Resend cooldown (persistent across navigation) ──────
   const COOLDOWN_SECS = 60;
+  const COOLDOWN_KEY  = 'lezie_resend_cooldown_until';
+
   let cooldown    = $state(0);
   let resending   = $state(false);
   let resendDone  = $state(false);
   let resendError = $state('');
   let timer: ReturnType<typeof setInterval> | null = null;
 
+  function getRemainingCooldown(): number {
+    const until = Number(sessionStorage.getItem(COOLDOWN_KEY) ?? 0);
+    return Math.max(0, Math.ceil((until - Date.now()) / 1000));
+  }
+
   function startCooldown() {
-    cooldown = COOLDOWN_SECS;
+    // Store the expiry timestamp — survives page navigation
+    sessionStorage.setItem(COOLDOWN_KEY, String(Date.now() + COOLDOWN_SECS * 1000));
+    tickCooldown();
+  }
+
+  function tickCooldown() {
+    if (timer) clearInterval(timer);
+    cooldown = getRemainingCooldown();
+    if (cooldown <= 0) return;
+
     timer = setInterval(() => {
-      cooldown--;
-      if (cooldown <= 0) { clearInterval(timer!); timer = null; cooldown = 0; }
+      cooldown = getRemainingCooldown();
+      if (cooldown <= 0) {
+        clearInterval(timer!);
+        timer = null;
+      }
     }, 1000);
   }
 
   onMount(() => {
-    startCooldown();
+    // Resume any existing cooldown that was running before navigation
+    tickCooldown();
     inputRefs[0]?.focus();
   });
-  onDestroy(() => { if (timer) clearInterval(timer); });
+
+  onDestroy(() => {
+    if (timer) clearInterval(timer);
+  });
 
   async function handleResend() {
     if (cooldown > 0 || resending) return;
