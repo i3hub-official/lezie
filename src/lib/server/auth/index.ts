@@ -17,11 +17,15 @@ import {
   protectEmail,
   protectPhone,
   protectUsername,
+  protectName,
 } from '$lib/security/dataProtection';
 
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL || 'http://localhost:5173',
-  secret:  env.BETTER_AUTH_SECRET || '89e998e6034644edb1be296a3685791c',
+  secret:  (() => {
+    if (!env.BETTER_AUTH_SECRET) throw new Error('BETTER_AUTH_SECRET is not set in .env');
+    return env.BETTER_AUTH_SECRET;
+  })(),
 
   logger: {
     level:   dev ? 'debug' : 'error',
@@ -123,8 +127,8 @@ export const auth = betterAuth({
             await db.insert(userProfiles).values({
               id:        nanoid(),
               userId:    user.id as any,
-              firstName,
-              lastName,
+              firstName: firstName ? protectName(firstName) : null,
+              lastName:  lastName  ? protectName(lastName)  : null,
               updatedAt: new Date(),
             }).onConflictDoNothing();
 
@@ -152,8 +156,10 @@ export const auth = betterAuth({
   ],
 
   session: {
-    expiresIn:   60 * 60 * 24 * 30,
-    updateAge:   60 * 60 * 24,
-    cookieCache: { enabled: true, maxAge: 60 * 5 },
+    expiresIn: 60 * 60 * 24 * 30,
+    updateAge: 60 * 60 * 24,
+    // cookieCache disabled — was returning stale/invalid session data
+    // causing auth.api.getSession() to return null on every request
+    cookieCache: { enabled: false },
   },
 });
