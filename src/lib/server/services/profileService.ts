@@ -7,7 +7,6 @@ import * as Prot from '$lib/security/dataProtection';
 // Safely decrypt a Tier-2 random-IV field (format: "ivHex:encryptedHex").
 // If the value doesn't look encrypted (no colon separator) it's plaintext
 // from before encryption was enforced — return as-is.
-
 export function safeRevealField(value: string | null | undefined, revealFn: (s: string) => string): string | null {
   if (!value) return null;
   try {
@@ -47,14 +46,29 @@ export async function getProfile(userId: string) {
 
   return {
     ...profile,
-    firstName: safeRevealField(profile.firstName, Prot.revealName),
-    lastName:  safeRevealField(profile.lastName,  Prot.revealName),
-    bio:       safeRevealField(profile.bio,        Prot.revealText),
-    city:      safeRevealField(profile.city,       Prot.revealText),
-    country:   safeRevealField(profile.country,    Prot.revealText),
-    address:   safeRevealField(profile.address,    Prot.revealText),
-    phone:     safeRevealSearchable(account?.phone, Prot.revealPhone),
-    email:     safeRevealSearchable(account?.email, Prot.revealEmail),
+    firstName:   safeRevealField(profile.firstName,   Prot.revealName),
+    lastName:    safeRevealField(profile.lastName,    Prot.revealName),
+    bio:         safeRevealField(profile.bio,          Prot.revealText),
+    city:        safeRevealField(profile.city,         Prot.revealText),
+    state:       safeRevealField((profile as any).state,    Prot.revealText),
+    country:     safeRevealField(profile.country,     Prot.revealText),
+    address:     safeRevealField(profile.address,     Prot.revealText),
+    homeAddress: safeRevealField((profile as any).homeAddress, Prot.revealText),
+    phone:       safeRevealSearchable(account?.phone,  Prot.revealPhone),
+    email:       safeRevealSearchable(account?.email,  Prot.revealEmail),
+    // NIN/BVN — never returned to client in decrypted form
+    hasNin:      !!(profile as any).nin,
+    hasBvn:      !!(profile as any).bvn,
+    ninVerified: (profile as any).ninVerified ?? false,
+    bvnVerified: (profile as any).bvnVerified ?? false,
+    ninSubmittedAt: (profile as any).ninSubmittedAt ?? null,
+    bvnSubmittedAt: (profile as any).bvnSubmittedAt ?? null,
+    // Media
+    avatarUrl:   profile.avatarUrl ?? null,
+    coverUrl:    (profile as any).coverUrl ?? null,
+    // Username
+    username:      (profile as any).username ?? null,
+    usernameSetAt: (profile as any).usernameSetAt ?? null,
   };
 }
 
