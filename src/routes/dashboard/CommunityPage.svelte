@@ -1,30 +1,28 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { goto, invalidateAll } from '$app/navigation';
+  import { goto } from '$app/navigation';
   import { enhance } from '$app/forms';
   import {
-    Users, MessageCircle, Heart, Share2, Flag, ThumbsUp,
-    UserPlus, Search, Filter, X, ChevronLeft, Plus,
-    Clock, MapPin, Award, Shield, Crown, Star,
-    TrendingUp, MessageSquare, Eye, MoreHorizontal,
-    Send, Image as ImageIcon, Link, Smile,
-    ChevronRight, Calendar, Bell, CheckCircle,
-    AlertCircle, HelpCircle, BookOpen, Target,
-    LayoutGrid, Radio, List
+    Users, MessageCircle, ThumbsUp, Share2, UserPlus,
+    Search, Filter, X, ChevronLeft, Plus, Clock,
+    MapPin, Award, Shield, Star, TrendingUp,
+    MessageSquare, Eye, Send, Image as ImageIcon,
+    Link, Smile, Calendar, Bell, CheckCircle,
+    HelpCircle, LayoutGrid, Radio
   } from 'lucide-svelte';
   import NeighbourhoodFeed from '$lib/components/NeighbourhoodFeed.svelte';
 
   let { data } = $props();
 
-  let showCreatePost       = $state(false);
-  let searchQuery          = $state('');
-  let showFeed             = $state(true);
-  let showDiscussions      = $state(true);
-  let showMembers          = $state(true);
-  let showEvents           = $state(true);
+  let showCreatePost        = $state(false);
+  let searchQuery           = $state('');
+  let showFeed              = $state(true);
+  let showDiscussions       = $state(true);
+  let showMembers           = $state(true);
+  let showEvents            = $state(true);
   let showNeighbourhoodFeed = $state(true);
-  let userLat              = $state<number | null>(null);
-  let userLng              = $state<number | null>(null);
+  let userLat               = $state<number | null>(null);
+  let userLng               = $state<number | null>(null);
 
   let newPost = $state({
     content:     '',
@@ -33,15 +31,14 @@
     scope:       'global' as 'global' | 'local',
   });
 
-  // ── Location ──────────────────────────────────────────────
+  // Get location for NeighbourhoodFeed display only — no invalidateAll
+  // to avoid freezing. Location-filtered data requires a manual page reload.
   onMount(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        async (pos) => {
+        (pos) => {
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
-          // Re-load with location so local posts are included
-          await invalidateAll();
         },
         () => {},
         { timeout: 8000, maximumAge: 60000 }
@@ -49,10 +46,9 @@
     }
   });
 
-  // ── Derived / filtered data ────────────────────────────────
+  // ── Filtered data ──────────────────────────────────────────
   const filteredPosts = $derived(
-    !searchQuery
-      ? data.posts
+    !searchQuery ? data.posts
       : data.posts.filter(p =>
           p.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
           p.authorName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -60,8 +56,7 @@
   );
 
   const filteredDiscussions = $derived(
-    !searchQuery
-      ? data.discussions
+    !searchQuery ? data.discussions
       : data.discussions.filter(d =>
           d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           d.authorName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -69,16 +64,14 @@
   );
 
   const filteredMembers = $derived(
-    !searchQuery
-      ? data.members
+    !searchQuery ? data.members
       : data.members.filter(m =>
           m.name.toLowerCase().includes(searchQuery.toLowerCase())
         )
   );
 
   const filteredEvents = $derived(
-    !searchQuery
-      ? data.events
+    !searchQuery ? data.events
       : data.events.filter(e =>
           e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           e.location.toLowerCase().includes(searchQuery.toLowerCase())
@@ -87,11 +80,11 @@
 
   // ── Categories ────────────────────────────────────────────
   const categories = [
-    { id: 'general',  label: 'General Discussion', icon: MessageCircle, color: '#6B7280' },
-    { id: 'safety',   label: 'Safety Tips',        icon: Shield,        color: '#10B981' },
-    { id: 'alerts',   label: 'Alert Sharing',      icon: Bell,          color: '#F59E0B' },
-    { id: 'questions',label: 'Questions',          icon: HelpCircle,    color: '#3B82F6' },
-    { id: 'success',  label: 'Success Stories',    icon: Award,         color: '#8B5CF6' },
+    { id: 'general',   label: 'General Discussion', icon: MessageCircle, color: '#6B7280' },
+    { id: 'safety',    label: 'Safety Tips',         icon: Shield,        color: '#10B981' },
+    { id: 'alerts',    label: 'Alert Sharing',       icon: Bell,          color: '#F59E0B' },
+    { id: 'questions', label: 'Questions',           icon: HelpCircle,    color: '#3B82F6' },
+    { id: 'success',   label: 'Success Stories',     icon: Award,         color: '#8B5CF6' },
   ];
 
   function getCategoryIcon(id: string)  { return categories.find(c => c.id === id)?.icon  ?? MessageCircle; }
@@ -99,19 +92,18 @@
   function getCategoryLabel(id: string) { return categories.find(c => c.id === id)?.label ?? id; }
 
   // ── Formatting ────────────────────────────────────────────
-  function formatDate(dateString: string) {
-    const date = new Date(dateString);
-    const diff  = Date.now() - date.getTime();
+  function formatDate(iso: string) {
+    const diff  = Date.now() - new Date(iso).getTime();
     const hours = Math.floor(diff / 3600000);
     const days  = Math.floor(hours / 24);
     if (hours < 1)  return 'Just now';
     if (hours < 24) return `${hours}h ago`;
     if (days  < 7)  return `${days}d ago`;
-    return date.toLocaleDateString();
+    return new Date(iso).toLocaleDateString();
   }
 
-  function formatEventDate(dateString: string) {
-    return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  function formatEventDate(iso: string) {
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
   function tierToRole(tier: string) {
@@ -122,16 +114,12 @@
     return map[tier] ?? 'Member';
   }
 
-  // ── Toggle all sections ───────────────────────────────────
   function toggleAllSections() {
-    const allVisible = showNeighbourhoodFeed && showFeed && showDiscussions && showMembers && showEvents;
-    showNeighbourhoodFeed = !allVisible;
-    showFeed              = !allVisible;
-    showDiscussions       = !allVisible;
-    showMembers           = !allVisible;
-    showEvents            = !allVisible;
+    const all = showNeighbourhoodFeed && showFeed && showDiscussions && showMembers && showEvents;
+    showNeighbourhoodFeed = showFeed = showDiscussions = showMembers = showEvents = !all;
   }
 </script>
+
 
 <div class="community-page">
   <div class="community-container">
