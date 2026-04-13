@@ -1,4 +1,3 @@
-
 // src/lib/server/db/schema.ts
 
 import {
@@ -29,7 +28,6 @@ export const reportStatusEnum = pgEnum('report_status', ['reported', 'investigat
 export const notificationTypeEnum = pgEnum('notification_type', ['alert', 'verification', 'system']);
 export const flagTypeEnum = pgEnum('flag_type', ['travel_anomaly', 'multiple_reports', 'suspicious_pattern']);
 export const mediaTypeEnum = pgEnum('media_type', ['image', 'video', 'audio']);
-export const alertZoneStatusEnum = pgEnum('alert_zone_status', ['active', 'inactive']);
 
 // ==================== TABLES WITH INDEXES ====================
 
@@ -70,76 +68,45 @@ export const users = pgTable('users', {
 
 // User profiles
 export const userProfiles = pgTable('user_profiles', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => nanoid()),
+  id:        text('id').primaryKey().$defaultFn(() => nanoid()),
+  userId:    text('user_id').references(() => users.id).notNull().unique(),
 
-  userId: text('user_id')
-    .references(() => users.id)
-    .notNull()
-    .unique(),
+  // ── Encrypted fields (Tier 2 random-IV) ────────────────────────────────
+  firstName: varchar('first_name', { length: 255 }),   // encrypted
+  lastName:  varchar('last_name',  { length: 400 }),   // encrypted
+  bio:       text('bio'),                               // encrypted
+  address:   text('address'),                           // encrypted (full street address)
+  homeAddress: text('home_address'),                    // encrypted (home/saved location)
+  city:      varchar('city',    { length: 255 }),       // encrypted
+  state:     varchar('state',   { length: 255 }),       // encrypted
+  country:   varchar('country', { length: 255 }),       // encrypted
 
-  firstName: varchar('first_name', { length: 255 }),
-  lastName: varchar('last_name', { length: 400 }),
+  // ── Media (Cloudinary URLs — not PII, stored plaintext) ────────────────
+  avatarUrl:    varchar('avatar_url',    { length: 500 }),
+  coverUrl:     varchar('cover_url',     { length: 500 }),
+  avatarPublicId: varchar('avatar_public_id', { length: 255 }), // Cloudinary public_id for deletion
+  coverPublicId:  varchar('cover_public_id',  { length: 255 }),
 
-  // Avatar (updated to support Cloudinary later)
-  avatarUrl: text('avatar_url'),
+  // ── KYC identity fields (encrypted, once-verified locks) ───────────────
+  nin:         varchar('nin',  { length: 500 }),        // encrypted National ID
+  bvn:         varchar('bvn',  { length: 500 }),        // encrypted Bank Verification Number
+  ninVerified: boolean('nin_verified').default(false).notNull(),
+  bvnVerified: boolean('bvn_verified').default(false).notNull(),
+  ninSubmittedAt: timestamp('nin_submitted_at'),
+  bvnSubmittedAt: timestamp('bvn_submitted_at'),
 
-  bio: text('bio'),
+  // ── Non-encrypted fields ────────────────────────────────────────────────
+  dateOfBirth:  timestamp('date_of_birth'),
+  location:     jsonb('location'),              // { lat, lng } for map features
+  socialLinks:  jsonb('social_links'),          // { twitter, linkedin, instagram }
+  username:     varchar('username', { length: 255 }), // plaintext — set-once, indexed
+  usernameSetAt: timestamp('username_set_at'), // non-null = locked, cannot change
 
-  // ─────────────────────────────────────────────
-  // KYC FIELDS
-  // ─────────────────────────────────────────────
-  nin: varchar('nin', { length: 20 }),
-  bvn: varchar('bvn', { length: 20 }),
-
-  ninVerified: boolean('nin_verified').default(false),
-  bvnVerified: boolean('bvn_verified').default(false),
-
-  ninVerifiedAt: timestamp('nin_verified_at'),
-  bvnVerifiedAt: timestamp('bvn_verified_at'),
-
-  // ─────────────────────────────────────────────
-  // ADDRESS FIELDS (expanded)
-  // ─────────────────────────────────────────────
-  streetAddress: text('street_address'),
-  city: varchar('city', { length: 100 }),
-  state: varchar('state', { length: 100 }),
-  country: varchar('country', { length: 100 }),
-  postalCode: varchar('postal_code', { length: 20 }),
-
-  homeAddressSet: boolean('home_address_set').default(false),
-
-  // Legacy optional field (kept for compatibility)
-  location: jsonb('location'),
-
-  // ─────────────────────────────────────────────
-  // MEDIA (Cloudinary support)
-  // ─────────────────────────────────────────────
-  coverPhotoUrl: text('cover_photo_url'),
-  avatarPublicId: text('avatar_public_id'),
-  coverPhotoPublicId: text('cover_photo_public_id'),
-
-  // ─────────────────────────────────────────────
-  // USERNAME (set once)
-  // ─────────────────────────────────────────────
-  username: varchar('username', { length: 50 }).unique(),
-  usernameSet: boolean('username_set').default(false),
-
-  // ─────────────────────────────────────────────
-  // SYSTEM FIELDS
-  // ─────────────────────────────────────────────
-  dateOfBirth: timestamp('date_of_birth'),
-
-  createdAt: timestamp('created_at')
-    .defaultNow()
-    .notNull(),
-
-  updatedAt: timestamp('updated_at')
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
   index('user_profiles_name_idx').on(table.firstName, table.lastName),
+  uniqueIndex('user_profiles_username_idx').on(table.username).where(sql`${table.username} IS NOT NULL`),
 ]);
 
 // User Preferences
@@ -156,7 +123,6 @@ export const userPreferences = pgTable('user_preferences', {
   notifyLow: boolean('notify_low').default(false).notNull(),
   language: varchar('language', { length: 10 }).default('en'),
   theme: varchar('theme', { length: 20 }).default('light'),
-  data: jsonb('data').$type<UserSettingsData>(),          // ← ADD THIS
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
@@ -295,40 +261,11 @@ export const savedLocations = pgTable('saved_locations', {
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
-export const alertZones = pgTable('alert_zones', {
-  id:                uuid('id').primaryKey().defaultRandom(),
-  userId:            text('user_id').references(() => users.id).notNull(),
-  name:              varchar('name', { length: 255 }).notNull(),
-  radius:            integer('radius').default(2).notNull(),        // km, max 2
-  categories:        jsonb('categories').notNull().$type<string[]>(),
-  severity:          jsonb('severity').notNull().$type<string[]>(),
-  isActive:          boolean('is_active').default(true).notNull(),
-  locationLabel:     varchar('location_label', { length: 255 }),
-  lat:               text('lat'),                                   // stored as text to avoid float precision issues
-  lng:               text('lng'),
-  lastTriggered:     timestamp('last_triggered'),
-  notificationCount: integer('notification_count').default(0).notNull(),
-  createdAt:         timestamp('created_at').defaultNow().notNull(),
-  updatedAt:         timestamp('updated_at').defaultNow().notNull(),
-}, (table) => [
-  index('alert_zones_user_idx').on(table.userId),
-  index('alert_zones_active_idx').on(table.isActive),
-]);
-
-// UserSettings
-export const userSettings = pgTable('user_settings', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  settings: jsonb('settings').notNull().$type<UserSettingsData>(),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
-
 // ==================== RELATIONS ====================
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   authUser: one(authUsers, {
-    fields: [users.id],
+    fields: [users.hashable],
     references: [authUsers.id]
   }),
   profile: one(userProfiles, {
@@ -345,8 +282,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   notifications: many(notifications),
   sessions: many(sessions),
   identityFlags: many(identityFlags),
-  savedLocations: many(savedLocations),
-  alertZones: many(alertZones)
+  savedLocations: many(savedLocations)
 }));
 
 export const reportsRelations = relations(reports, ({ one, many }) => ({
@@ -364,11 +300,4 @@ export const reportsRelations = relations(reports, ({ one, many }) => ({
   }),
   media: many(reportMedia),
   comments: many(reportComments)
-}));
-
-export const alertZonesRelations = relations(alertZones, ({ one }) => ({
-  user: one(users, {
-    fields: [alertZones.userId],
-    references: [users.id],
-  }),
 }));
