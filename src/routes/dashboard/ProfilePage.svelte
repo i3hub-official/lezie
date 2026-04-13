@@ -166,10 +166,9 @@
       form.append('file', file);
       form.append('type', type);
 
-      const res = await fetch('/api/profile/upload', { 
+      const res = await fetch('/api/profile/upload', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: form 
+  body: form   // ← no headers — browser sets Content-Type + boundary automatically
 });
 const body = await res.json();
       if (!res.ok) { uploadError = body.error ?? 'Upload failed'; return; }
