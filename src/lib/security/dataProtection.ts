@@ -32,6 +32,12 @@ const normalize = {
     s.trim().replace(/\s+/g, ' ').replace(/\w\S*/g, w =>
       w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
     ),
+  
+  nin: (s: string): string =>
+    s.trim().replace(/[^0-9]/g, ''),
+  
+  bvn: (s: string): string =>
+    s.trim().replace(/[^0-9]/g, ''),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -65,6 +71,24 @@ export async function protectUsername(raw: string) {
   };
 }
 
+/** NIN: searchable (deterministic) for verification */
+export async function protectNIN(raw: string) {
+  const normal = normalize.nin(raw);
+  return {
+    encrypted:  encryptSearchable(normal, 'nin'),
+    searchHash: await generateSearchHash(normal, 'nin'),
+  };
+}
+
+/** BVN: searchable (deterministic) for verification */
+export async function protectBVN(raw: string) {
+  const normal = normalize.bvn(raw);
+  return {
+    encrypted:  encryptSearchable(normal, 'bvn'),
+    searchHash: await generateSearchHash(normal, 'bvn'),
+  };
+}
+
 /** Name / firstName / lastName: random-IV, not searchable */
 export function protectName(raw: string): string {
   return encryptField(normalize.name(raw));
@@ -94,6 +118,14 @@ export function revealPhone(encrypted: string): string {
 
 export function revealUsername(encrypted: string): string {
   return decryptSearchable(encrypted, 'username');
+}
+
+export function revealNIN(encrypted: string): string {
+  return decryptSearchable(encrypted, 'nin');
+}
+
+export function revealBVN(encrypted: string): string {
+  return decryptSearchable(encrypted, 'bvn');
 }
 
 export function revealName(encrypted: string): string {
