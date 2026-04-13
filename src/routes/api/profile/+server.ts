@@ -2,13 +2,13 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
-import { userProfiles, users } from '$lib/server/db/schema';
+import { userProfiles } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import {
   protectText,
   protectName,
-  protectNin,
-  protectBvn,
+  protectNIN,
+  protectBVN,
 } from '$lib/security/dataProtection';
 
 export const PATCH: RequestHandler = async ({ request, locals }) => {
@@ -27,13 +27,13 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
   const updates: Record<string, any> = { updatedAt: new Date() };
 
   // ── Mutable free-text fields ─────────────────────────────────────────────
-  if (body.bio       !== undefined) updates.bio       = body.bio       ? protectText(body.bio)       : null;
-  if (body.address   !== undefined) updates.address   = body.address   ? protectText(body.address)   : null;
+  if (body.bio         !== undefined) updates.bio         = body.bio         ? protectText(body.bio)         : null;
+  if (body.address     !== undefined) updates.address     = body.address     ? protectText(body.address)     : null;
   if (body.homeAddress !== undefined) updates.homeAddress = body.homeAddress ? protectText(body.homeAddress) : null;
-  if (body.city      !== undefined) updates.city      = body.city      ? protectText(body.city)      : null;
-  if (body.state     !== undefined) updates.state     = body.state     ? protectText(body.state)     : null;
-  if (body.country   !== undefined) updates.country   = body.country   ? protectText(body.country)   : null;
-  if (body.location  !== undefined) updates.location  = body.location;
+  if (body.city        !== undefined) updates.city        = body.city        ? protectText(body.city)        : null;
+  if (body.state       !== undefined) updates.state       = body.state       ? protectText(body.state)       : null;
+  if (body.country     !== undefined) updates.country     = body.country     ? protectText(body.country)     : null;
+  if (body.location    !== undefined) updates.location    = body.location;
   if (body.socialLinks !== undefined) updates.socialLinks = body.socialLinks;
 
   // ── Username — set-once lock ─────────────────────────────────────────────
@@ -45,7 +45,6 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
     if (!/^[a-z0-9_]{3,30}$/.test(trimmed)) {
       return json({ error: 'Username must be 3–30 characters: letters, numbers, underscores only.' }, { status: 400 });
     }
-    // Check uniqueness
     const taken = await db.query.userProfiles.findFirst({
       where: eq(userProfiles.username, trimmed),
     });
@@ -61,7 +60,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
     if (current.ninVerified) {
       return json({ error: 'NIN cannot be changed after verification.' }, { status: 400 });
     }
-    const { encrypted } = await protectNin(body.nin);
+    const { encrypted } = await protectNIN(body.nin);
     updates.nin            = encrypted;
     updates.ninSubmittedAt = new Date();
   }
@@ -71,7 +70,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
     if (current.bvnVerified) {
       return json({ error: 'BVN cannot be changed after verification.' }, { status: 400 });
     }
-    const { encrypted } = await protectBvn(body.bvn);
+    const { encrypted } = await protectBVN(body.bvn);
     updates.bvn            = encrypted;
     updates.bvnSubmittedAt = new Date();
   }
