@@ -15,6 +15,7 @@
     Mail,
     ArrowRight
   } from 'lucide-svelte';
+  
 
   let searchQuery = $state('');
   let openIndex = $state<number | null>(0);
