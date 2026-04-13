@@ -8,8 +8,9 @@
     MapPin, Award, Shield, Star, TrendingUp,
     MessageSquare, Eye, Send, Image as ImageIcon,
     Link, Smile, Calendar, Bell, CheckCircle,
-    HelpCircle, LayoutGrid, Radio
+    HelpCircle, LayoutGrid, Radio, AlertTriangle
   } from 'lucide-svelte';
+  import NeighbourhoodFeed from '$lib/components/NeighbourhoodFeed.svelte';
 
   let { data } = $props();
 
@@ -19,7 +20,11 @@
   let showDiscussions = $state(true);
   let showMembers = $state(true);
   let showEvents = $state(true);
-  let showNeighbourhoodFeed = $state(false); // Disabled by default
+  let showNeighbourhoodFeed = $state(true); // ✅ Enabled by default
+  let userLat = $state<number | null>(null);
+  let userLng = $state<number | null>(null);
+  let locationError = $state<string | null>(null);
+  let isLoadingLocation = $state(true);
   
   let newPost = $state({
     content: '',
@@ -80,6 +85,39 @@
       e.location?.toLowerCase().includes(query)
     );
   }
+
+  // Get user location for NeighbourhoodFeed
+  function getUserLocation() {
+    if (!navigator.geolocation) {
+      locationError = 'Geolocation is not supported by your browser';
+      isLoadingLocation = false;
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        userLat = position.coords.latitude;
+        userLng = position.coords.longitude;
+        isLoadingLocation = false;
+        console.log('📍 Location obtained:', userLat, userLng);
+      },
+      (error) => {
+        console.warn('Geolocation error:', error.message);
+        locationError = 'Unable to get your location. Using default view.';
+        isLoadingLocation = false;
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
+  }
+
+  // Get location on mount
+  setTimeout(() => {
+    getUserLocation();
+  }, 100);
 
   onDestroy(() => {
     if (searchTimeout) clearTimeout(searchTimeout);
@@ -261,6 +299,47 @@
         {showNeighbourhoodFeed && showFeed && showDiscussions && showMembers && showEvents ? 'Hide All' : 'Show All'}
       </button>
     </div>
+
+    <!-- Neighbourhood Feed Section - Wired up with error handling -->
+    {#if showNeighbourhoodFeed}
+      <div class="section-container">
+        <div class="section-header">
+          <div class="section-title">
+            <Radio size={18} class="section-icon" />
+            <h2>Nearby Activity</h2>
+            <span class="section-count">within 2km</span>
+          </div>
+        </div>
+        <div class="section-content section-content--flush">
+          {#if isLoadingLocation}
+            <div class="loading-placeholder">
+              <div class="loading-spinner-small"></div>
+              <p>Getting your location...</p>
+            </div>
+          {:else if locationError}
+            <div class="error-placeholder">
+              <AlertTriangle size={24} />
+              <p>{locationError}</p>
+              <button class="retry-btn" onclick={getUserLocation}>
+                Retry
+              </button>
+            </div>
+          {:else if userLat && userLng}
+            {#key `${userLat}-${userLng}`}
+              <NeighbourhoodFeed
+                lat={userLat}
+                lng={userLng}
+                neighbourhood=""
+              />
+            {/key}
+          {:else}
+            <div class="loading-placeholder">
+              <p>Waiting for location...</p>
+            </div>
+          {/if}
+        </div>
+      </div>
+    {/if}
 
     <!-- Community Feed Section - Fixed empty state handling -->
     {#if showFeed}
@@ -658,13 +737,63 @@
   {/if}
 </div>
 
+
+
+
+
+
+
 <style>
+  ..loading-placeholder, .error-placeholder {
+    text-align: center;
+    padding: 2rem;
+    color: #64748b;
+  }
+  
+  .loading-placeholder p, .error-placeholder p {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .loading-spinner-small {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #e2e8f0;
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin: 0 auto;
+  }
+  
+  .error-placeholder {
+    background: #FEF2F2;
+    border-radius: 0.75rem;
+    color: #DC2626;
+  }
+  
+  .retry-btn {
+    margin-top: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    background: #DC2626;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+  
+  .retry-btn:hover {
+    background: #B91C1C;
+  }
+
+  /* Rest of your existing styles remain the same */
   .community-page {
     min-height: 100vh;
     background: transparent;
     padding: 0;
     font-family: 'DM Sans', system-ui, sans-serif;
   }
+
 
   .community-container {
     max-width: 100%;
