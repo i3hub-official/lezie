@@ -14,8 +14,6 @@ import { users, userProfiles } from '$lib/server/db/schema';
 import { eq, desc, and, sql, gt, or } from 'drizzle-orm';
 import { safeRevealField } from '$lib/server/services/profileService';
 
-
-
 function withinRadius(latCol: any, lngCol: any, lat: number, lng: number, radiusKm: number) {
   const latDelta = radiusKm / 111.0;
   const lngDelta = radiusKm / (111.0 * Math.cos((lat * Math.PI) / 180));
@@ -27,10 +25,10 @@ function withinRadius(latCol: any, lngCol: any, lat: number, lng: number, radius
   );
 }
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, setHeaders }) => {
   if (!locals.user) throw error(401, 'Unauthorized');
 
-// Add cache headers
+  // Add cache headers to prevent excessive reloads
   setHeaders({
     'Cache-Control': 'private, max-age=60',
   });
