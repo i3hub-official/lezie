@@ -2,79 +2,98 @@
   import { onMount } from 'svelte';
   import {
     ChevronLeft, Bell, Shield, Moon,
-    Trash2, Save, ChevronDown
+    Trash2, Save, ChevronDown, Lock
   } from 'lucide-svelte';
 
-  import { toasts }   from '$lib/toasts.svelte';
-  import { confirm }  from '$lib/confirm.svelte';
+  import { toasts }  from '$lib/toasts.svelte';
+  import { confirm } from '$lib/confirm.svelte';
+  import type { UnlockedFeatures } from '$lib/config/settings.config';
 
-  // ── Settings state ────────────────────────────────────────────────────────
-  let settings = $state({
-    notifications: {
-      push:           true,
-      email:          false,
-      sms:            true,
-      incidentNearby: true,
-      reportVerified: true,
-    },
-    privacy: {
-      anonymousReporting: true,
-      showLocation:       false,
-      profileVisibility:  'community' as string,
-    },
-    appearance: {
-      theme:    'light' as 'light' | 'dark' | 'system',
-      language: 'en',
-    },
-  });
-
-  let isSaving    = $state(false);
-  let isLoading   = $state(true);
+  // ── State ──────────────────────────────────────────────────────────────────
+  let isLoading    = $state(true);
+  let isSaving     = $state(false);
   let showDropdown = $state(false);
 
+  // Tier context — populated from API
+  let tier        = $state('1');
+  let kycStatus   = $state('pending');
+  let trustScore  = $state(0);
+  let reportCount = $state(0);
+
+  let unlocked = $state<UnlockedFeatures>({
+    emailSmsToggle:     false,
+    anonymousReporting: false,
+    localScopedPosts:   false,
+    profileVisibility:  false,
+    showLocationToggle: false,
+  });
+
+  // Individual state per toggle — avoids nested $state mutation bug
+  let push           = $state(true);
+  let email          = $state(false);
+  let sms            = $state(false);
+  let reportVerified = $state(true);
+  // incidentNearby is ALWAYS true — no toggle, no state needed
+
+  let anonymousReporting = $state(false);
+  let showLocation       = $state(false);
+  let profileVisibility  = $state<'public' | 'community' | 'private'>('community');
+
+  let theme    = $state<'light' | 'dark' | 'system'>('light');
+  let language = $state('en');
+
   const visibilityOptions = [
-    { value: 'community', label: 'Community Only' },
-    { value: 'public',    label: 'Public'          },
-    { value: 'private',   label: 'Private'         },
+    { value: 'community' as const, label: 'Community Only' },
+    { value: 'public'    as const, label: 'Public'          },
+    { value: 'private'   as const, label: 'Private'         },
   ];
 
-  // ── Load settings on mount ────────────────────────────────────────────────
+  // Tier badge
+  const tierLabel = $derived((() => {
+    const t = parseInt(tier, 10);
+    if (t >= 4) return { text: 'Full Access',    color: '#10B981' };
+    if (t >= 3) return { text: 'Trusted Member', color: '#6a2c91' };
+    if (t >= 2) return { text: 'Active Member',  color: '#F59E0B' };
+    return           { text: 'New Member',       color: '#94a3b8' };
+  })());
+
+  // ── Load ───────────────────────────────────────────────────────────────────
   onMount(async () => {
     try {
       const res = await fetch('/api/settings');
-      if (res.ok) {
-        const data = await res.json();
-        // Deep merge so any missing keys fall back to defaults
-        settings = {
-          notifications: { ...settings.notifications, ...data.notifications },
-          privacy:       { ...settings.privacy,       ...data.privacy       },
-          appearance:    { ...settings.appearance,    ...data.appearance    },
-        };
-      }
+      if (!res.ok) throw new Error(`Load failed (${res.status})`);
+      const data = await res.json();
+
+      tier        = data.tier        ?? '1';
+      kycStatus   = data.kycStatus   ?? 'pending';
+      trustScore  = data.trustScore  ?? 0;
+      reportCount = data.reportCount ?? 0;
+      unlocked    = data.unlockedFeatures ?? unlocked;
+
+      push           = data.notifications?.push           ?? true;
+      email          = data.notifications?.email          ?? false;
+      sms            = data.notifications?.sms            ?? false;
+      reportVerified = data.notifications?.reportVerified ?? true;
+
+      anonymousReporting = data.privacy?.anonymousReporting ?? false;
+      showLocation       = data.privacy?.showLocation       ?? false;
+      profileVisibility  = data.privacy?.profileVisibility  ?? 'community';
+
+      theme    = data.appearance?.theme    ?? 'light';
+      language = data.appearance?.language ?? 'en';
+
     } catch (err) {
-      console.error('[Settings] Failed to load:', err);
+      console.error('[Settings] Load failed:', err);
     } finally {
       isLoading = false;
     }
   });
 
-  // ── Toggle helpers ────────────────────────────────────────────────────────
-  // Using explicit setters instead of bind:checked to avoid the Svelte 5
-  // nested $state reactivity bug that prevents incidentNearby from toggling.
-
-  function setNotif(key: keyof typeof settings.notifications, val: boolean) {
-    settings.notifications = { ...settings.notifications, [key]: val };
-  }
-
-  function setPrivacy(key: keyof typeof settings.privacy, val: boolean | string) {
-    settings.privacy = { ...settings.privacy, [key]: val };
-  }
-
-  // ── Dropdown ──────────────────────────────────────────────────────────────
+  // ── Dropdown ───────────────────────────────────────────────────────────────
   function toggleDropdown() { showDropdown = !showDropdown; }
 
-  function selectVisibility(value: string) {
-    setPrivacy('profileVisibility', value);
+  function selectVisibility(value: typeof profileVisibility) {
+    profileVisibility = value;
     showDropdown = false;
   }
 
@@ -84,17 +103,23 @@
     }
   }
 
-  // ── Save ──────────────────────────────────────────────────────────────────
+  // ── Save ───────────────────────────────────────────────────────────────────
   async function saveSettings() {
     isSaving = true;
     try {
       const res = await fetch('/api/settings', {
         method:  'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(settings),
+        body: JSON.stringify({
+          notifications: { push, email, sms, reportVerified },
+          privacy:       { anonymousReporting, showLocation, profileVisibility },
+          appearance:    { theme, language },
+        }),
       });
 
       if (!res.ok) throw new Error(`Save failed (${res.status})`);
+      const data = await res.json();
+      if (data.unlockedFeatures) unlocked = data.unlockedFeatures;
 
       toasts.success('Settings Saved', 'Your changes have been applied successfully.');
     } catch (err) {
@@ -105,7 +130,7 @@
     }
   }
 
-  // ── Delete account ────────────────────────────────────────────────────────
+  // ── Delete account ─────────────────────────────────────────────────────────
   async function deleteAccount() {
     const confirmed = await confirm.show({
       title:       'Delete My Account',
@@ -114,13 +139,11 @@
       cancelText:  'Cancel',
       type:        'danger',
     });
-
     if (confirmed) {
       toasts.success('Account Deletion Requested', 'You will receive a confirmation email shortly.');
     }
   }
 </script>
-
 
 <svelte:window on:click={handleClickOutside} />
 
