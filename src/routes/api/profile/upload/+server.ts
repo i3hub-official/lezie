@@ -54,35 +54,18 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const publicId = `${folder}/${userId}_${type}`;
 
     const result = await new Promise<any>((resolve, reject) => {
-      const timestamp = Math.round(Date.now() / 1000);
-
-      // Build params to sign — must match exactly what you send to the API
-      const paramsToSign: Record<string, any> = {
-        folder,
-        overwrite:     true,
-        public_id:     publicId,
-        resource_type: 'image',
-        timestamp,
-        transformation: type === 'avatar'
-          ? 'w_400,h_400,c_fill,g_face'
-          : 'w_1200,h_400,c_fill',
-      };
-
-      // Generate signature using Cloudinary's built-in utility
-      const signature = cloudinary.utils.api_sign_request(
-        paramsToSign,
-        env.CLOUDINARY_API_SECRET
-      );
-
       const stream = cloudinary.uploader.upload_stream(
         {
-          ...paramsToSign,
-          api_key:   env.CLOUDINARY_API_KEY,
-          signature,
+          public_id:     publicId,
+          folder,
+          overwrite:     true,
+          resource_type: 'image',
+          transformation: type === 'avatar'
+            ? [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }]
+            : [{ width: 1200, height: 400, crop: 'fill' }],
         },
         (error, result) => error ? reject(error) : resolve(result)
       );
-
       stream.end(buffer);
     });
 
