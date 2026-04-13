@@ -1,10 +1,11 @@
 <script lang="ts">
 console.log('🔵 Component initializing');
 
+import { onMount } from 'svelte';
   import { onDestroy } from 'svelte';
   import { goto } from '$app/navigation';
   import { enhance } from '$app/forms';
-import { onDestroy, onMount } from 'svelte';
+
   import {
     Users, MessageCircle, ThumbsUp, Share2, UserPlus,
     Search, Filter, X, ChevronLeft, Plus, Clock,
