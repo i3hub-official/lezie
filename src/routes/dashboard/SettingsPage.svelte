@@ -1,88 +1,126 @@
 <script lang="ts">
-  import { 
-    ChevronLeft, Bell, Shield, Moon, 
-    Trash2, Save, ChevronDown 
+  import { onMount } from 'svelte';
+  import {
+    ChevronLeft, Bell, Shield, Moon,
+    Trash2, Save, ChevronDown
   } from 'lucide-svelte';
-  
-  // Toast & Confirmation System
-  import { toasts } from '$lib/toasts.svelte';
-  import { confirm } from '$lib/confirm.svelte';
 
-  // Settings State
+  import { toasts }   from '$lib/toasts.svelte';
+  import { confirm }  from '$lib/confirm.svelte';
+
+  // ── Settings state ────────────────────────────────────────────────────────
   let settings = $state({
     notifications: {
-      push: true,
-      email: false,
-      sms: true,
+      push:           true,
+      email:          false,
+      sms:            true,
       incidentNearby: true,
-      reportVerified: true
+      reportVerified: true,
     },
     privacy: {
       anonymousReporting: true,
-      showLocation: false,
-      profileVisibility: 'community' // 'public', 'community', 'private'
+      showLocation:       false,
+      profileVisibility:  'community' as string,
     },
     appearance: {
-      theme: 'light' as 'light' | 'dark' | 'system',
-      language: 'en'
-    }
+      theme:    'light' as 'light' | 'dark' | 'system',
+      language: 'en',
+    },
   });
 
-  let isSaving = $state(false);
+  let isSaving    = $state(false);
+  let isLoading   = $state(true);
   let showDropdown = $state(false);
 
   const visibilityOptions = [
     { value: 'community', label: 'Community Only' },
-    { value: 'public', label: 'Public' },
-    { value: 'private', label: 'Private' }
+    { value: 'public',    label: 'Public'          },
+    { value: 'private',   label: 'Private'         },
   ];
 
-  function toggleDropdown() {
-    showDropdown = !showDropdown;
+  // ── Load settings on mount ────────────────────────────────────────────────
+  onMount(async () => {
+    try {
+      const res = await fetch('/api/settings');
+      if (res.ok) {
+        const data = await res.json();
+        // Deep merge so any missing keys fall back to defaults
+        settings = {
+          notifications: { ...settings.notifications, ...data.notifications },
+          privacy:       { ...settings.privacy,       ...data.privacy       },
+          appearance:    { ...settings.appearance,    ...data.appearance    },
+        };
+      }
+    } catch (err) {
+      console.error('[Settings] Failed to load:', err);
+    } finally {
+      isLoading = false;
+    }
+  });
+
+  // ── Toggle helpers ────────────────────────────────────────────────────────
+  // Using explicit setters instead of bind:checked to avoid the Svelte 5
+  // nested $state reactivity bug that prevents incidentNearby from toggling.
+
+  function setNotif(key: keyof typeof settings.notifications, val: boolean) {
+    settings.notifications = { ...settings.notifications, [key]: val };
   }
 
+  function setPrivacy(key: keyof typeof settings.privacy, val: boolean | string) {
+    settings.privacy = { ...settings.privacy, [key]: val };
+  }
+
+  // ── Dropdown ──────────────────────────────────────────────────────────────
+  function toggleDropdown() { showDropdown = !showDropdown; }
+
   function selectVisibility(value: string) {
-    settings.privacy.profileVisibility = value;
+    setPrivacy('profileVisibility', value);
     showDropdown = false;
   }
 
-  async function saveSettings() {
-    isSaving = true;
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
-    isSaving = false;
-    
-    toasts.success(
-      "Settings Saved", 
-      "Your changes have been applied successfully."
-    );
-  }
-
-  async function deleteAccount() {
-    const confirmed = await confirm.show({
-      title: "Delete My Account",
-      message: "This action cannot be undone. All your data, reports, and profile will be permanently removed.",
-      confirmText: "Yes, Delete Account",
-      cancelText: "Cancel",
-      type: "danger"
-    });
-
-    if (confirmed) {
-      // Simulate deletion request
-      toasts.success(
-        "Account Deletion Requested", 
-        "You will receive a confirmation email shortly."
-      );
-    }
-  }
-
-  // Close dropdown when clicking outside
   function handleClickOutside(e: MouseEvent) {
     if (!(e.target as HTMLElement).closest('.custom-dropdown')) {
       showDropdown = false;
     }
   }
+
+  // ── Save ──────────────────────────────────────────────────────────────────
+  async function saveSettings() {
+    isSaving = true;
+    try {
+      const res = await fetch('/api/settings', {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(settings),
+      });
+
+      if (!res.ok) throw new Error(`Save failed (${res.status})`);
+
+      toasts.success('Settings Saved', 'Your changes have been applied successfully.');
+    } catch (err) {
+      console.error('[Settings] Save failed:', err);
+      toasts.error?.('Save Failed', 'Could not save settings. Please try again.');
+    } finally {
+      isSaving = false;
+    }
+  }
+
+  // ── Delete account ────────────────────────────────────────────────────────
+  async function deleteAccount() {
+    const confirmed = await confirm.show({
+      title:       'Delete My Account',
+      message:     'This action cannot be undone. All your data, reports, and profile will be permanently removed.',
+      confirmText: 'Yes, Delete Account',
+      cancelText:  'Cancel',
+      type:        'danger',
+    });
+
+    if (confirmed) {
+      toasts.success('Account Deletion Requested', 'You will receive a confirmation email shortly.');
+    }
+  }
 </script>
+
 
 <svelte:window on:click={handleClickOutside} />
 
