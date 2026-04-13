@@ -159,202 +159,282 @@
       <h1 class="page-title">Settings</h1>
     </div>
 
-    <div class="settings-card">
-
-      <!-- Notifications Section -->
-      <div class="settings-section">
-        <div class="section-header">
-          <Bell size={22} style="color: var(--primary-color)" />
-          <h2>Notifications</h2>
+    <!-- Tier Badge -->
+    {#if !isLoading}
+      <div class="tier-banner">
+        <div class="tier-left">
+          <span class="tier-chip" style="background:{tierLabel.color}20; color:{tierLabel.color}; border-color:{tierLabel.color}40;">
+            {tierLabel.text}
+          </span>
+          <span class="tier-meta">
+            KYC: <strong>{kycStatus}</strong> ·
+            Trust: <strong>{trustScore}</strong> ·
+            Reports: <strong>{reportCount}</strong>
+          </span>
         </div>
-
-        <div class="setting-item">
-          <div>
-            <div class="setting-title">Push Notifications</div>
-            <div class="setting-desc">Receive alerts for incidents near you</div>
-          </div>
-          <label class="toggle-switch">
-            <input
-            type="checkbox"
-            checked={settings.notifications.push}
-            oninput={(e) => setNotif('push', (e.target as HTMLInputElement).checked)}
-          />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="setting-item">
-          <div>
-            <div class="setting-title">Email Notifications</div>
-            <div class="setting-desc">Weekly summary and important updates</div>
-          </div>
-          <label class="toggle-switch">
-            <input
-            type="checkbox"
-            checked={settings.notifications.email}
-            oninput={(e) => setNotif('email', (e.target as HTMLInputElement).checked)}
-          />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="setting-item">
-          <div>
-            <div class="setting-title">Incident Nearby</div>
-            <div class="setting-desc">Alert when a new report is filed within 2km</div>
-          </div>
-          <label class="toggle-switch">
-            <input
-            type="checkbox"
-            checked={settings.notifications.incidentNearby}
-            oninput={(e) => setNotif('incidentNearby', (e.target as HTMLInputElement).checked)}
-          />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="setting-item">
-          <div>
-            <div class="setting-title">Report Verified</div>
-            <div class="setting-desc">Notify me when my reports are verified</div>
-          </div>
-          <label class="toggle-switch">
-            <input
-            type="checkbox"
-            checked={settings.notifications.reportVerified}
-/>
-            <span class="slider"></span>
-          </label>
-        </div>
+        {#if !unlocked.emailSmsToggle}
+          <span class="tier-hint">Submit more reports to unlock additional settings</span>
+        {/if}
       </div>
+    {/if}
 
-      <!-- Privacy Section -->
-      <div class="settings-section">
-        <div class="section-header">
-          <Shield size={22} style="color: var(--primary-color)" />
-          <h2>Privacy & Security</h2>
-        </div>
+    {#if isLoading}
+      <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>Loading your settings...</p>
+      </div>
+    {:else}
+      <div class="settings-card">
 
-        <div class="setting-item">
-          <div>
-            <div class="setting-title">Anonymous Reporting</div>
-            <div class="setting-desc">Hide my identity when submitting reports</div>
-          </div>
-          <label class="toggle-switch">
-            <input
-            type="checkbox"
-            checked={settings.privacy.anonymousReporting}
-            oninput={(e) => setPrivacy('anonymousReporting', (e.target as HTMLInputElement).checked)}
-          />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="setting-item">
-          <div>
-            <div class="setting-title">Share My Location</div>
-            <div class="setting-desc">Allow community to see approximate location on map</div>
-          </div>
-          <label class="toggle-switch">
-            <input
-            type="checkbox"
-            checked={settings.privacy.showLocation}
-            oninput={(e) => setPrivacy('showLocation', (e.target as HTMLInputElement).checked)}
-          />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <!-- Custom Dropdown -->
-        <div class="setting-item">
-          <div>
-            <div class="setting-title">Profile Visibility</div>
-            <div class="setting-desc">Control who can see your profile</div>
+        <!-- ── Notifications ───────────────────────────────────────────── -->
+        <div class="settings-section">
+          <div class="section-header">
+            <Bell size={22} style="color: var(--primary-color)" />
+            <h2>Notifications</h2>
           </div>
 
-          <div class="custom-dropdown">
-            <button class="dropdown-trigger" onclick={toggleDropdown}>
-              {visibilityOptions.find(opt => opt.value === settings.privacy.profileVisibility)?.label}
-              <ChevronDown size={18} class={showDropdown ? 'rotated' : ''} />
-            </button>
+          <!-- Push — always unlocked -->
+          <div class="setting-item">
+            <div>
+              <div class="setting-title">Push Notifications</div>
+              <div class="setting-desc">Receive alerts for incidents near you</div>
+            </div>
+            <label class="toggle-switch">
+              <input
+                type="checkbox"
+                checked={push}
+                oninput={(e) => push = (e.target as HTMLInputElement).checked}
+              />
+              <span class="slider"></span>
+            </label>
+          </div>
 
-            {#if showDropdown}
-              <div class="dropdown-menu">
-                {#each visibilityOptions as option}
-                  <button
-                    class="dropdown-item"
-                    class:active={option.value === settings.privacy.profileVisibility}
-                    onclick={() => selectVisibility(option.value)}
-                  >
-                    {option.label}
-                  </button>
-                {/each}
+          <!-- Email — Tier 2+ -->
+          <div class="setting-item {!unlocked.emailSmsToggle ? 'setting-item--locked' : ''}">
+            <div>
+              <div class="setting-title">
+                Email Notifications
+                {#if !unlocked.emailSmsToggle}<Lock size={12} class="lock-icon" />{/if}
               </div>
+              <div class="setting-desc">
+                {unlocked.emailSmsToggle
+                  ? 'Weekly summary and important updates'
+                  : 'Unlock at Tier 2 (submit 1+ report, trust ≥ 10)'}
+              </div>
+            </div>
+            <label class="toggle-switch {!unlocked.emailSmsToggle ? 'toggle-switch--disabled' : ''}">
+              <input
+                type="checkbox"
+                checked={email}
+                disabled={!unlocked.emailSmsToggle}
+                oninput={(e) => { if (unlocked.emailSmsToggle) email = (e.target as HTMLInputElement).checked; }}
+              />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- SMS — Tier 2+ -->
+          <div class="setting-item {!unlocked.emailSmsToggle ? 'setting-item--locked' : ''}">
+            <div>
+              <div class="setting-title">
+                SMS Notifications
+                {#if !unlocked.emailSmsToggle}<Lock size={12} class="lock-icon" />{/if}
+              </div>
+              <div class="setting-desc">
+                {unlocked.emailSmsToggle
+                  ? 'Critical alerts sent via text message'
+                  : 'Unlock at Tier 2 (submit 1+ report, trust ≥ 10)'}
+              </div>
+            </div>
+            <label class="toggle-switch {!unlocked.emailSmsToggle ? 'toggle-switch--disabled' : ''}">
+              <input
+                type="checkbox"
+                checked={sms}
+                disabled={!unlocked.emailSmsToggle}
+                oninput={(e) => { if (unlocked.emailSmsToggle) sms = (e.target as HTMLInputElement).checked; }}
+              />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Incident Nearby — ALWAYS ON, cannot be toggled -->
+          <div class="setting-item setting-item--locked">
+            <div>
+              <div class="setting-title">
+                Incident Nearby
+                <Lock size={12} class="lock-icon" />
+              </div>
+              <div class="setting-desc">Alert when a new report is filed within 2km — always active for your safety</div>
+            </div>
+            <label class="toggle-switch toggle-switch--disabled" title="This setting cannot be turned off">
+              <input type="checkbox" checked={true} disabled />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Report Verified — always unlocked -->
+          <div class="setting-item">
+            <div>
+              <div class="setting-title">Report Verified</div>
+              <div class="setting-desc">Notify me when my reports are verified</div>
+            </div>
+            <label class="toggle-switch">
+              <input
+                type="checkbox"
+                checked={reportVerified}
+                oninput={(e) => reportVerified = (e.target as HTMLInputElement).checked}
+              />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- ── Privacy & Security ──────────────────────────────────────── -->
+        <div class="settings-section">
+          <div class="section-header">
+            <Shield size={22} style="color: var(--primary-color)" />
+            <h2>Privacy & Security</h2>
+          </div>
+
+          <!-- Anonymous Reporting — Tier 3+ -->
+          <div class="setting-item {!unlocked.anonymousReporting ? 'setting-item--locked' : ''}">
+            <div>
+              <div class="setting-title">
+                Anonymous Reporting
+                {#if !unlocked.anonymousReporting}<Lock size={12} class="lock-icon" />{/if}
+              </div>
+              <div class="setting-desc">
+                {unlocked.anonymousReporting
+                  ? 'Hide my identity when submitting reports'
+                  : 'Unlock at Tier 3 (KYC verified, trust ≥ 50, 5+ reports)'}
+              </div>
+            </div>
+            <label class="toggle-switch {!unlocked.anonymousReporting ? 'toggle-switch--disabled' : ''}">
+              <input
+                type="checkbox"
+                checked={anonymousReporting}
+                disabled={!unlocked.anonymousReporting}
+                oninput={(e) => { if (unlocked.anonymousReporting) anonymousReporting = (e.target as HTMLInputElement).checked; }}
+              />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Show Location — Tier 4 -->
+          <div class="setting-item {!unlocked.showLocationToggle ? 'setting-item--locked' : ''}">
+            <div>
+              <div class="setting-title">
+                Share My Location
+                {#if !unlocked.showLocationToggle}<Lock size={12} class="lock-icon" />{/if}
+              </div>
+              <div class="setting-desc">
+                {unlocked.showLocationToggle
+                  ? 'Allow community to see approximate location on map'
+                  : 'Unlock at Tier 4 (KYC verified, trust ≥ 100, 10+ reports)'}
+              </div>
+            </div>
+            <label class="toggle-switch {!unlocked.showLocationToggle ? 'toggle-switch--disabled' : ''}">
+              <input
+                type="checkbox"
+                checked={showLocation}
+                disabled={!unlocked.showLocationToggle}
+                oninput={(e) => { if (unlocked.showLocationToggle) showLocation = (e.target as HTMLInputElement).checked; }}
+              />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Profile Visibility — Tier 4 -->
+          <div class="setting-item {!unlocked.profileVisibility ? 'setting-item--locked' : ''}">
+            <div>
+              <div class="setting-title">
+                Profile Visibility
+                {#if !unlocked.profileVisibility}<Lock size={12} class="lock-icon" />{/if}
+              </div>
+              <div class="setting-desc">
+                {unlocked.profileVisibility
+                  ? 'Control who can see your profile'
+                  : 'Unlock at Tier 4 (KYC verified, trust ≥ 100, 10+ reports)'}
+              </div>
+            </div>
+
+            {#if unlocked.profileVisibility}
+              <div class="custom-dropdown">
+                <button class="dropdown-trigger" onclick={toggleDropdown}>
+                  {visibilityOptions.find(o => o.value === profileVisibility)?.label ?? 'Community Only'}
+                  <ChevronDown size={18} class={showDropdown ? 'rotated' : ''} />
+                </button>
+                {#if showDropdown}
+                  <div class="dropdown-menu">
+                    {#each visibilityOptions as option}
+                      <button
+                        class="dropdown-item"
+                        class:active={option.value === profileVisibility}
+                        onclick={() => selectVisibility(option.value)}
+                      >
+                        {option.label}
+                      </button>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+            {:else}
+              <span class="locked-value">Community Only</span>
             {/if}
           </div>
         </div>
-      </div>
 
-      <!-- Appearance -->
-      <div class="settings-section">
-        <div class="section-header">
-          <Moon size={22} style="color: var(--primary-color)" />
-          <h2>Appearance</h2>
-        </div>
+        <!-- ── Appearance ──────────────────────────────────────────────── -->
+        <div class="settings-section">
+          <div class="section-header">
+            <Moon size={22} style="color: var(--primary-color)" />
+            <h2>Appearance</h2>
+          </div>
 
-        <div class="setting-item">
-          <div class="setting-title">Theme</div>
-          <div class="theme-options">
-            <button 
-              class="theme-btn {settings.appearance.theme === 'light' ? 'active' : ''}"
-              onclick={() => settings.appearance.theme = 'light'}>
-              Light
-            </button>
-            <button 
-              class="theme-btn {settings.appearance.theme === 'dark' ? 'active' : ''}"
-              onclick={() => settings.appearance.theme = 'dark'}>
-              Dark
-            </button>
-            <button 
-              class="theme-btn {settings.appearance.theme === 'system' ? 'active' : ''}"
-              onclick={() => settings.appearance.theme = 'system'}>
-              System
-            </button>
+          <div class="setting-item">
+            <div class="setting-title">Theme</div>
+            <div class="theme-options">
+              <button
+                class="theme-btn {theme === 'light' ? 'active' : ''}"
+                onclick={() => theme = 'light'}>Light</button>
+              <button
+                class="theme-btn {theme === 'dark' ? 'active' : ''}"
+                onclick={() => theme = 'dark'}>Dark</button>
+              <button
+                class="theme-btn {theme === 'system' ? 'active' : ''}"
+                onclick={() => theme = 'system'}>System</button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Danger Zone -->
-      <div class="settings-section danger-zone">
-        <div class="section-header">
-          <h2 style="color: var(--danger-color)">Danger Zone</h2>
+        <!-- ── Danger Zone ─────────────────────────────────────────────── -->
+        <div class="settings-section danger-zone">
+          <div class="section-header">
+            <h2 style="color: var(--danger-color)">Danger Zone</h2>
+          </div>
+          <button class="delete-btn" onclick={deleteAccount}>
+            <Trash2 size={18} />
+            Delete My Account
+          </button>
         </div>
 
-        <button class="delete-btn" onclick={deleteAccount}>
-          <Trash2 size={18} />
-          Delete My Account
-        </button>
-      </div>
+        <!-- ── Save ───────────────────────────────────────────────────── -->
+        <div class="save-section">
+          <button class="save-btn" onclick={saveSettings} disabled={isSaving}>
+            {#if isSaving}
+              <span>Saving...</span>
+            {:else}
+              <Save size={18} />
+              <span>Save All Changes</span>
+            {/if}
+          </button>
+        </div>
 
-      <!-- Save Button -->
-      <div class="save-section">
-        <button 
-          class="save-btn" 
-          onclick={saveSettings}
-          disabled={isSaving}
-        >
-          {#if isSaving}
-            <span>Saving...</span>
-          {:else}
-            <Save size={18} />
-            <span>Save All Changes</span>
-          {/if}
-        </button>
       </div>
-
-    </div>
+    {/if}
   </div>
 </div>
+
 
 <style>
   .settings-page {
@@ -655,4 +735,90 @@
       width: 100%;
     }
   }
+
+/* ── Tier banner ──────────────────────────────────────────────────────────── */
+  .tier-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .625rem 1rem;
+    background: var(--primary-bg, #f5f3ff);
+    border: 1px solid var(--primary-border, #ddd6fe);
+    border-radius: .875rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+
+  .tier-left {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+  }
+
+  .tier-chip {
+    font-size: .688rem;
+    font-weight: 700;
+    padding: .25rem .75rem;
+    border-radius: 9999px;
+    border: 1px solid;
+    letter-spacing: .02em;
+  }
+
+  .tier-meta {
+    font-size: .688rem;
+    color: #64748b;
+  }
+
+  .tier-meta strong { color: #0f172a; }
+
+  .tier-hint {
+    font-size: .625rem;
+    color: #94a3b8;
+    font-style: italic;
+  }
+
+  /* ── Locked setting ──────────────────────────────────────────────────────── */
+  .setting-item--locked {
+    opacity: .65;
+  }
+
+  .lock-icon {
+    color: #94a3b8;
+    margin-left: .25rem;
+    vertical-align: middle;
+  }
+
+  .toggle-switch--disabled {
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .locked-value {
+    font-size: .75rem;
+    color: #94a3b8;
+    padding: .375rem .75rem;
+    background: #f1f5f9;
+    border-radius: .5rem;
+    white-space: nowrap;
+  }
+
+  /* ── Loading ─────────────────────────────────────────────────────────────── */
+  .loading-container {
+    text-align: center;
+    padding: 3rem;
+  }
+
+  .loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e2e8f0;
+    border-top-color: var(--primary-color, #6a2c91);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    margin: 0 auto .75rem;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
