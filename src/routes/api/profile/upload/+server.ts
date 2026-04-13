@@ -56,8 +56,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const result = await new Promise<any>((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
+          upload_preset: 'lz_default',
           public_id:     publicId,
-          folder,
           overwrite:     true,
           resource_type: 'image',
           transformation: type === 'avatar'
