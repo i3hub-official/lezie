@@ -7,7 +7,8 @@ import * as Prot from '$lib/security/dataProtection';
 // Safely decrypt a Tier-2 random-IV field (format: "ivHex:encryptedHex").
 // If the value doesn't look encrypted (no colon separator) it's plaintext
 // from before encryption was enforced — return as-is.
-function safeRevealField(value: string | null | undefined, revealFn: (s: string) => string): string | null {
+
+export function safeRevealField(value: string | null | undefined, revealFn: (s: string) => string): string | null {
   if (!value) return null;
   try {
     // Encrypted values always contain a colon separator between IV and ciphertext
