@@ -78,6 +78,20 @@
       </div>
     </div>
 
+<!-- Add this after stats cards -->
+<h2>Posts:</h2>
+{#if data?.posts?.length === 0}
+  <p>No posts found</p>
+{:else}
+  {#each data.posts.slice(0, 1) as post (post.id)}
+    <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+      <div style="font-weight: bold;">{post.authorName}</div>
+      <div>{post.content}</div>
+      <div style="color: #666; font-size: 12px;">👍 {post.likeCount} likes</div>
+    </div>
+  {/each}
+{/if}
+
     <h2>Raw Data:</h2>
     <details>
       <summary>Click to see data</summary>
