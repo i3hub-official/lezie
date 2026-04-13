@@ -4,6 +4,33 @@ import { users, userProfiles } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import * as Prot from '$lib/security/dataProtection';
 
+// Safely decrypt a Tier-2 random-IV field (format: "ivHex:encryptedHex").
+// If the value doesn't look encrypted (no colon separator) it's plaintext
+// from before encryption was enforced — return as-is.
+function safeRevealField(value: string | null | undefined, revealFn: (s: string) => string): string | null {
+  if (!value) return null;
+  try {
+    // Encrypted values always contain a colon separator between IV and ciphertext
+    if (!value.includes(':')) return value; // plaintext — return as-is
+    return revealFn(value);
+  } catch {
+    // Decryption failed for any reason — return null rather than crashing
+    return null;
+  }
+}
+
+// Safely decrypt a Tier-1 searchable field (pure hex, no colon).
+// If it doesn't look like hex it's plaintext — return as-is.
+function safeRevealSearchable(value: string | null | undefined, revealFn: (s: string) => string): string | null {
+  if (!value) return null;
+  try {
+    if (!/^[0-9a-fA-F]+$/.test(value)) return value; // plaintext — return as-is
+    return revealFn(value);
+  } catch {
+    return null;
+  }
+}
+
 export async function getProfile(userId: string) {
   const [profile] = await db
     .select()
@@ -19,15 +46,14 @@ export async function getProfile(userId: string) {
 
   return {
     ...profile,
-    firstName: profile.firstName ? Prot.revealName(profile.firstName) : null,
-    lastName:  profile.lastName  ? Prot.revealName(profile.lastName)  : null,
-    bio:       profile.bio       ? Prot.revealText(profile.bio)       : null,
-    city:      profile.city      ? Prot.revealText(profile.city)      : null,
-    country:   profile.country   ? Prot.revealText(profile.country)   : null,
-    address:   profile.address   ? Prot.revealText(profile.address)   : null,
-    // Decrypt phone from users table and attach to profile
-    phone:     account?.phone    ? Prot.revealPhone(account.phone)    : null,
-    email:     account?.email    ? Prot.revealEmail(account.email)    : null,
+    firstName: safeRevealField(profile.firstName, Prot.revealName),
+    lastName:  safeRevealField(profile.lastName,  Prot.revealName),
+    bio:       safeRevealField(profile.bio,        Prot.revealText),
+    city:      safeRevealField(profile.city,       Prot.revealText),
+    country:   safeRevealField(profile.country,    Prot.revealText),
+    address:   safeRevealField(profile.address,    Prot.revealText),
+    phone:     safeRevealSearchable(account?.phone, Prot.revealPhone),
+    email:     safeRevealSearchable(account?.email, Prot.revealEmail),
   };
 }
 
@@ -49,7 +75,7 @@ export async function getKycData<T = object>(userId: string): Promise<T | null> 
 
   try {
     return Prot.revealKycData<T>(row.kyc as string);
-  } catch (e) {
+  } catch {
     console.error(`[KYC] Decryption failed for ${userId}: possible tampering or key mismatch`);
     return null;
   }
