@@ -15,7 +15,7 @@ cloudinary.config({
   cloud_name:         env.CLOUDINARY_CLOUD_NAME,
   api_key:            env.CLOUDINARY_API_KEY,
   api_secret:         env.CLOUDINARY_API_SECRET,
-  secure_distribution: env.CLOUDINARY_SECURE_DISTRIBUTION ?? undefined,
+  secure_distribution: env.CLOUDINARY_SECURE_DISTRIBUTION ?? 'dnyzppsc3',
   upload_prefix:      env.CLOUDINARY_UPLOAD_PREFIX ?? 'https://api-eu.cloudinary.com',
   secure:             true,
 });
