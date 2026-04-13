@@ -1,14 +1,21 @@
 // src/routes/api/profile/upload/+server.ts
-//
-// Handles avatar and cover photo uploads via Cloudinary.
-// Flow: client sends file → uploads to Cloudinary → updates DB → returns URL.
+// Uses base64 upload via cloudinary.uploader.upload() —
+// same pattern as your working projects.
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { userProfiles } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-import cloudinary from '$lib/server/cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configure inline using process.env — same pattern as your working projects
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure:     true,
+});
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
@@ -26,11 +33,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   const type = form.get('type') as string;
 
   if (!file)
-    return json({ error: 'No file provided' }, { status: 400 });
+    return json({ error: 'No file provided' },        { status: 400 });
   if (!['avatar', 'cover'].includes(type))
-    return json({ error: 'Invalid upload type' }, { status: 400 });
+    return json({ error: 'Invalid upload type' },      { status: 400 });
   if (file.size > 5 * 1024 * 1024)
-    return json({ error: 'File must be under 5MB' }, { status: 400 });
+    return json({ error: 'File must be under 5MB' },   { status: 400 });
   if (!file.type.startsWith('image/'))
     return json({ error: 'Only image files allowed' }, { status: 400 });
 
@@ -48,28 +55,25 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       await cloudinary.uploader.destroy(oldPublicId).catch(() => {});
     }
 
-    // Upload new image via stream
-    const buffer   = Buffer.from(await file.arrayBuffer());
-    const folder   = `lezie/${type}s`;
-    const publicId = `${folder}/${userId}_${type}`;
+    // Convert file to base64 — same approach as your working project
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer      = Buffer.from(arrayBuffer);
+    const base64      = `data:${file.type};base64,${buffer.toString('base64')}`;
 
-    const result = await new Promise<any>((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          upload_preset: 'lz_default',
-          public_id:     publicId,
-          overwrite:     true,
-          resource_type: 'image',
-          transformation: type === 'avatar'
-            ? [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }]
-            : [{ width: 1200, height: 400, crop: 'fill' }],
-        },
-        (error, result) => error ? reject(error) : resolve(result)
-      );
-      stream.end(buffer);
+    const publicId = `lezie/${type}s/${userId}_${type}`;
+
+    // Upload using .upload() not upload_stream — this is what works in your projects
+    const result = await cloudinary.uploader.upload(base64, {
+      upload_preset:  'lz_default',
+      public_id:      publicId,
+      overwrite:      true,
+      resource_type:  'image',
+      transformation: type === 'avatar'
+        ? [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }]
+        : [{ width: 1200, height: 400, crop: 'fill' }],
     });
 
-    // Persist URL + public_id to DB
+    // Update DB
     const urlField      = type === 'avatar' ? 'avatarUrl'      : 'coverUrl';
     const publicIdField = type === 'avatar' ? 'avatarPublicId' : 'coverPublicId';
 
