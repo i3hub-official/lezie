@@ -21,7 +21,7 @@ import {
 
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL || 'http://localhost:5173',
-  secret:  env.BETTER_AUTH_SECRET,
+  secret:  env.BETTER_AUTH_SECRET || '89e998e6034644edb1be296a3685791c',
 
   logger: {
     level:   dev ? 'debug' : 'error',
