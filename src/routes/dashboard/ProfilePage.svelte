@@ -15,9 +15,7 @@
   // ── Props from dashboard +page.server.ts ──
   let { data } = $props<{
     data: {
-      user:    any;
-      account: any;
-      profile: any;
+      
     }
   }>();
 
