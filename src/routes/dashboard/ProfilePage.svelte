@@ -166,8 +166,12 @@
       form.append('file', file);
       form.append('type', type);
 
-      const res = await fetch('/api/profile/upload', { method: 'POST', body: form });
-      const body = await res.json();
+      const res = await fetch('/api/profile/upload', { 
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: form 
+});
+const body = await res.json();
       if (!res.ok) { uploadError = body.error ?? 'Upload failed'; return; }
       window.location.reload();
     } catch { uploadError = 'Upload failed. Please try again.'; }
