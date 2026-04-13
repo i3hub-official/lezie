@@ -199,28 +199,28 @@
       </div>
     </div>
 
-    <!-- Search Bar -->
-    <div class="search-bar-wrapper">
-      <div class="search-bar">
-        <div class="search-icon-wrapper">
-          <Search size={18} class="search-icon" />
-        </div>
-        <input 
-          type="text" 
-          placeholder="Search discussions, posts, or members..." 
-          on:input={handleSearchInput}
-          class="search-input"
-        />
-        {#if searchQuery}
-          <button class="clear-search" onclick={() => {
-            searchQuery = '';
-            debouncedSearchQuery = '';
-          }}>
-            <X size={16} />
-          </button>
-        {/if}
-      </div>
+  <!-- Search Bar -->
+<div class="search-bar-wrapper">
+  <div class="search-bar">
+    <div class="search-icon-wrapper">
+      <Search size={18} class="search-icon" />
     </div>
+    <input 
+      type="text" 
+      placeholder="Search discussions, posts, or members..." 
+      oninput={handleSearchInput}
+      class="search-input"
+    />
+    {#if searchQuery}
+      <button class="clear-search" onclick={() => {
+        searchQuery = '';
+        debouncedSearchQuery = '';
+      }}>
+        <X size={16} />
+      </button>
+    {/if}
+  </div>
+</div>
 
     <!-- Filter Toggle Buttons -->
     <div class="filter-bar">
