@@ -151,7 +151,7 @@
             <div class="setting-desc">Receive alerts for incidents near you</div>
           </div>
           <label class="toggle-switch">
-            <input<input
+            <input
             type="checkbox"
             checked={settings.notifications.push}
             oninput={(e) => setNotif('push', (e.target as HTMLInputElement).checked)}
