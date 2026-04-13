@@ -3,19 +3,14 @@
   import {
     ChevronLeft,
     Home,
-    Sparkles,
-    Search,
+        Search,
     HelpCircle,
     MessageCircle,
-    Shield,
-    Users,
-    Bell,
-    ChevronDown,
-    ChevronRight,
-    Mail,
+       ChevronDown,
+     Mail,
     ArrowRight
   } from 'lucide-svelte';
-  
+
 
   let searchQuery = $state('');
   let openIndex = $state<number | null>(0);
@@ -236,7 +231,7 @@
       <!-- Categories -->
       {#if !searchQuery}
         <div class="fq-categories">
-          {#each categories as cat}
+          {#each categories as cat (cat.id)}
             <button
               class="fq-category-btn"
               class:active={activeCategory === cat.id}
@@ -258,7 +253,7 @@
           </div>
         {:else}
           <div class="fq-list">
-            {#each filteredFaqs as faq, i}
+            {#each filteredFaqs as faq, i (faq.question)}
               <div class="fq-item" class:open={openIndex === i}>
                 <button
                   class="fq-question"
