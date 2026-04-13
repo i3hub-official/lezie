@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { goto } from '$app/navigation';
   import { enhance } from '$app/forms';
   import {
@@ -23,7 +23,13 @@
   let showNeighbourhoodFeed = $state(true);
   let userLat               = $state<number | null>(null);
   let userLng               = $state<number | null>(null);
-  let isLoading             = $state(false); // ✅ Added missing state
+  let isLoading             = $state(false);
+  
+  // ✅ Memoize filtered data to prevent recalculations
+  let filteredPostsCache = $state<any[]>([]);
+  let filteredDiscussionsCache = $state<any[]>([]);
+  let filteredMembersCache = $state<any[]>([]);
+  let filteredEventsCache = $state<any[]>([]);
 
   let newPost = $state({
     content:     '',
@@ -32,7 +38,7 @@
     scope:       'global' as 'global' | 'local',
   });
 
-  // ✅ Debounce search to prevent freezing
+  // ✅ Debounce search
   let debouncedSearchQuery = $state('');
   let searchTimeout: ReturnType<typeof setTimeout>;
 
@@ -40,12 +46,42 @@
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
       debouncedSearchQuery = searchQuery;
-    }, 300);
+    }, 500); // Increased debounce to 500ms
   });
 
-  // Get location - ✅ Added error handling to prevent repeated attempts
+  // ✅ Update filtered data only when debounced search changes
+  $effect(() => {
+    if (!debouncedSearchQuery) {
+      filteredPostsCache = data.posts;
+      filteredDiscussionsCache = data.discussions;
+      filteredMembersCache = data.members;
+      filteredEventsCache = data.events;
+    } else {
+      const query = debouncedSearchQuery.toLowerCase();
+      filteredPostsCache = data.posts.filter(p =>
+        p.content.toLowerCase().includes(query) ||
+        p.authorName.toLowerCase().includes(query)
+      );
+      filteredDiscussionsCache = data.discussions.filter(d =>
+        d.title.toLowerCase().includes(query) ||
+        d.authorName.toLowerCase().includes(query)
+      );
+      filteredMembersCache = data.members.filter(m =>
+        m.name.toLowerCase().includes(query)
+      );
+      filteredEventsCache = data.events.filter(e =>
+        e.title.toLowerCase().includes(query) ||
+        e.location.toLowerCase().includes(query)
+      );
+    }
+  });
+
+  // ✅ Prevent geolocation from running repeatedly
+  let locationFetched = $state(false);
+  
   onMount(() => {
-    if (navigator.geolocation && !userLat && !userLng) {
+    if (navigator.geolocation && !locationFetched && !userLat && !userLng) {
+      locationFetched = true;
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           userLat = pos.coords.latitude;
@@ -59,37 +95,9 @@
     }
   });
 
-  // ── Filtered data with debounced search ──────────────────
-  const filteredPosts = $derived(
-    !debouncedSearchQuery ? data.posts
-      : data.posts.filter(p =>
-          p.content.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-          p.authorName.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
-        )
-  );
-
-  const filteredDiscussions = $derived(
-    !debouncedSearchQuery ? data.discussions
-      : data.discussions.filter(d =>
-          d.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-          d.authorName.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
-        )
-  );
-
-  const filteredMembers = $derived(
-    !debouncedSearchQuery ? data.members
-      : data.members.filter(m =>
-          m.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
-        )
-  );
-
-  const filteredEvents = $derived(
-    !debouncedSearchQuery ? data.events
-      : data.events.filter(e =>
-          e.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-          e.location.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
-        )
-  );
+  onDestroy(() => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+  });
 
   // ── Categories ────────────────────────────────────────────
   const categories = [
@@ -104,7 +112,6 @@
   function getCategoryColor(id: string) { return categories.find(c => c.id === id)?.color ?? '#6B7280'; }
   function getCategoryLabel(id: string) { return categories.find(c => c.id === id)?.label ?? id; }
 
-  // ── Formatting ────────────────────────────────────────────
   function formatDate(iso: string) {
     const diff  = Date.now() - new Date(iso).getTime();
     const hours = Math.floor(diff / 3600000);
@@ -231,7 +238,7 @@
         >
           <MessageSquare size={14} />
           <span>Discussions</span>
-          <span class="filter-count">{filteredDiscussions.length}</span>
+          <span class="filter-count">{filteredDiscussionsCache.length}</span>
         </button>
         <button 
           class="filter-btn {showMembers ? 'active' : ''}" 
@@ -239,7 +246,7 @@
         >
           <Users size={14} />
           <span>Members</span>
-          <span class="filter-count">{filteredMembers.length}</span>
+          <span class="filter-count">{filteredMembersCache.length}</span>
         </button>
         <button 
           class="filter-btn {showEvents ? 'active' : ''}" 
@@ -247,7 +254,7 @@
         >
           <Calendar size={14} />
           <span>Events</span>
-          <span class="filter-count">{filteredEvents.length}</span>
+          <span class="filter-count">{filteredEventsCache.length}</span>
         </button>
       </div>
       <button class="toggle-all-btn" onclick={toggleAllSections}>
@@ -256,13 +263,8 @@
       </button>
     </div>
 
-    {#if isLoading}
-      <div class="loading-container">
-        <div class="loading-spinner"></div>
-        <p>Loading community content...</p>
-      </div>
-    {:else}
-      <!-- Neighbourhood Feed Section -->
+    <!-- ✅ Add key blocks to force re-render only when needed -->
+    {#key showNeighbourhoodFeed}
       {#if showNeighbourhoodFeed}
         <div class="section-container">
           <div class="section-header">
@@ -273,35 +275,47 @@
             </div>
           </div>
           <div class="section-content section-content--flush">
-            <NeighbourhoodFeed
-              lat={userLat}
-              lng={userLng}
-              neighbourhood=""
-            />
+            <!-- ✅ Only render if we have location, otherwise show loading -->
+            {#if userLat && userLng}
+              {@const memoKey = `${userLat}-${userLng}`}
+              {#key memoKey}
+                <NeighbourhoodFeed
+                  lat={userLat}
+                  lng={userLng}
+                  neighbourhood=""
+                />
+              {/key}
+            {:else}
+              <div class="loading-placeholder">
+                <p>Getting your location...</p>
+              </div>
+            {/if}
           </div>
         </div>
       {/if}
-      
-      <!-- Community Feed Section -->
+    {/key}
+
+    <!-- Community Feed Section -->
+    {#key showFeed}
       {#if showFeed}
         <div class="section-container">
           <div class="section-header">
             <div class="section-title">
               <TrendingUp size={18} class="section-icon" />
               <h2>Community Feed</h2>
-              <span class="section-count">{filteredPosts.length} posts</span>
+              <span class="section-count">{filteredPostsCache.length} posts</span>
             </div>
           </div>
 
           <div class="section-content">
-            {#if filteredPosts.length === 0}
+            {#if filteredPostsCache.length === 0}
               <div class="empty-state">
                 <MessageCircle size={48} />
                 <p>No posts found matching your search</p>
               </div>
             {:else}
               <div class="posts-grid">
-                {#each filteredPosts as post}
+                {#each filteredPostsCache as post (post.id)}
                   {@const CategoryIcon = getCategoryIcon(post.category)}
                   <div class="post-card">
                     {#if post.isPinned}
@@ -324,7 +338,7 @@
                             <CheckCircle size={14} class="verified-badge" />
                           {/if}
                         </div>
-                        <div class="author-role">{formatDate(post.createdAt.toISOString())}</div>
+                        <div class="author-role">{formatDate(post.createdAt)}</div>
                       </div>
                       <div class="post-category" style="background: {getCategoryColor(post.category)}10; color: {getCategoryColor(post.category)}">
                         <CategoryIcon size={12} />
@@ -356,7 +370,7 @@
                       </div>
                       <div class="post-time">
                         <Clock size={12} />
-                        <span>{formatDate(post.createdAt.toISOString())}</span>
+                        <span>{formatDate(post.createdAt)}</span>
                       </div>
                     </div>
                   </div>
@@ -366,27 +380,29 @@
           </div>
         </div>
       {/if}
+    {/key}
 
-      <!-- Discussions Section -->
+    <!-- Discussions Section -->
+    {#key showDiscussions}
       {#if showDiscussions}
         <div class="section-container">
           <div class="section-header">
             <div class="section-title">
               <MessageSquare size={18} class="section-icon" />
               <h2>Discussions</h2>
-              <span class="section-count">{filteredDiscussions.length} discussions</span>
+              <span class="section-count">{filteredDiscussionsCache.length} discussions</span>
             </div>
           </div>
 
           <div class="section-content">
-            {#if filteredDiscussions.length === 0}
+            {#if filteredDiscussionsCache.length === 0}
               <div class="empty-state">
                 <MessageSquare size={48} />
                 <p>No discussions found matching your search</p>
               </div>
             {:else}
               <div class="discussions-list">
-                {#each filteredDiscussions as discussion}
+                {#each filteredDiscussionsCache as discussion (discussion.id)}
                   {@const CategoryIcon = getCategoryIcon(discussion.category)}
                   <div class="discussion-card">
                     {#if discussion.isSticky}
@@ -411,7 +427,7 @@
 
                     <div class="discussion-footer">
                       <span class="discussion-author">by {discussion.authorName}</span>
-                      <span class="discussion-time">Last activity {formatDate(discussion.lastActivityAt.toISOString())}</span>
+                      <span class="discussion-time">Last activity {formatDate(discussion.lastActivityAt)}</span>
                     </div>
                   </div>
                 {/each}
@@ -420,27 +436,29 @@
           </div>
         </div>
       {/if}
+    {/key}
 
-      <!-- Members Section -->
+    <!-- Members Section -->
+    {#key showMembers}
       {#if showMembers}
         <div class="section-container">
           <div class="section-header">
             <div class="section-title">
               <Users size={18} class="section-icon" />
               <h2>Members</h2>
-              <span class="section-count">{filteredMembers.length} members</span>
+              <span class="section-count">{filteredMembersCache.length} members</span>
             </div>
           </div>
 
           <div class="section-content">
-            {#if filteredMembers.length === 0}
+            {#if filteredMembersCache.length === 0}
               <div class="empty-state">
                 <Users size={48} />
                 <p>No members found matching your search</p>
               </div>
             {:else}
               <div class="members-grid">
-                {#each filteredMembers as member}
+                {#each filteredMembersCache as member (member.id)}
                   <div class="member-card">
                     <div class="member-avatar-wrapper">
                       <img 
@@ -476,31 +494,33 @@
           </div>
         </div>
       {/if}
+    {/key}
 
-      <!-- Events Section -->
+    <!-- Events Section -->
+    {#key showEvents}
       {#if showEvents}
         <div class="section-container">
           <div class="section-header">
             <div class="section-title">
               <Calendar size={18} class="section-icon" />
               <h2>Upcoming Events</h2>
-              <span class="section-count">{filteredEvents.length} events</span>
+              <span class="section-count">{filteredEventsCache.length} events</span>
             </div>
           </div>
 
           <div class="section-content">
-            {#if filteredEvents.length === 0}
+            {#if filteredEventsCache.length === 0}
               <div class="empty-state">
                 <Calendar size={48} />
                 <p>No events found matching your search</p>
               </div>
             {:else}
               <div class="events-grid">
-                {#each filteredEvents as event}
+                {#each filteredEventsCache as event (event.id)}
                   <div class="event-card">
                     <div class="event-date-badge">
-                      <span class="event-month">{formatEventDate(event.startsAt.toISOString()).split(' ')[0]}</span>
-                      <span class="event-day">{formatEventDate(event.startsAt.toISOString()).split(' ')[1]}</span>
+                      <span class="event-month">{formatEventDate(event.startsAt).split(' ')[0]}</span>
+                      <span class="event-day">{formatEventDate(event.startsAt).split(' ')[1]}</span>
                     </div>
 
                     <div class="event-details">
@@ -528,18 +548,18 @@
           </div>
         </div>
       {/if}
+    {/key}
 
-      <!-- Empty state when no sections are visible -->
-      {#if !showFeed && !showDiscussions && !showMembers && !showEvents}
-        <div class="empty-state-all">
-          <Filter size={64} />
-          <h3>No sections visible</h3>
-          <p>Use the filter buttons above to show community content</p>
-          <button class="reset-btn" onclick={toggleAllSections}>
-            Show All Sections
-          </button>
-        </div>
-      {/if}
+    <!-- Empty state when no sections are visible -->
+    {#if !showFeed && !showDiscussions && !showMembers && !showEvents && !showNeighbourhoodFeed}
+      <div class="empty-state-all">
+        <Filter size={64} />
+        <h3>No sections visible</h3>
+        <p>Use the filter buttons above to show community content</p>
+        <button class="reset-btn" onclick={toggleAllSections}>
+          Show All Sections
+        </button>
+      </div>
     {/if}
   </div>
 
@@ -658,6 +678,12 @@
 </div>
 
 <style>
+.loading-placeholder {
+    padding: 2rem;
+    text-align: center;
+    color: #666;
+  }
+
   .community-page {
     min-height: 100vh;
     background: transparent;
