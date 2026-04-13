@@ -199,7 +199,6 @@
             <input
             type="checkbox"
             checked={settings.notifications.reportVerified}
-            oninpu
             <span class="slider"></span>
           </label>
         </div>
