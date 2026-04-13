@@ -151,7 +151,11 @@
             <div class="setting-desc">Receive alerts for incidents near you</div>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" bind:checked={settings.notifications.push} />
+            <input<input
+            type="checkbox"
+            checked={settings.notifications.push}
+            oninput={(e) => setNotif('push', (e.target as HTMLInputElement).checked)}
+          />
             <span class="slider"></span>
           </label>
         </div>
@@ -162,7 +166,11 @@
             <div class="setting-desc">Weekly summary and important updates</div>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" bind:checked={settings.notifications.email} />
+            <input
+            type="checkbox"
+            checked={settings.notifications.email}
+            oninput={(e) => setNotif('email', (e.target as HTMLInputElement).checked)}
+          />
             <span class="slider"></span>
           </label>
         </div>
@@ -173,7 +181,11 @@
             <div class="setting-desc">Alert when a new report is filed within 2km</div>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" bind:checked={settings.notifications.incidentNearby} />
+            <input
+            type="checkbox"
+            checked={settings.notifications.incidentNearby}
+            oninput={(e) => setNotif('incidentNearby', (e.target as HTMLInputElement).checked)}
+          />
             <span class="slider"></span>
           </label>
         </div>
@@ -184,7 +196,10 @@
             <div class="setting-desc">Notify me when my reports are verified</div>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" bind:checked={settings.notifications.reportVerified} />
+            <input
+            type="checkbox"
+            checked={settings.notifications.reportVerified}
+            oninpu
             <span class="slider"></span>
           </label>
         </div>
@@ -203,7 +218,11 @@
             <div class="setting-desc">Hide my identity when submitting reports</div>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" bind:checked={settings.privacy.anonymousReporting} />
+            <input
+            type="checkbox"
+            checked={settings.privacy.anonymousReporting}
+            oninput={(e) => setPrivacy('anonymousReporting', (e.target as HTMLInputElement).checked)}
+          />
             <span class="slider"></span>
           </label>
         </div>
@@ -214,7 +233,11 @@
             <div class="setting-desc">Allow community to see approximate location on map</div>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" bind:checked={settings.privacy.showLocation} />
+            <input
+            type="checkbox"
+            checked={settings.privacy.showLocation}
+            oninput={(e) => setPrivacy('showLocation', (e.target as HTMLInputElement).checked)}
+          />
             <span class="slider"></span>
           </label>
         </div>
