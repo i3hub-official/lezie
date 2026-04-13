@@ -1,87 +1,90 @@
 // src/routes/api/profile/+server.ts
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
-import { users, userProfiles } from '$lib/server/db/schema';
+import { userProfiles, users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import {
-  protectName,
   protectText,
-  protectPhone,
+  protectName,
+  protectNin,
+  protectBvn,
 } from '$lib/security/dataProtection';
 
 export const PATCH: RequestHandler = async ({ request, locals }) => {
-  if (!locals.user) throw error(401, 'Unauthorized');
+  if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
 
   const userId = locals.user.id;
   const body   = await request.json();
 
-  const {
-    firstName,
-    lastName,
-    phone,
-    city,
-    country,
-    address,
-    bio,
-    twitterHandle,
-    linkedinHandle,
-  } = body;
+  // ── Load current profile to enforce immutability rules ──────────────────
+  const current = await db.query.userProfiles.findFirst({
+    where: eq(userProfiles.userId, userId),
+  });
 
-  try {
-    const profileUpdate: Record<string, any> = {
-      updatedAt: new Date(),
-    };
+  if (!current) return json({ error: 'Profile not found' }, { status: 404 });
 
-    // Only update fields that are non-empty strings
-    if (firstName?.trim()) profileUpdate.firstName = protectName(firstName.trim());
-    if (lastName?.trim())  profileUpdate.lastName  = protectName(lastName.trim());
-    if (city?.trim())      profileUpdate.city      = protectText(city.trim());
-    if (country?.trim())   profileUpdate.country   = protectText(country.trim());
-    if (address?.trim())   profileUpdate.address   = protectText(address.trim());
-    if (bio?.trim())       profileUpdate.bio       = protectText(bio.trim());
+  const updates: Record<string, any> = { updatedAt: new Date() };
 
-    // Social links — store in location jsonb under a 'social' key
-    // Only update if at least one handle is provided
-    if (twitterHandle?.trim() || linkedinHandle?.trim()) {
-      const [existing] = await db
-        .select({ location: userProfiles.location })
-        .from(userProfiles)
-        .where(eq(userProfiles.userId, userId));
+  // ── Mutable free-text fields ─────────────────────────────────────────────
+  if (body.bio       !== undefined) updates.bio       = body.bio       ? protectText(body.bio)       : null;
+  if (body.address   !== undefined) updates.address   = body.address   ? protectText(body.address)   : null;
+  if (body.homeAddress !== undefined) updates.homeAddress = body.homeAddress ? protectText(body.homeAddress) : null;
+  if (body.city      !== undefined) updates.city      = body.city      ? protectText(body.city)      : null;
+  if (body.state     !== undefined) updates.state     = body.state     ? protectText(body.state)     : null;
+  if (body.country   !== undefined) updates.country   = body.country   ? protectText(body.country)   : null;
+  if (body.location  !== undefined) updates.location  = body.location;
+  if (body.socialLinks !== undefined) updates.socialLinks = body.socialLinks;
 
-      const currentLocation = (existing?.location as any) ?? {};
-      const currentSocial   = currentLocation.social ?? {};
-
-      const updatedSocial: Record<string, string> = { ...currentSocial };
-      if (twitterHandle?.trim())  updatedSocial.twitter  = twitterHandle.trim();
-      if (linkedinHandle?.trim()) updatedSocial.linkedin = linkedinHandle.trim();
-
-      profileUpdate.location = {
-        ...currentLocation,
-        social: updatedSocial,
-      };
+  // ── Username — set-once lock ─────────────────────────────────────────────
+  if (body.username !== undefined) {
+    if (current.usernameSetAt) {
+      return json({ error: 'Username cannot be changed once set.' }, { status: 400 });
     }
-
-    // Only run profile update if there's something to update
-    if (Object.keys(profileUpdate).length > 1) {
-      await db
-        .update(userProfiles)
-        .set(profileUpdate)
-        .where(eq(userProfiles.userId, userId));
+    const trimmed = body.username.trim().toLowerCase();
+    if (!/^[a-z0-9_]{3,30}$/.test(trimmed)) {
+      return json({ error: 'Username must be 3–30 characters: letters, numbers, underscores only.' }, { status: 400 });
     }
-
-    // Phone — required, must not be empty
-    if (phone?.trim()) {
-      const { encrypted: encPhone } = await protectPhone(phone.trim());
-      await db
-        .update(users)
-        .set({ phone: encPhone, updatedAt: new Date() })
-        .where(eq(users.id, userId));
+    // Check uniqueness
+    const taken = await db.query.userProfiles.findFirst({
+      where: eq(userProfiles.username, trimmed),
+    });
+    if (taken && taken.userId !== userId) {
+      return json({ error: 'Username is already taken.' }, { status: 409 });
     }
-
-    return json({ success: true });
-  } catch (err) {
-    console.error('[PROFILE:UPDATE] Failed:', err);
-    throw error(500, 'Failed to update profile');
+    updates.username      = trimmed;
+    updates.usernameSetAt = new Date();
   }
+
+  // ── NIN — store encrypted, mark pending, lock once verified ─────────────
+  if (body.nin !== undefined) {
+    if (current.ninVerified) {
+      return json({ error: 'NIN cannot be changed after verification.' }, { status: 400 });
+    }
+    const { encrypted } = await protectNin(body.nin);
+    updates.nin            = encrypted;
+    updates.ninSubmittedAt = new Date();
+  }
+
+  // ── BVN — same pattern ───────────────────────────────────────────────────
+  if (body.bvn !== undefined) {
+    if (current.bvnVerified) {
+      return json({ error: 'BVN cannot be changed after verification.' }, { status: 400 });
+    }
+    const { encrypted } = await protectBvn(body.bvn);
+    updates.bvn            = encrypted;
+    updates.bvnSubmittedAt = new Date();
+  }
+
+  // ── Fields that are NEVER updatable via this endpoint ───────────────────
+  // firstName, lastName, dateOfBirth → set at signup, immutable
+  // email, phone → stored in authUsers / users, not in userProfiles
+  // avatarUrl, coverUrl → updated only via /api/profile/upload
+
+  await db
+    .update(userProfiles)
+    .set(updates)
+    .where(eq(userProfiles.userId, userId));
+
+  return json({ success: true });
 };
