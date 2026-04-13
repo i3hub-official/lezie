@@ -1,335 +1,138 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { goto } from '$app/navigation';
+  import { enhance } from '$app/forms';
   import {
-    Users, MessageCircle, Heart, Share2, Flag, ThumbsUp,
-    UserPlus, Search, Filter, X, ChevronLeft, Plus,
-    Clock, MapPin, Award, Shield, Crown, Star,
-    TrendingUp, MessageSquare, Eye, MoreHorizontal,
-    Send, Image as ImageIcon, Link, Smile,
-    ChevronRight, Calendar, Bell, CheckCircle,
-    AlertCircle, HelpCircle, BookOpen, Target,
-    LayoutGrid, Radio, List
+    Users, MessageCircle, ThumbsUp, Share2, UserPlus,
+    Search, Filter, X, ChevronLeft, Plus, Clock,
+    MapPin, Award, Shield, Star, TrendingUp,
+    MessageSquare, Eye, Send, Image as ImageIcon,
+    Link, Smile, Calendar, Bell, CheckCircle,
+    HelpCircle, LayoutGrid, Radio
   } from 'lucide-svelte';
-import NeighbourhoodFeed from '$lib/components/NeighbourhoodFeed.svelte';
 
+  let { data } = $props();
 
-  let isLoading = $state(true);
   let showCreatePost = $state(false);
   let searchQuery = $state('');
-  let selectedPost = $state<any>(null);
-  
-  // Toggle states for each section
   let showFeed = $state(true);
   let showDiscussions = $state(true);
   let showMembers = $state(true);
   let showEvents = $state(true);
-  let showNeighbourhoodFeed = $state(true);
-  let userLat = $state<number | null>(null);
-  let userLng = $state<number | null>(null);
-
+  let showNeighbourhoodFeed = $state(false); // Disabled by default
+  
   let newPost = $state({
     content: '',
     category: 'general',
-    isAnonymous: false
+    isAnonymous: false,
+    scope: 'global' as 'global' | 'local',
   });
 
-  let posts = $state<any[]>([]);
-  let discussions = $state<any[]>([]);
-  let members = $state<any[]>([]);
-  let events = $state<any[]>([]);
-  let currentUser = $state<any>(null);
+  // Simple debounce - no reactive statements
+  let debouncedSearchQuery = $state('');
+  let searchTimeout: ReturnType<typeof setTimeout>;
   
-
-
-  let categories = $state([
-    { id: 'general', label: 'General Discussion', icon: MessageCircle, color: '#6B7280' },
-    { id: 'safety', label: 'Safety Tips', icon: Shield, color: '#10B981' },
-    { id: 'alerts', label: 'Alert Sharing', icon: Bell, color: '#F59E0B' },
-    { id: 'questions', label: 'Questions', icon: HelpCircle, color: '#3B82F6' },
-    { id: 'success', label: 'Success Stories', icon: Award, color: '#8B5CF6' }
-  ]);
-
-  onMount(async () => {
-    await loadData();
-    isLoading = false;
-
-// Get user location for NeighbourhoodFeed
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          userLat = pos.coords.latitude;
-          userLng  = pos.coords.longitude;
-        },
-        () => { /* silently ignore — feed still works without location */ },
-        { timeout: 8000, maximumAge: 60000 }
-      );
-    }
-  });
-
-
-
-  async function loadData() {
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    currentUser = {
-      id: 1,
-      name: 'Ogwo GP',
-      avatar: 'https://ui-avatars.com/api/?name=Ogwo+Godspower&background=6a2c91&color=fff',
-      role: 'Safety Ambassador',
-      joinDate: '2024-01-15',
-      posts: 47,
-      reputation: 1250,
-      badges: ['Helper', 'Vigilant', 'Community Hero']
-    };
-
-    posts = [
-      {
-        id: 1,
-        author: {
-          name: 'Okpala Ebubechukwu Favour',
-          avatar: 'https://ui-avatars.com/api/?name=Okpala+Ebubechukwu&background=10B981&color=fff',
-          role: 'Neighborhood Watch'
-        },
-        content: 'Just wanted to share that the new street lights on Maple Avenue have made a huge difference! Haven\'t seen any suspicious activity in weeks. Great job everyone!',
-        category: 'success',
-        likes: 234,
-        comments: 45,
-        shares: 12,
-        timestamp: new Date(Date.now() - 2 * 3600000).toISOString(),
-        isPinned: true,
-        isVerified: true
-      },
-      {
-        id: 2,
-        author: {
-          name: 'Ephraim Joy',
-          avatar: 'https://ui-avatars.com/api/?name=Ephraim+Joy&background=F59E0B&color=fff',
-          role: 'Safety Officer'
-        },
-        content: 'Safety tip: Always keep your emergency contacts updated in your profile. In case of an incident, having quick access to emergency contacts can save precious minutes.',
-        category: 'safety',
-        likes: 189,
-        comments: 32,
-        shares: 67,
-        timestamp: new Date(Date.now() - 5 * 3600000).toISOString(),
-        isPinned: true,
-        isVerified: true
-      },
-      {
-        id: 3,
-        author: {
-          name: 'Onyeukwu Damain',
-          avatar: 'https://ui-avatars.com/api/?name=Onyeukwu+Damain&background=EF4444&color=fff',
-          role: 'Active Member'
-        },
-        content: 'Has anyone noticed increased police presence near the downtown area? I\'ve seen more patrols lately and wondering if there\'s a specific reason.',
-        category: 'questions',
-        likes: 67,
-        comments: 23,
-        shares: 4,
-        timestamp: new Date(Date.now() - 1 * 86400000).toISOString(),
-        isPinned: false,
-        isVerified: false
-      }
-    ];
-
-    discussions = [
-      {
-        id: 1,
-        title: 'Neighborhood Watch Program Expansion',
-        author: 'Community Board',
-        category: 'general',
-        replies: 234,
-        views: 1245,
-        lastActivity: new Date(Date.now() - 3 * 3600000).toISOString(),
-        isSticky: true
-      },
-      {
-        id: 2,
-        title: 'How to improve lighting in our area?',
-        author: 'Safety Committee',
-        category: 'safety',
-        replies: 89,
-        views: 567,
-        lastActivity: new Date(Date.now() - 1 * 86400000).toISOString(),
-        isSticky: false
-      },
-      {
-        id: 3,
-        title: 'Emergency response times - share your experience',
-        author: 'John Parker',
-        category: 'alerts',
-        replies: 145,
-        views: 890,
-        lastActivity: new Date(Date.now() - 2 * 86400000).toISOString(),
-        isSticky: false
-      }
-    ];
-
-    members = [
-      {
-        id: 1,
-        name: 'Dr. Sarah Johnson',
-        avatar: 'https://ui-avatars.com/api/?name=Sarah+Johnson&background=6a2c91&color=fff',
-        role: 'Safety Ambassador',
-        reputation: 2450,
-        badges: ['Expert', 'Helper', 'Leader'],
-        isOnline: true
-      },
-      {
-        id: 2,
-        name: 'Michael Chen',
-        avatar: 'https://ui-avatars.com/api/?name=Michael+Chen&background=10B981&color=fff',
-        role: 'Neighborhood Watch',
-        reputation: 1870,
-        badges: ['Vigilant', 'Helper'],
-        isOnline: true
-      },
-      {
-        id: 3,
-        name: 'Emily Rodriguez',
-        avatar: 'https://ui-avatars.com/api/?name=Emily+Rodriguez&background=F59E0B&color=fff',
-        role: 'Active Member',
-        reputation: 890,
-        badges: ['Newcomer'],
-        isOnline: false
-      },
-      {
-        id: 4,
-        name: 'David Kim',
-        avatar: 'https://ui-avatars.com/api/?name=David+Kim&background=3B82F6&color=fff',
-        role: 'Community Organizer',
-        reputation: 3100,
-        badges: ['Leader', 'Expert', 'Helper', 'Vigilant'],
-        isOnline: true
-      },
-      {
-        id: 5,
-        name: 'Maria Garcia',
-        avatar: 'https://ui-avatars.com/api/?name=Maria+Garcia&background=EF4444&color=fff',
-        role: 'Safety Monitor',
-        reputation: 1560,
-        badges: ['Vigilant', 'Helper'],
-        isOnline: false
-      },
-      {
-        id: 6,
-        name: 'James Wilson',
-        avatar: 'https://ui-avatars.com/api/?name=James+Wilson&background=8B5CF6&color=fff',
-        role: 'Active Member',
-        reputation: 720,
-        badges: ['Newcomer'],
-        isOnline: true
-      }
-    ];
-
-    events = [
-      {
-        id: 1,
-        title: 'Community Safety Workshop',
-        date: new Date(Date.now() + 5 * 86400000).toISOString(),
-        location: 'Community Center',
-        attendees: 45,
-        maxAttendees: 100,
-        category: 'workshop',
-        description: 'Learn essential safety tips and emergency response techniques'
-      },
-      {
-        id: 2,
-        title: 'Neighborhood Watch Meeting',
-        date: new Date(Date.now() + 12 * 86400000).toISOString(),
-        location: 'Maple Street School',
-        attendees: 32,
-        maxAttendees: 50,
-        category: 'meeting',
-        description: 'Monthly meeting to discuss community safety initiatives'
-      },
-      {
-        id: 3,
-        title: 'First Aid Certification Course',
-        date: new Date(Date.now() + 19 * 86400000).toISOString(),
-        location: 'Red Cross Building',
-        attendees: 18,
-        maxAttendees: 25,
-        category: 'training',
-        description: 'Get certified in first aid and CPR'
-      }
-    ];
+  function handleSearchInput(e: Event) {
+    const target = e.target as HTMLInputElement;
+    searchQuery = target.value;
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      debouncedSearchQuery = searchQuery;
+    }, 300);
   }
 
-  function formatDate(dateString: string) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(hours / 24);
-
-    if (hours < 1) return 'Just now';
-    if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-    if (days < 7) return `${days} day${days !== 1 ? 's' : ''} ago`;
-    return date.toLocaleDateString();
-  }
-
-  function formatEventDate(dateString: string) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
-
-  function getCategoryIcon(categoryId: string) {
-    return categories.find(c => c.id === categoryId)?.icon || MessageCircle;
-  }
-
-  function getCategoryColor(categoryId: string) {
-    return categories.find(c => c.id === categoryId)?.color || '#6B7280';
-  }
-
+  // Simple filter functions - called only when needed
   function getFilteredPosts() {
-    if (!searchQuery) return posts;
-    return posts.filter(p => 
-      p.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.author.name.toLowerCase().includes(searchQuery.toLowerCase())
+    if (!data?.posts) return [];
+    if (!debouncedSearchQuery) return data.posts;
+    const query = debouncedSearchQuery.toLowerCase();
+    return data.posts.filter(p =>
+      p.content?.toLowerCase().includes(query) ||
+      p.authorName?.toLowerCase().includes(query)
     );
   }
 
   function getFilteredDiscussions() {
-    if (!searchQuery) return discussions;
-    return discussions.filter(d => 
-      d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.author.toLowerCase().includes(searchQuery.toLowerCase())
+    if (!data?.discussions) return [];
+    if (!debouncedSearchQuery) return data.discussions;
+    const query = debouncedSearchQuery.toLowerCase();
+    return data.discussions.filter(d =>
+      d.title?.toLowerCase().includes(query) ||
+      d.authorName?.toLowerCase().includes(query)
     );
   }
 
   function getFilteredMembers() {
-    if (!searchQuery) return members;
-    return members.filter(m => 
-      m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.role.toLowerCase().includes(searchQuery.toLowerCase())
+    if (!data?.members) return [];
+    if (!debouncedSearchQuery) return data.members;
+    const query = debouncedSearchQuery.toLowerCase();
+    return data.members.filter(m =>
+      m.name?.toLowerCase().includes(query)
     );
   }
 
   function getFilteredEvents() {
-    if (!searchQuery) return events;
-    return events.filter(e => 
-      e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.location.toLowerCase().includes(searchQuery.toLowerCase())
+    if (!data?.events) return [];
+    if (!debouncedSearchQuery) return data.events;
+    const query = debouncedSearchQuery.toLowerCase();
+    return data.events.filter(e =>
+      e.title?.toLowerCase().includes(query) ||
+      e.location?.toLowerCase().includes(query)
     );
   }
 
-  function getCategoryLabel(categoryId: string) {
-    return categories.find(c => c.id === categoryId)?.label || categoryId;
+  onDestroy(() => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+  });
+
+  // Categories
+  const categories = [
+    { id: 'general',   label: 'General Discussion', icon: MessageCircle, color: '#6B7280' },
+    { id: 'safety',    label: 'Safety Tips',         icon: Shield,        color: '#10B981' },
+    { id: 'alerts',    label: 'Alert Sharing',       icon: Bell,          color: '#F59E0B' },
+    { id: 'questions', label: 'Questions',           icon: HelpCircle,    color: '#3B82F6' },
+    { id: 'success',   label: 'Success Stories',     icon: Award,         color: '#8B5CF6' },
+  ];
+
+  function getCategoryIcon(id: string) { return categories.find(c => c.id === id)?.icon ?? MessageCircle; }
+  function getCategoryColor(id: string) { return categories.find(c => c.id === id)?.color ?? '#6B7280'; }
+  function getCategoryLabel(id: string) { return categories.find(c => c.id === id)?.label ?? id; }
+
+  function formatDate(iso: string) {
+    if (!iso) return 'Recently';
+    try {
+      const diff = Date.now() - new Date(iso).getTime();
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(hours / 24);
+      if (hours < 1) return 'Just now';
+      if (hours < 24) return `${hours}h ago`;
+      if (days < 7) return `${days}d ago`;
+      return new Date(iso).toLocaleDateString();
+    } catch {
+      return 'Recently';
+    }
   }
-  
+
+  function formatEventDate(iso: string) {
+    if (!iso) return '';
+    try {
+      return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } catch {
+      return '';
+    }
+  }
+
+  function tierToRole(tier: string) {
+    const map: Record<string, string> = {
+      '1': 'Member', '2': 'Active Member',
+      '3': 'Safety Ambassador', '4': 'Community Leader',
+    };
+    return map[tier] ?? 'Member';
+  }
+
   function toggleAllSections() {
-    
-  const allVisible = showNeighbourhoodFeed && showFeed && showDiscussions && showMembers && showEvents;
-
-    showNeighbourhoodFeed = !allVisible;
-    showFeed              = !allVisible;
-    showDiscussions       = !allVisible;
-    showMembers           = !allVisible;
-    showEvents            = !allVisible;
-
+    const all = showNeighbourhoodFeed && showFeed && showDiscussions && showMembers && showEvents;
+    showNeighbourhoodFeed = showFeed = showDiscussions = showMembers = showEvents = !all;
   }
 </script>
 
@@ -361,42 +164,32 @@ import NeighbourhoodFeed from '$lib/components/NeighbourhoodFeed.svelte';
     </div>
 
     <!-- Stats Cards -->
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-icon members-icon">
-          <Users size={22} />
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">1,250</span>
-          <span class="stat-label">Active Members</span>
-        </div>
+    <div class="stat-card">
+      <div class="stat-icon members-icon"><Users size={22} /></div>
+      <div class="stat-content">
+        <span class="stat-value">{data?.stats?.memberCount ?? 0}</span>
+        <span class="stat-label">Active Members</span>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon posts-icon">
-          <MessageCircle size={22} />
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">3,421</span>
-          <span class="stat-label">Total Posts</span>
-        </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon posts-icon"><MessageCircle size={22} /></div>
+      <div class="stat-content">
+        <span class="stat-value">{data?.stats?.postCount ?? 0}</span>
+        <span class="stat-label">Total Posts</span>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon discussions-icon">
-          <MessageSquare size={22} />
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">847</span>
-          <span class="stat-label">Discussions</span>
-        </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon discussions-icon"><MessageSquare size={22} /></div>
+      <div class="stat-content">
+        <span class="stat-value">{data?.stats?.discussionCount ?? 0}</span>
+        <span class="stat-label">Discussions</span>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon events-icon">
-          <Calendar size={22} />
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">12</span>
-          <span class="stat-label">Upcoming Events</span>
-        </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon events-icon"><Calendar size={22} /></div>
+      <div class="stat-content">
+        <span class="stat-value">{data?.stats?.eventCount ?? 0}</span>
+        <span class="stat-label">Upcoming Events</span>
       </div>
     </div>
 
@@ -409,11 +202,14 @@ import NeighbourhoodFeed from '$lib/components/NeighbourhoodFeed.svelte';
         <input 
           type="text" 
           placeholder="Search discussions, posts, or members..." 
-          bind:value={searchQuery}
+          oninput={handleSearchInput}
           class="search-input"
         />
         {#if searchQuery}
-          <button class="clear-search" onclick={() => searchQuery = ''}>
+          <button class="clear-search" onclick={() => {
+            searchQuery = '';
+            debouncedSearchQuery = '';
+          }}>
             <X size={16} />
           </button>
         {/if}
@@ -428,13 +224,13 @@ import NeighbourhoodFeed from '$lib/components/NeighbourhoodFeed.svelte';
       </div>
       <div class="filter-buttons">
         <button
-  class="filter-btn {showNeighbourhoodFeed ? 'active' : ''}"
-  onclick={() => showNeighbourhoodFeed = !showNeighbourhoodFeed}
->
-  <Radio size={14} />
-  <span>Nearby Feed</span>
-  <span class="filter-count">live</span>
-</button>
+          class="filter-btn {showNeighbourhoodFeed ? 'active' : ''}"
+          onclick={() => showNeighbourhoodFeed = !showNeighbourhoodFeed}
+        >
+          <Radio size={14} />
+          <span>Nearby Feed</span>
+          <span class="filter-count">live</span>
+        </button>
         <button 
           class="filter-btn {showDiscussions ? 'active' : ''}" 
           onclick={() => showDiscussions = !showDiscussions}
@@ -462,281 +258,291 @@ import NeighbourhoodFeed from '$lib/components/NeighbourhoodFeed.svelte';
       </div>
       <button class="toggle-all-btn" onclick={toggleAllSections}>
         <LayoutGrid size={14} />
-       {showNeighbourhoodFeed && showFeed && showDiscussions && showMembers && showEvents ? 'Hide All' : 'Show All'}>
+        {showNeighbourhoodFeed && showFeed && showDiscussions && showMembers && showEvents ? 'Hide All' : 'Show All'}
       </button>
     </div>
 
-    {#if isLoading}
-      <div class="loading-container">
-        <div class="loading-spinner"></div>
-        <p>Loading community content...</p>
-      </div>
-    {:else}
-     <!-- Neighbourhood Feed Section -->
-      {#if showNeighbourhoodFeed}
-        <div class="section-container">
-          <div class="section-header">
-            <div class="section-title">
-              <Radio size={18} class="section-icon" />
-              <h2>Nearby Activity</h2>
-              <span class="section-count">within 2km</span>
-            </div>
-          </div>
-          <div class="section-content section-content--flush">
-            <NeighbourhoodFeed
-              lat={userLat}
-              lng={userLng}
-              neighbourhood=""
-            />
+    <!-- Community Feed Section - Fixed empty state handling -->
+    {#if showFeed}
+      <div class="section-container">
+        <div class="section-header">
+          <div class="section-title">
+            <TrendingUp size={18} class="section-icon" />
+            <h2>Community Feed</h2>
+            <span class="section-count">{getFilteredPosts().length} posts</span>
           </div>
         </div>
-      {/if}
-      <!-- Community Feed Section -->
-      {#if showFeed}
-        <div class="section-container">
-          <div class="section-header">
-            <div class="section-title">
-              <TrendingUp size={18} class="section-icon" />
-              <h2>Community Feed</h2>
-              <span class="section-count">{getFilteredPosts().length} posts</span>
+
+        <div class="section-content">
+          {#if !data?.posts || data.posts.length === 0}
+            <div class="empty-state">
+              <MessageCircle size={48} />
+              <p>No posts yet. Be the first to create a post!</p>
             </div>
-          </div>
-          
-          <div class="section-content">
-            {#if getFilteredPosts().length === 0}
-              <div class="empty-state">
-                <MessageCircle size={48} />
-                <p>No posts found matching your search</p>
-              </div>
-            {:else}
-              <div class="posts-grid">
-                {#each getFilteredPosts() as post}
-                  {@const CategoryIcon = getCategoryIcon(post.category)}
-                  <div class="post-card">
-                    {#if post.isPinned}
-                      <div class="post-pinned">
-                        <Star size={12} />
-                        <span>Pinned</span>
-                      </div>
-                    {/if}
-
-                    <div class="post-header">
-                      <img src={post.author.avatar} alt={post.author.name} class="post-avatar" />
-                      <div class="post-author">
-                        <div class="author-name">
-                          {post.author.name}
-                          {#if post.isVerified}
-                            <CheckCircle size={14} class="verified-badge" />
-                          {/if}
-                        </div>
-                        <div class="author-role">{post.author.role}</div>
-                      </div>
-                      <div class="post-category" style="background: {getCategoryColor(post.category)}10; color: {getCategoryColor(post.category)}">
-                        <CategoryIcon size={12} />
-                        <span>{getCategoryLabel(post.category)}</span>
-                      </div>
+          {:else if getFilteredPosts().length === 0}
+            <div class="empty-state">
+              <MessageCircle size={48} />
+              <p>No posts found matching your search</p>
+            </div>
+          {:else}
+            {@const filteredPosts = getFilteredPosts()}
+            <div class="posts-grid">
+              {#each filteredPosts as post (post.id)}
+                {@const CategoryIcon = getCategoryIcon(post.category)}
+                <div class="post-card">
+                  {#if post.isPinned}
+                    <div class="post-pinned">
+                      <Star size={12} />
+                      <span>Pinned</span>
                     </div>
+                  {/if}
 
-                    <div class="post-content">
-                      <p>{post.content}</p>
+                  <div class="post-header">
+                    <img 
+                      src="https://ui-avatars.com/api/?name={encodeURIComponent(post.authorName)}&background=6a2c91&color=fff" 
+                      alt={post.authorName} 
+                      class="post-avatar" 
+                    />
+                    <div class="post-author">
+                      <div class="author-name">
+                        {post.authorName}
+                        {#if post.isVerified}
+                          <CheckCircle size={14} class="verified-badge" />
+                        {/if}
+                      </div>
+                      <div class="author-role">{formatDate(post.createdAt)}</div>
                     </div>
+                    <div class="post-category" style="background: {getCategoryColor(post.category)}10; color: {getCategoryColor(post.category)}">
+                      <CategoryIcon size={12} />
+                      <span>{getCategoryLabel(post.category)}</span>
+                    </div>
+                  </div>
 
-                    <div class="post-footer">
-                      <div class="post-stats">
-                        <button class="stat-btn">
+                  <div class="post-content">
+                    <p>{post.content}</p>
+                  </div>
+
+                  <div class="post-footer">
+                    <div class="post-stats">
+                      <form method="POST" action="?/toggleLike" use:enhance>
+                        <input type="hidden" name="postId" value={post.id} />
+                        <button type="submit" class="stat-btn {post.isLiked ? 'liked' : ''}">
                           <ThumbsUp size={14} />
-                          <span>{post.likes}</span>
+                          <span>{post.likeCount}</span>
                         </button>
-                        <button class="stat-btn">
-                          <MessageCircle size={14} />
-                          <span>{post.comments}</span>
-                        </button>
-                        <button class="stat-btn">
-                          <Share2 size={14} />
-                          <span>{post.shares}</span>
-                        </button>
-                      </div>
-                      <div class="post-time">
-                        <Clock size={12} />
-                        <span>{formatDate(post.timestamp)}</span>
-                      </div>
-                    </div>
-                  </div>
-                {/each}
-              </div>
-            {/if}
-          </div>
-        </div>
-      {/if}
-
-      <!-- Discussions Section -->
-      {#if showDiscussions}
-        <div class="section-container">
-          <div class="section-header">
-            <div class="section-title">
-              <MessageSquare size={18} class="section-icon" />
-              <h2>Discussions</h2>
-              <span class="section-count">{getFilteredDiscussions().length} discussions</span>
-            </div>
-          </div>
-          
-          <div class="section-content">
-            {#if getFilteredDiscussions().length === 0}
-              <div class="empty-state">
-                <MessageSquare size={48} />
-                <p>No discussions found matching your search</p>
-              </div>
-            {:else}
-              <div class="discussions-list">
-                {#each getFilteredDiscussions() as discussion}
-                  {@const CategoryIcon = getCategoryIcon(discussion.category)}
-                  <div class="discussion-card">
-                    {#if discussion.isSticky}
-                      <div class="discussion-sticky">
-                        <Star size={12} />
-                        <span>Sticky</span>
-                      </div>
-                    {/if}
-
-                    <div class="discussion-header">
-                      <div class="discussion-category" style="background: {getCategoryColor(discussion.category)}10; color: {getCategoryColor(discussion.category)}">
-                        <CategoryIcon size={12} />
-                        <span>{getCategoryLabel(discussion.category)}</span>
-                      </div>
-                      <div class="discussion-stats">
-                        <span><MessageCircle size={12} /> {discussion.replies} replies</span>
-                        <span><Eye size={12} /> {discussion.views} views</span>
-                      </div>
-                    </div>
-
-                    <h3 class="discussion-title">{discussion.title}</h3>
-
-                    <div class="discussion-footer">
-                      <span class="discussion-author">by {discussion.author}</span>
-                      <span class="discussion-time">Last activity {formatDate(discussion.lastActivity)}</span>
-                    </div>
-                  </div>
-                {/each}
-              </div>
-            {/if}
-          </div>
-        </div>
-      {/if}
-
-      <!-- Members Section -->
-      {#if showMembers}
-        <div class="section-container">
-          <div class="section-header">
-            <div class="section-title">
-              <Users size={18} class="section-icon" />
-              <h2>Members</h2>
-              <span class="section-count">{getFilteredMembers().length} members</span>
-            </div>
-          </div>
-          
-          <div class="section-content">
-            {#if getFilteredMembers().length === 0}
-              <div class="empty-state">
-                <Users size={48} />
-                <p>No members found matching your search</p>
-              </div>
-            {:else}
-              <div class="members-grid">
-                {#each getFilteredMembers() as member}
-                  <div class="member-card">
-                    <div class="member-avatar-wrapper">
-                      <img src={member.avatar} alt={member.name} class="member-avatar" />
-                      {#if member.isOnline}
-                        <span class="online-dot"></span>
-                      {/if}
-                    </div>
-
-                    <h4 class="member-name">{member.name}</h4>
-                    <div class="member-role">{member.role}</div>
-
-                    <div class="member-badges">
-                      {#each member.badges as badge}
-                        <span class="badge">{badge}</span>
-                      {/each}
-                    </div>
-
-                    <div class="member-stats">
-                      <div class="member-stat">
-                        <Award size={14} />
-                        <span>{member.reputation}</span>
-                      </div>
-                    </div>
-
-                    <button class="follow-btn">
-                      <UserPlus size={14} />
-                      Follow
-                    </button>
-                  </div>
-                {/each}
-              </div>
-            {/if}
-          </div>
-        </div>
-      {/if}
-
-      <!-- Events Section -->
-      {#if showEvents}
-        <div class="section-container">
-          <div class="section-header">
-            <div class="section-title">
-              <Calendar size={18} class="section-icon" />
-              <h2>Upcoming Events</h2>
-              <span class="section-count">{getFilteredEvents().length} events</span>
-            </div>
-          </div>
-          
-          <div class="section-content">
-            {#if getFilteredEvents().length === 0}
-              <div class="empty-state">
-                <Calendar size={48} />
-                <p>No events found matching your search</p>
-              </div>
-            {:else}
-              <div class="events-grid">
-                {#each getFilteredEvents() as event}
-                  <div class="event-card">
-                    <div class="event-date-badge">
-                      <span class="event-month">{formatEventDate(event.date).split(' ')[0]}</span>
-                      <span class="event-day">{formatEventDate(event.date).split(' ')[1]}</span>
-                    </div>
-
-                    <div class="event-details">
-                      <h4 class="event-title">{event.title}</h4>
-                      <div class="event-info">
-                        <span><MapPin size={12} /> {event.location}</span>
-                        <span><Users size={12} /> {event.attendees}/{event.maxAttendees} attending</span>
-                      </div>
-                      <div class="event-progress">
-                        <div class="progress-bar" style="width: {(event.attendees / event.maxAttendees) * 100}%"></div>
-                      </div>
-                      <button class="rsvp-btn">
-                        RSVP Now
+                      </form>
+                      <button class="stat-btn">
+                        <MessageCircle size={14} />
+                        <span>{post.commentCount}</span>
+                      </button>
+                      <button class="stat-btn">
+                        <Share2 size={14} />
+                        <span>{post.shareCount}</span>
                       </button>
                     </div>
+                    <div class="post-time">
+                      <Clock size={12} />
+                      <span>{formatDate(post.createdAt)}</span>
+                    </div>
                   </div>
-                {/each}
-              </div>
-            {/if}
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      </div>
+    {/if}
+
+    <!-- Discussions Section -->
+    {#if showDiscussions}
+      <div class="section-container">
+        <div class="section-header">
+          <div class="section-title">
+            <MessageSquare size={18} class="section-icon" />
+            <h2>Discussions</h2>
+            <span class="section-count">{getFilteredDiscussions().length} discussions</span>
           </div>
         </div>
-      {/if}
-      
-      <!-- Empty state when no sections are visible -->
-      {#if !showFeed && !showDiscussions && !showMembers && !showEvents}
-        <div class="empty-state-all">
-          <Filter size={64} />
-          <h3>No sections visible</h3>
-          <p>Use the filter buttons above to show community content</p>
-          <button class="reset-btn" onclick={toggleAllSections}>
-            Show All Sections
-          </button>
+
+        <div class="section-content">
+          {#if !data?.discussions || data.discussions.length === 0}
+            <div class="empty-state">
+              <MessageSquare size={48} />
+              <p>No discussions yet. Start a conversation!</p>
+            </div>
+          {:else if getFilteredDiscussions().length === 0}
+            <div class="empty-state">
+              <MessageSquare size={48} />
+              <p>No discussions found matching your search</p>
+            </div>
+          {:else}
+            {@const filteredDiscussions = getFilteredDiscussions()}
+            <div class="discussions-list">
+              {#each filteredDiscussions as discussion (discussion.id)}
+                {@const CategoryIcon = getCategoryIcon(discussion.category)}
+                <div class="discussion-card">
+                  {#if discussion.isSticky}
+                    <div class="discussion-sticky">
+                      <Star size={12} />
+                      <span>Sticky</span>
+                    </div>
+                  {/if}
+
+                  <div class="discussion-header">
+                    <div class="discussion-category" style="background: {getCategoryColor(discussion.category)}10; color: {getCategoryColor(discussion.category)}">
+                      <CategoryIcon size={12} />
+                      <span>{getCategoryLabel(discussion.category)}</span>
+                    </div>
+                    <div class="discussion-stats">
+                      <span><MessageCircle size={12} /> {discussion.replyCount} replies</span>
+                      <span><Eye size={12} /> {discussion.viewCount} views</span>
+                    </div>
+                  </div>
+
+                  <h3 class="discussion-title">{discussion.title}</h3>
+
+                  <div class="discussion-footer">
+                    <span class="discussion-author">by {discussion.authorName}</span>
+                    <span class="discussion-time">Last activity {formatDate(discussion.lastActivityAt)}</span>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
         </div>
-      {/if}
+      </div>
+    {/if}
+
+    <!-- Members Section -->
+    {#if showMembers}
+      <div class="section-container">
+        <div class="section-header">
+          <div class="section-title">
+            <Users size={18} class="section-icon" />
+            <h2>Members</h2>
+            <span class="section-count">{getFilteredMembers().length} members</span>
+          </div>
+        </div>
+
+        <div class="section-content">
+          {#if !data?.members || data.members.length === 0}
+            <div class="empty-state">
+              <Users size={48} />
+              <p>No members found</p>
+            </div>
+          {:else if getFilteredMembers().length === 0}
+            <div class="empty-state">
+              <Users size={48} />
+              <p>No members found matching your search</p>
+            </div>
+          {:else}
+            {@const filteredMembers = getFilteredMembers()}
+            <div class="members-grid">
+              {#each filteredMembers as member (member.id)}
+                <div class="member-card">
+                  <div class="member-avatar-wrapper">
+                    <img 
+                      src="https://ui-avatars.com/api/?name={encodeURIComponent(member.name)}&background=6a2c91&color=fff" 
+                      alt={member.name} 
+                      class="member-avatar" 
+                    />
+                  </div>
+
+                  <h4 class="member-name">{member.name}</h4>
+                  <div class="member-role">{tierToRole(member.tier)}</div>
+
+                  <div class="member-stats">
+                    <div class="member-stat">
+                      <Award size={14} />
+                      <span>{member.trustScore}</span>
+                    </div>
+                  </div>
+
+                  {#if !member.isCurrentUser}
+                    <form method="POST" action="?/toggleFollow" use:enhance>
+                      <input type="hidden" name="followedId" value={member.id} />
+                      <button type="submit" class="follow-btn {member.isFollowing ? 'following' : ''}">
+                        <UserPlus size={14} />
+                        {member.isFollowing ? 'Following' : 'Follow'}
+                      </button>
+                    </form>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      </div>
+    {/if}
+
+    <!-- Events Section -->
+    {#if showEvents}
+      <div class="section-container">
+        <div class="section-header">
+          <div class="section-title">
+            <Calendar size={18} class="section-icon" />
+            <h2>Upcoming Events</h2>
+            <span class="section-count">{getFilteredEvents().length} events</span>
+          </div>
+        </div>
+
+        <div class="section-content">
+          {#if !data?.events || data.events.length === 0}
+            <div class="empty-state">
+              <Calendar size={48} />
+              <p>No upcoming events. Check back soon!</p>
+            </div>
+          {:else if getFilteredEvents().length === 0}
+            <div class="empty-state">
+              <Calendar size={48} />
+              <p>No events found matching your search</p>
+            </div>
+          {:else}
+            {@const filteredEvents = getFilteredEvents()}
+            <div class="events-grid">
+              {#each filteredEvents as event (event.id)}
+                <div class="event-card">
+                  <div class="event-date-badge">
+                    <span class="event-month">{formatEventDate(event.startsAt).split(' ')[0]}</span>
+                    <span class="event-day">{formatEventDate(event.startsAt).split(' ')[1]}</span>
+                  </div>
+
+                  <div class="event-details">
+                    <h4 class="event-title">{event.title}</h4>
+                    <div class="event-info">
+                      <span><MapPin size={12} /> {event.location}</span>
+                      <span><Users size={12} /> {event.attendeeCount}{event.maxAttendees ? `/${event.maxAttendees}` : ''} attending</span>
+                    </div>
+                    {#if event.maxAttendees}
+                      <div class="event-progress">
+                        <div class="progress-bar" style="width: {(event.attendeeCount / event.maxAttendees) * 100}%"></div>
+                      </div>
+                    {/if}
+                    <form method="POST" action="?/toggleRsvp" use:enhance>
+                      <input type="hidden" name="eventId" value={event.id} />
+                      <button type="submit" class="rsvp-btn {event.isAttending ? 'attending' : ''}">
+                        {event.isAttending ? '✓ Going' : 'RSVP Now'}
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      </div>
+    {/if}
+
+    <!-- Empty state when no sections are visible -->
+    {#if !showFeed && !showDiscussions && !showMembers && !showEvents && !showNeighbourhoodFeed}
+      <div class="empty-state-all">
+        <Filter size={64} />
+        <h3>No sections visible</h3>
+        <p>Use the filter buttons above to show community content</p>
+        <button class="reset-btn" onclick={toggleAllSections}>
+          Show All Sections
+        </button>
+      </div>
     {/if}
   </div>
 
@@ -744,81 +550,109 @@ import NeighbourhoodFeed from '$lib/components/NeighbourhoodFeed.svelte';
   {#if showCreatePost}
     <div class="modal-overlay" onclick={() => showCreatePost = false}>
       <div class="modal" onclick={(e) => e.stopPropagation()}>
-        <div class="modal-header">
-          <div class="modal-title">
-            <div class="modal-icon">
-              <Plus size={20} />
+        <form 
+          method="POST" 
+          action="?/createPost" 
+          use:enhance={() => {
+            return async ({ result, update }) => {
+              if (result.type === 'success') {
+                showCreatePost = false;
+                newPost = { content: '', category: 'general', isAnonymous: false, scope: 'global' };
+                await update();
+              }
+            };
+          }}
+        >
+          <div class="modal-header">
+            <div class="modal-title">
+              <div class="modal-icon">
+                <Plus size={20} />
+              </div>
+              <h2>Create New Post</h2>
             </div>
-            <h2>Create New Post</h2>
+            <button type="button" class="modal-close" onclick={() => showCreatePost = false}>
+              <X size={20} />
+            </button>
           </div>
-          <button class="modal-close" onclick={() => showCreatePost = false}>
-            <X size={20} />
-          </button>
-        </div>
 
-        <div class="modal-body">
-          <div class="form-field">
-            <label>Category</label>
-            <div class="category-select">
-              {#each categories as cat}
-                <button 
-                  class="category-option {newPost.category === cat.id ? 'selected' : ''}"
-                  style={newPost.category === cat.id ? `border-color: ${cat.color}; background: ${cat.color}10;` : ''}
-                  onclick={() => newPost.category = cat.id}
-                >
-                  <cat.icon size={16} style={newPost.category === cat.id ? `color: ${cat.color}` : ''} />
-                  <span>{cat.label}</span>
-                </button>
-              {/each}
+          <div class="modal-body">
+            <div class="form-field">
+              <label>Category</label>
+              <div class="category-select">
+                <input type="hidden" name="category" value={newPost.category} />
+                {#each categories as cat}
+                  <button 
+                    type="button"
+                    class="category-option {newPost.category === cat.id ? 'selected' : ''}"
+                    style={newPost.category === cat.id ? `border-color: ${cat.color}; background: ${cat.color}10;` : ''}
+                    onclick={() => newPost.category = cat.id}
+                  >
+                    <cat.icon size={16} style={newPost.category === cat.id ? `color: ${cat.color}` : ''} />
+                    <span>{cat.label}</span>
+                  </button>
+                {/each}
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label>Content</label>
+              <textarea 
+                name="content"
+                bind:value={newPost.content}
+                placeholder="Share your thoughts, safety tips, or questions with the community..."
+                class="post-input"
+                rows={6}
+              ></textarea>
+            </div>
+
+            <div class="form-field">
+              <label class="checkbox-label">
+                <input type="checkbox" bind:checked={newPost.isAnonymous} />
+                <span>Post anonymously</span>
+              </label>
+              <p class="field-hint">Your name won't be displayed publicly</p>
+            </div>
+
+            <div class="form-field">
+              <label class="checkbox-label">
+                <input type="radio" bind:group={newPost.scope} value="global" />
+                <span>Global - Visible to everyone</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="radio" bind:group={newPost.scope} value="local" />
+                <span>Local - Only visible in your area</span>
+              </label>
+            </div>
+
+            <div class="post-actions">
+              <button type="button" class="action-btn">
+                <ImageIcon size={16} />
+                Add Image
+              </button>
+              <button type="button" class="action-btn">
+                <Link size={16} />
+                Add Link
+              </button>
+              <button type="button" class="action-btn">
+                <Smile size={16} />
+                Add Emoji
+              </button>
             </div>
           </div>
 
-          <div class="form-field">
-            <label>Content</label>
-            <textarea 
-              bind:value={newPost.content}
-              placeholder="Share your thoughts, safety tips, or questions with the community..."
-              class="post-input"
-              rows={6}
-            ></textarea>
-          </div>
-
-          <div class="form-field">
-            <label class="checkbox-label">
-              <input type="checkbox" bind:checked={newPost.isAnonymous} />
-              <span>Post anonymously</span>
-            </label>
-            <p class="field-hint">Your name won't be displayed publicly</p>
-          </div>
-
-          <div class="post-actions">
-            <button class="action-btn">
-              <ImageIcon size={16} />
-              Add Image
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick={() => showCreatePost = false}>
+              Cancel
             </button>
-            <button class="action-btn">
-              <Link size={16} />
-              Add Link
-            </button>
-            <button class="action-btn">
-              <Smile size={16} />
-              Add Emoji
+            <button type="submit" class="btn-primary">
+              <Send size={16} />
+              Publish Post
             </button>
           </div>
-        </div>
 
-        <div class="modal-footer">
-          <button class="btn-secondary" onclick={() => showCreatePost = false}>
-            Cancel
-          </button>
-          <button class="btn-primary" onclick={() => {
-            showCreatePost = false;
-            newPost = { content: '', category: 'general', isAnonymous: false };
-          }}>
-            <Send size={16} />
-            Publish Post
-          </button>
-        </div>
+          <input type="hidden" name="isAnonymous" value={newPost.isAnonymous} />
+          <input type="hidden" name="scope" value={newPost.scope} />
+        </form>
       </div>
     </div>
   {/if}
