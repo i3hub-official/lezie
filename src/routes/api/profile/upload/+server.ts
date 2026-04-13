@@ -10,15 +10,7 @@ import { userProfiles } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { env } from '$env/dynamic/private';
 import { v2 as cloudinary } from 'cloudinary';
-
-cloudinary.config({
-  cloud_name:         env.CLOUDINARY_CLOUD_NAME,
-  api_key:            env.CLOUDINARY_API_KEY,
-  api_secret:         env.CLOUDINARY_API_SECRET,
-  secure_distribution: env.CLOUDINARY_SECURE_DISTRIBUTION ?? 'dnyzppsc3',
-  upload_prefix:      env.CLOUDINARY_UPLOAD_PREFIX ?? 'https://api-eu.cloudinary.com',
-  secure:             true,
-});
+import cloudinary from '$lib/server/cloudinary';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
