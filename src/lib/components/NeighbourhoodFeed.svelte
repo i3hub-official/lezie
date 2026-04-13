@@ -14,7 +14,7 @@
   } from 'lucide-svelte';
   
   // ✅ FIXED: Import as value, not type
-  import { haversineKm } from '$lib/server/db/geo';
+  import { haversineKm } from '$lib/utils/geo';
 
   // ── Types ──────────────────────────────────────────────────────────────────
 
