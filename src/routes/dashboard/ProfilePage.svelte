@@ -15,6 +15,7 @@
     data: { user: any; account: any; profile: any; kycData: any; recentReports: any[]; reportSummary: any }
   }>();
 
+
   // ── Derived display values ────────────────────────────────
   const fullName    = $derived(
     [data.profile?.firstName, data.profile?.lastName].filter(Boolean).join(' ')
@@ -28,6 +29,49 @@
   );
   const safetyScore = $derived(data.account?.trustScore ?? 0);
   const kycStatus   = $derived(data.account?.kycStatus  ?? 'pending');
+
+  // ── KYC confirmation modal ────────────────────────────────────────────────
+  let showKycConfirm = $state(false);
+  let kycConfirmPayload: { nin?: string; bvn?: string } = {};
+
+  function requestKycSubmit() {
+    const payload: any = {};
+    if (kycForm.nin.trim()) payload.nin = kycForm.nin.trim();
+    if (kycForm.bvn.trim()) payload.bvn = kycForm.bvn.trim();
+    if (!Object.keys(payload).length) { kycError = 'Enter at least one field'; return; }
+    // Validate lengths
+    if (payload.nin && payload.nin.length !== 11) { kycError = 'NIN must be exactly 11 digits'; return; }
+    if (payload.bvn && payload.bvn.length !== 11) { kycError = 'BVN must be exactly 11 digits'; return; }
+    kycConfirmPayload = payload;
+    showKycConfirm    = true;
+  }
+
+  async function confirmKycSubmit() {
+    showKycConfirm = false;
+    savingKyc      = true;
+    kycError       = '';
+    kycSuccess     = '';
+    try {
+      const res = await fetch('/api/profile', {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(kycConfirmPayload),
+      });
+      const body = await res.json();
+      if (!res.ok) { kycError = body.error ?? 'Failed to save'; return; }
+      kycSuccess = 'Submitted for verification';
+      kycForm    = { nin: '', bvn: '' };
+      setTimeout(() => window.location.reload(), 900);
+    } catch { kycError = 'Connection error.'; }
+    finally { savingKyc = false; }
+  }
+
+  // ── Mask sensitive numbers ────────────────────────────────────────────────
+  // Shows first 3 chars + dots + last 2 chars: "234•••••89"
+  function maskSensitive(value: string | null | undefined): string {
+    if (!value || value.length < 6) return '•••••••••••';
+    return value.slice(0, 3) + '•'.repeat(value.length - 5) + value.slice(-2);
+  }
 
   // ── Tabs ──────────────────────────────────────────────────
   let activeTab = $state<'overview' | 'edit' | 'kyc' | 'security'>('overview');
@@ -415,25 +459,29 @@ const body = await res.json();
 
           <!-- Immutable display only -->
           <div class="form-group form-group--readonly">
-            <label>Full Name</label>
+            <label>Full Name <span class="lock-badge"><Lock size={10} /> Locked</span></label>
             <div class="readonly-value">{fullName}</div>
           </div>
+    
           <div class="form-group form-group--readonly">
-            <label>Email</label>
+            <label>Email <span class="lock-badge"><Lock size={10} /> Locked</span></label>
             <div class="readonly-value"><Mail size={13} /> {email}</div>
           </div>
+
           <div class="form-group form-group--readonly">
-            <label>Phone</label>
+            <label>Phone <span class="lock-badge"><Lock size={10} /> Locked</span></label>
             <div class="readonly-value"><Phone size={13} /> {phone || '—'}</div>
           </div>
+
           {#if data.profile?.dateOfBirth}
             <div class="form-group form-group--readonly">
-              <label>Date of Birth</label>
+              <label>Date of Birth <span class="lock-badge"><Lock size={10} /> Locked</span></label>
               <div class="readonly-value">
                 {new Date(data.profile.dateOfBirth).toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' })}
               </div>
             </div>
           {/if}
+
 
           <!-- Username — set-once -->
           <div class="form-group {data.profile?.usernameSetAt ? 'form-group--readonly' : ''}">
@@ -578,7 +626,19 @@ const body = await res.json();
             </div>
             {#if data.profile?.ninVerified}
               <div class="notice notice-success">
-                <CheckCircle size={13} /> Your NIN is verified and locked. It cannot be changed.
+                <CheckCircle size={13} /> Your NIN is verified and locked.
+              </div>
+              <div class="masked-value">
+                <Key size={13} /> {maskSensitive(data.profile?.ninMasked ?? '•••••••••••')}
+                <span class="mask-note">Last 2 digits visible for reference</span>
+              </div>
+            {:else if data.profile?.hasNin}
+              <div class="notice notice-warning">
+                <AlertTriangle size={13} /> NIN submitted and pending verification.
+                Cannot be updated until reviewed.
+              </div>
+              <div class="masked-value">
+                <Key size={13} /> {maskSensitive(data.profile?.ninMasked ?? '•••••••••••')}
               </div>
             {:else}
               <input
@@ -588,11 +648,11 @@ const body = await res.json();
                 placeholder="Enter 11-digit NIN"
                 maxlength={11}
                 inputmode="numeric"
-                disabled={data.profile?.ninVerified}
               />
-              {#if data.profile?.hasNin && !data.profile?.ninVerified}
-                <p class="field-hint">NIN submitted on {new Date(data.profile.ninSubmittedAt).toLocaleDateString()}. Pending manual verification.</p>
-              {/if}
+              <p class="field-hint warn-hint">
+                ⚠ Once submitted, your NIN cannot be updated unless manually rejected by an admin.
+                Double-check before submitting.
+              </p>
             {/if}
           </div>
 
@@ -612,7 +672,19 @@ const body = await res.json();
             </div>
             {#if data.profile?.bvnVerified}
               <div class="notice notice-success">
-                <CheckCircle size={13} /> Your BVN is verified and locked. It cannot be changed.
+                <CheckCircle size={13} /> Your BVN is verified and locked.
+              </div>
+              <div class="masked-value">
+                <Key size={13} /> {maskSensitive(data.profile?.bvnMasked ?? '•••••••••••')}
+                <span class="mask-note">Last 2 digits visible for reference</span>
+              </div>
+            {:else if data.profile?.hasBvn}
+              <div class="notice notice-warning">
+                <AlertTriangle size={13} /> BVN submitted and pending verification.
+                Cannot be updated until reviewed.
+              </div>
+              <div class="masked-value">
+                <Key size={13} /> {maskSensitive(data.profile?.bvnMasked ?? '•••••••••••')}
               </div>
             {:else}
               <input
@@ -622,11 +694,11 @@ const body = await res.json();
                 placeholder="Enter 11-digit BVN"
                 maxlength={11}
                 inputmode="numeric"
-                disabled={data.profile?.bvnVerified}
               />
-              {#if data.profile?.hasBvn && !data.profile?.bvnVerified}
-                <p class="field-hint">BVN submitted on {new Date(data.profile.bvnSubmittedAt).toLocaleDateString()}. Pending manual verification.</p>
-              {/if}
+              <p class="field-hint warn-hint">
+                ⚠ Once submitted, your BVN cannot be updated unless manually rejected by an admin.
+                Double-check before submitting.
+              </p>
             {/if}
           </div>
 
@@ -634,7 +706,7 @@ const body = await res.json();
 
         {#if !data.profile?.ninVerified || !data.profile?.bvnVerified}
           <div class="form-actions">
-            <button class="btn btn-primary" onclick={saveKyc} disabled={savingKyc}>
+            <button class="btn btn-primary" onclick={requestKycSubmit} disabled={savingKyc}>
               <Shield size={16} /> {savingKyc ? 'Submitting…' : 'Submit for Verification'}
             </button>
           </div>
@@ -687,10 +759,361 @@ const body = await res.json();
       </div>
     {/if}
 
+    <!-- KYC Confirmation Modal -->
+    {#if showKycConfirm}
+      <div class="modal-overlay" onclick={() => showKycConfirm = false}>
+        <div class="modal-box" onclick={(e) => e.stopPropagation()}>
+          <div class="modal-header">
+            <Shield size={22} style="color: var(--primary-color)" />
+            <h3>Confirm Identity Submission</h3>
+          </div>
+
+          <div class="modal-body">
+            <div class="confirm-warning">
+              <AlertTriangle size={18} style="color: #F59E0B" />
+              <p>
+                <strong>Please review carefully.</strong>
+                Once submitted, your identity documents cannot be updated unless
+                an admin rejects them. Make sure the details are correct.
+              </p>
+            </div>
+
+            {#if kycConfirmPayload.nin}
+              <div class="confirm-row">
+                <span class="confirm-label"><FileText size={13} /> NIN</span>
+                <span class="confirm-value">{maskSensitive(kycConfirmPayload.nin)}</span>
+              </div>
+            {/if}
+            {#if kycConfirmPayload.bvn}
+              <div class="confirm-row">
+                <span class="confirm-label"><CreditCard size={13} /> BVN</span>
+                <span class="confirm-value">{maskSensitive(kycConfirmPayload.bvn)}</span>
+              </div>
+            {/if}
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" onclick={() => showKycConfirm = false}>
+              <X size={15} /> Go Back &amp; Recheck
+            </button>
+            <button class="btn btn-primary" onclick={confirmKycSubmit}>
+              <Shield size={15} /> Confirm &amp; Submit
+            </button>
+          </div>
+        </div>
+      </div>
+    {/if}
+
   </div>
 </div>
 
 <style>
+  .profile-page { width: 100%; }
+  .profile-container { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem; padding-bottom: 3rem; }
+
+  /* Cover */
+  .cover-section { position: relative; }
+  .cover-photo {
+    height: 180px; border-radius: 1rem;
+    background: linear-gradient(135deg, #1a0b2e, #2d1b4e);
+    background-size: cover; background-position: center;
+    position: relative; overflow: hidden;
+  }
+  .change-cover-btn {
+    position: absolute; bottom: .75rem; right: .75rem;
+    display: inline-flex; align-items: center; gap: .375rem;
+    background: rgba(0,0,0,.5); color: white; border: none;
+    border-radius: .625rem; padding: .5rem .875rem;
+    font-size: .75rem; font-weight: 600; cursor: pointer;
+    backdrop-filter: blur(4px); transition: background .2s;
+  }
+  .change-cover-btn:hover { background: rgba(0,0,0,.7); }
+  .avatar-section { position: absolute; bottom: -48px; left: 1.5rem; }
+  .avatar-wrap { position: relative; width: 96px; height: 96px; }
+  .avatar { width: 96px; height: 96px; border-radius: 50%; border: 4px solid white; object-fit: cover; }
+  .change-avatar-btn {
+    position: absolute; bottom: 0; right: 0;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #6a2c91; color: white; border: 2px solid white;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background .2s;
+  }
+  .change-avatar-btn:hover { background: #4a1d6e; }
+  .hidden-input { display: none; }
+
+  /* Hero */
+  .profile-hero { margin-top: 56px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .user-name { font-family: 'DM Serif Display', Georgia, serif; font-size: 1.5rem; color: #1e1b4b; margin: 0 0 .25rem; }
+  .username-badge { font-size: .8rem; color: #6a2c91; font-weight: 600; background: #f3e8ff; padding: .2rem .6rem; border-radius: 100px; }
+  .hero-details { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin-top: .625rem; font-size: .8125rem; color: #64748b; }
+  .hero-details span { display: inline-flex; align-items: center; gap: .375rem; }
+
+  /* Tabs */
+  .profile-tabs { display: flex; gap: .25rem; border-bottom: 1.5px solid #e5e7eb; padding-bottom: 0; }
+  .tab-btn {
+    display: inline-flex; align-items: center; gap: .375rem;
+    padding: .625rem 1rem; border: none; background: none;
+    font-size: .8125rem; font-weight: 500; color: #64748b;
+    cursor: pointer; border-bottom: 2px solid transparent;
+    margin-bottom: -1.5px; transition: all .2s; border-radius: .5rem .5rem 0 0;
+    position: relative;
+  }
+  .tab-btn:hover { color: #6a2c91; background: #f3e8ff; }
+  .tab-btn.active { color: #6a2c91; border-bottom-color: #6a2c91; font-weight: 700; }
+  .tab-badge {
+    position: absolute; top: .25rem; right: .25rem;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #f59e0b; color: white; font-size: .5rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Tab content */
+  .tab-content { display: flex; flex-direction: column; gap: 1.25rem; padding-top: 1rem; }
+
+  /* Stats */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .875rem; }
+  @media (max-width: 640px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stat-card { background: white; border: 1.5px solid #e5e7eb; border-radius: 1rem; padding: 1rem; display: flex; align-items: center; gap: .875rem; }
+  .stat-icon { width: 40px; height: 40px; border-radius: .75rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .reports-icon { background: #fef2f2; color: #dc2626; }
+  .score-icon   { background: #fef3c7; color: #d97706; }
+  .kyc-icon     { background: #f0fdf4; color: #15803d; }
+  .tier-icon    { background: #f3e8ff; color: #6a2c91; }
+  .stat-value   { display: block; font-size: 1.125rem; font-weight: 800; color: #1e1b4b; }
+  .stat-label   { display: block; font-size: .6875rem; color: #94a3b8; font-weight: 500; margin-top: .125rem; }
+
+  /* Score ring */
+  .score-section { background: white; border: 1.5px solid #e5e7eb; border-radius: 1rem; padding: 1.25rem; }
+  .score-header { display: flex; align-items: center; gap: .5rem; margin-bottom: 1rem; font-weight: 700; color: #1e1b4b; }
+  .score-body { display: flex; align-items: center; gap: 1.5rem; }
+  .score-ring { position: relative; display: flex; align-items: center; justify-content: center; }
+  .score-num { position: absolute; font-size: 1.5rem; font-weight: 800; color: #6a2c91; }
+  .score-info p { font-size: .8125rem; color: #64748b; margin: 0 0 .5rem; }
+  .score-tip { font-size: .75rem; color: #94a3b8; }
+
+  /* Info sections */
+  .bio-section, .info-section, .social-section, .recent-section {
+    background: white; border: 1.5px solid #e5e7eb; border-radius: 1rem; padding: 1.25rem;
+  }
+  .bio-section h3, .info-section h3, .social-section h3, .recent-section h3 {
+    display: flex; align-items: center; gap: .375rem;
+    font-size: .875rem; font-weight: 700; color: #1e1b4b; margin: 0 0 .75rem;
+  }
+  .bio-section p { font-size: .875rem; color: #374151; line-height: 1.6; margin: 0; }
+  .info-section p { font-size: .875rem; color: #374151; margin: 0; }
+  .social-links { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .social-link { font-size: .8125rem; color: #6a2c91; text-decoration: none; background: #f3e8ff; padding: .375rem .875rem; border-radius: .625rem; font-weight: 600; }
+  .social-link:hover { text-decoration: underline; }
+  .reports-list { display: flex; flex-direction: column; gap: .5rem; }
+  .report-item { display: flex; align-items: center; gap: .75rem; font-size: .8125rem; }
+  .severity-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .severity-critical { background: #dc2626; }
+  .severity-high     { background: #ea580c; }
+  .severity-medium   { background: #d97706; }
+  .severity-low      { background: #65a30d; }
+  .report-title { flex: 1; color: #374151; }
+  .report-date  { color: #94a3b8; font-size: .75rem; }
+
+  /* Forms */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+  .form-group { display: flex; flex-direction: column; gap: .375rem; }
+  .form-group--full { grid-column: 1 / -1; }
+  .form-group--readonly label, .form-group--readonly .readonly-value { opacity: .7; }
+  .form-group label { font-size: .8125rem; font-weight: 600; color: #374151; display: flex; align-items: center; gap: .375rem; }
+  .form-input { padding: .6875rem .875rem; border: 1.5px solid #e5e7eb; border-radius: .75rem; font-size: .875rem; font-family: inherit; color: #1e1b4b; outline: none; transition: border-color .2s; background: white; }
+  .form-input:focus { border-color: #6a2c91; box-shadow: 0 0 0 3px rgba(106,44,145,.1); }
+  .form-input:disabled { background: #f8fafc; color: #94a3b8; cursor: not-allowed; }
+  .form-textarea { padding: .6875rem .875rem; border: 1.5px solid #e5e7eb; border-radius: .75rem; font-size: .875rem; font-family: inherit; color: #1e1b4b; outline: none; resize: vertical; transition: border-color .2s; }
+  .form-textarea:focus { border-color: #6a2c91; box-shadow: 0 0 0 3px rgba(106,44,145,.1); }
+  .form-select { width: 100%; padding: .6875rem .875rem; border: 1.5px solid #e5e7eb; border-radius: .75rem; font-size: .875rem; font-family: inherit; color: #1e1b4b; outline: none; appearance: none; background: white; transition: border-color .2s; }
+  .form-select:focus { border-color: #6a2c91; box-shadow: 0 0 0 3px rgba(106,44,145,.1); }
+  .select-wrap { position: relative; }
+  .select-wrap :global(.select-arrow) { position: absolute; right: .875rem; top: 50%; transform: translateY(-50%); pointer-events: none; color: #94a3b8; }
+  .readonly-value { padding: .6875rem .875rem; background: #f8fafc; border: 1.5px solid #f1f5f9; border-radius: .75rem; font-size: .875rem; color: #64748b; display: flex; align-items: center; gap: .5rem; }
+  .mt-1 { margin-top: .25rem; }
+  .form-actions { display: flex; gap: .75rem; padding-top: .5rem; }
+  .field-hint { font-size: .75rem; color: #94a3b8; margin: .25rem 0 0; }
+
+  /* Badges */
+  .lock-badge { font-size: .6875rem; font-weight: 600; background: #fef3c7; color: #d97706; padding: .2rem .5rem; border-radius: 100px; display: inline-flex; align-items: center; gap: .2rem; margin-left: .375rem; }
+  .optional-badge { font-size: .6875rem; font-weight: 500; color: #94a3b8; margin-left: .375rem; }
+
+  /* Notices */
+  .notice { display: flex; align-items: flex-start; gap: .625rem; padding: .875rem 1rem; border-radius: .875rem; font-size: .8125rem; line-height: 1.5; }
+  .notice-info    { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+  .notice-success { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+  .alert { display: flex; align-items: center; gap: .5rem; padding: .75rem 1rem; border-radius: .75rem; font-size: .8125rem; font-weight: 600; }
+  .alert-success { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+  .alert-error   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+  /* KYC */
+  .kyc-grid { display: flex; flex-direction: column; gap: 1rem; }
+  .kyc-card { background: white; border: 1.5px solid #e5e7eb; border-radius: 1rem; padding: 1.25rem; display: flex; flex-direction: column; gap: .875rem; }
+  .kyc-card-header { display: flex; align-items: flex-start; gap: .875rem; }
+  .kyc-card-header > :global(svg) { color: #6a2c91; flex-shrink: 0; margin-top: .125rem; }
+  .kyc-card-header h4 { font-size: .9375rem; font-weight: 700; color: #1e1b4b; margin: 0 0 .25rem; }
+  .kyc-card-header p { font-size: .8rem; color: #64748b; margin: 0; }
+  .kyc-card-header { display: grid; grid-template-columns: auto 1fr auto; }
+  .verified-pill { display: inline-flex; align-items: center; gap: .25rem; padding: .25rem .625rem; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; border-radius: 100px; font-size: .6875rem; font-weight: 700; white-space: nowrap; }
+  .pending-pill  { display: inline-flex; align-items: center; gap: .25rem; padding: .25rem .625rem; background: #fffbeb; color: #d97706; border: 1px solid #fde68a; border-radius: 100px; font-size: .6875rem; font-weight: 700; }
+
+  /* Security */
+  .security-grid { display: flex; flex-direction: column; gap: .875rem; }
+  .security-card { background: white; border: 1.5px solid #e5e7eb; border-radius: 1rem; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; }
+  .security-card-icon { width: 44px; height: 44px; border-radius: .875rem; background: #f3e8ff; color: #6a2c91; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .security-card-body { flex: 1; }
+  .security-card-body h4 { font-size: .9375rem; font-weight: 700; color: #1e1b4b; margin: 0 0 .25rem; }
+  .security-card-body p { font-size: .8rem; color: #64748b; margin: 0; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; padding: .75rem 1.25rem; border-radius: .875rem; font-size: .9375rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .2s; border: none; }
+  .btn-sm { padding: .5rem .875rem; font-size: .8125rem; border-radius: .625rem; }
+  .btn-primary { background: linear-gradient(135deg,#6a2c91,#4a1d6e); color: white; box-shadow: 0 4px 14px rgba(106,44,145,.25); }
+  .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(106,44,145,.35); }
+  .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
+  .btn-secondary { background: white; color: #374151; border: 1.5px solid #e5e7eb; }
+  .btn-secondary:hover { border-color: #6a2c91; color: #6a2c91; background: #f3e8ff; }
+  .btn-outline { background: transparent; color: #64748b; border: 1.5px solid #e5e7eb; }
+  .btn-outline:hover { border-color: #6a2c91; color: #6a2c91; }
+
+  /* Upload spinners */
+  .upload-spinner, .upload-spinner-sm {
+    width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3);
+    border-top-color: white; border-radius: 50%;
+    animation: spin .6s linear infinite;
+  }
+  .upload-spinner-sm { width: 12px; height: 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .warn-hint {
+    color: #92400e;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    border-radius: .5rem;
+    padding: .375rem .625rem;
+    font-size: .688rem;
+    margin-top: .375rem;
+    line-height: 1.5;
+  }
+
+  .masked-value {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-family: monospace;
+    font-size: .875rem;
+    color: #475569;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: .625rem;
+    padding: .625rem .875rem;
+    margin-top: .5rem;
+    letter-spacing: .05em;
+  }
+
+  .mask-note {
+    font-size: .625rem;
+    color: #94a3b8;
+    font-family: 'DM Sans', sans-serif;
+    margin-left: auto;
+  }
+
+  .notice-warning {
+    background: #fef3c7;
+    border-color: #fde68a;
+    color: #92400e;
+  }
+
+  /* ── Confirmation modal ─────────────────────────────────── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .modal-box {
+    background: white;
+    border-radius: 1.25rem;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .modal-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .modal-body {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .875rem;
+  }
+
+  .confirm-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: .625rem;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: .75rem;
+    padding: .875rem;
+    font-size: .8125rem;
+    color: #78350f;
+    line-height: 1.55;
+  }
+
+  .confirm-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .625rem .875rem;
+    background: #f8fafc;
+    border-radius: .625rem;
+    border: 1px solid #e2e8f0;
+  }
+
+  .confirm-label {
+    display: flex;
+    align-items: center;
+    gap: .375rem;
+    font-size: .75rem;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  .confirm-value {
+    font-family: monospace;
+    font-size: .875rem;
+    color: #0f172a;
+    letter-spacing: .08em;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: .75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #f1f5f9;
+  }
+
   .profile-page { width: 100%; }
   .profile-container { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem; padding-bottom: 3rem; }
 
