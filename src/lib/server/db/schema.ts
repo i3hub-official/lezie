@@ -70,19 +70,74 @@ export const users = pgTable('users', {
 
 // User profiles
 export const userProfiles = pgTable('user_profiles', {
-  id: text('id').primaryKey().$defaultFn(() => nanoid()),
-  userId: text('user_id').references(() => users.id).notNull().unique(),
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => nanoid()),
+
+  userId: text('user_id')
+    .references(() => users.id)
+    .notNull()
+    .unique(),
+
   firstName: varchar('first_name', { length: 255 }),
   lastName: varchar('last_name', { length: 400 }),
-  avatarUrl: varchar('avatar_url', { length: 500 }),
+
+  // Avatar (updated to support Cloudinary later)
+  avatarUrl: text('avatar_url'),
+
   bio: text('bio'),
+
+  // ─────────────────────────────────────────────
+  // KYC FIELDS
+  // ─────────────────────────────────────────────
+  nin: varchar('nin', { length: 20 }),
+  bvn: varchar('bvn', { length: 20 }),
+
+  ninVerified: boolean('nin_verified').default(false),
+  bvnVerified: boolean('bvn_verified').default(false),
+
+  ninVerifiedAt: timestamp('nin_verified_at'),
+  bvnVerifiedAt: timestamp('bvn_verified_at'),
+
+  // ─────────────────────────────────────────────
+  // ADDRESS FIELDS (expanded)
+  // ─────────────────────────────────────────────
+  streetAddress: text('street_address'),
+  city: varchar('city', { length: 100 }),
+  state: varchar('state', { length: 100 }),
+  country: varchar('country', { length: 100 }),
+  postalCode: varchar('postal_code', { length: 20 }),
+
+  homeAddressSet: boolean('home_address_set').default(false),
+
+  // Legacy optional field (kept for compatibility)
   location: jsonb('location'),
-  address: text('address'),
-  city: varchar('city', { length: 255 }),
-  country: varchar('country', { length: 255 }),
+
+  // ─────────────────────────────────────────────
+  // MEDIA (Cloudinary support)
+  // ─────────────────────────────────────────────
+  coverPhotoUrl: text('cover_photo_url'),
+  avatarPublicId: text('avatar_public_id'),
+  coverPhotoPublicId: text('cover_photo_public_id'),
+
+  // ─────────────────────────────────────────────
+  // USERNAME (set once)
+  // ─────────────────────────────────────────────
+  username: varchar('username', { length: 50 }).unique(),
+  usernameSet: boolean('username_set').default(false),
+
+  // ─────────────────────────────────────────────
+  // SYSTEM FIELDS
+  // ─────────────────────────────────────────────
   dateOfBirth: timestamp('date_of_birth'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull()
+
+  createdAt: timestamp('created_at')
+    .defaultNow()
+    .notNull(),
+
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
+    .notNull(),
 }, (table) => [
   index('user_profiles_name_idx').on(table.firstName, table.lastName),
 ]);
