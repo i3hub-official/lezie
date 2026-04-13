@@ -35,6 +35,8 @@ const FIXED_IV = {
   email:    mustHexEnv('FIXED_IV_EMAIL',    env.FIXED_IV_EMAIL,    16),
   phone:    mustHexEnv('FIXED_IV_PHONE',    env.FIXED_IV_PHONE,    16),
   username: mustHexEnv('FIXED_IV_USERNAME', env.FIXED_IV_USERNAME, 16),
+  nin:      mustHexEnv('FIXED_IV_NIN',      env.FIXED_IV_NIN,      16),
+  bvn:      mustHexEnv('FIXED_IV_BVN',      env.FIXED_IV_BVN,      16),
 };
 
 const SEARCH_HASH_PEPPER = (() => {
@@ -59,7 +61,7 @@ function assertValidHex(str: string, field: string): void {
 // ─────────────────────────────────────────────────────────────────────────────
 // TIER 1: Searchable Deterministic Encryption (AES-256-CBC + Fixed IV)
 // ─────────────────────────────────────────────────────────────────────────────
-export type SearchableField = 'email' | 'phone' | 'username';
+export type SearchableField = 'email' | 'phone' | 'username' | 'nin' | 'bvn';
 
 export function encryptSearchable(data: string, field: SearchableField): string {
   if (!data) throw new Error(`Cannot encrypt empty ${field}`);
@@ -113,10 +115,10 @@ export function decryptField(encryptedData: string): string {
     throw new Error('Invalid encrypted field format (missing colon)');
   }
 
-  const ivHex = encryptedData.slice(0, sep);
+  const ivHex  = encryptedData.slice(0, sep);
   const encHex = encryptedData.slice(sep + 1);
 
-  assertValidHex(ivHex, 'IV');
+  assertValidHex(ivHex,  'IV');
   assertValidHex(encHex, 'Encrypted');
 
   const decipher = crypto.createDecipheriv(
@@ -160,9 +162,9 @@ export function decryptSecure(encryptedData: string): string {
 
   const [ivHex, authTagHex, encHex] = parts;
 
-  assertValidHex(ivHex, 'GCM IV');
-  assertValidHex(authTagHex, 'GCM AuthTag');
-  assertValidHex(encHex, 'GCM Encrypted');
+  assertValidHex(ivHex,       'GCM IV');
+  assertValidHex(authTagHex,  'GCM AuthTag');
+  assertValidHex(encHex,      'GCM Encrypted');
 
   const decipher = crypto.createDecipheriv(
     'aes-256-gcm',
