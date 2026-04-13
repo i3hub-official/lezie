@@ -1,7 +1,4 @@
 <!-- src/lib/components/NeighbourhoodFeed.svelte -->
-<!-- Neighbourhood feed showing nearby incidents/posts within 2km.        -->
-<!-- Includes AI summarise button that calls /api/ai/summarise-feed.      -->
-
 <script lang="ts">
   import { onMount } from 'svelte';
 
@@ -13,10 +10,7 @@
     ChevronUp, TrendingUp, Zap, Eye, Filter
   } from 'lucide-svelte';
   
-  // ✅ FIXED: Import as value, not type
   import { haversineKm } from '$lib/utils/geo';
-
-  // ── Types ──────────────────────────────────────────────────────────────────
 
   interface FeedItem {
     id: string;
@@ -43,63 +37,45 @@
     generated_at: string;
   }
 
-  // ── Props ──────────────────────────────────────────────────────────────────
-
-  interface Props {
-    neighbourhood?: string;   // e.g. "Surulere, Lagos"
-    lat?: number | null;
-    lng?: number | null;
-  }
-
   let {
     neighbourhood = '',
     lat = null,
     lng = null,
-  }: Props = $props();
+  } = $props();
 
-  // ── State ──────────────────────────────────────────────────────────────────
-
-  let feedItems        = $state<FeedItem[]>([]);
-  let isLoadingFeed    = $state(true);
-  let activeFilter     = $state<'all' | 'incident' | 'post' | 'alert'>('all');
-  let aiSummary        = $state<AISummary | null>(null);
-  let isSummarising    = $state(false);
-  let summaryError     = $state('');
-  let summaryExpanded  = $state(true);
-  let showSummary      = $state(false);
-  
-  // ✅ Prevent multiple simultaneous load attempts
+  let feedItems = $state<FeedItem[]>([]);
+  let isLoadingFeed = $state(true);
+  let activeFilter = $state<'all' | 'incident' | 'post' | 'alert'>('all');
+  let aiSummary = $state<AISummary | null>(null);
+  let isSummarising = $state(false);
+  let summaryError = $state('');
+  let summaryExpanded = $state(true);
+  let showSummary = $state(false);
   let isLoading = $state(false);
 
-  // ── Mood config ────────────────────────────────────────────────────────────
-
   const moodConfig = {
-    calm:     { color: '#10B981', bg: '#d1fae5', border: '#6ee7b7', label: 'Calm',     icon: Shield  },
-    watchful: { color: '#F59E0B', bg: '#fef3c7', border: '#fcd34d', label: 'Watchful', icon: Eye     },
-    tense:    { color: '#F97316', bg: '#ffedd5', border: '#fdba74', label: 'Tense',    icon: AlertTriangle },
-    urgent:   { color: '#EF4444', bg: '#fee2e2', border: '#fca5a5', label: 'Urgent',   icon: Zap     },
+    calm: { color: '#10B981', bg: '#d1fae5', border: '#6ee7b7', label: 'Calm', icon: Shield },
+    watchful: { color: '#F59E0B', bg: '#fef3c7', border: '#fcd34d', label: 'Watchful', icon: Eye },
+    tense: { color: '#F97316', bg: '#ffedd5', border: '#fdba74', label: 'Tense', icon: AlertTriangle },
+    urgent: { color: '#EF4444', bg: '#fee2e2', border: '#fca5a5', label: 'Urgent', icon: Zap },
   };
-
-  // ── Category config ────────────────────────────────────────────────────────
 
   const categoryConfig: Record<string, { color: string; bg: string; icon: any }> = {
     suspicious: { color: '#F59E0B', bg: '#fef3c7', icon: AlertTriangle },
-    theft:      { color: '#EF4444', bg: '#fee2e2', icon: AlertOctagon  },
-    vandalism:  { color: '#F97316', bg: '#ffedd5', icon: Building      },
-    fire:       { color: '#DC2626', bg: '#fee2e2', icon: Flame         },
-    accident:   { color: '#F59E0B', bg: '#fef3c7', icon: Car           },
-    noise:      { color: '#8B5CF6', bg: '#ede9fe', icon: Volume2       },
-    other:      { color: '#6B7280', bg: '#f3f4f6', icon: MoreHorizontal},
+    theft: { color: '#EF4444', bg: '#fee2e2', icon: AlertOctagon },
+    vandalism: { color: '#F97316', bg: '#ffedd5', icon: Building },
+    fire: { color: '#DC2626', bg: '#fee2e2', icon: Flame },
+    accident: { color: '#F59E0B', bg: '#fef3c7', icon: Car },
+    noise: { color: '#8B5CF6', bg: '#ede9fe', icon: Volume2 },
+    other: { color: '#6B7280', bg: '#f3f4f6', icon: MoreHorizontal },
   };
 
   const severityColors = {
-    low:      '#10B981',
-    medium:   '#F59E0B',
-    high:     '#F97316',
+    low: '#10B981',
+    medium: '#F59E0B',
+    high: '#F97316',
     critical: '#EF4444',
   };
-
-  // ── Derived: filtered items ────────────────────────────────────────────────
 
   const displayItems = $derived(
     activeFilter === 'all'
@@ -107,22 +83,19 @@
       : feedItems.filter(i => i.type === activeFilter)
   );
 
-  // ── Mount: load feed ───────────────────────────────────────────────────────
-
   onMount(() => {
     loadFeed();
   });
 
   async function loadFeed() {
-    // ✅ Prevent concurrent loads
     if (isLoading) return;
     isLoading = true;
     isLoadingFeed = true;
 
     try {
       const params = new URLSearchParams();
-      if (lat)           params.set('lat',           String(lat));
-      if (lng)           params.set('lng',           String(lng));
+      if (lat) params.set('lat', String(lat));
+      if (lng) params.set('lng', String(lng));
       if (neighbourhood) params.set('neighbourhood', neighbourhood);
 
       const res = await fetch(`/api/reports/map?${params}&dateRange=day`);
@@ -130,7 +103,6 @@
       if (res.ok) {
         const raw = await res.json();
         
-        // ✅ Safe haversine calculation with null checks
         const calculateDistance = (r: any) => {
           if (lat && lng && r.lat && r.lng) {
             try {
@@ -143,20 +115,18 @@
           return undefined;
         };
         
-        // Map map-API shape to FeedItem shape
         feedItems = raw
           .map((r: any) => ({
-            id:          r.id,
-            type:        'incident' as const,
-            title:       r.title || 'Untitled',
-            body:        r.description,
-            category:    r.category,
-            severity:    r.severity,
-            location:    r.location,
+            id: r.id,
+            type: 'incident' as const,
+            title: r.title || 'Untitled',
+            body: r.description,
+            category: r.category,
+            severity: r.severity,
+            location: r.location,
             distance_km: calculateDistance(r),
             reported_at: r.time || new Date().toISOString(),
           }))
-          // Enforce 2km radius on client side as final guard
           .filter((item: any) =>
             item.distance_km === undefined || item.distance_km <= 2
           )
@@ -176,29 +146,27 @@
     }
   }
 
-  // ── AI Summarise ──────────────────────────────────────────────────────────
-
   async function summariseFeed() {
     if (isSummarising || feedItems.length === 0) return;
 
     isSummarising = true;
-    summaryError  = '';
-    showSummary   = true;
+    summaryError = '';
+    showSummary = true;
 
     try {
       const res = await fetch('/api/ai/summarise-feed', {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           neighbourhood: neighbourhood || undefined,
           items: feedItems.map(item => ({
-            id:          item.id,
-            type:        item.type,
-            title:       item.title,
-            body:        item.body,
-            category:    item.category,
-            severity:    item.severity,
-            location:    item.location,
+            id: item.id,
+            type: item.type,
+            title: item.title,
+            body: item.body,
+            category: item.category,
+            severity: item.severity,
+            location: item.location,
             distance_km: item.distance_km,
             reported_at: item.reported_at,
           })),
@@ -210,9 +178,8 @@
         throw new Error(err.message ?? `Server error ${res.status}`);
       }
 
-      aiSummary       = await res.json();
+      aiSummary = await res.json();
       summaryExpanded = true;
-
     } catch (err: unknown) {
       console.error('AI summary error:', err);
       summaryError = err instanceof Error ? err.message : 'Summary unavailable. Please try again.';
@@ -221,16 +188,14 @@
     }
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
-
   function formatTime(iso: string) {
     try {
       const diff = Date.now() - new Date(iso).getTime();
-      const m    = Math.floor(diff / 60000);
-      const h    = Math.floor(diff / 3600000);
-      const d    = Math.floor(diff / 86400000);
-      if (m < 1)  return 'Just now';
-      if (h < 1)  return `${m}m ago`;
+      const m = Math.floor(diff / 60000);
+      const h = Math.floor(diff / 3600000);
+      const d = Math.floor(diff / 86400000);
+      if (m < 1) return 'Just now';
+      if (h < 1) return `${m}m ago`;
       if (h < 24) return `${h}h ago`;
       return `${d}d ago`;
     } catch {
@@ -249,8 +214,6 @@
 </script>
 
 <div class="nf-wrap">
-
-  <!-- ── Header ──────────────────────────────────────────────────────────── -->
   <div class="nf-header">
     <div class="nf-header-left">
       <div class="nf-header-icon">
@@ -267,7 +230,6 @@
     </div>
 
     <div class="nf-header-right">
-      <!-- Summarise button -->
       <button
         class="nf-summarise-btn {isSummarising ? 'nf-summarise-btn--loading' : ''}"
         onclick={summariseFeed}
@@ -283,7 +245,6 @@
         {/if}
       </button>
 
-      <!-- Refresh -->
       <button
         class="nf-icon-btn"
         onclick={loadFeed}
@@ -295,7 +256,6 @@
     </div>
   </div>
 
-  <!-- ── AI Summary Panel ───────────────────────────────────────────────── -->
   {#if showSummary}
     <div class="nf-summary-wrap">
       {#if isSummarising}
@@ -303,23 +263,19 @@
           <Loader2 size={18} class="nf-spin" />
           <span>Generating AI summary of your neighbourhood feed…</span>
         </div>
-
       {:else if summaryError}
         <div class="nf-summary-error">
           <AlertTriangle size={14} />
           <span>{summaryError}</span>
           <button onclick={summariseFeed}>Retry</button>
         </div>
-
       {:else if aiSummary}
         {@const mood = moodConfig[aiSummary.mood]}
         {@const MoodIcon = mood.icon}
-
         <div
           class="nf-summary-card"
           style="border-color:{mood.border}; background:linear-gradient(135deg,{mood.bg} 0%,white 100%);"
         >
-          <!-- Summary header -->
           <div class="nf-summary-head">
             <div class="nf-summary-title">
               <span class="nf-mood-chip" style="background:{mood.bg}; color:{mood.color}; border-color:{mood.border};">
@@ -345,18 +301,12 @@
           </div>
 
           {#if summaryExpanded}
-            <!-- Headline -->
             <p class="nf-summary-headline">{aiSummary.headline}</p>
-
-            <!-- Body -->
             <p class="nf-summary-body">{aiSummary.summary}</p>
-
-            <!-- Safety tip -->
             <div class="nf-summary-tip" style="border-color:{mood.border};">
               <Zap size={12} style="color:{mood.color}; flex-shrink:0;" />
               <p>{aiSummary.safety_tip}</p>
             </div>
-
             <p class="nf-summary-time">
               <TrendingUp size={10} />
               Generated {formatTime(aiSummary.generated_at)}
@@ -368,13 +318,12 @@
     </div>
   {/if}
 
-  <!-- ── Filter tabs ────────────────────────────────────────────────────── -->
   <div class="nf-filters">
     {#each ([
-      { value: 'all',      label: 'All'       },
+      { value: 'all', label: 'All' },
       { value: 'incident', label: 'Incidents' },
-      { value: 'alert',    label: 'Alerts'    },
-      { value: 'post',     label: 'Posts'     },
+      { value: 'alert', label: 'Alerts' },
+      { value: 'post', label: 'Posts' },
     ] as const) as f}
       <button
         class="nf-filter-btn {activeFilter === f.value ? 'nf-filter-btn--active' : ''}"
@@ -388,28 +337,22 @@
     {/each}
   </div>
 
-  <!-- ── Feed items ─────────────────────────────────────────────────────── -->
   {#if isLoadingFeed}
     <div class="nf-loading">
       <Loader2 size={24} class="nf-spin" />
       <p>Loading nearby feed…</p>
     </div>
-
   {:else if displayItems.length === 0}
     <div class="nf-empty">
       <Users size={36} />
       <p>No {activeFilter === 'all' ? '' : activeFilter + ' '}activity nearby.</p>
     </div>
-
   {:else}
     <div class="nf-list">
       {#each displayItems as item (item.id)}
         {@const cat = getCatConfig(item.category)}
         {@const CatIcon = cat.icon}
-
         <div class="nf-item nf-item--{item.type}">
-
-          <!-- Item header -->
           <div class="nf-item-head">
             <div class="nf-item-icon" style="background:{cat.bg}; color:{cat.color};">
               <CatIcon size={14} />
@@ -439,13 +382,11 @@
             </div>
           </div>
 
-          <!-- Title + body -->
           <h4 class="nf-item-title">{item.title}</h4>
           {#if item.body}
             <p class="nf-item-body">{item.body}</p>
           {/if}
 
-          <!-- Footer -->
           <div class="nf-item-foot">
             <span class="nf-author">
               {item.isAnonymous ? 'Anonymous' : (item.author ?? 'Community member')}
@@ -466,13 +407,13 @@
               </button>
             </div>
           </div>
-
         </div>
       {/each}
     </div>
   {/if}
-
 </div>
+
+
 <style>
   .nf-wrap {
     font-family: 'DM Sans', system-ui, sans-serif;
