@@ -101,6 +101,7 @@ export const userPreferences = pgTable('user_preferences', {
   notifyLow: boolean('notify_low').default(false).notNull(),
   language: varchar('language', { length: 10 }).default('en'),
   theme: varchar('theme', { length: 20 }).default('light'),
+  data: jsonb('data').$type<UserSettingsData>(),          // ← ADD THIS
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
