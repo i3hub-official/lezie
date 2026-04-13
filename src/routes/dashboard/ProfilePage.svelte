@@ -119,6 +119,12 @@
     saveError = '';
   }
 
+function getKycLevel() {
+    if (data.profile?.ninVerified && data.profile?.bvnVerified) return 'Tier 3';
+    if (data.profile?.ninVerified || data.profile?.bvnVerified) return 'Tier 2';
+    return 'Tier 1';
+  }
+
   async function uploadToCloudinary(file: File, type: 'avatar' | 'cover'): Promise<string | null> {
     const formData = new FormData();
     formData.append('file', file);
@@ -927,9 +933,5 @@
     }
   }
 
-  function getKycLevel() {
-    if (data.profile?.ninVerified && data.profile?.bvnVerified) return 'Tier 3';
-    if (data.profile?.ninVerified || data.profile?.bvnVerified) return 'Tier 2';
-    return 'Tier 1';
-  }
+  
 </style>
