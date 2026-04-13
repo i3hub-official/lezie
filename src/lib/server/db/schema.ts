@@ -315,6 +315,15 @@ export const alertZones = pgTable('alert_zones', {
   index('alert_zones_active_idx').on(table.isActive),
 ]);
 
+// UserSettings
+export const userSettings = pgTable('user_settings', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  settings: jsonb('settings').notNull().$type<UserSettingsData>(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
 // ==================== RELATIONS ====================
 
 export const usersRelations = relations(users, ({ one, many }) => ({
