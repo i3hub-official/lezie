@@ -12,7 +12,9 @@
     Sparkles, Loader2, RefreshCw, Radio, ChevronDown,
     ChevronUp, TrendingUp, Zap, Eye, Filter
   } from 'lucide-svelte';
-import type { haversineKm } from '$lib/server/db/geo';
+  
+  // ✅ FIXED: Import as value, not type
+  import { haversineKm } from '$lib/server/db/geo';
 
   // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -65,6 +67,9 @@ import type { haversineKm } from '$lib/server/db/geo';
   let summaryError     = $state('');
   let summaryExpanded  = $state(true);
   let showSummary      = $state(false);
+  
+  // ✅ Prevent multiple simultaneous load attempts
+  let isLoading = $state(false);
 
   // ── Mood config ────────────────────────────────────────────────────────────
 
@@ -104,47 +109,72 @@ import type { haversineKm } from '$lib/server/db/geo';
 
   // ── Mount: load feed ───────────────────────────────────────────────────────
 
-  onMount(async () => {
-    await loadFeed();
+  onMount(() => {
+    loadFeed();
   });
 
   async function loadFeed() {
-  isLoadingFeed = true;
+    // ✅ Prevent concurrent loads
+    if (isLoading) return;
+    isLoading = true;
+    isLoadingFeed = true;
 
-  const params = new URLSearchParams();
-  if (lat)           params.set('lat',           String(lat));
-  if (lng)           params.set('lng',           String(lng));
-  if (neighbourhood) params.set('neighbourhood', neighbourhood);
+    try {
+      const params = new URLSearchParams();
+      if (lat)           params.set('lat',           String(lat));
+      if (lng)           params.set('lng',           String(lng));
+      if (neighbourhood) params.set('neighbourhood', neighbourhood);
 
-  const res = await fetch(`/api/reports/map?${params}&dateRange=day`);
-  if (res.ok) {
-    const raw = await res.json();
-    // Map map-API shape to FeedItem shape
-    feedItems = raw.map((r: any) => ({
-      id:          r.id,
-      type:        'incident' as const,
-      title:       r.title,
-      body:        r.description,
-      category:    r.category,
-      severity:    r.severity,
-      location:    r.location,
-      distance_km: (lat && lng)
-        ? haversineKm(lat, lng, r.lat, r.lng)
-        : undefined,
-      reported_at: r.time,
-    }))
-    // Enforce 2km radius on client side as final guard
-    .filter((item: any) =>
-      item.distance_km === undefined || item.distance_km <= 2
-    )
-    .sort((a: any, b: any) =>
-      (a.distance_km ?? 99) - (b.distance_km ?? 99)
-    );
-  }
-
-  isLoadingFeed = false;
-}
+      const res = await fetch(`/api/reports/map?${params}&dateRange=day`);
+      
+      if (res.ok) {
+        const raw = await res.json();
         
+        // ✅ Safe haversine calculation with null checks
+        const calculateDistance = (r: any) => {
+          if (lat && lng && r.lat && r.lng) {
+            try {
+              return haversineKm(lat, lng, r.lat, r.lng);
+            } catch (err) {
+              console.warn('Distance calculation failed:', err);
+              return undefined;
+            }
+          }
+          return undefined;
+        };
+        
+        // Map map-API shape to FeedItem shape
+        feedItems = raw
+          .map((r: any) => ({
+            id:          r.id,
+            type:        'incident' as const,
+            title:       r.title || 'Untitled',
+            body:        r.description,
+            category:    r.category,
+            severity:    r.severity,
+            location:    r.location,
+            distance_km: calculateDistance(r),
+            reported_at: r.time || new Date().toISOString(),
+          }))
+          // Enforce 2km radius on client side as final guard
+          .filter((item: any) =>
+            item.distance_km === undefined || item.distance_km <= 2
+          )
+          .sort((a: any, b: any) =>
+            (a.distance_km ?? 99) - (b.distance_km ?? 99)
+          );
+      } else {
+        console.error('Failed to load feed:', res.status);
+        feedItems = [];
+      }
+    } catch (err) {
+      console.error('Error loading neighbourhood feed:', err);
+      feedItems = [];
+    } finally {
+      isLoadingFeed = false;
+      isLoading = false;
+    }
+  }
 
   // ── AI Summarise ──────────────────────────────────────────────────────────
 
@@ -184,6 +214,7 @@ import type { haversineKm } from '$lib/server/db/geo';
       summaryExpanded = true;
 
     } catch (err: unknown) {
+      console.error('AI summary error:', err);
       summaryError = err instanceof Error ? err.message : 'Summary unavailable. Please try again.';
     } finally {
       isSummarising = false;
@@ -193,14 +224,18 @@ import type { haversineKm } from '$lib/server/db/geo';
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   function formatTime(iso: string) {
-    const diff = Date.now() - new Date(iso).getTime();
-    const m    = Math.floor(diff / 60000);
-    const h    = Math.floor(diff / 3600000);
-    const d    = Math.floor(diff / 86400000);
-    if (m < 1)  return 'Just now';
-    if (h < 1)  return `${m}m ago`;
-    if (h < 24) return `${h}h ago`;
-    return `${d}d ago`;
+    try {
+      const diff = Date.now() - new Date(iso).getTime();
+      const m    = Math.floor(diff / 60000);
+      const h    = Math.floor(diff / 3600000);
+      const d    = Math.floor(diff / 86400000);
+      if (m < 1)  return 'Just now';
+      if (h < 1)  return `${m}m ago`;
+      if (h < 24) return `${h}h ago`;
+      return `${d}d ago`;
+    } catch {
+      return 'Recently';
+    }
   }
 
   function formatDistance(km?: number) {
@@ -368,7 +403,7 @@ import type { haversineKm } from '$lib/server/db/geo';
 
   {:else}
     <div class="nf-list">
-      {#each displayItems as item}
+      {#each displayItems as item (item.id)}
         {@const cat = getCatConfig(item.category)}
         {@const CatIcon = cat.icon}
 
@@ -438,7 +473,6 @@ import type { haversineKm } from '$lib/server/db/geo';
   {/if}
 
 </div>
-
 <style>
   .nf-wrap {
     font-family: 'DM Sans', system-ui, sans-serif;
