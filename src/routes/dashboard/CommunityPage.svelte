@@ -744,7 +744,7 @@
 
 
 <style>
-  ..loading-placeholder, .error-placeholder {
+  .loading-placeholder, .error-placeholder {
     text-align: center;
     padding: 2rem;
     color: #64748b;
