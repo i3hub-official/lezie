@@ -23,6 +23,7 @@
   let showNeighbourhoodFeed = $state(true);
   let userLat               = $state<number | null>(null);
   let userLng               = $state<number | null>(null);
+  let isLoading             = $state(false); // ✅ Added missing state
 
   let newPost = $state({
     content:     '',
@@ -31,50 +32,62 @@
     scope:       'global' as 'global' | 'local',
   });
 
-  // Get location for NeighbourhoodFeed display only — no invalidateAll
-  // to avoid freezing. Location-filtered data requires a manual page reload.
+  // ✅ Debounce search to prevent freezing
+  let debouncedSearchQuery = $state('');
+  let searchTimeout: ReturnType<typeof setTimeout>;
+
+  $effect(() => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      debouncedSearchQuery = searchQuery;
+    }, 300);
+  });
+
+  // Get location - ✅ Added error handling to prevent repeated attempts
   onMount(() => {
-    if (navigator.geolocation) {
+    if (navigator.geolocation && !userLat && !userLng) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           userLat = pos.coords.latitude;
           userLng = pos.coords.longitude;
         },
-        () => {},
-        { timeout: 8000, maximumAge: 60000 }
+        (err) => {
+          console.warn('Geolocation error:', err.message);
+        },
+        { timeout: 5000, maximumAge: 60000, enableHighAccuracy: false }
       );
     }
   });
 
-  // ── Filtered data ──────────────────────────────────────────
+  // ── Filtered data with debounced search ──────────────────
   const filteredPosts = $derived(
-    !searchQuery ? data.posts
+    !debouncedSearchQuery ? data.posts
       : data.posts.filter(p =>
-          p.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.authorName.toLowerCase().includes(searchQuery.toLowerCase())
+          p.content.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+          p.authorName.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
         )
   );
 
   const filteredDiscussions = $derived(
-    !searchQuery ? data.discussions
+    !debouncedSearchQuery ? data.discussions
       : data.discussions.filter(d =>
-          d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          d.authorName.toLowerCase().includes(searchQuery.toLowerCase())
+          d.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+          d.authorName.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
         )
   );
 
   const filteredMembers = $derived(
-    !searchQuery ? data.members
+    !debouncedSearchQuery ? data.members
       : data.members.filter(m =>
-          m.name.toLowerCase().includes(searchQuery.toLowerCase())
+          m.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
         )
   );
 
   const filteredEvents = $derived(
-    !searchQuery ? data.events
+    !debouncedSearchQuery ? data.events
       : data.events.filter(e =>
-          e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          e.location.toLowerCase().includes(searchQuery.toLowerCase())
+          e.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+          e.location.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
         )
   );
 
@@ -119,7 +132,6 @@
     showNeighbourhoodFeed = showFeed = showDiscussions = showMembers = showEvents = !all;
   }
 </script>
-
 
 <div class="community-page">
   <div class="community-container">
