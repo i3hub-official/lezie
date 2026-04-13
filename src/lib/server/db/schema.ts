@@ -59,6 +59,7 @@ export const users = pgTable('users', {
   lastActive:   timestamp('last_active').defaultNow().notNull(),
   createdAt:    timestamp('created_at').defaultNow().notNull(),
   updatedAt:    timestamp('updated_at').defaultNow().notNull(),
+  hashable:     text('hashable'), // For auth relations
 }, (table) => [
   // Unique constraints on hash columns — deterministic, no PII in index
   uniqueIndex('users_email_hash_idx').on(table.emailHash).where(sql`${table.emailHash} IS NOT NULL`),
@@ -263,13 +264,15 @@ export const savedLocations = pgTable('saved_locations', {
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
+// ==================== ALERT ZONES (UPDATED) ====================
+
 export const alertZones = pgTable('alert_zones', {
   id:                uuid('id').primaryKey().defaultRandom(),
   userId:            text('user_id').references(() => users.id).notNull(),
   name:              varchar('name', { length: 255 }).notNull(),
   radius:            integer('radius').default(2).notNull(),        // km, max 2
-  categories:        jsonb('categories').notNull().$type<string[]>(),
-  severity:          jsonb('severity').notNull().$type<string[]>(),
+  categories:        jsonb('categories').notNull().$type<string[]>(), // ['theft', 'assault', 'fire', etc]
+  severity:          jsonb('severity').notNull().$type<string[]>(),   // ['low', 'medium', 'high', 'critical']
   isActive:          boolean('is_active').default(true).notNull(),
   locationLabel:     varchar('location_label', { length: 255 }),
   lat:               text('lat'),                                   // stored as text to avoid float precision issues
@@ -281,6 +284,58 @@ export const alertZones = pgTable('alert_zones', {
 }, (table) => [
   index('alert_zones_user_idx').on(table.userId),
   index('alert_zones_active_idx').on(table.isActive),
+  index('alert_zones_location_idx').on(table.lat, table.lng),
+]);
+
+// Alert Zone Triggers - when a zone is triggered by an incident
+export const alertZoneTriggers = pgTable('alert_zone_triggers', {
+  id:                uuid('id').primaryKey().defaultRandom(),
+  zoneId:            uuid('zone_id').references(() => alertZones.id, { onDelete: 'cascade' }).notNull(),
+  incidentId:        uuid('incident_id'),                           // Reference to incidents table
+  postId:            uuid('post_id'),                               // Reference to community_posts
+  triggerType:       varchar('trigger_type', { length: 50 }).notNull(), // 'incident', 'post', 'report'
+  category:          varchar('category', { length: 50 }).notNull(),
+  severity:          varchar('severity', { length: 20 }).notNull(),
+  message:           text('message'),
+  triggeredAt:       timestamp('triggered_at').defaultNow().notNull(),
+  isNotified:        boolean('is_notified').default(false).notNull(),
+  notifiedAt:        timestamp('notified_at'),
+  metadata:          jsonb('metadata').$type<Record<string, any>>(),
+}, (table) => [
+  index('alert_zone_triggers_zone_idx').on(table.zoneId),
+  index('alert_zone_triggers_triggered_idx').on(table.triggeredAt),
+  index('alert_zone_triggers_notified_idx').on(table.isNotified),
+]);
+
+// User Alert Zone Subscriptions
+export const userAlertSubscriptions = pgTable('user_alert_subscriptions', {
+  id:                uuid('id').primaryKey().defaultRandom(),
+  userId:            text('user_id').references(() => users.id).notNull(),
+  zoneId:            uuid('zone_id').references(() => alertZones.id, { onDelete: 'cascade' }).notNull(),
+  isActive:          boolean('is_active').default(true).notNull(),
+  subscribedAt:      timestamp('subscribed_at').defaultNow().notNull(),
+  unsubscribedAt:    timestamp('unsubscribed_at'),
+}, (table) => [
+  index('user_alert_subscriptions_user_idx').on(table.userId),
+  index('user_alert_subscriptions_zone_idx').on(table.zoneId),
+  uniqueIndex('user_alert_subscriptions_unique_idx').on(table.userId, table.zoneId),
+]);
+
+// Alert Zone Notifications Log
+export const alertZoneNotifications = pgTable('alert_zone_notifications', {
+  id:                uuid('id').primaryKey().defaultRandom(),
+  zoneId:            uuid('zone_id').references(() => alertZones.id, { onDelete: 'cascade' }).notNull(),
+  userId:            text('user_id').references(() => users.id).notNull(),
+  triggerId:         uuid('trigger_id').references(() => alertZoneTriggers.id, { onDelete: 'cascade' }).notNull(),
+  channel:           varchar('channel', { length: 20 }).notNull(), // 'push', 'email', 'sms', 'in_app'
+  sentAt:            timestamp('sent_at').defaultNow().notNull(),
+  delivered:         boolean('delivered').default(false),
+  readAt:            timestamp('read_at'),
+  metadata:          jsonb('metadata').$type<Record<string, any>>(),
+}, (table) => [
+  index('alert_zone_notifications_zone_idx').on(table.zoneId),
+  index('alert_zone_notifications_user_idx').on(table.userId),
+  index('alert_zone_notifications_sent_idx').on(table.sentAt),
 ]);
 
 
@@ -306,7 +361,9 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   sessions: many(sessions),
   identityFlags: many(identityFlags),
   savedLocations: many(savedLocations),
-alertZones: many(alertZones)
+  alertZones: many(alertZones),
+  alertSubscriptions: many(userAlertSubscriptions),
+  alertNotifications: many(alertZoneNotifications),
 }));
 
 export const reportsRelations = relations(reports, ({ one, many }) => ({
@@ -326,11 +383,62 @@ export const reportsRelations = relations(reports, ({ one, many }) => ({
   comments: many(reportComments)
 }));
 
+// ==================== ALERT ZONES RELATIONS ====================
 
-
-export const alertZonesRelations = relations(alertZones, ({ one }) => ({
+export const alertZonesRelations = relations(alertZones, ({ one, many }) => ({
   user: one(users, {
     fields: [alertZones.userId],
     references: [users.id],
   }),
+  triggers: many(alertZoneTriggers),
+  subscriptions: many(userAlertSubscriptions),
+  notifications: many(alertZoneNotifications),
 }));
+
+export const alertZoneTriggersRelations = relations(alertZoneTriggers, ({ one }) => ({
+  zone: one(alertZones, {
+    fields: [alertZoneTriggers.zoneId],
+    references: [alertZones.id],
+  }),
+}));
+
+export const userAlertSubscriptionsRelations = relations(userAlertSubscriptions, ({ one }) => ({
+  user: one(users, {
+    fields: [userAlertSubscriptions.userId],
+    references: [users.id],
+  }),
+  zone: one(alertZones, {
+    fields: [userAlertSubscriptions.zoneId],
+    references: [alertZones.id],
+  }),
+}));
+
+export const alertZoneNotificationsRelations = relations(alertZoneNotifications, ({ one }) => ({
+  zone: one(alertZones, {
+    fields: [alertZoneNotifications.zoneId],
+    references: [alertZones.id],
+  }),
+  user: one(users, {
+    fields: [alertZoneNotifications.userId],
+    references: [users.id],
+  }),
+  trigger: one(alertZoneTriggers, {
+    fields: [alertZoneNotifications.triggerId],
+    references: [alertZoneTriggers.id],
+  }),
+}));
+
+// ==================== TYPES ====================
+
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type NewUserProfile = typeof userProfiles.$inferInsert;
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type Report = typeof reports.$inferSelect;
+export type NewReport = typeof reports.$inferInsert;
+export type AlertZone = typeof alertZones.$inferSelect;
+export type NewAlertZone = typeof alertZones.$inferInsert;
+export type AlertZoneTrigger = typeof alertZoneTriggers.$inferSelect;
+export type UserAlertSubscription = typeof userAlertSubscriptions.$inferSelect;
+export type AlertZoneNotification = typeof alertZoneNotifications.$inferSelect;
