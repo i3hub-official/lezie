@@ -23,14 +23,8 @@
   let showNeighbourhoodFeed = $state(true);
   let userLat               = $state<number | null>(null);
   let userLng               = $state<number | null>(null);
-  let isLoading             = $state(false);
   
-  // ✅ Memoize filtered data to prevent recalculations
-  let filteredPostsCache = $state<any[]>([]);
-  let filteredDiscussionsCache = $state<any[]>([]);
-  let filteredMembersCache = $state<any[]>([]);
-  let filteredEventsCache = $state<any[]>([]);
-
+  // Simple state without memoization caches
   let newPost = $state({
     content:     '',
     category:    'general',
@@ -38,50 +32,58 @@
     scope:       'global' as 'global' | 'local',
   });
 
-  // ✅ Debounce search
+  // Simple debounce - no $effect
   let debouncedSearchQuery = $state('');
   let searchTimeout: ReturnType<typeof setTimeout>;
-
-  $effect(() => {
+  
+  function handleSearchInput(e: Event) {
+    const target = e.target as HTMLInputElement;
+    searchQuery = target.value;
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
       debouncedSearchQuery = searchQuery;
-    }, 500); // Increased debounce to 500ms
-  });
+    }, 300);
+  }
 
-  // ✅ Update filtered data only when debounced search changes
-  $effect(() => {
-    if (!debouncedSearchQuery) {
-      filteredPostsCache = data.posts;
-      filteredDiscussionsCache = data.discussions;
-      filteredMembersCache = data.members;
-      filteredEventsCache = data.events;
-    } else {
-      const query = debouncedSearchQuery.toLowerCase();
-      filteredPostsCache = data.posts.filter(p =>
-        p.content.toLowerCase().includes(query) ||
-        p.authorName.toLowerCase().includes(query)
-      );
-      filteredDiscussionsCache = data.discussions.filter(d =>
-        d.title.toLowerCase().includes(query) ||
-        d.authorName.toLowerCase().includes(query)
-      );
-      filteredMembersCache = data.members.filter(m =>
-        m.name.toLowerCase().includes(query)
-      );
-      filteredEventsCache = data.events.filter(e =>
-        e.title.toLowerCase().includes(query) ||
-        e.location.toLowerCase().includes(query)
-      );
-    }
-  });
+  // Simple filtered data - computed on demand
+  function getFilteredPosts() {
+    if (!debouncedSearchQuery) return data.posts;
+    const query = debouncedSearchQuery.toLowerCase();
+    return data.posts.filter(p =>
+      p.content.toLowerCase().includes(query) ||
+      p.authorName.toLowerCase().includes(query)
+    );
+  }
 
-  // ✅ Prevent geolocation from running repeatedly
-  let locationFetched = $state(false);
-  
+  function getFilteredDiscussions() {
+    if (!debouncedSearchQuery) return data.discussions;
+    const query = debouncedSearchQuery.toLowerCase();
+    return data.discussions.filter(d =>
+      d.title.toLowerCase().includes(query) ||
+      d.authorName.toLowerCase().includes(query)
+    );
+  }
+
+  function getFilteredMembers() {
+    if (!debouncedSearchQuery) return data.members;
+    const query = debouncedSearchQuery.toLowerCase();
+    return data.members.filter(m =>
+      m.name.toLowerCase().includes(query)
+    );
+  }
+
+  function getFilteredEvents() {
+    if (!debouncedSearchQuery) return data.events;
+    const query = debouncedSearchQuery.toLowerCase();
+    return data.events.filter(e =>
+      e.title.toLowerCase().includes(query) ||
+      e.location.toLowerCase().includes(query)
+    );
+  }
+
+  // Simple geolocation - runs once
   onMount(() => {
-    if (navigator.geolocation && !locationFetched && !userLat && !userLng) {
-      locationFetched = true;
+    if (navigator.geolocation && !userLat && !userLng) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           userLat = pos.coords.latitude;
@@ -206,11 +208,14 @@
         <input 
           type="text" 
           placeholder="Search discussions, posts, or members..." 
-          bind:value={searchQuery}
+          on:input={handleSearchInput}
           class="search-input"
         />
         {#if searchQuery}
-          <button class="clear-search" onclick={() => searchQuery = ''}>
+          <button class="clear-search" onclick={() => {
+            searchQuery = '';
+            debouncedSearchQuery = '';
+          }}>
             <X size={16} />
           </button>
         {/if}
@@ -238,7 +243,7 @@
         >
           <MessageSquare size={14} />
           <span>Discussions</span>
-          <span class="filter-count">{filteredDiscussionsCache.length}</span>
+          <span class="filter-count">{getFilteredDiscussions().length}</span>
         </button>
         <button 
           class="filter-btn {showMembers ? 'active' : ''}" 
@@ -246,7 +251,7 @@
         >
           <Users size={14} />
           <span>Members</span>
-          <span class="filter-count">{filteredMembersCache.length}</span>
+          <span class="filter-count">{getFilteredMembers().length}</span>
         </button>
         <button 
           class="filter-btn {showEvents ? 'active' : ''}" 
@@ -254,7 +259,7 @@
         >
           <Calendar size={14} />
           <span>Events</span>
-          <span class="filter-count">{filteredEventsCache.length}</span>
+          <span class="filter-count">{getFilteredEvents().length}</span>
         </button>
       </div>
       <button class="toggle-all-btn" onclick={toggleAllSections}>
@@ -263,292 +268,282 @@
       </button>
     </div>
 
-    <!-- ✅ Add key blocks to force re-render only when needed -->
-    {#key showNeighbourhoodFeed}
-      {#if showNeighbourhoodFeed}
-        <div class="section-container">
-          <div class="section-header">
-            <div class="section-title">
-              <Radio size={18} class="section-icon" />
-              <h2>Nearby Activity</h2>
-              <span class="section-count">within 2km</span>
-            </div>
-          </div>
-          <div class="section-content section-content--flush">
-            <!-- ✅ Only render if we have location, otherwise show loading -->
-            {#if userLat && userLng}
-              {@const memoKey = `${userLat}-${userLng}`}
-              {#key memoKey}
-                <NeighbourhoodFeed
-                  lat={userLat}
-                  lng={userLng}
-                  neighbourhood=""
-                />
-              {/key}
-            {:else}
-              <div class="loading-placeholder">
-                <p>Getting your location...</p>
-              </div>
-            {/if}
+    <!-- Neighbourhood Feed Section - removed #key blocks -->
+    {#if showNeighbourhoodFeed}
+      <div class="section-container">
+        <div class="section-header">
+          <div class="section-title">
+            <Radio size={18} class="section-icon" />
+            <h2>Nearby Activity</h2>
+            <span class="section-count">within 2km</span>
           </div>
         </div>
-      {/if}
-    {/key}
+        <div class="section-content section-content--flush">
+          {#if userLat && userLng}
+            <NeighbourhoodFeed
+              lat={userLat}
+              lng={userLng}
+              neighbourhood=""
+            />
+          {:else}
+            <div class="loading-placeholder">
+              <p>Getting your location...</p>
+            </div>
+          {/if}
+        </div>
+      </div>
+    {/if}
 
     <!-- Community Feed Section -->
-    {#key showFeed}
-      {#if showFeed}
-        <div class="section-container">
-          <div class="section-header">
-            <div class="section-title">
-              <TrendingUp size={18} class="section-icon" />
-              <h2>Community Feed</h2>
-              <span class="section-count">{filteredPostsCache.length} posts</span>
-            </div>
-          </div>
-
-          <div class="section-content">
-            {#if filteredPostsCache.length === 0}
-              <div class="empty-state">
-                <MessageCircle size={48} />
-                <p>No posts found matching your search</p>
-              </div>
-            {:else}
-              <div class="posts-grid">
-                {#each filteredPostsCache as post (post.id)}
-                  {@const CategoryIcon = getCategoryIcon(post.category)}
-                  <div class="post-card">
-                    {#if post.isPinned}
-                      <div class="post-pinned">
-                        <Star size={12} />
-                        <span>Pinned</span>
-                      </div>
-                    {/if}
-
-                    <div class="post-header">
-                      <img 
-                        src="https://ui-avatars.com/api/?name={encodeURIComponent(post.authorName)}&background=6a2c91&color=fff" 
-                        alt={post.authorName} 
-                        class="post-avatar" 
-                      />
-                      <div class="post-author">
-                        <div class="author-name">
-                          {post.authorName}
-                          {#if post.isVerified}
-                            <CheckCircle size={14} class="verified-badge" />
-                          {/if}
-                        </div>
-                        <div class="author-role">{formatDate(post.createdAt)}</div>
-                      </div>
-                      <div class="post-category" style="background: {getCategoryColor(post.category)}10; color: {getCategoryColor(post.category)}">
-                        <CategoryIcon size={12} />
-                        <span>{getCategoryLabel(post.category)}</span>
-                      </div>
-                    </div>
-
-                    <div class="post-content">
-                      <p>{post.content}</p>
-                    </div>
-
-                    <div class="post-footer">
-                      <div class="post-stats">
-                        <form method="POST" action="?/toggleLike" use:enhance>
-                          <input type="hidden" name="postId" value={post.id} />
-                          <button type="submit" class="stat-btn {post.isLiked ? 'liked' : ''}">
-                            <ThumbsUp size={14} />
-                            <span>{post.likeCount}</span>
-                          </button>
-                        </form>
-                        <button class="stat-btn">
-                          <MessageCircle size={14} />
-                          <span>{post.commentCount}</span>
-                        </button>
-                        <button class="stat-btn">
-                          <Share2 size={14} />
-                          <span>{post.shareCount}</span>
-                        </button>
-                      </div>
-                      <div class="post-time">
-                        <Clock size={12} />
-                        <span>{formatDate(post.createdAt)}</span>
-                      </div>
-                    </div>
-                  </div>
-                {/each}
-              </div>
-            {/if}
+    {#if showFeed}
+      <div class="section-container">
+        <div class="section-header">
+          <div class="section-title">
+            <TrendingUp size={18} class="section-icon" />
+            <h2>Community Feed</h2>
+            <span class="section-count">{getFilteredPosts().length} posts</span>
           </div>
         </div>
-      {/if}
-    {/key}
+
+        <div class="section-content">
+          {@const filteredPosts = getFilteredPosts()}
+          {#if filteredPosts.length === 0}
+            <div class="empty-state">
+              <MessageCircle size={48} />
+              <p>No posts found matching your search</p>
+            </div>
+          {:else}
+            <div class="posts-grid">
+              {#each filteredPosts as post (post.id)}
+                {@const CategoryIcon = getCategoryIcon(post.category)}
+                <div class="post-card">
+                  {#if post.isPinned}
+                    <div class="post-pinned">
+                      <Star size={12} />
+                      <span>Pinned</span>
+                    </div>
+                  {/if}
+
+                  <div class="post-header">
+                    <img 
+                      src="https://ui-avatars.com/api/?name={encodeURIComponent(post.authorName)}&background=6a2c91&color=fff" 
+                      alt={post.authorName} 
+                      class="post-avatar" 
+                    />
+                    <div class="post-author">
+                      <div class="author-name">
+                        {post.authorName}
+                        {#if post.isVerified}
+                          <CheckCircle size={14} class="verified-badge" />
+                        {/if}
+                      </div>
+                      <div class="author-role">{formatDate(post.createdAt)}</div>
+                    </div>
+                    <div class="post-category" style="background: {getCategoryColor(post.category)}10; color: {getCategoryColor(post.category)}">
+                      <CategoryIcon size={12} />
+                      <span>{getCategoryLabel(post.category)}</span>
+                    </div>
+                  </div>
+
+                  <div class="post-content">
+                    <p>{post.content}</p>
+                  </div>
+
+                  <div class="post-footer">
+                    <div class="post-stats">
+                      <form method="POST" action="?/toggleLike" use:enhance>
+                        <input type="hidden" name="postId" value={post.id} />
+                        <button type="submit" class="stat-btn {post.isLiked ? 'liked' : ''}">
+                          <ThumbsUp size={14} />
+                          <span>{post.likeCount}</span>
+                        </button>
+                      </form>
+                      <button class="stat-btn">
+                        <MessageCircle size={14} />
+                        <span>{post.commentCount}</span>
+                      </button>
+                      <button class="stat-btn">
+                        <Share2 size={14} />
+                        <span>{post.shareCount}</span>
+                      </button>
+                    </div>
+                    <div class="post-time">
+                      <Clock size={12} />
+                      <span>{formatDate(post.createdAt)}</span>
+                    </div>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      </div>
+    {/if}
 
     <!-- Discussions Section -->
-    {#key showDiscussions}
-      {#if showDiscussions}
-        <div class="section-container">
-          <div class="section-header">
-            <div class="section-title">
-              <MessageSquare size={18} class="section-icon" />
-              <h2>Discussions</h2>
-              <span class="section-count">{filteredDiscussionsCache.length} discussions</span>
-            </div>
-          </div>
-
-          <div class="section-content">
-            {#if filteredDiscussionsCache.length === 0}
-              <div class="empty-state">
-                <MessageSquare size={48} />
-                <p>No discussions found matching your search</p>
-              </div>
-            {:else}
-              <div class="discussions-list">
-                {#each filteredDiscussionsCache as discussion (discussion.id)}
-                  {@const CategoryIcon = getCategoryIcon(discussion.category)}
-                  <div class="discussion-card">
-                    {#if discussion.isSticky}
-                      <div class="discussion-sticky">
-                        <Star size={12} />
-                        <span>Sticky</span>
-                      </div>
-                    {/if}
-
-                    <div class="discussion-header">
-                      <div class="discussion-category" style="background: {getCategoryColor(discussion.category)}10; color: {getCategoryColor(discussion.category)}">
-                        <CategoryIcon size={12} />
-                        <span>{getCategoryLabel(discussion.category)}</span>
-                      </div>
-                      <div class="discussion-stats">
-                        <span><MessageCircle size={12} /> {discussion.replyCount} replies</span>
-                        <span><Eye size={12} /> {discussion.viewCount} views</span>
-                      </div>
-                    </div>
-
-                    <h3 class="discussion-title">{discussion.title}</h3>
-
-                    <div class="discussion-footer">
-                      <span class="discussion-author">by {discussion.authorName}</span>
-                      <span class="discussion-time">Last activity {formatDate(discussion.lastActivityAt)}</span>
-                    </div>
-                  </div>
-                {/each}
-              </div>
-            {/if}
+    {#if showDiscussions}
+      <div class="section-container">
+        <div class="section-header">
+          <div class="section-title">
+            <MessageSquare size={18} class="section-icon" />
+            <h2>Discussions</h2>
+            <span class="section-count">{getFilteredDiscussions().length} discussions</span>
           </div>
         </div>
-      {/if}
-    {/key}
+
+        <div class="section-content">
+          {@const filteredDiscussions = getFilteredDiscussions()}
+          {#if filteredDiscussions.length === 0}
+            <div class="empty-state">
+              <MessageSquare size={48} />
+              <p>No discussions found matching your search</p>
+            </div>
+          {:else}
+            <div class="discussions-list">
+              {#each filteredDiscussions as discussion (discussion.id)}
+                {@const CategoryIcon = getCategoryIcon(discussion.category)}
+                <div class="discussion-card">
+                  {#if discussion.isSticky}
+                    <div class="discussion-sticky">
+                      <Star size={12} />
+                      <span>Sticky</span>
+                    </div>
+                  {/if}
+
+                  <div class="discussion-header">
+                    <div class="discussion-category" style="background: {getCategoryColor(discussion.category)}10; color: {getCategoryColor(discussion.category)}">
+                      <CategoryIcon size={12} />
+                      <span>{getCategoryLabel(discussion.category)}</span>
+                    </div>
+                    <div class="discussion-stats">
+                      <span><MessageCircle size={12} /> {discussion.replyCount} replies</span>
+                      <span><Eye size={12} /> {discussion.viewCount} views</span>
+                    </div>
+                  </div>
+
+                  <h3 class="discussion-title">{discussion.title}</h3>
+
+                  <div class="discussion-footer">
+                    <span class="discussion-author">by {discussion.authorName}</span>
+                    <span class="discussion-time">Last activity {formatDate(discussion.lastActivityAt)}</span>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      </div>
+    {/if}
 
     <!-- Members Section -->
-    {#key showMembers}
-      {#if showMembers}
-        <div class="section-container">
-          <div class="section-header">
-            <div class="section-title">
-              <Users size={18} class="section-icon" />
-              <h2>Members</h2>
-              <span class="section-count">{filteredMembersCache.length} members</span>
-            </div>
-          </div>
-
-          <div class="section-content">
-            {#if filteredMembersCache.length === 0}
-              <div class="empty-state">
-                <Users size={48} />
-                <p>No members found matching your search</p>
-              </div>
-            {:else}
-              <div class="members-grid">
-                {#each filteredMembersCache as member (member.id)}
-                  <div class="member-card">
-                    <div class="member-avatar-wrapper">
-                      <img 
-                        src="https://ui-avatars.com/api/?name={encodeURIComponent(member.name)}&background=6a2c91&color=fff" 
-                        alt={member.name} 
-                        class="member-avatar" 
-                      />
-                    </div>
-
-                    <h4 class="member-name">{member.name}</h4>
-                    <div class="member-role">{tierToRole(member.tier)}</div>
-
-                    <div class="member-stats">
-                      <div class="member-stat">
-                        <Award size={14} />
-                        <span>{member.trustScore}</span>
-                      </div>
-                    </div>
-
-                    {#if !member.isCurrentUser}
-                      <form method="POST" action="?/toggleFollow" use:enhance>
-                        <input type="hidden" name="followedId" value={member.id} />
-                        <button type="submit" class="follow-btn {member.isFollowing ? 'following' : ''}">
-                          <UserPlus size={14} />
-                          {member.isFollowing ? 'Following' : 'Follow'}
-                        </button>
-                      </form>
-                    {/if}
-                  </div>
-                {/each}
-              </div>
-            {/if}
+    {#if showMembers}
+      <div class="section-container">
+        <div class="section-header">
+          <div class="section-title">
+            <Users size={18} class="section-icon" />
+            <h2>Members</h2>
+            <span class="section-count">{getFilteredMembers().length} members</span>
           </div>
         </div>
-      {/if}
-    {/key}
+
+        <div class="section-content">
+          {@const filteredMembers = getFilteredMembers()}
+          {#if filteredMembers.length === 0}
+            <div class="empty-state">
+              <Users size={48} />
+              <p>No members found matching your search</p>
+            </div>
+          {:else}
+            <div class="members-grid">
+              {#each filteredMembers as member (member.id)}
+                <div class="member-card">
+                  <div class="member-avatar-wrapper">
+                    <img 
+                      src="https://ui-avatars.com/api/?name={encodeURIComponent(member.name)}&background=6a2c91&color=fff" 
+                      alt={member.name} 
+                      class="member-avatar" 
+                    />
+                  </div>
+
+                  <h4 class="member-name">{member.name}</h4>
+                  <div class="member-role">{tierToRole(member.tier)}</div>
+
+                  <div class="member-stats">
+                    <div class="member-stat">
+                      <Award size={14} />
+                      <span>{member.trustScore}</span>
+                    </div>
+                  </div>
+
+                  {#if !member.isCurrentUser}
+                    <form method="POST" action="?/toggleFollow" use:enhance>
+                      <input type="hidden" name="followedId" value={member.id} />
+                      <button type="submit" class="follow-btn {member.isFollowing ? 'following' : ''}">
+                        <UserPlus size={14} />
+                        {member.isFollowing ? 'Following' : 'Follow'}
+                      </button>
+                    </form>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      </div>
+    {/if}
 
     <!-- Events Section -->
-    {#key showEvents}
-      {#if showEvents}
-        <div class="section-container">
-          <div class="section-header">
-            <div class="section-title">
-              <Calendar size={18} class="section-icon" />
-              <h2>Upcoming Events</h2>
-              <span class="section-count">{filteredEventsCache.length} events</span>
-            </div>
-          </div>
-
-          <div class="section-content">
-            {#if filteredEventsCache.length === 0}
-              <div class="empty-state">
-                <Calendar size={48} />
-                <p>No events found matching your search</p>
-              </div>
-            {:else}
-              <div class="events-grid">
-                {#each filteredEventsCache as event (event.id)}
-                  <div class="event-card">
-                    <div class="event-date-badge">
-                      <span class="event-month">{formatEventDate(event.startsAt).split(' ')[0]}</span>
-                      <span class="event-day">{formatEventDate(event.startsAt).split(' ')[1]}</span>
-                    </div>
-
-                    <div class="event-details">
-                      <h4 class="event-title">{event.title}</h4>
-                      <div class="event-info">
-                        <span><MapPin size={12} /> {event.location}</span>
-                        <span><Users size={12} /> {event.attendeeCount}{event.maxAttendees ? `/${event.maxAttendees}` : ''} attending</span>
-                      </div>
-                      {#if event.maxAttendees}
-                        <div class="event-progress">
-                          <div class="progress-bar" style="width: {(event.attendeeCount / event.maxAttendees) * 100}%"></div>
-                        </div>
-                      {/if}
-                      <form method="POST" action="?/toggleRsvp" use:enhance>
-                        <input type="hidden" name="eventId" value={event.id} />
-                        <button type="submit" class="rsvp-btn {event.isAttending ? 'attending' : ''}">
-                          {event.isAttending ? '✓ Going' : 'RSVP Now'}
-                        </button>
-                      </form>
-                    </div>
-                  </div>
-                {/each}
-              </div>
-            {/if}
+    {#if showEvents}
+      <div class="section-container">
+        <div class="section-header">
+          <div class="section-title">
+            <Calendar size={18} class="section-icon" />
+            <h2>Upcoming Events</h2>
+            <span class="section-count">{getFilteredEvents().length} events</span>
           </div>
         </div>
-      {/if}
-    {/key}
+
+        <div class="section-content">
+          {@const filteredEvents = getFilteredEvents()}
+          {#if filteredEvents.length === 0}
+            <div class="empty-state">
+              <Calendar size={48} />
+              <p>No events found matching your search</p>
+            </div>
+          {:else}
+            <div class="events-grid">
+              {#each filteredEvents as event (event.id)}
+                <div class="event-card">
+                  <div class="event-date-badge">
+                    <span class="event-month">{formatEventDate(event.startsAt).split(' ')[0]}</span>
+                    <span class="event-day">{formatEventDate(event.startsAt).split(' ')[1]}</span>
+                  </div>
+
+                  <div class="event-details">
+                    <h4 class="event-title">{event.title}</h4>
+                    <div class="event-info">
+                      <span><MapPin size={12} /> {event.location}</span>
+                      <span><Users size={12} /> {event.attendeeCount}{event.maxAttendees ? `/${event.maxAttendees}` : ''} attending</span>
+                    </div>
+                    {#if event.maxAttendees}
+                      <div class="event-progress">
+                        <div class="progress-bar" style="width: {(event.attendeeCount / event.maxAttendees) * 100}%"></div>
+                      </div>
+                    {/if}
+                    <form method="POST" action="?/toggleRsvp" use:enhance>
+                      <input type="hidden" name="eventId" value={event.id} />
+                      <button type="submit" class="rsvp-btn {event.isAttending ? 'attending' : ''}">
+                        {event.isAttending ? '✓ Going' : 'RSVP Now'}
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      </div>
+    {/if}
 
     <!-- Empty state when no sections are visible -->
     {#if !showFeed && !showDiscussions && !showMembers && !showEvents && !showNeighbourhoodFeed}
