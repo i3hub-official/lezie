@@ -248,11 +248,7 @@ const body = await res.json();
           <span><Calendar size={13} /> Member since {joinDate}</span>
         </div>
       </div>
-      <div class="hero-actions">
-        <button class="btn btn-outline btn-sm" onclick={handleLogout}>
-          <LogOut size={14} /> Sign out
-        </button>
-      </div>
+
     </div>
 
     <!-- Tabs -->
