@@ -156,25 +156,25 @@
     switch(client.toLowerCase()) {
       case 'gmail':
         if (isIOS) {
-          return 'googlegmail://';  // Opens Gmail app on iOS
+          return 'googlegmail://';  // Opens Gmail app to inbox
         } else if (isAndroid) {
-          return 'intent://mail/#Intent;scheme=mailto;package=com.google.android.gm;end';
+          return 'intent://mail/#Intent;scheme=mailto;package=com.google.android.gm;end'; // Opens Gmail app
         }
         return 'https://mail.google.com';
       
       case 'outlook':
         if (isIOS) {
-          return 'ms-outlook://';  // Opens Outlook app on iOS
+          return 'ms-outlook://';  // Opens Outlook app to inbox
         } else if (isAndroid) {
-          return 'intent://mail/#Intent;scheme=mailto;package=com.microsoft.office.outlook;end';
+          return 'intent://mail/#Intent;scheme=mailto;package=com.microsoft.office.outlook;end'; // Opens Outlook app
         }
         return 'https://outlook.live.com';
       
       case 'yahoo':
         if (isIOS) {
-          return 'ymail://';  // Opens Yahoo Mail app on iOS
+          return 'ymail://';  // Opens Yahoo Mail app to inbox
         } else if (isAndroid) {
-          return 'intent://mail/#Intent;scheme=mailto;package=com.yahoo.mobile.client.android.mail;end';
+          return 'intent://mail/#Intent;scheme=mailto;package=com.yahoo.mobile.client.android.mail;end'; // Opens Yahoo Mail app
         }
         return 'https://mail.yahoo.com';
       
@@ -197,32 +197,26 @@
 
     const deepLink = getEmailAppLink(clientName);
     
-    // Create a temporary anchor to try opening the app
-    const anchor = document.createElement('a');
-    anchor.href = deepLink;
-    anchor.style.display = 'none';
-    document.body.appendChild(anchor);
-    anchor.click();
+    // Try to open the app
+    window.location.href = deepLink;
     
-    // Remove the anchor after a short delay
-    setTimeout(() => {
-      document.body.removeChild(anchor);
-    }, 100);
-    
-    // Fallback: If the app doesn't open after 2 seconds, offer to open web version
-    setTimeout(() => {
-      if (document.hasFocus()) {
-        const fallbackMessage = confirm(`Couldn't open ${clientName} app. Would you like to open it in your browser instead?`);
-        if (fallbackMessage) {
-          const webLinks = {
-            'Gmail': 'https://mail.google.com',
-            'Outlook': 'https://outlook.live.com',
-            'Yahoo': 'https://mail.yahoo.com'
-          };
-          window.open(webLinks[clientName as keyof typeof webLinks], '_blank', 'noopener,noreferrer');
-        }
+    // Fallback: If the app doesn't open after 2.5 seconds, offer to open web version
+    const fallbackTimer = setTimeout(() => {
+      const fallbackMessage = confirm(`Couldn't open ${clientName} app. Would you like to open it in your browser instead?`);
+      if (fallbackMessage) {
+        const webLinks = {
+          'Gmail': 'https://mail.google.com',
+          'Outlook': 'https://outlook.live.com',
+          'Yahoo': 'https://mail.yahoo.com'
+        };
+        window.open(webLinks[clientName as keyof typeof webLinks], '_blank', 'noopener,noreferrer');
       }
-    }, 2000);
+    }, 2500);
+    
+    // Clear the fallback timer if the page loses focus (app opened successfully)
+    window.addEventListener('blur', () => {
+      clearTimeout(fallbackTimer);
+    }, { once: true });
   }
 </script>
 
