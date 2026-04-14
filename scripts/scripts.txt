@@ -3,3 +3,18 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
 ...
+
+INSERT INTO categories (id, name, icon, color, default_severity, is_active, created_at, updated_at) VALUES
+  (gen_random_uuid(), 'Suspicious Activity', 'alert-triangle', '#F59E0B', 'medium', true, now(), now()),
+  (gen_random_uuid(), 'Theft / Robbery',     'alert-octagon',  '#EF4444', 'high',   true, now(), now()),
+  (gen_random_uuid(), 'Vandalism',           'building',       '#F97316', 'medium', true, now(), now()),
+  (gen_random_uuid(), 'Fire / Emergency',    'flame',          '#DC2626', 'critical',true,now(), now()),
+  (gen_random_uuid(), 'Accident',            'car',            '#F59E0B', 'high',   true, now(), now()),
+  (gen_random_uuid(), 'Noise Complaint',     'volume-2',       '#8B5CF6', 'low',    true, now(), now()),
+  (gen_random_uuid(), 'Other',               'more-horizontal','#6B7280', 'medium', true, now(), now());
+
+INSERT INTO statuses (id, name, color, is_active, created_at, updated_at) VALUES
+  (gen_random_uuid(), 'Reported',      '#F59E0B', true, now(), now()),
+  (gen_random_uuid(), 'Investigating', '#3B82F6', true, now(), now()),
+  (gen_random_uuid(), 'Resolved',      '#10B981', true, now(), now()),
+  (gen_random_uuid(), 'False Report',  '#6B7280', true, now(), now());

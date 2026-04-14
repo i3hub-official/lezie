@@ -1,149 +1,183 @@
-// src/routes/api/dashboard/+server.ts
-// Returns all data the dashboard home needs in a single request:
-//   - stats (totalReports, verifiedReports, activeAlerts, safetyScore)
-//   - recentIncidents (last 5, joined with category + status)
-//   - notifications (last 5 for this user)
-//
-// Auth is already resolved by hooks.server.ts — we read event.locals directly.
-// No second getSession() call needed.
+// src/routes/dashboard/+page.server.ts
+import type { PageServerLoad } from './$types';
+import { error } from '@sveltejs/kit';
+import { dev } from '$app/environment';
 
-import { json, error } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import {
-  reports, categories, statuses,
-  notifications as notificationsTable,
-  alertZones,
+  users,
+  reports,
+  reportComments,
+  reportMedia,
+  notifications,
+  savedLocations,
+  identityFlags,
+  categories,
+  statuses,
 } from '$lib/server/db/schema';
-import { eq, desc, and, count } from 'drizzle-orm';
 
-export const GET: RequestHandler = async ({ locals }) => {
-  // hooks.server.ts already validated + set this — if null, hook redirected to /signin
-  const userId = locals.user?.id;
-  if (!userId) throw error(401, 'Unauthorised.');
+import { eq, desc, sql, and, count } from 'drizzle-orm';
+import { getProfile, getKycData } from '$lib/server/services/profileService';
 
-  // ── All queries in parallel ───────────────────────────────────────────────
-  const [
-    allReportsResult,
-    verifiedReportsResult,
-    activeAlertsResult,
-    recentIncidentsRows,
-    notificationRows,
-  ] = await Promise.all([
+export const load: PageServerLoad = async ({ locals }) => {
+  if (!locals.user) throw error(401, 'Unauthorized');
 
-    // Total reports by this user
-    db
-      .select({ count: count() })
-      .from(reports)
-      .where(eq(reports.userId, userId)),
+  const userId = locals.user.id;
+  if (dev) console.log(`[DASHBOARD] Loading data for user: ${userId}`);
 
-    // Community-verified reports by this user
-    db
-      .select({ count: count() })
-      .from(reports)
-      .where(and(
-        eq(reports.userId, userId),
-        eq(reports.verificationStatus, 'community-verified')
-      )),
+  // ── Profile (non-fatal) ────────────────────────────────────────────────────
+  let profile: any = null;
+  try {
+    profile = await getProfile(userId);
+  } catch (err: any) {
+    if (dev) console.warn(`[DASHBOARD] Profile error (non-fatal):`, err.message);
+  }
 
-    // Active alert zones for this user
-    db
-      .select({ count: count() })
-      .from(alertZones)
-      .where(and(
-        eq(alertZones.userId, userId),
-        eq(alertZones.isActive, true)
-      )),
+  // ── KYC data (non-fatal) ───────────────────────────────────────────────────
+  let kycData: any = null;
+  try {
+    kycData = await getKycData(userId);
+  } catch (err: any) {
+    if (dev) console.warn(`[DASHBOARD] KYC error (non-fatal):`, err.message);
+  }
 
-    // Last 5 reports across all users (community feed), joined with category + status
-    db
-      .select({
-        id:                 reports.id,
-        title:              reports.title,
-        severity:           reports.severity,
-        location:           reports.location,
-        locationName:       reports.locationName,
-        createdAt:          reports.createdAt,
-        isAnonymous:        reports.isAnonymous,
-        verificationStatus: reports.verificationStatus,
-        categoryName:       categories.name,
-        statusName:         statuses.name,
-      })
-      .from(reports)
-      .innerJoin(categories, eq(reports.categoryId, categories.id))
-      .innerJoin(statuses,   eq(reports.statusId,   statuses.id))
-      .orderBy(desc(reports.createdAt))
-      .limit(5),
+  try {
+    const [
+      account,
+      recentReports,
+      reportSummaryRows,
+      commentCount,
+      mediaCount,
+      unreadCountResult,
+      recentNotifications,
+      savedLocationsData,
+      activeFlags,
+    ] = await Promise.all([
 
-    // Last 5 notifications for this user (read + unread)
-    db
-      .select({
-        id:        notificationsTable.id,
-        type:      notificationsTable.type,
-        body:      notificationsTable.body,
-        isRead:    notificationsTable.isRead,
-        createdAt: notificationsTable.createdAt,
-      })
-      .from(notificationsTable)
-      .where(eq(notificationsTable.userId, userId))
-      .orderBy(desc(notificationsTable.createdAt))
-      .limit(5),
-  ]);
+      // 1. Account data from users table
+      db
+        .select({
+          tier:        users.tier,
+          trustScore:  users.trustScore,
+          kycStatus:   users.kycStatus,
+          lastActive:  users.lastActive,
+          isActive:    users.isActive,
+        })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1)
+        .then(r => r[0] ?? null),
 
-  // ── Compute stats ──────────────────────────────────────────────────────────
-  const totalReports    = Number(allReportsResult[0]?.count    ?? 0);
-  const verifiedReports = Number(verifiedReportsResult[0]?.count ?? 0);
-  const activeAlerts    = Number(activeAlertsResult[0]?.count  ?? 0);
+      // 2. Recent reports with category + status names
+      db
+        .select({
+          id:                 reports.id,
+          title:              reports.title,
+          severity:           reports.severity,
+          verificationStatus: reports.verificationStatus,
+          createdAt:          reports.createdAt,
+          categoryName:       categories.name,
+          categoryColor:      categories.color,
+          statusName:         statuses.name,
+          statusColor:        statuses.color,
+        })
+        .from(reports)
+        .leftJoin(categories, eq(reports.categoryId, categories.id))
+        .leftJoin(statuses,   eq(reports.statusId,   statuses.id))
+        .where(eq(reports.userId, userId))
+        .orderBy(desc(reports.createdAt))
+        .limit(10)
+        .then(rows => rows.map(r => ({ ...r, createdAt: r.createdAt.toISOString() }))),
 
-  // Safety score = (verified / total) * 100, defaults to 0 with no reports
-  const safetyScore = totalReports > 0
-    ? Math.round((verifiedReports / totalReports) * 100)
-    : 0;
+      // 3. Report severity breakdown
+      db
+        .select({
+          total:    sql<number>`count(*)::int`,
+          low:      sql<number>`count(*) filter (where ${reports.severity} = 'low')::int`,
+          medium:   sql<number>`count(*) filter (where ${reports.severity} = 'medium')::int`,
+          high:     sql<number>`count(*) filter (where ${reports.severity} = 'high')::int`,
+          critical: sql<number>`count(*) filter (where ${reports.severity} = 'critical')::int`,
+          resolved: sql<number>`count(*) filter (where ${statuses.name} ilike 'resolved')::int`,
+        })
+        .from(reports)
+        .leftJoin(statuses, eq(reports.statusId, statuses.id))
+        .where(eq(reports.userId, userId))
+        .then(r => r[0] ?? { total: 0, low: 0, medium: 0, high: 0, critical: 0, resolved: 0 }),
 
-  // ── Shape recent incidents ─────────────────────────────────────────────────
-  const recentIncidents = recentIncidentsRows.map(r => {
-    const loc = r.location as { lat?: number; lng?: number } | null;
+      // 4. Total comments on user's reports
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(reportComments)
+        .innerJoin(reports, eq(reportComments.reportId, reports.id))
+        .where(eq(reports.userId, userId))
+        .then(r => r[0]?.count ?? 0),
+
+      // 5. Total media uploads by user
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(reportMedia)
+        .where(eq(reportMedia.userId, userId))
+        .then(r => r[0]?.count ?? 0),
+
+      // 6. Unread notifications
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(notifications)
+        .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)))
+        .then(r => r[0]?.count ?? 0),
+
+      // 7. Recent notifications
+      db
+        .select()
+        .from(notifications)
+        .where(eq(notifications.userId, userId))
+        .orderBy(desc(notifications.createdAt))
+        .limit(20)
+        .then(rows => rows.map(r => ({ ...r, createdAt: r.createdAt.toISOString() }))),
+
+      // 8. Saved locations
+      db
+        .select()
+        .from(savedLocations)
+        .where(eq(savedLocations.userId, userId)),
+
+      // 9. Active identity flags
+      db
+        .select()
+        .from(identityFlags)
+        .where(and(eq(identityFlags.userId, userId), eq(identityFlags.resolved, false))),
+    ]);
+
+    if (dev) {
+      console.log(`[DASHBOARD] ✅ Loaded for ${userId} — ${recentReports.length} reports, ${unreadCountResult} unread`);
+    }
+
     return {
-      id:       r.id,
-      title:    r.title,
-      category: r.categoryName.toLowerCase(),
-      severity: r.severity,
-      time:     r.createdAt.toISOString(),
-      location: r.locationName
-        ?? (loc?.lat ? `${loc.lat.toFixed(4)}, ${loc.lng?.toFixed(4)}` : 'Unknown location'),
-      status:   r.statusName.toLowerCase(),
+      user:    locals.user,
+      account: account ?? {
+        tier: '1', trustScore: 0, kycStatus: 'pending',
+        lastActive: null, isActive: true,
+      },
+      profile:  profile ?? { firstName: null, lastName: null, phone: null, email: null },
+      kycData,
+
+      // Report stats
+      recentReports,
+      reportSummary:    reportSummaryRows,
+      commentCount,
+      mediaCount,
+
+      // Notifications
+      unreadCount:         unreadCountResult,
+      recentNotifications,
+
+      // Misc
+      savedLocations:  savedLocationsData,
+      activeFlags,
     };
-  });
 
-  // ── Shape notifications ────────────────────────────────────────────────────
-  // Map DB enum → template keys the dashboard already uses:
-  //   'verification' → 'success'
-  //   'system'       → 'info'
-  //   'alert'        → 'alert'  (unchanged)
-  const typeMap: Record<string, string> = {
-    verification: 'success',
-    system:       'info',
-    alert:        'alert',
-  };
-
-  const notifications = notificationRows.map(n => ({
-    id:      n.id,
-    type:    typeMap[n.type] ?? 'info',
-    message: n.body,
-    time:    n.createdAt.toISOString(),
-    read:    n.isRead,
-  }));
-
-  return json({
-    stats: {
-      totalReports,
-      verifiedReports,
-      activeAlerts,
-      safetyScore,
-      communityMembers: 0,  // TODO: add total active users count
-      pendingReviews:   0,  // TODO: add pending status count
-    },
-    recentIncidents,
-    notifications,
-  });
+  } catch (err: any) {
+    console.error(`[DASHBOARD] Critical failure for ${userId}:`, err?.message);
+    throw error(500, 'Unable to load dashboard. Please try again.');
+  }
 };

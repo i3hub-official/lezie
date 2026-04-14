@@ -10,7 +10,7 @@
 
 import { dev } from '$app/environment';
 
-const APP_URL  = dev ? 'http://localhost:5173' : 'https://lezie.app';
+const APP_URL  = dev ? 'http://localhost:5173' : 'https://lezie.vercel.app';
 const APP_NAME = 'Lezie';
 const LOGO_URL = `${APP_URL}/icons/lz_logo_t.png`;
 const YEAR     = new Date().getFullYear();
