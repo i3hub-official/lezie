@@ -32,6 +32,7 @@ const ROUTE_CONFIG = {
     '/api/health',
     '/api/statistics',
     '/api/debug/cloudinary',
+    '/icons',
     '/_app',
     '/favicon',
   ],
