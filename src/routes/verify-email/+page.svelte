@@ -1,3 +1,4 @@
+<!-- src/routes/verify-email/+page.svelte -->
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { Mail, RefreshCw, CheckCircle, AlertCircle, ArrowRight, Home, ShieldCheck } from 'lucide-svelte';
@@ -141,6 +142,88 @@
 
   const circumference = 2 * Math.PI * 20;
   const strokeDash = $derived(circumference - ((cooldown / COOLDOWN_SECS) * circumference));
+
+  // ── Mobile app detection and deep links ──────────────────
+  function isMobileDevice(): boolean {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  }
+
+  function getEmailAppLink(client: string): string {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isIOS = /iphone|ipad|ipod/.test(userAgent);
+    const isAndroid = /android/.test(userAgent);
+
+    switch(client.toLowerCase()) {
+      case 'gmail':
+        if (isIOS) {
+          return 'googlegmail://';  // Opens Gmail app on iOS
+        } else if (isAndroid) {
+          return 'intent://mail/#Intent;scheme=mailto;package=com.google.android.gm;end';
+        }
+        return 'https://mail.google.com';
+      
+      case 'outlook':
+        if (isIOS) {
+          return 'ms-outlook://';  // Opens Outlook app on iOS
+        } else if (isAndroid) {
+          return 'intent://mail/#Intent;scheme=mailto;package=com.microsoft.office.outlook;end';
+        }
+        return 'https://outlook.live.com';
+      
+      case 'yahoo':
+        if (isIOS) {
+          return 'ymail://';  // Opens Yahoo Mail app on iOS
+        } else if (isAndroid) {
+          return 'intent://mail/#Intent;scheme=mailto;package=com.yahoo.mobile.client.android.mail;end';
+        }
+        return 'https://mail.yahoo.com';
+      
+      default:
+        return '#';
+    }
+  }
+
+  function openEmailApp(clientName: string) {
+    if (!isMobileDevice()) {
+      // On desktop, just open the web version
+      const desktopLinks = {
+        'Gmail': 'https://mail.google.com',
+        'Outlook': 'https://outlook.live.com',
+        'Yahoo': 'https://mail.yahoo.com'
+      };
+      window.open(desktopLinks[clientName as keyof typeof desktopLinks], '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    const deepLink = getEmailAppLink(clientName);
+    
+    // Create a temporary anchor to try opening the app
+    const anchor = document.createElement('a');
+    anchor.href = deepLink;
+    anchor.style.display = 'none';
+    document.body.appendChild(anchor);
+    anchor.click();
+    
+    // Remove the anchor after a short delay
+    setTimeout(() => {
+      document.body.removeChild(anchor);
+    }, 100);
+    
+    // Fallback: If the app doesn't open after 2 seconds, offer to open web version
+    setTimeout(() => {
+      if (document.hasFocus()) {
+        const fallbackMessage = confirm(`Couldn't open ${clientName} app. Would you like to open it in your browser instead?`);
+        if (fallbackMessage) {
+          const webLinks = {
+            'Gmail': 'https://mail.google.com',
+            'Outlook': 'https://outlook.live.com',
+            'Yahoo': 'https://mail.yahoo.com'
+          };
+          window.open(webLinks[clientName as keyof typeof webLinks], '_blank', 'noopener,noreferrer');
+        }
+      }
+    }, 2000);
+  }
 </script>
 
 <svelte:head>
@@ -286,11 +369,18 @@
 
         <div class="ve-mail-clients">
           {#each [
-            { name:'Gmail',   href:'https://mail.google.com',  color:'#EA4335' },
-            { name:'Outlook', href:'https://outlook.live.com', color:'#0078D4' },
-            { name:'Yahoo',   href:'https://mail.yahoo.com',   color:'#720E9E' },
+            { name:'Gmail',   href:'#', color:'#EA4335' },
+            { name:'Outlook', href:'#', color:'#0078D4' },
+            { name:'Yahoo',   href:'#', color:'#720E9E' },
           ] as client}
-            <a href={client.href} target="_blank" rel="noopener noreferrer" class="ve-mail-client">
+            <a 
+              href={client.href} 
+              onclick={(e) => { 
+                e.preventDefault(); 
+                openEmailApp(client.name);
+              }}
+              class="ve-mail-client"
+            >
               <span class="ve-client-dot" style="background:{client.color}"></span>
               {client.name}<ArrowRight size={11} />
             </a>
@@ -371,7 +461,7 @@
   .ve-spin { display:inline-flex; animation:ve-spin .6s linear infinite; }
   .ve-spin-sm { width:14px; height:14px; border:2px solid rgba(255,255,255,.3); border-top-color:white; border-radius:50%; animation:ve-spin .6s linear infinite; }
   .ve-mail-clients { display:flex; gap:.5rem; flex-wrap:wrap; }
-  .ve-mail-client { display:inline-flex; align-items:center; gap:.375rem; padding:.4375rem .875rem; border-radius:.625rem; border:1.5px solid #e5e7eb; background:white; font-size:.75rem; font-weight:600; color:#374151; text-decoration:none; transition:all .2s; }
+  .ve-mail-client { display:inline-flex; align-items:center; gap:.375rem; padding:.4375rem .875rem; border-radius:.625rem; border:1.5px solid #e5e7eb; background:white; font-size:.75rem; font-weight:600; color:#374151; text-decoration:none; transition:all .2s; cursor:pointer; }
   .ve-mail-client:hover { border-color:#6a2c91; color:#6a2c91; background:#f3e8ff; transform:translateY(-1px); }
   .ve-client-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
   .ve-footer { display:flex; flex-direction:column; align-items:center; gap:.375rem; }
