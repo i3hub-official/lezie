@@ -12,6 +12,13 @@ const ROUTE_CONFIG = {
     '/reset-password',
     '/verify-email',
     '/verify',
+    '/faq',
+    '/contact',
+    '/about',
+    '/terms',
+    '/privacy',
+    '/safety-guidelines',
+    'terms',
   ]),
 
   PUBLIC_PREFIX: [

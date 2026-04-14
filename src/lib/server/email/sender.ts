@@ -10,15 +10,14 @@ export interface EmailPayload {
 
 const transporter = nodemailer.createTransport({
   host:   env.SMTP_HOST,
-  port:   Number(env.SMTP_PORT ?? 587),
+  port:   Number(env.SMTP_PORT ?? 465),
   secure: Number(env.SMTP_PORT) === 465,
-  // Force IPv4 — Termux and some hosts can't reach SMTP over IPv6
   family: 4,
   auth: {
     user: env.SMTP_USER,
     pass: env.SMTP_PASS,
   },
-});
+} as nodemailer.TransportOptions);
 
 export async function sendEmail({ to, subject, html }: EmailPayload): Promise<void> {
   console.log(`[EMAIL] 📧 Sending to: ${to} | Subject: ${subject}`);

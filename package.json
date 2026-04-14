@@ -18,7 +18,9 @@
 		"db:studio": "drizzle-kit studio",
 		"db:check": "drizzle-kit check",
 		"db:up": "drizzle-kit up",
-		"db:drop": "drizzle-kit drop"
+		"db:drop": "drizzle-kit drop",
+		"studio": "drizzle-kit studio",
+		"start": "pnpm dev --host"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.2",
