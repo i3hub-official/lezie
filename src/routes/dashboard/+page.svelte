@@ -310,7 +310,7 @@
 
     <!-- Footer actions -->
     <div class="db-sidebar-foot">
-      <button class="db-report-btn" onclick={() => goto('/report')}
+      <button class="db-report-btn" onclick={() => goto('/dashboard#reports')}
               title={isSidebarCollapsed ? 'Report Incident' : ''}>
         <FlagTriangleRight size={15} />
         {#if !isSidebarCollapsed}<span>Report Incident</span>{/if}
