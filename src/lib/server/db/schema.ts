@@ -428,6 +428,28 @@ export const alertZoneNotificationsRelations = relations(alertZoneNotifications,
   }),
 }));
 
+export const reportMediaRelations = relations(reportMedia, ({ one }) => ({
+	report: one(reports, {
+		fields: [reportMedia.reportId],
+		references: [reports.id]
+	}),
+	user: one(users, {
+		fields: [reportMedia.userId],
+		references: [users.id]
+	})
+}));
+
+export const reportCommentsRelations = relations(reportComments, ({ one }) => ({
+	report: one(reports, {
+		fields: [reportComments.reportId],
+		references: [reports.id]
+	}),
+	user: one(users, {
+		fields: [reportComments.userId],
+		references: [users.id]
+	})
+}));
+
 // ==================== TYPES ====================
 
 export type User = typeof users.$inferSelect;

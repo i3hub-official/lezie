@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { reports, categories, statuses, users } from '$lib/server/db/schema';
 import { eq, desc, and, sql, ilike, or } from 'drizzle-orm';
-
+import { nanoid } from 'nanoid';
 const MAX_REPORTS_PER_PAGE = 20;
 
 const parseRequestBody = async (request: Request) => {
@@ -234,18 +234,23 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       return json({ error: 'No statuses configured — contact admin' }, { status: 500 });
     }
 
-    const [inserted] = await db.insert(reports).values({
-      userId: isAnonymous ? null : user.id,
-      categoryId: categoryRow.id,
-      statusId: statusRow.id,
-      title,
-      description,
-      severity: severity as any,
-      isAnonymous,
-      location,
-      locationName,
-      address,
-    }).returning({ id: reports.id });
+ const [inserted] = await db.insert(reports).values({
+  userId: isAnonymous ? null : user.id,
+  categoryId: categoryRow.id,
+  statusId: statusRow.id,
+  title,
+  description,
+  severity: severity as any,
+  isAnonymous,
+  // Pass the object directly for JSONB
+  location: location, 
+  locationName,
+  address,
+}).returning({ id: reports.id });
+
+if (!inserted) {
+  throw new Error('Database insert returned no row');
+}
 
     if (!inserted) {
       return json({ error: 'Failed to save report' }, { status: 500 });
