@@ -1,109 +1,88 @@
 // src/routes/api/verify-code/+server.ts
-//
-// 1. Validates the 6-digit code against the verifications table
-// 2. On success, calls Better Auth's verify-email endpoint to mark
-//    the email as verified and set the session cookie
-// 3. Proxies the Set-Cookie header back to the browser
-
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { verifications } from '$lib/server/db/auth-schema';
-import { eq, and, gt, like } from 'drizzle-orm';
+import { gt } from 'drizzle-orm';
 import { env } from '$env/dynamic/private';
 
 export const POST: RequestHandler = async ({ request, url }) => {
   try {
-    const { code, ref } = await request.json();
+    const { code } = await request.json();
 
-    if (!code || !/^\d{6}$/.test(code.trim())) {
-      return json({ error: 'Enter a valid 6-digit code.' }, { status: 400 });
+    // 1. Validation
+    if (!code || !/^[A-Z0-9]{6}$/i.test(code.trim())) {
+      return json({ error: 'Enter a valid 6-character code.' }, { status: 400 });
     }
 
+    const upperCode = code.trim().toUpperCase();
     const now = new Date();
 
-    // ── 1. Look up code in verifications table ────────────────────────────
-    const record = await db
+    // 2. Fetch active tokens
+    const records = await db
       .select()
       .from(verifications)
-      .where(
-        and(
-          like(verifications.identifier, 'verify_code:%'),
-          eq(verifications.value, code.trim()),
-          gt(verifications.expiresAt, now)
-        )
-      )
-      .limit(1);
+      .where(gt(verifications.expiresAt, now));
 
-    if (record.length === 0) {
+    // 3. Find match logic (ensure this matches your email template derivation exactly)
+    const match = records.find(r => {
+      const alphanumeric = r.value.replace(/[^a-zA-Z0-9]/g, '');
+      const derived = alphanumeric.slice(-6).toUpperCase();
+      return derived === upperCode;
+    });
+
+    if (!match) {
       return json(
         { error: 'Incorrect or expired code. Please try again.' },
         { status: 400 }
       );
     }
 
-    // Extract the token stored alongside the code
-    // The identifier is: verify_code:<email>
-    // The value is the 6-digit code
-    // The token for Better Auth is stored in a separate verifications row
-    // Look for the Better Auth token row for this email
-    const email = record[0].identifier.replace('verify_code:', '');
+   // 4. Verification Proxy
+// Use the current request's origin (IP or Domain) so the fetch 
+// stays on the same "network" the browser is using.
+const currentOrigin = url.origin; 
 
-    // ── 2. Find the Better Auth verification token for this email ─────────
-    const tokenRecord = await db
-      .select()
-      .from(verifications)
-      .where(
-        and(
-          eq(verifications.identifier, email),
-          gt(verifications.expiresAt, now)
-        )
-      )
-      .limit(1);
+// Construct the URL to hit the Better Auth internal endpoint
+const verifyUrl = new URL('/api/auth/verify-email', currentOrigin);
+verifyUrl.searchParams.set('token', match.value);
 
-    // ── 3. Delete the code so it can't be reused ──────────────────────────
-    await db
-      .delete(verifications)
-      .where(eq(verifications.id, record[0].id));
+// Optional: If you want Better Auth to handle the final redirect internally
+// verifyUrl.searchParams.set('callbackURL', '/dashboard');
 
-    if (tokenRecord.length === 0) {
-      // No Better Auth token found — fall back to just marking success
-      // The user will need to use the email link instead
-      return json(
-        { error: 'Verification token expired. Please request a new verification email.' },
-        { status: 400 }
-      );
-    }
+const verifyRes = await fetch(verifyUrl.toString(), {
+  method: 'GET',
+  headers: {
+    // CRITICAL: Forward the Host header so Better Auth knows which 
+    // domain/IP is being used for the session cookie domain
+    'host': url.host,
+    'User-Agent': request.headers.get('user-agent') ?? '',
+  },
+  redirect: 'manual', 
+});
 
-    const betterAuthToken = tokenRecord[0].value;
-
-    // ── 4. Call Better Auth's verify-email endpoint ───────────────────────
-    // This marks emailVerified = true and sets the session cookie
-    const baseUrl = env.BETTER_AUTH_URL ?? url.origin;
-
-    const verifyRes = await fetch(
-      `${baseUrl}/api/auth/verify-email?token=${encodeURIComponent(betterAuthToken)}&callbackURL=/dashboard`,
-      {
-        method:   'GET',
-        redirect: 'manual', // Don't follow the redirect — we handle it
-      }
-    );
-
-    // ── 5. Proxy Set-Cookie headers back to the browser ───────────────────
-    const setCookie = verifyRes.headers.get('set-cookie');
-
-    const headers = new Headers({ 'Content-Type': 'application/json' });
-    if (setCookie) {
-      headers.set('set-cookie', setCookie);
+    // 5. THE FIX: Correctly proxy MULTIPLE Set-Cookie headers
+    const responseHeaders = new Headers({ 'Content-Type': 'application/json' });
+    
+    // verifyRes.headers.getSetCookie() is the modern way to get all individual cookies
+    const cookies = verifyRes.headers.getSetCookie();
+    
+    if (cookies.length > 0) {
+      cookies.forEach(cookie => {
+        responseHeaders.append('set-cookie', cookie);
+      });
     }
 
     return new Response(
-      JSON.stringify({ success: true }),
-      { status: 200, headers }
+      JSON.stringify({ 
+        success: true, 
+        message: 'Email verified successfully.' 
+      }),
+      { status: 200, headers: responseHeaders }
     );
 
   } catch (err) {
-    console.error('[VERIFY-CODE]', err);
-    return json({ error: 'Something went wrong. Please try again.' }, { status: 500 });
+    console.error('[VERIFY-CODE] Critical Error:', err);
+    return json({ error: 'Server error during verification.' }, { status: 500 });
   }
 };

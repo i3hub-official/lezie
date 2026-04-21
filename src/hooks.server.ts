@@ -34,6 +34,7 @@ const ROUTE_CONFIG = {
     '/api/debug/cloudinary',
     '/icons',
     '/_app',
+    '/.well-known',
     '/favicon',
   ],
 
