@@ -128,44 +128,34 @@ const testScenarios = $state([
 async function testReport() {
   isLoading = true;
   
-  try {
-	const res = await fetch('/api/reports', {
-	  method: 'POST',
-	credentials: 'include',
-	  headers: {
-		'Content-Type': 'application/json'
-	  },
-	  body: JSON.stringify({
-		title,
-		description,
-		categoryId,
-		locationName
-	  })
-	});
-  
-	const data = await res.json();
-
-    // 1. You must assign the data to the $state variable
-    // If you just console.log(data), the UI stays empty!
-    result = data; 
-
-    // 2. Trigger the AI analysis
-    const aiRes = await fetchWithRetry('/api/ai/analyse-report', {
-       method: 'POST',
-       body: JSON.stringify({ description: data.description })
+ try {
+    // 1. Create the report in the DB
+    const res = await fetch('/api/reports', {
+      method: 'POST',
+      body: JSON.stringify({ title, description, categoryId, locationName })
     });
-    
-    if (aiRes.ok) {
-      const aiData = await aiRes.json();
-      // 3. Update the result object reactively
-   // THIS IS THE KEY: Merge the two together
-result = {
-  ...data,
-  ai_analysis: aiData
-};
-    }
+    const data = await res.json();
+
+    // 2. IMPORTANT: Send the actual 'title' and 'description' from your state
+    const aiRes = await fetch('/api/ai/analyse-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        title: title, // Make sure these aren't empty!
+        description: description 
+      })
+    });
+
+    const aiData = await aiRes.json();
+
+    // 3. Merge for the UI
+    result = {
+      ...data,
+      ai_analysis: aiData
+    };
+
   } catch (err) {
-    console.error(err);
+    error = err.message;
   } finally {
     isLoading = false;
   }
